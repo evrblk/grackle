@@ -55,9 +55,9 @@ var gatewayCmd = &cobra.Command{
 
 		grpcServer := grpc.NewServer(
 			grpc.ChainUnaryInterceptor(
-				//monitoringMiddleware.Unary,
-				//loggingMiddleware.Unary,
-				//authnMiddleware.Unary,
+			//monitoringMiddleware.Unary,
+			//loggingMiddleware.Unary,
+			//authnMiddleware.Unary,
 			),
 			grpc.ChainStreamInterceptor(),
 		)

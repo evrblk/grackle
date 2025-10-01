@@ -1124,20 +1124,20 @@ func TestCreateSemaphoreMaxSizeValidation(t *testing.T) {
 	resp, err := server.CreateSemaphore(ctx, &gracklepb.CreateSemaphoreRequest{
 		NamespaceName: "namespace1",
 		SemaphoreName: "semaphore1",
-		Permits:       50, // Max allowed by account limits
+		Permits:       100, // Max allowed by account limits
 	})
 	require.NoError(err)
 	require.NotNil(resp.Semaphore)
-	require.Equal(uint64(50), resp.Semaphore.Permits)
+	require.Equal(uint64(100), resp.Semaphore.Permits)
 
 	// Test semaphore size exceeding account limits
 	_, err = server.CreateSemaphore(ctx, &gracklepb.CreateSemaphoreRequest{
 		NamespaceName: "namespace1",
 		SemaphoreName: "semaphore2",
-		Permits:       51, // Exceeds MaxNumberOfSemaphoreHolders (50)
+		Permits:       101, // Exceeds MaxNumberOfSemaphoreHolders (100)
 	})
 	require.Error(err)
-	require.Contains(err.Error(), "semaphore size is too big, max: 50")
+	require.Contains(err.Error(), "semaphore size is too big, max: 100")
 }
 
 func TestUpdateSemaphoreMaxSizeValidation(t *testing.T) {
@@ -1164,20 +1164,20 @@ func TestUpdateSemaphoreMaxSizeValidation(t *testing.T) {
 	resp, err := server.UpdateSemaphore(ctx, &gracklepb.UpdateSemaphoreRequest{
 		NamespaceName: "namespace1",
 		SemaphoreName: "semaphore1",
-		Permits:       50, // Max allowed by account limits
+		Permits:       100, // Max allowed by account limits
 	})
 	require.NoError(err)
 	require.NotNil(resp.Semaphore)
-	require.Equal(uint64(50), resp.Semaphore.Permits)
+	require.Equal(uint64(100), resp.Semaphore.Permits)
 
 	// Test update exceeding account limits
 	_, err = server.UpdateSemaphore(ctx, &gracklepb.UpdateSemaphoreRequest{
 		NamespaceName: "namespace1",
 		SemaphoreName: "semaphore1",
-		Permits:       51, // Exceeds MaxNumberOfSemaphoreHolders (50)
+		Permits:       101, // Exceeds MaxNumberOfSemaphoreHolders (100)
 	})
 	require.Error(err)
-	require.Contains(err.Error(), "semaphore size is too big, max: 50")
+	require.Contains(err.Error(), "semaphore size is too big, max: 100")
 }
 
 func TestCreateWaitGroupMaxSizeValidation(t *testing.T) {
@@ -1196,20 +1196,20 @@ func TestCreateWaitGroupMaxSizeValidation(t *testing.T) {
 	resp, err := server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
 		NamespaceName: "namespace1",
 		WaitGroupName: "waitgroup1",
-		Counter:       1000, // Max allowed by account limits
+		Counter:       1000000, // Max allowed by account limits
 	})
 	require.NoError(err)
 	require.NotNil(resp.WaitGroup)
-	require.Equal(uint64(1000), resp.WaitGroup.Counter)
+	require.Equal(uint64(1000000), resp.WaitGroup.Counter)
 
 	// Test wait group size exceeding account limits
 	_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
 		NamespaceName: "namespace1",
 		WaitGroupName: "waitgroup2",
-		Counter:       1001, // Exceeds MaxWaitGroupSize (1000)
+		Counter:       1000001, // Exceeds MaxWaitGroupSize (1000000)
 	})
 	require.Error(err)
-	require.Contains(err.Error(), "wait group size is too big, max: 1000")
+	require.Contains(err.Error(), "wait group size is too big, max: 1000000")
 }
 
 func setupGrackleApiServer() *GrackleApiServer {
