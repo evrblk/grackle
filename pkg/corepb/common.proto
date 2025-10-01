@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option go_package = "github.com/evrblk/grackle/pkg/corepb";
+
+package com.evrblk.grackle.corepb;
+
+message PaginationToken {
+  enum Type {
+    NEXT = 0;
+    PREVIOUS = 1;
+  }
+
+  Type type = 1;
+  bytes value = 2;
+}

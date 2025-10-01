@@ -1,0 +1,116 @@
+syntax = "proto3";
+
+option go_package = "github.com/evrblk/grackle/pkg/corepb";
+
+package com.evrblk.grackle.corepb;
+
+import "pkg/corepb/locks.proto";
+import "pkg/corepb/namespaces.proto";
+import "pkg/corepb/semaphores.proto";
+import "pkg/corepb/wait_groups.proto";
+import "x/errors.proto";
+
+message GrackleReadRequest {
+  reserved 1;
+
+  oneof request {
+    GetSemaphoreRequest get_semaphore_request = 2;
+    ListSemaphoresRequest list_semaphores_request = 3;
+
+    GetWaitGroupRequest get_wait_group_request = 4;
+    ListWaitGroupsRequest list_wait_groups_request = 5;
+
+    GetNamespaceRequest get_namespace_request = 6;
+    ListNamespacesRequest list_namespaces_request = 7;
+
+    ListLocksRequest list_locks_request = 8;
+  }
+}
+
+message GrackleReadResponse {
+  com.evrblk.monstera.monsterax.Error error = 1;
+
+  oneof response {
+    GetSemaphoreResponse get_semaphore_response = 2;
+    ListSemaphoresResponse list_semaphores_response = 3;
+
+    GetWaitGroupResponse get_wait_group_response = 4;
+    ListWaitGroupsResponse list_wait_groups_response = 5;
+
+    GetNamespaceResponse get_namespace_response = 6;
+    ListNamespacesResponse list_namespaces_response = 7;
+
+    ListLocksResponse list_locks_response = 8;
+  }
+}
+
+message GrackleUpdateRequest {
+  reserved 1;
+
+  oneof request {
+    CreateSemaphoreRequest create_semaphore_request = 2;
+    UpdateSemaphoreRequest update_semaphore_request = 3;
+    DeleteSemaphoreRequest delete_semaphore_request = 4;
+    AcquireSemaphoreRequest acquire_semaphore_request = 5;
+    ReleaseSemaphoreRequest release_semaphore_request = 6;
+    RunSemaphoresGarbageCollectionRequest
+        run_semaphores_garbage_collection_request = 7;
+    SemaphoresDeleteNamespaceRequest semaphores_delete_namespace_request = 8;
+
+    CreateWaitGroupRequest create_wait_group_request = 9;
+    DeleteWaitGroupRequest delete_wait_group_request = 10;
+    AddJobsToWaitGroupRequest add_jobs_to_wait_group_request = 11;
+    CompleteJobsFromWaitGroupRequest complete_jobs_from_wait_group_request = 12;
+    RunWaitGroupsGarbageCollectionRequest
+        run_wait_groups_garbage_collection_request = 13;
+    WaitGroupsDeleteNamespaceRequest wait_groups_delete_namespace_request = 14;
+
+    AcquireLockRequest acquire_lock_request = 15;
+    ReleaseLockRequest release_lock_request = 16;
+    DeleteLockRequest delete_lock_request = 17;
+    GetLockRequest get_lock_request = 18;
+    RunLocksGarbageCollectionRequest run_locks_garbage_collection_request = 19;
+    LocksDeleteNamespaceRequest locks_delete_namespace_request = 20;
+
+    CreateNamespaceRequest create_namespace_request = 21;
+    UpdateNamespaceRequest update_namespace_request = 22;
+    DeleteNamespaceRequest delete_namespace_request = 23;
+  }
+}
+
+message GrackleUpdateResponse {
+  com.evrblk.monstera.monsterax.Error error = 1;
+
+  oneof response {
+    CreateSemaphoreResponse create_semaphore_response = 2;
+    UpdateSemaphoreResponse update_semaphore_response = 3;
+    DeleteSemaphoreResponse delete_semaphore_response = 4;
+    AcquireSemaphoreResponse acquire_semaphore_response = 5;
+    ReleaseSemaphoreResponse release_semaphore_response = 6;
+    RunSemaphoresGarbageCollectionResponse
+        run_semaphores_garbage_collection_response = 7;
+    SemaphoresDeleteNamespaceResponse semaphores_delete_namespace_response = 8;
+
+    CreateWaitGroupResponse create_wait_group_response = 9;
+    DeleteWaitGroupResponse delete_wait_group_response = 10;
+    AddJobsToWaitGroupResponse add_jobs_to_wait_group_response = 11;
+    CompleteJobsFromWaitGroupResponse complete_jobs_from_wait_group_response =
+        12;
+    RunWaitGroupsGarbageCollectionResponse
+        run_wait_groups_garbage_collection_response = 13;
+    WaitGroupsDeleteNamespaceResponse wait_groups_delete_namespace_response =
+        14;
+
+    AcquireLockResponse acquire_lock_response = 15;
+    ReleaseLockResponse release_lock_response = 16;
+    DeleteLockResponse delete_lock_response = 17;
+    GetLockResponse get_lock_response = 18;
+    RunLocksGarbageCollectionResponse run_locks_garbage_collection_response =
+        19;
+    LocksDeleteNamespaceResponse locks_delete_namespace_response = 20;
+
+    CreateNamespaceResponse create_namespace_response = 21;
+    UpdateNamespaceResponse update_namespace_response = 22;
+    DeleteNamespaceResponse delete_namespace_response = 23;
+  }
+}

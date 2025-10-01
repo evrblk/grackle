@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+option go_package = "github.com/evrblk/grackle/pkg/corepb";
+
+package com.evrblk.grackle.corepb;
+
+import "pkg/corepb/common.proto";
+
+message CreateNamespaceRequest {
+  uint64 account_id = 1;
+  string name = 2;
+  string description = 3;
+  int64 now = 4;
+  int64 max_number_of_namespaces = 5;
+}
+
+message CreateNamespaceResponse {
+  Namespace namespace = 1;
+}
+
+message ListNamespacesRequest {
+  uint64 account_id = 1;
+  PaginationToken pagination_token = 2;
+  int32 limit = 3;
+}
+
+message ListNamespacesResponse {
+  repeated Namespace namespaces = 1;
+  PaginationToken next_pagination_token = 2;
+  PaginationToken previous_pagination_token = 3;
+}
+
+message GetNamespaceRequest {
+  NamespaceId namespace_id = 1;
+}
+
+message GetNamespaceResponse {
+  Namespace namespace = 1;
+}
+
+message DeleteNamespaceRequest {
+  NamespaceId namespace_id = 1;
+  int64 namespace_created_at = 2;
+  int64 now = 3;
+}
+
+message DeleteNamespaceResponse {}
+
+message UpdateNamespaceRequest {
+  NamespaceId namespace_id = 1;
+  string description = 2;
+  int64 now = 3;
+}
+
+message UpdateNamespaceResponse {
+  Namespace namespace = 1;
+}
+
+message Namespace {
+  NamespaceId id = 1;
+  string description = 2;
+  int64 created_at = 3;
+  int64 updated_at = 4;
+}
+
+message NamespaceId {
+  uint64 account_id = 1;
+  string namespace_name = 2;
+}
+
+message NamespaceTimestampedId {
+  uint64 account_id = 1;
+  string namespace_name = 2;
+  int64 namespace_created_at = 3;
+}
+
+message NamespacesCounter {
+  uint64 account_id = 1;
+  int64 number_of_namespaces = 2;
+}

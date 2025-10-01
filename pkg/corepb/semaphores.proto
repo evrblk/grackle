@@ -1,0 +1,135 @@
+syntax = "proto3";
+
+option go_package = "github.com/evrblk/grackle/pkg/corepb";
+
+package com.evrblk.grackle.corepb;
+
+import "pkg/corepb/common.proto";
+import "pkg/corepb/namespaces.proto";
+
+message CreateSemaphoreRequest {
+  NamespaceTimestampedId namespace_timestamped_id = 1;
+  string name = 2;
+  string description = 3;
+  int64 now = 4;
+  uint64 permits = 5;
+  int64 max_number_of_semaphores_per_namespace = 6;
+}
+
+message CreateSemaphoreResponse {
+  Semaphore semaphore = 1;
+}
+
+message ListSemaphoresRequest {
+  NamespaceTimestampedId namespace_timestamped_id = 1;
+  PaginationToken pagination_token = 2;
+  int32 limit = 3;
+}
+
+message ListSemaphoresResponse {
+  repeated Semaphore semaphores = 1;
+  PaginationToken next_pagination_token = 2;
+  PaginationToken previous_pagination_token = 3;
+}
+
+message GetSemaphoreRequest {
+  SemaphoreId semaphore_id = 1;
+  int64 now = 2;
+}
+
+message GetSemaphoreResponse {
+  Semaphore semaphore = 1;
+}
+
+message AcquireSemaphoreRequest {
+  SemaphoreId semaphore_id = 1;
+  string process_id = 2;
+  int64 expires_at = 3;
+  int64 now = 4;
+}
+
+message AcquireSemaphoreResponse {
+  Semaphore semaphore = 1;
+  bool success = 2;
+}
+
+message ReleaseSemaphoreRequest {
+  SemaphoreId semaphore_id = 1;
+  string process_id = 2;
+  int64 now = 3;
+}
+
+message ReleaseSemaphoreResponse {
+  Semaphore semaphore = 1;
+}
+
+message UpdateSemaphoreRequest {
+  SemaphoreId semaphore_id = 1;
+  string description = 2;
+  uint64 permits = 3;
+  int64 now = 4;
+}
+
+message UpdateSemaphoreResponse {
+  Semaphore semaphore = 1;
+}
+
+message DeleteSemaphoreRequest {
+  SemaphoreId semaphore_id = 1;
+}
+
+message DeleteSemaphoreResponse {}
+
+message SemaphoresDeleteNamespaceRequest {
+  uint64 record_id = 1;
+  NamespaceTimestampedId namespace_timestamped_id = 2;
+  int64 now = 3;
+}
+
+message SemaphoresDeleteNamespaceResponse {}
+
+message Semaphore {
+  SemaphoreId id = 1;
+  string description = 2;
+  int64 created_at = 3;
+  int64 updated_at = 4;
+  uint64 permits = 5;
+  repeated SemaphoreHolder semaphore_holders = 6;
+}
+
+message SemaphoreHolder {
+  string process_id = 1;
+  int64 locked_at = 2;
+  int64 expires_at = 3;
+}
+
+message SemaphoreId {
+  uint64 account_id = 1;
+  string namespace_name = 2;
+  int64 namespace_created_at = 3;
+  string semaphore_name = 4;
+}
+
+message RunSemaphoresGarbageCollectionRequest {
+  int64 now = 1;
+  int64 gc_records_page_size = 2;
+  int64 gc_record_semaphores_page_size = 3;
+  int64 max_visited_semaphores = 4;
+}
+
+message RunSemaphoresGarbageCollectionResponse {}
+
+message SemaphoresGCRecord {
+  uint64 id = 1;
+  NamespaceTimestampedId namespace_timestamped_id = 2;
+}
+
+message SemaphoresCounter {
+  NamespaceTimestampedId namespace_timestamped_id = 1;
+  int64 number_of_semaphores = 2;
+}
+
+message SemaphoresExpirationGlobalIndexRecord {
+  SemaphoreId semaphore_id = 1;
+  int64 expires_at = 2;
+}

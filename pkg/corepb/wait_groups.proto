@@ -1,0 +1,135 @@
+syntax = "proto3";
+
+option go_package = "github.com/evrblk/grackle/pkg/corepb";
+
+package com.evrblk.grackle.corepb;
+
+import "pkg/corepb/common.proto";
+import "pkg/corepb/namespaces.proto";
+
+message CreateWaitGroupRequest {
+  NamespaceTimestampedId namespace_timestamped_id = 1;
+  string name = 2;
+  string description = 3;
+  int64 now = 4;
+  uint64 counter = 5;
+  int64 expires_at = 6;
+  int64 max_number_of_wait_groups_per_namespace = 7;
+}
+
+message CreateWaitGroupResponse {
+  WaitGroup wait_group = 1;
+}
+
+message ListWaitGroupsRequest {
+  NamespaceTimestampedId namespace_timestamped_id = 1;
+  PaginationToken pagination_token = 2;
+  int32 limit = 3;
+}
+
+message ListWaitGroupsResponse {
+  repeated WaitGroup wait_groups = 1;
+  PaginationToken next_pagination_token = 2;
+  PaginationToken previous_pagination_token = 3;
+}
+
+message GetWaitGroupRequest {
+  WaitGroupId wait_group_id = 1;
+}
+
+message GetWaitGroupResponse {
+  WaitGroup wait_group = 1;
+}
+
+message DeleteWaitGroupRequest {
+  uint64 record_id = 1;
+  WaitGroupId wait_group_id = 2;
+}
+
+message DeleteWaitGroupResponse {}
+
+message AddJobsToWaitGroupRequest {
+  WaitGroupId wait_group_id = 1;
+  uint64 counter = 2;
+  int64 now = 3;
+  int64 max_wait_group_size = 4;
+}
+
+message AddJobsToWaitGroupResponse {
+  WaitGroup wait_group = 1;
+}
+
+message CompleteJobsFromWaitGroupRequest {
+  WaitGroupId wait_group_id = 1;
+  repeated string process_ids = 2;
+  int64 now = 3;
+}
+
+message CompleteJobsFromWaitGroupResponse {
+  WaitGroup wait_group = 1;
+}
+
+message RunWaitGroupsGarbageCollectionRequest {
+  int64 now = 1;
+  int64 gc_records_page_size = 2;
+  int64 gc_record_wait_groups_page_size = 3;
+  int64 max_deleted_objects = 4;
+}
+
+message RunWaitGroupsGarbageCollectionResponse {}
+
+message WaitGroupsDeleteNamespaceRequest {
+  uint64 record_id = 1;
+  NamespaceTimestampedId namespace_timestamped_id = 2;
+  int64 now = 3;
+}
+
+message WaitGroupsDeleteNamespaceResponse {}
+
+message WaitGroup {
+  WaitGroupId id = 1;
+  string description = 2;
+  int64 created_at = 3;
+  int64 updated_at = 4;
+  int64 expires_at = 5;
+  uint64 counter = 6;
+  uint64 completed = 7;
+}
+
+message WaitGroupJob {
+  WaitGroupJobId id = 1;
+  int64 completed_at = 2;
+}
+
+message WaitGroupJobId {
+  uint64 account_id = 1;
+  string namespace_name = 2;
+  int64 namespace_created_at = 4;
+  string wait_group_name = 5;
+  string process_id = 6;
+}
+
+message WaitGroupId {
+  uint64 account_id = 1;
+  string namespace_name = 2;
+  int64 namespace_created_at = 3;
+  string wait_group_name = 4;
+}
+
+message WaitGroupsCounter {
+  NamespaceTimestampedId namespace_timestamped_id = 1;
+  int64 number_of_wait_groups = 2;
+}
+
+message WaitGroupsGCRecord {
+  uint64 id = 1;
+  oneof record {
+    NamespaceTimestampedId namespace_timestamped_id = 2;
+    WaitGroupId wait_group_id = 3;
+  }
+}
+
+message WaitGroupsExpirationGlobalIndexRecord {
+  WaitGroupId wait_group_id = 1;
+  int64 expires_at = 2;
+}

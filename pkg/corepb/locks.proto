@@ -1,0 +1,120 @@
+syntax = "proto3";
+
+option go_package = "github.com/evrblk/grackle/pkg/corepb";
+
+package com.evrblk.grackle.corepb;
+
+import "pkg/corepb/common.proto";
+import "pkg/corepb/namespaces.proto";
+
+message AcquireLockRequest {
+  LockId lock_id = 1;
+  string process_id = 2;
+  bool write_lock = 3;
+  int64 now = 4;
+  int64 expires_at = 5;
+  int64 max_number_of_locks_per_namespace = 6;
+}
+
+message AcquireLockResponse {
+  Lock lock = 1;
+  bool success = 2;
+}
+
+message ReleaseLockRequest {
+  LockId lock_id = 1;
+  string process_id = 2;
+  int64 now = 3;
+}
+
+message ReleaseLockResponse {
+  Lock lock = 1;
+}
+
+message GetLockRequest {
+  LockId lock_id = 1;
+  int64 now = 2;
+}
+
+message GetLockResponse {
+  Lock lock = 1;
+}
+
+message DeleteLockRequest {
+  LockId lock_id = 1;
+  int64 now = 2;
+}
+
+message DeleteLockResponse {}
+
+message ListLocksRequest {
+  NamespaceTimestampedId namespace_timestamped_id = 1;
+  int64 now = 2;
+  PaginationToken pagination_token = 3;
+  int32 limit = 4;
+}
+
+message ListLocksResponse {
+  repeated Lock locks = 1;
+  PaginationToken next_pagination_token = 2;
+  PaginationToken previous_pagination_token = 3;
+}
+
+message RunLocksGarbageCollectionRequest {
+  int64 now = 1;
+  int64 gc_records_page_size = 2;
+  int64 gc_record_locks_page_size = 3;
+  int64 max_visited_locks = 4;
+}
+
+message RunLocksGarbageCollectionResponse {}
+
+message LocksDeleteNamespaceRequest {
+  NamespaceTimestampedId namespace_timestamped_id = 1;
+  uint64 record_id = 2;
+  int64 now = 3;
+}
+
+message LocksDeleteNamespaceResponse {}
+
+message Lock {
+  LockId id = 1;
+  LockState state = 2;
+  int64 locked_at = 3;
+  LockHolder write_lock_holder = 4;
+  repeated LockHolder read_lock_holders = 5;
+}
+
+message LockHolder {
+  string process_id = 1;
+  int64 locked_at = 2;
+  int64 expires_at = 3;
+}
+
+enum LockState {
+  UNLOCKED = 0;
+  READ_LOCKED = 1;
+  WRITE_LOCKED = 2;
+}
+
+message LockId {
+  uint64 account_id = 1;
+  string namespace_name = 2;
+  int64 namespace_created_at = 3;
+  string lock_name = 4;
+}
+
+message LocksCounter {
+  NamespaceTimestampedId namespace_timestamped_id = 1;
+  int64 number_of_locks = 2;
+}
+
+message LocksGCRecord {
+  uint64 id = 1;
+  NamespaceTimestampedId namespace_timestamped_id = 2;
+}
+
+message LocksExpirationGlobalIndexRecord {
+  LockId lock_id = 1;
+  int64 expires_at = 2;
+}
