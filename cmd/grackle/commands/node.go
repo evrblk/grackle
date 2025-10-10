@@ -20,7 +20,7 @@ import (
 	"github.com/evrblk/yellowstone-common/metrics"
 )
 
-var nodeCmdConfig struct {
+var nodeCmdCfg struct {
 	monsteraPort       int
 	prometheusPort     int
 	dataDir            string
@@ -35,17 +35,17 @@ var nodeCmd = &cobra.Command{
 		log.Println("Initializing Grackle Node server...")
 
 		// Metrics
-		metricsSrv := metrics.NewMetricsServer(nodeCmdConfig.prometheusPort)
+		metricsSrv := metrics.NewMetricsServer(nodeCmdCfg.prometheusPort)
 		metricsSrv.Start()
 
 		// Load monstera cluster config
-		clusterConfig, err := monstera.LoadConfigFromFile(nodeCmdConfig.monsteraConfigPath)
+		clusterConfig, err := monstera.LoadConfigFromFile(nodeCmdCfg.monsteraConfigPath)
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		// Create shared Badger store for application cores
-		dataStore := monstera.NewBadgerStore(filepath.Join(nodeCmdConfig.dataDir, "data"))
+		dataStore := monstera.NewBadgerStore(filepath.Join(nodeCmdCfg.dataDir, "data"))
 
 		// TODO set timeouts
 		monsteraNodeConfig := monstera.DefaultMonsteraNodeConfig
@@ -85,7 +85,7 @@ var nodeCmd = &cobra.Command{
 			},
 		}
 
-		monsteraNode, err := monstera.NewNode(nodeCmdConfig.dataDir, nodeCmdConfig.nodeId, clusterConfig, applicationDescriptors, monsteraNodeConfig)
+		monsteraNode, err := monstera.NewNode(nodeCmdCfg.dataDir, nodeCmdCfg.nodeId, clusterConfig, applicationDescriptors, monsteraNodeConfig)
 		if err != nil {
 			log.Fatalf("failed to create Monstera node: %v", err)
 		}
@@ -93,13 +93,13 @@ var nodeCmd = &cobra.Command{
 		// TODO
 		// Middleware
 		//monitoringMiddleware := yellowstone.NewMonitoringMiddleware()
-		//monsteraMetricsMiddleware := yellowstone.NewMonsteraMetricsMiddleware(nodeCmdConfig.nodeId)
+		//monsteraMetricsMiddleware := yellowstone.NewMonsteraMetricsMiddleware(nodeCmdCfg.nodeId)
 
 		// Starting Monstera node
 		monsteraNode.Start()
 
 		// Starting Monstera gRPC server
-		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", nodeCmdConfig.monsteraPort))
+		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", nodeCmdCfg.monsteraPort))
 		if err != nil {
 			log.Fatalf("failed to listen: %v", err)
 		}
@@ -109,7 +109,7 @@ var nodeCmd = &cobra.Command{
 			prometheus.GaugeOpts{
 				Name:        "monstera_node_ready",
 				Help:        "Monstera node is ready",
-				ConstLabels: prometheus.Labels{"node_id": nodeCmdConfig.nodeId},
+				ConstLabels: prometheus.Labels{"node_id": nodeCmdCfg.nodeId},
 			},
 			func() float64 {
 				if monsteraNode.NodeState() == monstera.READY {
@@ -175,27 +175,27 @@ var nodeCmd = &cobra.Command{
 func init() {
 	runCmd.AddCommand(nodeCmd)
 
-	nodeCmd.PersistentFlags().IntVarP(&nodeCmdConfig.monsteraPort, "monstera-port", "", 0, "Monstera server port")
+	nodeCmd.PersistentFlags().IntVarP(&nodeCmdCfg.monsteraPort, "monstera-port", "", 0, "Monstera server port")
 	err := nodeCmd.MarkPersistentFlagRequired("monstera-port")
 	if err != nil {
 		panic(err)
 	}
 
-	nodeCmd.PersistentFlags().IntVarP(&nodeCmdConfig.prometheusPort, "prometheus-port", "", 2112, "Prometheus metrics port")
+	nodeCmd.PersistentFlags().IntVarP(&nodeCmdCfg.prometheusPort, "prometheus-port", "", 2112, "Prometheus metrics port")
 
-	nodeCmd.PersistentFlags().StringVarP(&nodeCmdConfig.monsteraConfigPath, "monstera-config", "", "", "Monstera cluster config path")
+	nodeCmd.PersistentFlags().StringVarP(&nodeCmdCfg.monsteraConfigPath, "monstera-config", "", "", "Monstera cluster config path")
 	err = nodeCmd.MarkPersistentFlagRequired("monstera-config")
 	if err != nil {
 		panic(err)
 	}
 
-	nodeCmd.PersistentFlags().StringVarP(&nodeCmdConfig.dataDir, "data-dir", "", "", "Base directory for data")
+	nodeCmd.PersistentFlags().StringVarP(&nodeCmdCfg.dataDir, "data-dir", "", "", "Base directory for data")
 	err = nodeCmd.MarkPersistentFlagRequired("data-dir")
 	if err != nil {
 		panic(err)
 	}
 
-	nodeCmd.PersistentFlags().StringVarP(&nodeCmdConfig.nodeId, "node-id", "", "", "Monstera node ID")
+	nodeCmd.PersistentFlags().StringVarP(&nodeCmdCfg.nodeId, "node-id", "", "", "Monstera node ID")
 	err = nodeCmd.MarkPersistentFlagRequired("node-id")
 	if err != nil {
 		panic(err)

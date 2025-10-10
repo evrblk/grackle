@@ -15,7 +15,7 @@ import (
 	"github.com/evrblk/yellowstone-common/metrics"
 )
 
-var workerCmdConfig struct {
+var workerCmdCfg struct {
 	prometheusPort     int
 	monsteraConfigPath string
 }
@@ -27,11 +27,11 @@ var workerCmd = &cobra.Command{
 		log.Println("Initializing Grackle Worker...")
 
 		// Metrics
-		metricsSrv := metrics.NewMetricsServer(workerCmdConfig.prometheusPort)
+		metricsSrv := metrics.NewMetricsServer(workerCmdCfg.prometheusPort)
 		metricsSrv.Start()
 
 		// Monstera cluster config
-		clusterConfig, err := monstera.LoadConfigFromFile(workerCmdConfig.monsteraConfigPath)
+		clusterConfig, err := monstera.LoadConfigFromFile(workerCmdCfg.monsteraConfigPath)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -82,9 +82,9 @@ var workerCmd = &cobra.Command{
 func init() {
 	runCmd.AddCommand(workerCmd)
 
-	workerCmd.PersistentFlags().IntVarP(&workerCmdConfig.prometheusPort, "prometheus-port", "", 2112, "Prometheus metrics port")
+	workerCmd.PersistentFlags().IntVarP(&workerCmdCfg.prometheusPort, "prometheus-port", "", 2112, "Prometheus metrics port")
 
-	workerCmd.PersistentFlags().StringVarP(&workerCmdConfig.monsteraConfigPath, "monstera-config", "", "", "Monstera cluster config path")
+	workerCmd.PersistentFlags().StringVarP(&workerCmdCfg.monsteraConfigPath, "monstera-config", "", "", "Monstera cluster config path")
 	err := workerCmd.MarkPersistentFlagRequired("monstera-config")
 	if err != nil {
 		panic(err)

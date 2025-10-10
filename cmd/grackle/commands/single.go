@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var singleCmdConfig struct {
+var singleCmdCfg struct {
 	prometheusPort     int
 	monsteraConfigPath string
 }
@@ -20,9 +20,9 @@ var singleCmd = &cobra.Command{
 func init() {
 	runCmd.AddCommand(singleCmd)
 
-	singleCmd.PersistentFlags().IntVarP(&singleCmdConfig.prometheusPort, "prometheus-port", "", 2112, "Prometheus metrics port")
+	singleCmd.PersistentFlags().IntVarP(&singleCmdCfg.prometheusPort, "prometheus-port", "", 2112, "Prometheus metrics port")
 
-	singleCmd.PersistentFlags().StringVarP(&singleCmdConfig.monsteraConfigPath, "monstera-config", "", "", "Monstera cluster config path")
+	singleCmd.PersistentFlags().StringVarP(&singleCmdCfg.monsteraConfigPath, "monstera-config", "", "", "Monstera cluster config path")
 	err := singleCmd.MarkPersistentFlagRequired("monstera-config")
 	if err != nil {
 		panic(err)

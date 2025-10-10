@@ -9,12 +9,23 @@ Everblack Grackle provides distributed synchronisation primitives:
 * semaphores
 * wait groups
 
-All holds have a set expiration time. Process crash will not cause a dangling lock. Long-running processes can extend 
-the hold. All operations are atomic and safe to retry.
+Grackle state is durable (on disk). All holds have a set expiration time. Process crash will not cause a dangling lock. 
+Long-running processes can extend the hold. All operations are atomic and safe to retry.
 
 Go to [official documentation](https://everblack.dev/docs/grackle) to learn more.
 
 ## Running
+
+Build Grackle from sources:
+
+```shell
+make build
+```
+
+
+```shell
+go run ./cmd/grackle
+```
 
 Grackle can operate in a cluster mode (with replication and sharding):
 
@@ -22,18 +33,26 @@ Grackle can operate in a cluster mode (with replication and sharding):
 * `grackle run node`
 * `grackle run worker`
 
-Alternatively it can run in a single-binary non-clustered mode (full state on disk, no replication, no sharding):
+Alternatively it can run in a single-node non-clustered mode (full state on disk, no replication, no sharding):
 
 * `grackle run single`
 
-## Building
+Running in cluster mode requires Monstera cluster config file. To generate a simple config for 3 nodes run:
 
-Grackle is powered by [Monstera](https://github.com/evrblk/monstera) framework. Building steps include Protobuf 
-generation, Monstera code generation, and Go build. To run all of that at once:
+```shell
+go run ./cmd/grackle make-monstera-cluster \
+  --node=localhost:7001 \
+  --node=localhost:7002 \
+  --node=localhost:7003 \
+  --output=./cluster_config.json
+```
 
-```
-make build
-```
+## Using
+
+Use official Everblack SDKs:
+
+* https://github.com/evrblk/evrblk-go for Go
+* https://github.com/evrblk/evrblk-ruby for Ruby
 
 ## License
 

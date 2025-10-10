@@ -19,7 +19,7 @@ import (
 	"github.com/evrblk/yellowstone-common/metrics"
 )
 
-var gatewayCmdConfig struct {
+var gatewayCmdCfg struct {
 	port               int
 	prometheusPort     int
 	monsteraConfigPath string
@@ -31,17 +31,17 @@ var gatewayCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Println("Initializing Grackle API Gateway Server...")
 
-		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", gatewayCmdConfig.port))
+		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", gatewayCmdCfg.port))
 		if err != nil {
 			log.Fatalf("failed to listen: %v", err)
 		}
 
 		// Metrics
-		metricsSrv := metrics.NewMetricsServer(gatewayCmdConfig.prometheusPort)
+		metricsSrv := metrics.NewMetricsServer(gatewayCmdCfg.prometheusPort)
 		metricsSrv.Start()
 
 		// Load monstera cluster config
-		clusterConfig, err := monstera.LoadConfigFromFile(gatewayCmdConfig.monsteraConfigPath)
+		clusterConfig, err := monstera.LoadConfigFromFile(gatewayCmdCfg.monsteraConfigPath)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -95,15 +95,15 @@ var gatewayCmd = &cobra.Command{
 func init() {
 	runCmd.AddCommand(gatewayCmd)
 
-	gatewayCmd.PersistentFlags().IntVarP(&gatewayCmdConfig.port, "port", "", 0, "Server port")
+	gatewayCmd.PersistentFlags().IntVarP(&gatewayCmdCfg.port, "port", "", 0, "Server port")
 	err := gatewayCmd.MarkPersistentFlagRequired("port")
 	if err != nil {
 		panic(err)
 	}
 
-	gatewayCmd.PersistentFlags().IntVarP(&gatewayCmdConfig.prometheusPort, "prometheus-port", "", 2112, "Prometheus metrics port")
+	gatewayCmd.PersistentFlags().IntVarP(&gatewayCmdCfg.prometheusPort, "prometheus-port", "", 2112, "Prometheus metrics port")
 
-	gatewayCmd.PersistentFlags().StringVarP(&gatewayCmdConfig.monsteraConfigPath, "monstera-config", "", "", "Monstera cluster config path")
+	gatewayCmd.PersistentFlags().StringVarP(&gatewayCmdCfg.monsteraConfigPath, "monstera-config", "", "", "Monstera cluster config path")
 	err = gatewayCmd.MarkPersistentFlagRequired("monstera-config")
 	if err != nil {
 		panic(err)
