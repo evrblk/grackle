@@ -45,11 +45,11 @@ var workerCmd = &cobra.Command{
 		grackleCoreApiClient := grackle.NewGrackleCoreApiMonsteraStub(monsteraClient, &grackle.GrackleShardKeyCalculator{})
 
 		// Grackle workers
-		grackeLocksGarbageCollectionWorker := grackle.NewGrackleLocksGCWorker(grackleCoreApiClient, monsteraClient)
+		grackeLocksGarbageCollectionWorker := grackle.NewGrackleLocksGCWorker(grackleCoreApiClient)
 		grackeLocksGarbageCollectionWorker.Start()
-		grackeSemaphoresGarbageCollectionWorker := grackle.NewGrackleSemaphoresGCWorker(grackleCoreApiClient, monsteraClient)
+		grackeSemaphoresGarbageCollectionWorker := grackle.NewGrackleSemaphoresGCWorker(grackleCoreApiClient)
 		grackeSemaphoresGarbageCollectionWorker.Start()
-		grackeWaitGroupsGarbageCollectionWorker := grackle.NewGrackleWaitGroupsGCWorker(grackleCoreApiClient, monsteraClient)
+		grackeWaitGroupsGarbageCollectionWorker := grackle.NewGrackleWaitGroupsGCWorker(grackleCoreApiClient)
 		grackeWaitGroupsGarbageCollectionWorker.Start()
 
 		wg := sync.WaitGroup{}

@@ -21,11 +21,10 @@ import (
 )
 
 var nodeCmdCfg struct {
-	monsteraPort       int
 	prometheusPort     int
 	dataDir            string
 	monsteraConfigPath string
-	nodeId             string
+	nodeAddress        string
 }
 
 var nodeCmd = &cobra.Command{
@@ -56,7 +55,7 @@ var nodeCmd = &cobra.Command{
 				CoreFactoryFunc: func(shard *monstera.Shard, replica *monstera.Replica) monstera.ApplicationCore {
 					return grackle.NewGrackleLocksCoreAdapter(
 						shard.Id, replica.Id,
-						grackle.NewLocksCore(dataStore, shard.GlobalIndexPrefix, shard.LowerBound, shard.UpperBound))
+						grackle.NewLocksCore(dataStore, monstera.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
 				},
 			},
 			"GrackleNamespaces": {
@@ -64,7 +63,7 @@ var nodeCmd = &cobra.Command{
 				CoreFactoryFunc: func(shard *monstera.Shard, replica *monstera.Replica) monstera.ApplicationCore {
 					return grackle.NewGrackleNamespacesCoreAdapter(
 						shard.Id, replica.Id,
-						grackle.NewNamespacesCore(dataStore, shard.GlobalIndexPrefix, shard.LowerBound, shard.UpperBound))
+						grackle.NewNamespacesCore(dataStore, monstera.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
 				},
 			},
 			"GrackleWaitGroups": {
@@ -72,7 +71,7 @@ var nodeCmd = &cobra.Command{
 				CoreFactoryFunc: func(shard *monstera.Shard, replica *monstera.Replica) monstera.ApplicationCore {
 					return grackle.NewGrackleWaitGroupsCoreAdapter(
 						shard.Id, replica.Id,
-						grackle.NewWaitGroupsCore(dataStore, shard.GlobalIndexPrefix, shard.LowerBound, shard.UpperBound))
+						grackle.NewWaitGroupsCore(dataStore, monstera.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
 				},
 			},
 			"GrackleSemaphores": {
@@ -80,12 +79,12 @@ var nodeCmd = &cobra.Command{
 				CoreFactoryFunc: func(shard *monstera.Shard, replica *monstera.Replica) monstera.ApplicationCore {
 					return grackle.NewGrackleSemaphoresCoreAdapter(
 						shard.Id, replica.Id,
-						grackle.NewSemaphoresCore(dataStore, shard.GlobalIndexPrefix, shard.LowerBound, shard.UpperBound))
+						grackle.NewSemaphoresCore(dataStore, monstera.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
 				},
 			},
 		}
 
-		monsteraNode, err := monstera.NewNode(nodeCmdCfg.dataDir, nodeCmdCfg.nodeId, clusterConfig, applicationDescriptors, monsteraNodeConfig)
+		monsteraNode, err := monstera.NewNode(nodeCmdCfg.dataDir, nodeCmdCfg.nodeAddress, clusterConfig, applicationDescriptors, monsteraNodeConfig)
 		if err != nil {
 			log.Fatalf("failed to create Monstera node: %v", err)
 		}
@@ -99,7 +98,12 @@ var nodeCmd = &cobra.Command{
 		monsteraNode.Start()
 
 		// Starting Monstera gRPC server
-		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", nodeCmdCfg.monsteraPort))
+		_, port, err := net.SplitHostPort(nodeCmdCfg.nodeAddress)
+		if err != nil {
+			log.Fatalf("failed to parse node address: %v", err)
+		}
+
+		lis, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
 		if err != nil {
 			log.Fatalf("failed to listen: %v", err)
 		}
@@ -109,7 +113,7 @@ var nodeCmd = &cobra.Command{
 			prometheus.GaugeOpts{
 				Name:        "monstera_node_ready",
 				Help:        "Monstera node is ready",
-				ConstLabels: prometheus.Labels{"node_id": nodeCmdCfg.nodeId},
+				ConstLabels: prometheus.Labels{"node": nodeCmdCfg.nodeAddress},
 			},
 			func() float64 {
 				if monsteraNode.NodeState() == monstera.READY {
@@ -175,16 +179,10 @@ var nodeCmd = &cobra.Command{
 func init() {
 	runCmd.AddCommand(nodeCmd)
 
-	nodeCmd.PersistentFlags().IntVarP(&nodeCmdCfg.monsteraPort, "monstera-port", "", 0, "Monstera server port")
-	err := nodeCmd.MarkPersistentFlagRequired("monstera-port")
-	if err != nil {
-		panic(err)
-	}
-
 	nodeCmd.PersistentFlags().IntVarP(&nodeCmdCfg.prometheusPort, "prometheus-port", "", 2112, "Prometheus metrics port")
 
 	nodeCmd.PersistentFlags().StringVarP(&nodeCmdCfg.monsteraConfigPath, "monstera-config", "", "", "Monstera cluster config path")
-	err = nodeCmd.MarkPersistentFlagRequired("monstera-config")
+	err := nodeCmd.MarkPersistentFlagRequired("monstera-config")
 	if err != nil {
 		panic(err)
 	}
@@ -195,8 +193,8 @@ func init() {
 		panic(err)
 	}
 
-	nodeCmd.PersistentFlags().StringVarP(&nodeCmdCfg.nodeId, "node-id", "", "", "Monstera node ID")
-	err = nodeCmd.MarkPersistentFlagRequired("node-id")
+	nodeCmd.PersistentFlags().StringVarP(&nodeCmdCfg.nodeAddress, "node-address", "", "", "Monstera node address (host:port)")
+	err = nodeCmd.MarkPersistentFlagRequired("node-address")
 	if err != nil {
 		panic(err)
 	}

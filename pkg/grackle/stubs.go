@@ -3,7 +3,10 @@
 package grackle
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
+	"fmt"
 	corepb "github.com/evrblk/grackle/pkg/corepb"
 	monstera "github.com/evrblk/monstera"
 	monsterax "github.com/evrblk/monstera/x"
@@ -856,6 +859,18 @@ func (s *GrackleCoreApiMonsteraStub) WaitGroupsDeleteNamespace(ctx context.Conte
 	}
 }
 
+func (s *GrackleCoreApiMonsteraStub) ListShards(applicationName string) ([]string, error) {
+	shards, err := s.monsteraClient.ListShards(applicationName)
+	if err != nil {
+		return nil, err
+	}
+	shardIds := make([]string, len(shards))
+	for i := range shards {
+		shardIds[i] = shards[i].Id
+	}
+	return shardIds, nil
+}
+
 func NewGrackleCoreApiMonsteraStub(monsteraClient *monstera.MonsteraClient, shardKeyCalculator GrackleMonsteraShardKeyCalculator) *GrackleCoreApiMonsteraStub {
 	return &GrackleCoreApiMonsteraStub{monsteraClient: monsteraClient, shardKeyCalculator: shardKeyCalculator}
 }
@@ -868,220 +883,544 @@ func nilifyIfEmpty(err *monsterax.Error) error {
 	}
 }
 
-type GrackleCoreApiStandaloneStub struct {
-	grackleLocksCore      GrackleLocksCoreApi
-	grackleSemaphoresCore GrackleSemaphoresCoreApi
-	grackleNamespacesCore GrackleNamespacesCoreApi
-	grackleWaitGroupsCore GrackleWaitGroupsCoreApi
-
-	mu sync.RWMutex
+type grackleLocksCoreNonclusteredAdapter struct {
+	core       GrackleLocksCoreApi
+	mu         sync.RWMutex
+	id         string
+	lowerBound []byte
+	upperBound []byte
 }
 
-var _ GrackleCoreApi = &GrackleCoreApiStandaloneStub{}
-
-func (s *GrackleCoreApiStandaloneStub) ListLocks(ctx context.Context, request *corepb.ListLocksRequest) (*corepb.ListLocksResponse, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	return s.grackleLocksCore.ListLocks(request)
+type grackleSemaphoresCoreNonclusteredAdapter struct {
+	core       GrackleSemaphoresCoreApi
+	mu         sync.RWMutex
+	id         string
+	lowerBound []byte
+	upperBound []byte
 }
 
-func (s *GrackleCoreApiStandaloneStub) AcquireLock(ctx context.Context, request *corepb.AcquireLockRequest) (*corepb.AcquireLockResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	return s.grackleLocksCore.AcquireLock(request)
+type grackleNamespacesCoreNonclusteredAdapter struct {
+	core       GrackleNamespacesCoreApi
+	mu         sync.RWMutex
+	id         string
+	lowerBound []byte
+	upperBound []byte
 }
 
-func (s *GrackleCoreApiStandaloneStub) ReleaseLock(ctx context.Context, request *corepb.ReleaseLockRequest) (*corepb.ReleaseLockResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	return s.grackleLocksCore.ReleaseLock(request)
+type grackleWaitGroupsCoreNonclusteredAdapter struct {
+	core       GrackleWaitGroupsCoreApi
+	mu         sync.RWMutex
+	id         string
+	lowerBound []byte
+	upperBound []byte
 }
 
-func (s *GrackleCoreApiStandaloneStub) DeleteLock(ctx context.Context, request *corepb.DeleteLockRequest) (*corepb.DeleteLockResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+type GrackleNonclusteredApplicationCoresFactory struct {
+	GrackleLocksCoreFactoryFunc      func(shardId string, lowerBound []byte, upperBound []byte) GrackleLocksCoreApi
+	GrackleSemaphoresCoreFactoryFunc func(shardId string, lowerBound []byte, upperBound []byte) GrackleSemaphoresCoreApi
+	GrackleNamespacesCoreFactoryFunc func(shardId string, lowerBound []byte, upperBound []byte) GrackleNamespacesCoreApi
+	GrackleWaitGroupsCoreFactoryFunc func(shardId string, lowerBound []byte, upperBound []byte) GrackleWaitGroupsCoreApi
+}
+type GrackleCoreApiNonclusteredStub struct {
+	grackleLocksCores      []*grackleLocksCoreNonclusteredAdapter
+	grackleSemaphoresCores []*grackleSemaphoresCoreNonclusteredAdapter
+	grackleNamespacesCores []*grackleNamespacesCoreNonclusteredAdapter
+	grackleWaitGroupsCores []*grackleWaitGroupsCoreNonclusteredAdapter
 
-	return s.grackleLocksCore.DeleteLock(request)
+	shardKeyCalculator GrackleMonsteraShardKeyCalculator
 }
 
-func (s *GrackleCoreApiStandaloneStub) GetLock(ctx context.Context, request *corepb.GetLockRequest) (*corepb.GetLockResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+var _ GrackleCoreApi = &GrackleCoreApiNonclusteredStub{}
 
-	return s.grackleLocksCore.GetLock(request)
+func (s *GrackleCoreApiNonclusteredStub) ListLocks(ctx context.Context, request *corepb.ListLocksRequest) (*corepb.ListLocksResponse, error) {
+	shardKey := s.shardKeyCalculator.ListLocksShardKey(request)
+
+	for _, adapter := range s.grackleLocksCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.RLock()
+			defer adapter.mu.RUnlock()
+
+			return adapter.core.ListLocks(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleCoreApiStandaloneStub) RunLocksGarbageCollection(ctx context.Context, request *corepb.RunLocksGarbageCollectionRequest, shardId string) (*corepb.RunLocksGarbageCollectionResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *GrackleCoreApiNonclusteredStub) AcquireLock(ctx context.Context, request *corepb.AcquireLockRequest) (*corepb.AcquireLockResponse, error) {
+	shardKey := s.shardKeyCalculator.AcquireLockShardKey(request)
 
-	return s.grackleLocksCore.RunLocksGarbageCollection(request)
+	for _, adapter := range s.grackleLocksCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.AcquireLock(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleCoreApiStandaloneStub) LocksDeleteNamespace(ctx context.Context, request *corepb.LocksDeleteNamespaceRequest) (*corepb.LocksDeleteNamespaceResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *GrackleCoreApiNonclusteredStub) ReleaseLock(ctx context.Context, request *corepb.ReleaseLockRequest) (*corepb.ReleaseLockResponse, error) {
+	shardKey := s.shardKeyCalculator.ReleaseLockShardKey(request)
 
-	return s.grackleLocksCore.LocksDeleteNamespace(request)
+	for _, adapter := range s.grackleLocksCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.ReleaseLock(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleCoreApiStandaloneStub) GetSemaphore(ctx context.Context, request *corepb.GetSemaphoreRequest) (*corepb.GetSemaphoreResponse, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+func (s *GrackleCoreApiNonclusteredStub) DeleteLock(ctx context.Context, request *corepb.DeleteLockRequest) (*corepb.DeleteLockResponse, error) {
+	shardKey := s.shardKeyCalculator.DeleteLockShardKey(request)
 
-	return s.grackleSemaphoresCore.GetSemaphore(request)
+	for _, adapter := range s.grackleLocksCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.DeleteLock(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleCoreApiStandaloneStub) ListSemaphores(ctx context.Context, request *corepb.ListSemaphoresRequest) (*corepb.ListSemaphoresResponse, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+func (s *GrackleCoreApiNonclusteredStub) GetLock(ctx context.Context, request *corepb.GetLockRequest) (*corepb.GetLockResponse, error) {
+	shardKey := s.shardKeyCalculator.GetLockShardKey(request)
 
-	return s.grackleSemaphoresCore.ListSemaphores(request)
+	for _, adapter := range s.grackleLocksCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.GetLock(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleCoreApiStandaloneStub) AcquireSemaphore(ctx context.Context, request *corepb.AcquireSemaphoreRequest) (*corepb.AcquireSemaphoreResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *GrackleCoreApiNonclusteredStub) RunLocksGarbageCollection(ctx context.Context, request *corepb.RunLocksGarbageCollectionRequest, shardId string) (*corepb.RunLocksGarbageCollectionResponse, error) {
+	for _, adapter := range s.grackleLocksCores {
+		if adapter.id == shardId {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
 
-	return s.grackleSemaphoresCore.AcquireSemaphore(request)
+			return adapter.core.RunLocksGarbageCollection(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardId: %s", shardId)
 }
 
-func (s *GrackleCoreApiStandaloneStub) ReleaseSemaphore(ctx context.Context, request *corepb.ReleaseSemaphoreRequest) (*corepb.ReleaseSemaphoreResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *GrackleCoreApiNonclusteredStub) LocksDeleteNamespace(ctx context.Context, request *corepb.LocksDeleteNamespaceRequest) (*corepb.LocksDeleteNamespaceResponse, error) {
+	shardKey := s.shardKeyCalculator.LocksDeleteNamespaceShardKey(request)
 
-	return s.grackleSemaphoresCore.ReleaseSemaphore(request)
+	for _, adapter := range s.grackleLocksCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.LocksDeleteNamespace(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleCoreApiStandaloneStub) CreateSemaphore(ctx context.Context, request *corepb.CreateSemaphoreRequest) (*corepb.CreateSemaphoreResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *GrackleCoreApiNonclusteredStub) GetSemaphore(ctx context.Context, request *corepb.GetSemaphoreRequest) (*corepb.GetSemaphoreResponse, error) {
+	shardKey := s.shardKeyCalculator.GetSemaphoreShardKey(request)
 
-	return s.grackleSemaphoresCore.CreateSemaphore(request)
+	for _, adapter := range s.grackleSemaphoresCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.RLock()
+			defer adapter.mu.RUnlock()
+
+			return adapter.core.GetSemaphore(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleCoreApiStandaloneStub) UpdateSemaphore(ctx context.Context, request *corepb.UpdateSemaphoreRequest) (*corepb.UpdateSemaphoreResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *GrackleCoreApiNonclusteredStub) ListSemaphores(ctx context.Context, request *corepb.ListSemaphoresRequest) (*corepb.ListSemaphoresResponse, error) {
+	shardKey := s.shardKeyCalculator.ListSemaphoresShardKey(request)
 
-	return s.grackleSemaphoresCore.UpdateSemaphore(request)
+	for _, adapter := range s.grackleSemaphoresCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.RLock()
+			defer adapter.mu.RUnlock()
+
+			return adapter.core.ListSemaphores(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleCoreApiStandaloneStub) DeleteSemaphore(ctx context.Context, request *corepb.DeleteSemaphoreRequest) (*corepb.DeleteSemaphoreResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *GrackleCoreApiNonclusteredStub) AcquireSemaphore(ctx context.Context, request *corepb.AcquireSemaphoreRequest) (*corepb.AcquireSemaphoreResponse, error) {
+	shardKey := s.shardKeyCalculator.AcquireSemaphoreShardKey(request)
 
-	return s.grackleSemaphoresCore.DeleteSemaphore(request)
+	for _, adapter := range s.grackleSemaphoresCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.AcquireSemaphore(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleCoreApiStandaloneStub) RunSemaphoresGarbageCollection(ctx context.Context, request *corepb.RunSemaphoresGarbageCollectionRequest, shardId string) (*corepb.RunSemaphoresGarbageCollectionResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *GrackleCoreApiNonclusteredStub) ReleaseSemaphore(ctx context.Context, request *corepb.ReleaseSemaphoreRequest) (*corepb.ReleaseSemaphoreResponse, error) {
+	shardKey := s.shardKeyCalculator.ReleaseSemaphoreShardKey(request)
 
-	return s.grackleSemaphoresCore.RunSemaphoresGarbageCollection(request)
+	for _, adapter := range s.grackleSemaphoresCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.ReleaseSemaphore(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleCoreApiStandaloneStub) SemaphoresDeleteNamespace(ctx context.Context, request *corepb.SemaphoresDeleteNamespaceRequest) (*corepb.SemaphoresDeleteNamespaceResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *GrackleCoreApiNonclusteredStub) CreateSemaphore(ctx context.Context, request *corepb.CreateSemaphoreRequest) (*corepb.CreateSemaphoreResponse, error) {
+	shardKey := s.shardKeyCalculator.CreateSemaphoreShardKey(request)
 
-	return s.grackleSemaphoresCore.SemaphoresDeleteNamespace(request)
+	for _, adapter := range s.grackleSemaphoresCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.CreateSemaphore(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleCoreApiStandaloneStub) GetNamespace(ctx context.Context, request *corepb.GetNamespaceRequest) (*corepb.GetNamespaceResponse, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+func (s *GrackleCoreApiNonclusteredStub) UpdateSemaphore(ctx context.Context, request *corepb.UpdateSemaphoreRequest) (*corepb.UpdateSemaphoreResponse, error) {
+	shardKey := s.shardKeyCalculator.UpdateSemaphoreShardKey(request)
 
-	return s.grackleNamespacesCore.GetNamespace(request)
+	for _, adapter := range s.grackleSemaphoresCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.UpdateSemaphore(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleCoreApiStandaloneStub) ListNamespaces(ctx context.Context, request *corepb.ListNamespacesRequest) (*corepb.ListNamespacesResponse, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+func (s *GrackleCoreApiNonclusteredStub) DeleteSemaphore(ctx context.Context, request *corepb.DeleteSemaphoreRequest) (*corepb.DeleteSemaphoreResponse, error) {
+	shardKey := s.shardKeyCalculator.DeleteSemaphoreShardKey(request)
 
-	return s.grackleNamespacesCore.ListNamespaces(request)
+	for _, adapter := range s.grackleSemaphoresCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.DeleteSemaphore(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleCoreApiStandaloneStub) CreateNamespace(ctx context.Context, request *corepb.CreateNamespaceRequest) (*corepb.CreateNamespaceResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *GrackleCoreApiNonclusteredStub) RunSemaphoresGarbageCollection(ctx context.Context, request *corepb.RunSemaphoresGarbageCollectionRequest, shardId string) (*corepb.RunSemaphoresGarbageCollectionResponse, error) {
+	for _, adapter := range s.grackleSemaphoresCores {
+		if adapter.id == shardId {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
 
-	return s.grackleNamespacesCore.CreateNamespace(request)
+			return adapter.core.RunSemaphoresGarbageCollection(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardId: %s", shardId)
 }
 
-func (s *GrackleCoreApiStandaloneStub) UpdateNamespace(ctx context.Context, request *corepb.UpdateNamespaceRequest) (*corepb.UpdateNamespaceResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *GrackleCoreApiNonclusteredStub) SemaphoresDeleteNamespace(ctx context.Context, request *corepb.SemaphoresDeleteNamespaceRequest) (*corepb.SemaphoresDeleteNamespaceResponse, error) {
+	shardKey := s.shardKeyCalculator.SemaphoresDeleteNamespaceShardKey(request)
 
-	return s.grackleNamespacesCore.UpdateNamespace(request)
+	for _, adapter := range s.grackleSemaphoresCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.SemaphoresDeleteNamespace(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleCoreApiStandaloneStub) DeleteNamespace(ctx context.Context, request *corepb.DeleteNamespaceRequest) (*corepb.DeleteNamespaceResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *GrackleCoreApiNonclusteredStub) GetNamespace(ctx context.Context, request *corepb.GetNamespaceRequest) (*corepb.GetNamespaceResponse, error) {
+	shardKey := s.shardKeyCalculator.GetNamespaceShardKey(request)
 
-	return s.grackleNamespacesCore.DeleteNamespace(request)
+	for _, adapter := range s.grackleNamespacesCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.RLock()
+			defer adapter.mu.RUnlock()
+
+			return adapter.core.GetNamespace(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleCoreApiStandaloneStub) GetWaitGroup(ctx context.Context, request *corepb.GetWaitGroupRequest) (*corepb.GetWaitGroupResponse, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+func (s *GrackleCoreApiNonclusteredStub) ListNamespaces(ctx context.Context, request *corepb.ListNamespacesRequest) (*corepb.ListNamespacesResponse, error) {
+	shardKey := s.shardKeyCalculator.ListNamespacesShardKey(request)
 
-	return s.grackleWaitGroupsCore.GetWaitGroup(request)
+	for _, adapter := range s.grackleNamespacesCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.RLock()
+			defer adapter.mu.RUnlock()
+
+			return adapter.core.ListNamespaces(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleCoreApiStandaloneStub) ListWaitGroups(ctx context.Context, request *corepb.ListWaitGroupsRequest) (*corepb.ListWaitGroupsResponse, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+func (s *GrackleCoreApiNonclusteredStub) CreateNamespace(ctx context.Context, request *corepb.CreateNamespaceRequest) (*corepb.CreateNamespaceResponse, error) {
+	shardKey := s.shardKeyCalculator.CreateNamespaceShardKey(request)
 
-	return s.grackleWaitGroupsCore.ListWaitGroups(request)
+	for _, adapter := range s.grackleNamespacesCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.CreateNamespace(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleCoreApiStandaloneStub) AddJobsToWaitGroup(ctx context.Context, request *corepb.AddJobsToWaitGroupRequest) (*corepb.AddJobsToWaitGroupResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *GrackleCoreApiNonclusteredStub) UpdateNamespace(ctx context.Context, request *corepb.UpdateNamespaceRequest) (*corepb.UpdateNamespaceResponse, error) {
+	shardKey := s.shardKeyCalculator.UpdateNamespaceShardKey(request)
 
-	return s.grackleWaitGroupsCore.AddJobsToWaitGroup(request)
+	for _, adapter := range s.grackleNamespacesCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.UpdateNamespace(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleCoreApiStandaloneStub) CompleteJobsFromWaitGroup(ctx context.Context, request *corepb.CompleteJobsFromWaitGroupRequest) (*corepb.CompleteJobsFromWaitGroupResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *GrackleCoreApiNonclusteredStub) DeleteNamespace(ctx context.Context, request *corepb.DeleteNamespaceRequest) (*corepb.DeleteNamespaceResponse, error) {
+	shardKey := s.shardKeyCalculator.DeleteNamespaceShardKey(request)
 
-	return s.grackleWaitGroupsCore.CompleteJobsFromWaitGroup(request)
+	for _, adapter := range s.grackleNamespacesCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.DeleteNamespace(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleCoreApiStandaloneStub) CreateWaitGroup(ctx context.Context, request *corepb.CreateWaitGroupRequest) (*corepb.CreateWaitGroupResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *GrackleCoreApiNonclusteredStub) GetWaitGroup(ctx context.Context, request *corepb.GetWaitGroupRequest) (*corepb.GetWaitGroupResponse, error) {
+	shardKey := s.shardKeyCalculator.GetWaitGroupShardKey(request)
 
-	return s.grackleWaitGroupsCore.CreateWaitGroup(request)
+	for _, adapter := range s.grackleWaitGroupsCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.RLock()
+			defer adapter.mu.RUnlock()
+
+			return adapter.core.GetWaitGroup(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleCoreApiStandaloneStub) DeleteWaitGroup(ctx context.Context, request *corepb.DeleteWaitGroupRequest) (*corepb.DeleteWaitGroupResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *GrackleCoreApiNonclusteredStub) ListWaitGroups(ctx context.Context, request *corepb.ListWaitGroupsRequest) (*corepb.ListWaitGroupsResponse, error) {
+	shardKey := s.shardKeyCalculator.ListWaitGroupsShardKey(request)
 
-	return s.grackleWaitGroupsCore.DeleteWaitGroup(request)
+	for _, adapter := range s.grackleWaitGroupsCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.RLock()
+			defer adapter.mu.RUnlock()
+
+			return adapter.core.ListWaitGroups(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleCoreApiStandaloneStub) RunWaitGroupsGarbageCollection(ctx context.Context, request *corepb.RunWaitGroupsGarbageCollectionRequest, shardId string) (*corepb.RunWaitGroupsGarbageCollectionResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *GrackleCoreApiNonclusteredStub) AddJobsToWaitGroup(ctx context.Context, request *corepb.AddJobsToWaitGroupRequest) (*corepb.AddJobsToWaitGroupResponse, error) {
+	shardKey := s.shardKeyCalculator.AddJobsToWaitGroupShardKey(request)
 
-	return s.grackleWaitGroupsCore.RunWaitGroupsGarbageCollection(request)
+	for _, adapter := range s.grackleWaitGroupsCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.AddJobsToWaitGroup(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleCoreApiStandaloneStub) WaitGroupsDeleteNamespace(ctx context.Context, request *corepb.WaitGroupsDeleteNamespaceRequest) (*corepb.WaitGroupsDeleteNamespaceResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *GrackleCoreApiNonclusteredStub) CompleteJobsFromWaitGroup(ctx context.Context, request *corepb.CompleteJobsFromWaitGroupRequest) (*corepb.CompleteJobsFromWaitGroupResponse, error) {
+	shardKey := s.shardKeyCalculator.CompleteJobsFromWaitGroupShardKey(request)
 
-	return s.grackleWaitGroupsCore.WaitGroupsDeleteNamespace(request)
+	for _, adapter := range s.grackleWaitGroupsCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.CompleteJobsFromWaitGroup(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func NewGrackleCoreApiStandaloneStub(grackleLocksCore GrackleLocksCoreApi, grackleSemaphoresCore GrackleSemaphoresCoreApi, grackleNamespacesCore GrackleNamespacesCoreApi, grackleWaitGroupsCore GrackleWaitGroupsCoreApi) *GrackleCoreApiStandaloneStub {
-	return &GrackleCoreApiStandaloneStub{grackleLocksCore: grackleLocksCore, grackleSemaphoresCore: grackleSemaphoresCore, grackleNamespacesCore: grackleNamespacesCore, grackleWaitGroupsCore: grackleWaitGroupsCore}
+func (s *GrackleCoreApiNonclusteredStub) CreateWaitGroup(ctx context.Context, request *corepb.CreateWaitGroupRequest) (*corepb.CreateWaitGroupResponse, error) {
+	shardKey := s.shardKeyCalculator.CreateWaitGroupShardKey(request)
+
+	for _, adapter := range s.grackleWaitGroupsCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.CreateWaitGroup(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+}
+
+func (s *GrackleCoreApiNonclusteredStub) DeleteWaitGroup(ctx context.Context, request *corepb.DeleteWaitGroupRequest) (*corepb.DeleteWaitGroupResponse, error) {
+	shardKey := s.shardKeyCalculator.DeleteWaitGroupShardKey(request)
+
+	for _, adapter := range s.grackleWaitGroupsCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.DeleteWaitGroup(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+}
+
+func (s *GrackleCoreApiNonclusteredStub) RunWaitGroupsGarbageCollection(ctx context.Context, request *corepb.RunWaitGroupsGarbageCollectionRequest, shardId string) (*corepb.RunWaitGroupsGarbageCollectionResponse, error) {
+	for _, adapter := range s.grackleWaitGroupsCores {
+		if adapter.id == shardId {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.RunWaitGroupsGarbageCollection(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardId: %s", shardId)
+}
+
+func (s *GrackleCoreApiNonclusteredStub) WaitGroupsDeleteNamespace(ctx context.Context, request *corepb.WaitGroupsDeleteNamespaceRequest) (*corepb.WaitGroupsDeleteNamespaceResponse, error) {
+	shardKey := s.shardKeyCalculator.WaitGroupsDeleteNamespaceShardKey(request)
+
+	for _, adapter := range s.grackleWaitGroupsCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.WaitGroupsDeleteNamespace(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+}
+
+func (s *GrackleCoreApiNonclusteredStub) ListShards(applicationName string) ([]string, error) {
+	switch applicationName {
+	case "GrackleLocks":
+		shardIds := make([]string, len(s.grackleLocksCores))
+		for i := range s.grackleLocksCores {
+			shardIds[i] = s.grackleLocksCores[i].id
+		}
+		return shardIds, nil
+	case "GrackleSemaphores":
+		shardIds := make([]string, len(s.grackleSemaphoresCores))
+		for i := range s.grackleSemaphoresCores {
+			shardIds[i] = s.grackleSemaphoresCores[i].id
+		}
+		return shardIds, nil
+	case "GrackleNamespaces":
+		shardIds := make([]string, len(s.grackleNamespacesCores))
+		for i := range s.grackleNamespacesCores {
+			shardIds[i] = s.grackleNamespacesCores[i].id
+		}
+		return shardIds, nil
+	case "GrackleWaitGroups":
+		shardIds := make([]string, len(s.grackleWaitGroupsCores))
+		for i := range s.grackleWaitGroupsCores {
+			shardIds[i] = s.grackleWaitGroupsCores[i].id
+		}
+		return shardIds, nil
+	default:
+		return nil, fmt.Errorf("application not found: %s", applicationName)
+	}
+}
+
+func NewGrackleCoreApiNonclusteredStub(shardsPerApp int, coresFactory *GrackleNonclusteredApplicationCoresFactory, shardKeyCalculator GrackleMonsteraShardKeyCalculator) *GrackleCoreApiNonclusteredStub {
+	grackleLocksCores := make([]*grackleLocksCoreNonclusteredAdapter, shardsPerApp)
+	grackleSemaphoresCores := make([]*grackleSemaphoresCoreNonclusteredAdapter, shardsPerApp)
+	grackleNamespacesCores := make([]*grackleNamespacesCoreNonclusteredAdapter, shardsPerApp)
+	grackleWaitGroupsCores := make([]*grackleWaitGroupsCoreNonclusteredAdapter, shardsPerApp)
+
+	shardSize := monstera.KeyspacePerApplication / shardsPerApp
+	for i := 0; i < shardsPerApp; i++ {
+		lower := uint32(i * shardSize)
+		upper := uint32((i+1)*shardSize - 1)
+		lowerBound := make([]byte, 4)
+		upperBound := make([]byte, 4)
+		binary.BigEndian.PutUint32(lowerBound, lower)
+		binary.BigEndian.PutUint32(upperBound, upper)
+
+		sl, su := monstera.ShortenBounds(lowerBound, upperBound)
+
+		grackleLocksShardId := fmt.Sprintf("%s_%x_%x", "GrackleLocks", sl, su)
+		grackleLocksCores[i] = &grackleLocksCoreNonclusteredAdapter{core: coresFactory.GrackleLocksCoreFactoryFunc(grackleLocksShardId, lowerBound, upperBound), id: grackleLocksShardId, lowerBound: lowerBound, upperBound: upperBound}
+
+		grackleSemaphoresShardId := fmt.Sprintf("%s_%x_%x", "GrackleSemaphores", sl, su)
+		grackleSemaphoresCores[i] = &grackleSemaphoresCoreNonclusteredAdapter{core: coresFactory.GrackleSemaphoresCoreFactoryFunc(grackleSemaphoresShardId, lowerBound, upperBound), id: grackleSemaphoresShardId, lowerBound: lowerBound, upperBound: upperBound}
+
+		grackleNamespacesShardId := fmt.Sprintf("%s_%x_%x", "GrackleNamespaces", sl, su)
+		grackleNamespacesCores[i] = &grackleNamespacesCoreNonclusteredAdapter{core: coresFactory.GrackleNamespacesCoreFactoryFunc(grackleNamespacesShardId, lowerBound, upperBound), id: grackleNamespacesShardId, lowerBound: lowerBound, upperBound: upperBound}
+
+		grackleWaitGroupsShardId := fmt.Sprintf("%s_%x_%x", "GrackleWaitGroups", sl, su)
+		grackleWaitGroupsCores[i] = &grackleWaitGroupsCoreNonclusteredAdapter{core: coresFactory.GrackleWaitGroupsCoreFactoryFunc(grackleWaitGroupsShardId, lowerBound, upperBound), id: grackleWaitGroupsShardId, lowerBound: lowerBound, upperBound: upperBound}
+
+	}
+	return &GrackleCoreApiNonclusteredStub{grackleLocksCores: grackleLocksCores, grackleSemaphoresCores: grackleSemaphoresCores, grackleNamespacesCores: grackleNamespacesCores, grackleWaitGroupsCores: grackleWaitGroupsCores, shardKeyCalculator: shardKeyCalculator}
 }

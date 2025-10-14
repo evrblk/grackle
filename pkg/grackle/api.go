@@ -42,6 +42,8 @@ type GrackleCoreApi interface {
 	DeleteWaitGroup(ctx context.Context, request *corepb.DeleteWaitGroupRequest) (*corepb.DeleteWaitGroupResponse, error)
 	RunWaitGroupsGarbageCollection(ctx context.Context, request *corepb.RunWaitGroupsGarbageCollectionRequest, shardId string) (*corepb.RunWaitGroupsGarbageCollectionResponse, error)
 	WaitGroupsDeleteNamespace(ctx context.Context, request *corepb.WaitGroupsDeleteNamespaceRequest) (*corepb.WaitGroupsDeleteNamespaceResponse, error)
+
+	ListShards(applicationName string) ([]string, error)
 }
 
 var _ GrackleCoreApi = &UnimplementedGrackleCoreApi{}
@@ -161,6 +163,10 @@ func (a *UnimplementedGrackleCoreApi) RunWaitGroupsGarbageCollection(ctx context
 }
 
 func (a *UnimplementedGrackleCoreApi) WaitGroupsDeleteNamespace(ctx context.Context, request *corepb.WaitGroupsDeleteNamespaceRequest) (*corepb.WaitGroupsDeleteNamespaceResponse, error) {
+	panic("not implemented")
+}
+
+func (a *UnimplementedGrackleCoreApi) ListShards(applicationName string) ([]string, error) {
 	panic("not implemented")
 }
 

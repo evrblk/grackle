@@ -232,6 +232,10 @@ func ValidateAcquireLockRequest(request *gracklepb.AcquireLockRequest) error {
 		return err
 	}
 
+	if request.ExpiresAt <= 0 {
+		return invalid("AcquireLockRequest.ExpiresAt", "ExpiresAt must be greater than zero")
+	}
+
 	return nil
 }
 
@@ -334,6 +338,10 @@ func ValidateAcquireSemaphoreRequest(request *gracklepb.AcquireSemaphoreRequest)
 
 	if err := validateProcessId(request.ProcessId, "AcquireSemaphoreRequest.ProcessId"); err != nil {
 		return err
+	}
+
+	if request.ExpiresAt <= 0 {
+		return invalid("AcquireSemaphoreRequest.ExpiresAt", "ExpiresAt must be greater than zero")
 	}
 
 	return nil

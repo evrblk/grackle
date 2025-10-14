@@ -23,6 +23,7 @@ var gatewayCmdCfg struct {
 	port               int
 	prometheusPort     int
 	monsteraConfigPath string
+	authKeysPath       string
 }
 
 var gatewayCmd = &cobra.Command{
@@ -51,15 +52,13 @@ var gatewayCmd = &cobra.Command{
 		monsteraClient.Start()
 
 		// Middleware
-		//monitoringMiddleware := yellowstone.NewMonitoringMiddleware()
+		unaryInterceptors := make([]grpc.UnaryServerInterceptor, 0)
+		if gatewayCmdCfg.authKeysPath != "" {
+			unaryInterceptors = append(unaryInterceptors, grackle_preview.NewAuthenticationMiddleware(gatewayCmdCfg.authKeysPath).Unary)
+		}
 
 		grpcServer := grpc.NewServer(
-			grpc.ChainUnaryInterceptor(
-			//monitoringMiddleware.Unary,
-			//loggingMiddleware.Unary,
-			//authnMiddleware.Unary,
-			),
-			grpc.ChainStreamInterceptor(),
+			grpc.ChainUnaryInterceptor(unaryInterceptors...),
 		)
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -108,4 +107,6 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+
+	gatewayCmd.PersistentFlags().StringVarP(&gatewayCmdCfg.authKeysPath, "auth-keys-path", "", "", "Path to the directory with auth keys. No authn if empty.")
 }

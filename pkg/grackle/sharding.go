@@ -6,11 +6,11 @@ import (
 )
 
 func shardByAccount(accountId uint64) []byte {
-	return monstera.GetShardKey(monstera.ConcatBytes(accountId), 4)
+	return monstera.GetTruncatedHash(monstera.ConcatBytes(accountId), 4)
 }
 
 func shardByAccountAndNamespace(accountId uint64, namespaceName string) []byte {
-	return monstera.GetShardKey(monstera.ConcatBytes(accountId, namespaceName), 4)
+	return monstera.GetTruncatedHash(monstera.ConcatBytes(accountId, namespaceName), 4)
 }
 
 type GrackleShardKeyCalculator struct{}

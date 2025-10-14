@@ -9,7 +9,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/evrblk/grackle/pkg/corepb"
-	"github.com/evrblk/monstera"
 	monsterax "github.com/evrblk/monstera/x"
 	"github.com/evrblk/yellowstone-common/workers"
 )
@@ -60,17 +59,14 @@ func init() {
 }
 
 type GrackleLocksGCWorker struct {
-	coreApiClient  GrackleCoreApi
-	monsteraClient *monstera.MonsteraClient
-
-	worker *workers.IntervalWorker
+	coreApiClient GrackleCoreApi
+	worker        *workers.IntervalWorker
 }
 
-func NewGrackleLocksGCWorker(coreApiClient GrackleCoreApi, monsteraClient *monstera.MonsteraClient) *GrackleLocksGCWorker {
+func NewGrackleLocksGCWorker(coreApiClient GrackleCoreApi) *GrackleLocksGCWorker {
 	return &GrackleLocksGCWorker{
-		coreApiClient:  coreApiClient,
-		monsteraClient: monsteraClient,
-		worker:         workers.NewIntervalWorker(time.Duration(5) * time.Second),
+		coreApiClient: coreApiClient,
+		worker:        workers.NewIntervalWorker(time.Duration(5) * time.Second),
 	}
 }
 
@@ -83,7 +79,7 @@ func (w *GrackleLocksGCWorker) Stop() {
 }
 
 func (w *GrackleLocksGCWorker) handler() {
-	shards, err := w.monsteraClient.ListShards("GrackleLocks")
+	shards, err := w.coreApiClient.ListShards("GrackleLocks")
 	if err != nil {
 		log.Printf("ListShards(\"GrackleLocks\"): %v", err)
 		return // TODO
@@ -94,11 +90,11 @@ func (w *GrackleLocksGCWorker) handler() {
 	done := &sync.WaitGroup{}
 	done.Add(len(shards))
 
-	for _, s := range shards {
+	for _, shard := range shards {
 		go func(shardId string, now time.Time, done *sync.WaitGroup) {
 			w.runGarbageCollection(shardId, now)
 			done.Done()
-		}(s.Id, now, done)
+		}(shard, now, done)
 	}
 
 	done.Wait()
@@ -120,17 +116,14 @@ func (w *GrackleLocksGCWorker) runGarbageCollection(shardId string, now time.Tim
 }
 
 type GrackleSemaphoresGCWorker struct {
-	coreApiClient  GrackleCoreApi
-	monsteraClient *monstera.MonsteraClient
-
-	worker *workers.IntervalWorker
+	coreApiClient GrackleCoreApi
+	worker        *workers.IntervalWorker
 }
 
-func NewGrackleSemaphoresGCWorker(coreApiClient GrackleCoreApi, monsteraClient *monstera.MonsteraClient) *GrackleSemaphoresGCWorker {
+func NewGrackleSemaphoresGCWorker(coreApiClient GrackleCoreApi) *GrackleSemaphoresGCWorker {
 	return &GrackleSemaphoresGCWorker{
-		coreApiClient:  coreApiClient,
-		monsteraClient: monsteraClient,
-		worker:         workers.NewIntervalWorker(time.Duration(5) * time.Second),
+		coreApiClient: coreApiClient,
+		worker:        workers.NewIntervalWorker(time.Duration(5) * time.Second),
 	}
 }
 
@@ -143,7 +136,7 @@ func (w *GrackleSemaphoresGCWorker) Stop() {
 }
 
 func (w *GrackleSemaphoresGCWorker) handler() {
-	shards, err := w.monsteraClient.ListShards("GrackleSemaphores")
+	shards, err := w.coreApiClient.ListShards("GrackleSemaphores")
 	if err != nil {
 		log.Printf("ListShards(\"GrackleSemaphores\"): %v", err)
 		return // TODO
@@ -154,11 +147,11 @@ func (w *GrackleSemaphoresGCWorker) handler() {
 	done := &sync.WaitGroup{}
 	done.Add(len(shards))
 
-	for _, s := range shards {
+	for _, shard := range shards {
 		go func(shardId string, now time.Time, done *sync.WaitGroup) {
 			w.runGarbageCollection(shardId, now)
 			done.Done()
-		}(s.Id, now, done)
+		}(shard, now, done)
 	}
 
 	done.Wait()
@@ -180,17 +173,14 @@ func (w *GrackleSemaphoresGCWorker) runGarbageCollection(shardId string, now tim
 }
 
 type GrackleWaitGroupsGCWorker struct {
-	coreApiClient  GrackleCoreApi
-	monsteraClient *monstera.MonsteraClient
-
-	worker *workers.IntervalWorker
+	coreApiClient GrackleCoreApi
+	worker        *workers.IntervalWorker
 }
 
-func NewGrackleWaitGroupsGCWorker(coreApiClient GrackleCoreApi, monsteraClient *monstera.MonsteraClient) *GrackleWaitGroupsGCWorker {
+func NewGrackleWaitGroupsGCWorker(coreApiClient GrackleCoreApi) *GrackleWaitGroupsGCWorker {
 	return &GrackleWaitGroupsGCWorker{
-		coreApiClient:  coreApiClient,
-		monsteraClient: monsteraClient,
-		worker:         workers.NewIntervalWorker(time.Duration(5) * time.Second),
+		coreApiClient: coreApiClient,
+		worker:        workers.NewIntervalWorker(time.Duration(5) * time.Second),
 	}
 }
 
@@ -203,7 +193,7 @@ func (w *GrackleWaitGroupsGCWorker) Stop() {
 }
 
 func (w *GrackleWaitGroupsGCWorker) handler() {
-	shards, err := w.monsteraClient.ListShards("GrackleWaitGroups")
+	shards, err := w.coreApiClient.ListShards("GrackleWaitGroups")
 	if err != nil {
 		log.Printf("ListShards(\"GrackleWaitGroups\"): %v", err)
 		return // TODO
@@ -214,11 +204,11 @@ func (w *GrackleWaitGroupsGCWorker) handler() {
 	done := &sync.WaitGroup{}
 	done.Add(len(shards))
 
-	for _, s := range shards {
+	for _, shard := range shards {
 		go func(shardId string, now time.Time, done *sync.WaitGroup) {
 			w.runGarbageCollection(shardId, now)
 			done.Done()
-		}(s.Id, now, done)
+		}(shard, now, done)
 	}
 
 	done.Wait()
