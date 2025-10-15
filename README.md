@@ -9,8 +9,11 @@ Everblack Grackle provides distributed synchronisation primitives:
 * semaphores
 * wait groups
 
-Grackle state is durable (on disk). All holds have a set expiration time. Process crash will not cause a dangling lock. 
+Grackle state is durable. All holds have a set expiration time. Process crash will not cause a dangling lock. 
 Long-running processes can extend the hold. All operations are atomic and safe to retry.
+
+Grackle has no external dependencies (no databases, no kafka, no redis, no zookeeper, or whatever). It stores all its state 
+on disk.
 
 Go to [official documentation](https://everblack.dev/docs/grackle) to learn more.
 
