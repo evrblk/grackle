@@ -142,6 +142,21 @@ acquireLockResp, err := grackleClient.AcquireLock(context.Background(), &grackle
 })
 ```
 
+## Authentication
+
+By default, API calls are unauthenticated. To use request signing add `--auth-keys-path=` argument to 
+`./grackle run gateway` or `./grackle run nonclustered`. It should point to a directory with API keys where each file 
+name is an API key ID, and corresponding file content is an API secret key.
+
+Generate keys with `evrblk` [CLI tool](https://github.com/evrblk/evrblk-cli):
+
+```shell
+$ evrblk authn generate-alfa-key
+```
+
+Read [Authentication](https://everblack.dev/docs/api/authentication/) documentation to learm more about how it works 
+and how to generate keys.
+
 ## License
 
 Everblack Grackle is released under the [AGPL-3 License](https://opensource.org/license/agpl-v3).

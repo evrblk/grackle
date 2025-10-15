@@ -129,4 +129,6 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+
+	nonclusteredCmd.PersistentFlags().StringVarP(&nonclusteredCmdCfg.authKeysPath, "auth-keys-path", "", "", "Path to the directory with auth keys. No authn if empty.")
 }
