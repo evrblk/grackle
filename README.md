@@ -25,6 +25,9 @@ $ cd grackle
 
 # Build
 $ make build
+
+# Produce ./grackle executable
+$ make grackle
 ```
 
 ## Running
