@@ -7,7 +7,7 @@ Everblack Grackle is a distributed-synchronization-primitives-as-a-service:
 
 * __read/write locks__ (can be exclusively locked for writing by a single process, or it can be locked for reading by multiple processes)
 * __semaphores__ (tracks how many units of a particular resource are available)
-* __wait groups__ (merge or fan-in of millions of tasks, similar to sync.WaitGroup in Go)
+* __wait groups__ (merge or fan-in of millions of tasks, similar to `sync.WaitGroup` in Go)
 
 Grackle state is durable. All holds have a set expiration time. Process crash will not cause a dangling lock. 
 Long-running processes can extend the hold. All operations are atomic and safe to retry.
