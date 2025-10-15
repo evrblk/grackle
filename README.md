@@ -3,17 +3,18 @@
 [![Go](https://github.com/evrblk/grackle/actions/workflows/go.yml/badge.svg)](https://github.com/evrblk/grackle/actions/workflows/go.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/evrblk/grackle)](https://goreportcard.com/report/github.com/evrblk/grackle)
 
-Everblack Grackle provides distributed synchronisation primitives:
+Everblack Grackle is a distributed-synchronization-primitives-as-a-service:
 
-* read/write locks
-* semaphores
-* wait groups
+* __read/write locks__ (can be exclusively locked for writing by a single process, or it can be locked for reading by multiple processes)
+* __semaphores__ (tracks how many units of a particular resource are available)
+* __wait groups__ (merge or fan-in of millions of tasks, similar to sync.WaitGroup in Go)
 
 Grackle state is durable. All holds have a set expiration time. Process crash will not cause a dangling lock. 
 Long-running processes can extend the hold. All operations are atomic and safe to retry.
 
-Grackle has no external dependencies (no databases, no kafka, no redis, no zookeeper, or whatever). It stores all its state 
-on disk.
+Grackle can operate in a clustered mode (with replication and sharding), or it can run in a single-process nonclustered 
+mode (full state on disk, no replication, no sharding). It has no external dependencies (no databases, no kafka, no redis, no zookeeper, 
+or whatever) and it stores all its state on disk.
 
 Go to [official documentation](https://everblack.dev/docs/grackle) to learn more.
 
@@ -34,9 +35,6 @@ $ make grackle
 ```
 
 ## Running
-
-Grackle can operate in a clustered mode (with replication and sharding), or it can run in a single-process nonclustered 
-mode (full state on disk, no replication, no sharding).
 
 ### Nonclustered mode
 
