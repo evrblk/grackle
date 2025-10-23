@@ -32,6 +32,8 @@ var gatewayCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Println("Initializing Grackle API Gateway Server...")
 
+		grackle_preview.RegisterMetrics()
+
 		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", gatewayCmdCfg.port))
 		if err != nil {
 			log.Fatalf("failed to listen: %v", err)

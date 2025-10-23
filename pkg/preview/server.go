@@ -27,7 +27,7 @@ var (
 	})
 )
 
-func init() {
+func RegisterMetrics() {
 	prometheus.MustRegister(locksOperationsTotal)
 	prometheus.MustRegister(semaphoresOperationsTotal)
 	prometheus.MustRegister(waitGroupsOperationsTotal)
