@@ -34,6 +34,10 @@ github.com/evrblk/evrblk-go v0.0.0-20250930112409-f33f0fd23d10 h1:Tb/q2UwO3m8OrB
 github.com/evrblk/evrblk-go v0.0.0-20250930112409-f33f0fd23d10/go.mod h1:zcmuq1DgoV0Tqvyh2c8/kad5XcuFS7JKd/64NF/hsNA=
 github.com/evrblk/evrblk-go v0.0.0-20251011114654-da7ec23a74a0 h1:i1oiITNPJG6TSiuorw3gUhnPiP3ijEi2ZLzctJZiOig=
 github.com/evrblk/evrblk-go v0.0.0-20251011114654-da7ec23a74a0/go.mod h1:zcmuq1DgoV0Tqvyh2c8/kad5XcuFS7JKd/64NF/hsNA=
+github.com/evrblk/evrblk-go v0.0.0-20251023232203-f2abd3f691c7 h1:5TGKb6EKr/g731chzpf0w197O1ZbcCfs5Qq1J8LmFtc=
+github.com/evrblk/evrblk-go v0.0.0-20251023232203-f2abd3f691c7/go.mod h1:zcmuq1DgoV0Tqvyh2c8/kad5XcuFS7JKd/64NF/hsNA=
+github.com/evrblk/evrblk-go v0.0.0-20251023233135-0790a1a0de0c h1:PjNIKE8R4tXGSH6w+s8yaK8/Kc0kSE12pcOGGOzTTU0=
+github.com/evrblk/evrblk-go v0.0.0-20251023233135-0790a1a0de0c/go.mod h1:zcmuq1DgoV0Tqvyh2c8/kad5XcuFS7JKd/64NF/hsNA=
 github.com/evrblk/monstera v0.0.0-20251010173051-87b556328d2a h1:rAYrcPt7YsG73PurLUoyXCte8EgVslFM/fbBv6TokKk=
 github.com/evrblk/monstera v0.0.0-20251010173051-87b556328d2a/go.mod h1:Y38iHr1Zt9vGD69B359Z2QugXVVmVbCfEhEvuErfkqc=
 github.com/evrblk/monstera v0.0.0-20251010183913-12b449cb84ce h1:0j35JaDjIDbYaUsbgaWHMdDUeQWD0QxE1MmTTp2R9oY=

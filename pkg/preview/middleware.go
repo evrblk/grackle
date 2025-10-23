@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -79,7 +80,9 @@ func (m *AuthenticationMiddleware) Unary(
 		return nil, errUnauthenticated
 	}
 
-	err = m.verifySignature(req, key, signature, int64(timestamp))
+	_, method := extractServiceAndMethod(info.FullMethod)
+
+	err = m.verifySignature(req, key, signature, int64(timestamp), method)
 	if err != nil {
 		return nil, errUnauthenticated
 	}
@@ -87,7 +90,7 @@ func (m *AuthenticationMiddleware) Unary(
 	return handler(ctx, req)
 }
 
-func (m *AuthenticationMiddleware) verifySignature(req interface{}, key *apiKey, signature string, timestamp int64) error {
+func (m *AuthenticationMiddleware) verifySignature(req interface{}, key *apiKey, signature string, timestamp int64, method string) error {
 	requestProto, ok := req.(proto.Message)
 	if !ok {
 		return errors.New("request does not implement proto.Message")
@@ -96,7 +99,7 @@ func (m *AuthenticationMiddleware) verifySignature(req interface{}, key *apiKey,
 	now := time.Now()
 
 	if strings.HasPrefix(key.id, "key_alfa_") {
-		return authn.VerifyAlfaSignature(signature, timestamp, now, key.body, requestProto)
+		return authn.VerifyAlfaSignature(signature, timestamp, now, key.body, requestProto, "Grackle", method)
 	} else if strings.HasPrefix(key.id, "key_bravo_") {
 		date := authn.GetDateOfTimestamp(timestamp)
 		hashedSecret, err := authn.HashBravoSecretWithDate(key.body, date)
@@ -104,7 +107,7 @@ func (m *AuthenticationMiddleware) verifySignature(req interface{}, key *apiKey,
 			return err
 		}
 
-		return authn.VerifyBravoSignature(signature, timestamp, now, hashedSecret, requestProto)
+		return authn.VerifyBravoSignature(signature, timestamp, now, hashedSecret, requestProto, "Grackle", method)
 	} else {
 		return errors.New("unsupported api key type")
 	}
@@ -139,4 +142,16 @@ func NewAuthenticationMiddleware(authKeysPath string) *AuthenticationMiddleware 
 		keys:         make(map[string]*apiKey),
 		authKeysPath: authKeysPath,
 	}
+}
+
+func extractServiceAndMethod(grpcPath string) (string, string) {
+	re, _ := regexp.Compile("([\\w\\d_]+)\\/([\\w\\d_]+)")
+	matches := re.FindStringSubmatch(grpcPath)
+	var service string
+	var method string
+	if len(matches) == 3 {
+		service = matches[1]
+		method = matches[2]
+	}
+	return service, method
 }

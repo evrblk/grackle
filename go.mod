@@ -3,7 +3,7 @@ module github.com/evrblk/grackle
 go 1.25.1
 
 require (
-	github.com/evrblk/evrblk-go v0.0.0-20251011114654-da7ec23a74a0
+	github.com/evrblk/evrblk-go v0.0.0-20251023233135-0790a1a0de0c
 	github.com/evrblk/monstera v0.0.0-20251014211823-7717d34e6850
 	github.com/evrblk/yellowstone-common v0.0.0-20251001110147-7261de2bff54
 	github.com/go-errors/errors v1.5.1
