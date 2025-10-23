@@ -15,8 +15,6 @@ import (
 )
 
 func TestAcquireSemaphore(t *testing.T) {
-	require := require.New(t)
-
 	semaphoresCore := newSemaphoresCore()
 
 	now := time.Now()
@@ -43,10 +41,10 @@ func TestAcquireSemaphore(t *testing.T) {
 		MaxNumberOfSemaphoresPerNamespace: 100,
 	})
 
-	require.NoError(err)
-	require.NotNil(createResponse.Semaphore)
-	require.Equal("test description", createResponse.Semaphore.Description)
-	require.EqualValues(2, createResponse.Semaphore.Permits)
+	require.NoError(t, err)
+	require.NotNil(t, createResponse.Semaphore)
+	require.Equal(t, "test description", createResponse.Semaphore.Description)
+	require.EqualValues(t, 2, createResponse.Semaphore.Permits)
 
 	// T+1m: Acquire semaphore
 	response1, err := semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
@@ -56,11 +54,11 @@ func TestAcquireSemaphore(t *testing.T) {
 		ExpiresAt:   now.Add(time.Minute).Add(time.Hour).UnixNano(),
 	})
 
-	require.NoError(err)
-	require.NotNil(response1.Semaphore)
-	require.True(response1.Success)
-	require.Len(response1.Semaphore.SemaphoreHolders, 1)
-	require.Equal("process_1", response1.Semaphore.SemaphoreHolders[0].ProcessId)
+	require.NoError(t, err)
+	require.NotNil(t, response1.Semaphore)
+	require.True(t, response1.Success)
+	require.Len(t, response1.Semaphore.SemaphoreHolders, 1)
+	require.Equal(t, "process_1", response1.Semaphore.SemaphoreHolders[0].ProcessId)
 
 	// T+2m: Get semaphore
 	getResponse, err := semaphoresCore.GetSemaphore(&corepb.GetSemaphoreRequest{
@@ -68,9 +66,9 @@ func TestAcquireSemaphore(t *testing.T) {
 		Now:         now.Add(2 * time.Minute).UnixNano(),
 	})
 
-	require.NoError(err)
-	require.NotNil(getResponse.Semaphore)
-	require.Len(getResponse.Semaphore.SemaphoreHolders, 1)
+	require.NoError(t, err)
+	require.NotNil(t, getResponse.Semaphore)
+	require.Len(t, getResponse.Semaphore.SemaphoreHolders, 1)
 
 	// T+62m: Get semaphore after expiration
 	getResponse2, err := semaphoresCore.GetSemaphore(&corepb.GetSemaphoreRequest{
@@ -78,14 +76,12 @@ func TestAcquireSemaphore(t *testing.T) {
 		Now:         now.Add(62 * time.Minute).UnixNano(),
 	})
 
-	require.NoError(err)
-	require.NotNil(getResponse2.Semaphore)
-	require.Len(getResponse2.Semaphore.SemaphoreHolders, 0)
+	require.NoError(t, err)
+	require.NotNil(t, getResponse2.Semaphore)
+	require.Len(t, getResponse2.Semaphore.SemaphoreHolders, 0)
 }
 
 func TestAcquireSemaphoreRepeatedly(t *testing.T) {
-	require := require.New(t)
-
 	semaphoresCore := newSemaphoresCore()
 
 	now := time.Now()
@@ -111,7 +107,7 @@ func TestAcquireSemaphoreRepeatedly(t *testing.T) {
 		Now:                               now.UnixNano(),
 		MaxNumberOfSemaphoresPerNamespace: 100,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// T+1m: Acquire semaphore
 	response1, err := semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
@@ -121,8 +117,8 @@ func TestAcquireSemaphoreRepeatedly(t *testing.T) {
 		ExpiresAt:   now.Add(time.Minute).Add(time.Hour).UnixNano(),
 	})
 
-	require.NoError(err)
-	require.True(response1.Success)
+	require.NoError(t, err)
+	require.True(t, response1.Success)
 
 	// T+2m: Acquire same semaphore with same process (should extend expiration)
 	response2, err := semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
@@ -132,15 +128,13 @@ func TestAcquireSemaphoreRepeatedly(t *testing.T) {
 		ExpiresAt:   now.Add(2 * time.Minute).Add(time.Hour).UnixNano(),
 	})
 
-	require.NoError(err)
-	require.True(response2.Success)
-	require.Len(response2.Semaphore.SemaphoreHolders, 1)
-	require.EqualValues(now.Add(2*time.Minute).Add(time.Hour).UnixNano(), response2.Semaphore.SemaphoreHolders[0].ExpiresAt)
+	require.NoError(t, err)
+	require.True(t, response2.Success)
+	require.Len(t, response2.Semaphore.SemaphoreHolders, 1)
+	require.EqualValues(t, now.Add(2*time.Minute).Add(time.Hour).UnixNano(), response2.Semaphore.SemaphoreHolders[0].ExpiresAt)
 }
 
 func TestAcquireSemaphoreWithMultiplePermits(t *testing.T) {
-	require := require.New(t)
-
 	semaphoresCore := newSemaphoresCore()
 
 	now := time.Now()
@@ -166,7 +160,7 @@ func TestAcquireSemaphoreWithMultiplePermits(t *testing.T) {
 		Now:                               now.UnixNano(),
 		MaxNumberOfSemaphoresPerNamespace: 100,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// T+1m: First process acquires semaphore
 	response1, err := semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
@@ -176,8 +170,8 @@ func TestAcquireSemaphoreWithMultiplePermits(t *testing.T) {
 		ExpiresAt:   now.Add(time.Minute).Add(time.Hour).UnixNano(),
 	})
 
-	require.NoError(err)
-	require.True(response1.Success)
+	require.NoError(t, err)
+	require.True(t, response1.Success)
 
 	// T+2m: Second process acquires semaphore
 	response2, err := semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
@@ -187,9 +181,9 @@ func TestAcquireSemaphoreWithMultiplePermits(t *testing.T) {
 		ExpiresAt:   now.Add(2 * time.Minute).Add(time.Hour).UnixNano(),
 	})
 
-	require.NoError(err)
-	require.True(response2.Success)
-	require.Len(response2.Semaphore.SemaphoreHolders, 2)
+	require.NoError(t, err)
+	require.True(t, response2.Success)
+	require.Len(t, response2.Semaphore.SemaphoreHolders, 2)
 
 	// T+3m: Third process tries to acquire semaphore (should fail)
 	response3, err := semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
@@ -199,14 +193,12 @@ func TestAcquireSemaphoreWithMultiplePermits(t *testing.T) {
 		ExpiresAt:   now.Add(3 * time.Minute).Add(time.Hour).UnixNano(),
 	})
 
-	require.NoError(err)
-	require.False(response3.Success)
-	require.Len(response3.Semaphore.SemaphoreHolders, 2)
+	require.NoError(t, err)
+	require.False(t, response3.Success)
+	require.Len(t, response3.Semaphore.SemaphoreHolders, 2)
 }
 
 func TestReleaseSemaphore(t *testing.T) {
-	require := require.New(t)
-
 	semaphoresCore := newSemaphoresCore()
 
 	now := time.Now()
@@ -232,7 +224,7 @@ func TestReleaseSemaphore(t *testing.T) {
 		Now:                               now.UnixNano(),
 		MaxNumberOfSemaphoresPerNamespace: 100,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// T+1m: Acquire semaphore
 	response1, err := semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
@@ -242,8 +234,8 @@ func TestReleaseSemaphore(t *testing.T) {
 		ExpiresAt:   now.Add(time.Minute).Add(time.Hour).UnixNano(),
 	})
 
-	require.NoError(err)
-	require.True(response1.Success)
+	require.NoError(t, err)
+	require.True(t, response1.Success)
 
 	// T+2m: Release semaphore
 	response2, err := semaphoresCore.ReleaseSemaphore(&corepb.ReleaseSemaphoreRequest{
@@ -252,14 +244,12 @@ func TestReleaseSemaphore(t *testing.T) {
 		ProcessId:   "process_1",
 	})
 
-	require.NoError(err)
-	require.NotNil(response2.Semaphore)
-	require.Len(response2.Semaphore.SemaphoreHolders, 0)
+	require.NoError(t, err)
+	require.NotNil(t, response2.Semaphore)
+	require.Len(t, response2.Semaphore.SemaphoreHolders, 0)
 }
 
 func TestUpdateSemaphore(t *testing.T) {
-	require := require.New(t)
-
 	semaphoresCore := newSemaphoresCore()
 
 	now := time.Now()
@@ -285,7 +275,7 @@ func TestUpdateSemaphore(t *testing.T) {
 		Now:                               now.UnixNano(),
 		MaxNumberOfSemaphoresPerNamespace: 100,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// T+1m: Update semaphore
 	_, err = semaphoresCore.UpdateSemaphore(&corepb.UpdateSemaphoreRequest{
@@ -295,7 +285,7 @@ func TestUpdateSemaphore(t *testing.T) {
 		Now:         now.Add(time.Minute).UnixNano(),
 	})
 
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// T+2m: Get updated semaphore
 	response, err := semaphoresCore.GetSemaphore(&corepb.GetSemaphoreRequest{
@@ -303,14 +293,12 @@ func TestUpdateSemaphore(t *testing.T) {
 		Now:         now.Add(2 * time.Minute).UnixNano(),
 	})
 
-	require.NoError(err)
-	require.Equal("updated description", response.Semaphore.Description)
-	require.EqualValues(3, response.Semaphore.Permits)
+	require.NoError(t, err)
+	require.Equal(t, "updated description", response.Semaphore.Description)
+	require.EqualValues(t, 3, response.Semaphore.Permits)
 }
 
 func TestUpdateSemaphoreWithInsufficientPermits(t *testing.T) {
-	require := require.New(t)
-
 	semaphoresCore := newSemaphoresCore()
 
 	now := time.Now()
@@ -336,7 +324,7 @@ func TestUpdateSemaphoreWithInsufficientPermits(t *testing.T) {
 		Now:                               now.UnixNano(),
 		MaxNumberOfSemaphoresPerNamespace: 100,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// T+1m: First process acquires semaphore
 	response1, err := semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
@@ -345,8 +333,8 @@ func TestUpdateSemaphoreWithInsufficientPermits(t *testing.T) {
 		ProcessId:   "process_1",
 		ExpiresAt:   now.Add(time.Minute).Add(time.Hour).UnixNano(),
 	})
-	require.NoError(err)
-	require.True(response1.Success)
+	require.NoError(t, err)
+	require.True(t, response1.Success)
 
 	// T+2m: Second process acquires semaphore
 	response2, err := semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
@@ -355,8 +343,8 @@ func TestUpdateSemaphoreWithInsufficientPermits(t *testing.T) {
 		ProcessId:   "process_2",
 		ExpiresAt:   now.Add(2 * time.Minute).Add(time.Hour).UnixNano(),
 	})
-	require.NoError(err)
-	require.True(response2.Success)
+	require.NoError(t, err)
+	require.True(t, response2.Success)
 
 	// T+3m: Third process acquires semaphore
 	response3, err := semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
@@ -365,16 +353,16 @@ func TestUpdateSemaphoreWithInsufficientPermits(t *testing.T) {
 		ProcessId:   "process_3",
 		ExpiresAt:   now.Add(3 * time.Minute).Add(time.Hour).UnixNano(),
 	})
-	require.NoError(err)
-	require.True(response3.Success)
+	require.NoError(t, err)
+	require.True(t, response3.Success)
 
 	// Verify we have 3 holders
 	getResponse, err := semaphoresCore.GetSemaphore(&corepb.GetSemaphoreRequest{
 		SemaphoreId: semaphoreId,
 		Now:         now.Add(4 * time.Minute).UnixNano(),
 	})
-	require.NoError(err)
-	require.Len(getResponse.Semaphore.SemaphoreHolders, 3)
+	require.NoError(t, err)
+	require.Len(t, getResponse.Semaphore.SemaphoreHolders, 3)
 
 	// T+5m: Try to update semaphore to reduce permits to 2 (less than current holders)
 	_, err = semaphoresCore.UpdateSemaphore(&corepb.UpdateSemaphoreRequest{
@@ -384,23 +372,21 @@ func TestUpdateSemaphoreWithInsufficientPermits(t *testing.T) {
 		Now:         now.Add(5 * time.Minute).UnixNano(),
 	})
 
-	require.Error(err)
-	require.Contains(err.Error(), "there are currently more holders than the new amount of permits")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "there are currently more holders than the new amount of permits")
 
 	// Verify the semaphore was not updated
 	getResponse2, err := semaphoresCore.GetSemaphore(&corepb.GetSemaphoreRequest{
 		SemaphoreId: semaphoreId,
 		Now:         now.Add(6 * time.Minute).UnixNano(),
 	})
-	require.NoError(err)
-	require.Equal("test description", getResponse2.Semaphore.Description) // Description should not be updated
-	require.EqualValues(3, getResponse2.Semaphore.Permits)                // Permits should not be updated
-	require.Len(getResponse2.Semaphore.SemaphoreHolders, 3)               // All holders should still be there
+	require.NoError(t, err)
+	require.Equal(t, "test description", getResponse2.Semaphore.Description) // Description should not be updated
+	require.EqualValues(t, 3, getResponse2.Semaphore.Permits)                // Permits should not be updated
+	require.Len(t, getResponse2.Semaphore.SemaphoreHolders, 3)               // All holders should still be there
 }
 
 func TestUpdateNonExistingSemaphore(t *testing.T) {
-	require := require.New(t)
-
 	semaphoresCore := newSemaphoresCore()
 
 	now := time.Now()
@@ -421,13 +407,11 @@ func TestUpdateNonExistingSemaphore(t *testing.T) {
 		Now:         now.UnixNano(),
 	})
 
-	require.Error(err)
-	require.Contains(err.Error(), "not found")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "not found")
 }
 
 func TestGetNonExistingSemaphore(t *testing.T) {
-	require := require.New(t)
-
 	semaphoresCore := newSemaphoresCore()
 
 	now := time.Now()
@@ -446,13 +430,11 @@ func TestGetNonExistingSemaphore(t *testing.T) {
 		Now:         now.UnixNano(),
 	})
 
-	require.Error(err)
-	require.Contains(err.Error(), "not found")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "not found")
 }
 
 func TestAcquireNonExistingSemaphore(t *testing.T) {
-	require := require.New(t)
-
 	semaphoresCore := newSemaphoresCore()
 
 	now := time.Now()
@@ -473,13 +455,11 @@ func TestAcquireNonExistingSemaphore(t *testing.T) {
 		ExpiresAt:   now.Add(time.Minute).Add(time.Hour).UnixNano(),
 	})
 
-	require.Error(err)
-	require.Contains(err.Error(), "not found")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "not found")
 }
 
 func TestReleaseNonExistingSemaphore(t *testing.T) {
-	require := require.New(t)
-
 	semaphoresCore := newSemaphoresCore()
 
 	now := time.Now()
@@ -499,13 +479,11 @@ func TestReleaseNonExistingSemaphore(t *testing.T) {
 		ProcessId:   "process_1",
 	})
 
-	require.Error(err)
-	require.Contains(err.Error(), "not found")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "not found")
 }
 
 func TestCreateSemaphoreWithDuplicateName(t *testing.T) {
-	require := require.New(t)
-
 	semaphoresCore := newSemaphoresCore()
 
 	now := time.Now()
@@ -529,7 +507,7 @@ func TestCreateSemaphoreWithDuplicateName(t *testing.T) {
 		Now:                               now.UnixNano(),
 		MaxNumberOfSemaphoresPerNamespace: 100,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// Try to create a second semaphore with the same name
 	_, err = semaphoresCore.CreateSemaphore(&corepb.CreateSemaphoreRequest{
@@ -545,13 +523,11 @@ func TestCreateSemaphoreWithDuplicateName(t *testing.T) {
 		MaxNumberOfSemaphoresPerNamespace: 100,
 	})
 
-	require.Error(err)
-	require.Contains(err.Error(), "already exists")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "already exists")
 }
 
 func TestDeleteSemaphore(t *testing.T) {
-	require := require.New(t)
-
 	semaphoresCore := newSemaphoresCore()
 
 	now := time.Now()
@@ -577,34 +553,32 @@ func TestDeleteSemaphore(t *testing.T) {
 		Now:                               now.UnixNano(),
 		MaxNumberOfSemaphoresPerNamespace: 100,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// T+1m: Verify semaphore exists
 	getResponse, err := semaphoresCore.GetSemaphore(&corepb.GetSemaphoreRequest{
 		SemaphoreId: semaphoreId,
 		Now:         now.Add(time.Minute).UnixNano(),
 	})
-	require.NoError(err)
-	require.NotNil(getResponse.Semaphore)
+	require.NoError(t, err)
+	require.NotNil(t, getResponse.Semaphore)
 
 	// T+2m: Delete semaphore
 	_, err = semaphoresCore.DeleteSemaphore(&corepb.DeleteSemaphoreRequest{
 		SemaphoreId: semaphoreId,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// T+3m: Verify semaphore no longer exists
 	_, err = semaphoresCore.GetSemaphore(&corepb.GetSemaphoreRequest{
 		SemaphoreId: semaphoreId,
 		Now:         now.Add(3 * time.Minute).UnixNano(),
 	})
-	require.Error(err)
-	require.Contains(err.Error(), "not found")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "not found")
 }
 
 func TestDeleteNonExistingSemaphore(t *testing.T) {
-	require := require.New(t)
-
 	semaphoresCore := newSemaphoresCore()
 
 	accountId := rand.Uint64()
@@ -620,12 +594,10 @@ func TestDeleteNonExistingSemaphore(t *testing.T) {
 		SemaphoreId: nonExistingSemaphoreId,
 	})
 
-	require.NoError(err)
+	require.NoError(t, err)
 }
 
 func TestListSemaphores(t *testing.T) {
-	require := require.New(t)
-
 	semaphoresCore := newSemaphoresCore()
 
 	now := time.Now()
@@ -649,7 +621,7 @@ func TestListSemaphores(t *testing.T) {
 		Now:                               now.UnixNano(),
 		MaxNumberOfSemaphoresPerNamespace: 100,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// Create second semaphore
 	_, err = semaphoresCore.CreateSemaphore(&corepb.CreateSemaphoreRequest{
@@ -664,7 +636,7 @@ func TestListSemaphores(t *testing.T) {
 		Now:                               now.UnixNano(),
 		MaxNumberOfSemaphoresPerNamespace: 100,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// List semaphores
 	response, err := semaphoresCore.ListSemaphores(&corepb.ListSemaphoresRequest{
@@ -675,13 +647,11 @@ func TestListSemaphores(t *testing.T) {
 		},
 	})
 
-	require.NoError(err)
-	require.Len(response.Semaphores, 2)
+	require.NoError(t, err)
+	require.Len(t, response.Semaphores, 2)
 }
 
 func TestSnapshotAndRestoreSemaphores(t *testing.T) {
-	require := require.New(t)
-
 	now := time.Now()
 
 	accountId := rand.Uint64()
@@ -709,7 +679,7 @@ func TestSnapshotAndRestoreSemaphores(t *testing.T) {
 		Now:                               now.UnixNano(),
 		MaxNumberOfSemaphoresPerNamespace: 100,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// T+1m: Acquire semaphore
 	response1, err := semaphoresCore1.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
@@ -718,8 +688,8 @@ func TestSnapshotAndRestoreSemaphores(t *testing.T) {
 		ProcessId:   "process_1",
 		ExpiresAt:   now.Add(time.Minute).Add(time.Hour).UnixNano(),
 	})
-	require.NoError(err)
-	require.True(response1.Success)
+	require.NoError(t, err)
+	require.True(t, response1.Success)
 
 	// Take snapshot at this point
 	snapshot := semaphoresCore1.Snapshot()
@@ -731,8 +701,8 @@ func TestSnapshotAndRestoreSemaphores(t *testing.T) {
 		ProcessId:   "process_2",
 		ExpiresAt:   now.Add(2 * time.Minute).Add(time.Hour).UnixNano(),
 	})
-	require.NoError(err)
-	require.True(response2.Success)
+	require.NoError(t, err)
+	require.True(t, response2.Success)
 
 	// T+3m: Release first process (after snapshot)
 	_, err = semaphoresCore1.ReleaseSemaphore(&corepb.ReleaseSemaphoreRequest{
@@ -740,16 +710,16 @@ func TestSnapshotAndRestoreSemaphores(t *testing.T) {
 		Now:         now.Add(3 * time.Minute).UnixNano(),
 		ProcessId:   "process_1",
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// Write snapshot to buffer
 	buf := bytes.NewBuffer(nil)
 	err = snapshot.Write(buf)
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// Restore snapshot to second core
 	err = semaphoresCore2.Restore(io.NopCloser(buf))
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// T+4m: Check that the restored state matches the snapshot state
 	// The semaphore should exist with one holder (process_1)
@@ -757,10 +727,10 @@ func TestSnapshotAndRestoreSemaphores(t *testing.T) {
 		SemaphoreId: semaphoreId,
 		Now:         now.Add(4 * time.Minute).UnixNano(),
 	})
-	require.NoError(err)
-	require.NotNil(response3.Semaphore)
-	require.Len(response3.Semaphore.SemaphoreHolders, 1)
-	require.Equal("process_1", response3.Semaphore.SemaphoreHolders[0].ProcessId)
+	require.NoError(t, err)
+	require.NotNil(t, response3.Semaphore)
+	require.Len(t, response3.Semaphore.SemaphoreHolders, 1)
+	require.Equal(t, "process_1", response3.Semaphore.SemaphoreHolders[0].ProcessId)
 
 	// T+5m: Try to acquire with a new process in restored state (should succeed)
 	response4, err := semaphoresCore2.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
@@ -769,9 +739,9 @@ func TestSnapshotAndRestoreSemaphores(t *testing.T) {
 		ProcessId:   "process_3",
 		ExpiresAt:   now.Add(5 * time.Minute).Add(time.Hour).UnixNano(),
 	})
-	require.NoError(err)
-	require.True(response4.Success)
-	require.Len(response4.Semaphore.SemaphoreHolders, 2)
+	require.NoError(t, err)
+	require.True(t, response4.Success)
+	require.Len(t, response4.Semaphore.SemaphoreHolders, 2)
 
 	// T+6m: Try to acquire with a third process in restored state (should fail - no more permits)
 	response5, err := semaphoresCore2.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
@@ -780,8 +750,8 @@ func TestSnapshotAndRestoreSemaphores(t *testing.T) {
 		ProcessId:   "process_4",
 		ExpiresAt:   now.Add(6 * time.Minute).Add(time.Hour).UnixNano(),
 	})
-	require.NoError(err)
-	require.False(response5.Success)
+	require.NoError(t, err)
+	require.False(t, response5.Success)
 
 	// T+7m: Release process_1 in restored state
 	_, err = semaphoresCore2.ReleaseSemaphore(&corepb.ReleaseSemaphoreRequest{
@@ -789,27 +759,25 @@ func TestSnapshotAndRestoreSemaphores(t *testing.T) {
 		Now:         now.Add(7 * time.Minute).UnixNano(),
 		ProcessId:   "process_1",
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// T+8m: Verify only process_3 remains in restored state
 	response6, err := semaphoresCore2.GetSemaphore(&corepb.GetSemaphoreRequest{
 		SemaphoreId: semaphoreId,
 		Now:         now.Add(8 * time.Minute).UnixNano(),
 	})
-	require.NoError(err)
-	require.Len(response6.Semaphore.SemaphoreHolders, 1)
-	require.Equal("process_3", response6.Semaphore.SemaphoreHolders[0].ProcessId)
+	require.NoError(t, err)
+	require.Len(t, response6.Semaphore.SemaphoreHolders, 1)
+	require.Equal(t, "process_3", response6.Semaphore.SemaphoreHolders[0].ProcessId)
 
 	// Verify that process_2 from the original core is not in the restored state
 	// (it was acquired after the snapshot)
 	for _, holder := range response6.Semaphore.SemaphoreHolders {
-		require.NotEqual("process_2", holder.ProcessId)
+		require.NotEqual(t, "process_2", holder.ProcessId)
 	}
 }
 
 func TestSemaphoresDeleteNamespace(t *testing.T) {
-	require := require.New(t)
-
 	semaphoresCore := newSemaphoresCore()
 
 	now := time.Now()
@@ -832,7 +800,7 @@ func TestSemaphoresDeleteNamespace(t *testing.T) {
 		Now:                               now.UnixNano(),
 		MaxNumberOfSemaphoresPerNamespace: 100,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// Mark the namespace as deleted using SemaphoresDeleteNamespace
 	deleteResponse, err := semaphoresCore.SemaphoresDeleteNamespace(&corepb.SemaphoresDeleteNamespaceRequest{
@@ -844,23 +812,21 @@ func TestSemaphoresDeleteNamespace(t *testing.T) {
 		Now: now.UnixNano(),
 	})
 
-	require.NoError(err)
-	require.NotNil(deleteResponse)
+	require.NoError(t, err)
+	require.NotNil(t, deleteResponse)
 
 	// Verify that the namespace is marked as deleted by checking the deleted namespaces list
 	txn := semaphoresCore.badgerStore.Update()
 	defer txn.Discard()
 
 	deletedNamespaces, err := semaphoresCore.listGCRecords(txn, 100)
-	require.NoError(err)
-	require.Len(deletedNamespaces, 1)
-	require.Equal(namespaceId.AccountId, deletedNamespaces[0].NamespaceTimestampedId.AccountId)
-	require.Equal(namespaceId.NamespaceName, deletedNamespaces[0].NamespaceTimestampedId.NamespaceName)
+	require.NoError(t, err)
+	require.Len(t, deletedNamespaces, 1)
+	require.Equal(t, namespaceId.AccountId, deletedNamespaces[0].NamespaceTimestampedId.AccountId)
+	require.Equal(t, namespaceId.NamespaceName, deletedNamespaces[0].NamespaceTimestampedId.NamespaceName)
 }
 
 func TestCreateSemaphoreMaxLimitReached(t *testing.T) {
-	require := require.New(t)
-
 	semaphoresCore := newSemaphoresCore()
 
 	now := time.Now()
@@ -887,7 +853,7 @@ func TestCreateSemaphoreMaxLimitReached(t *testing.T) {
 			Now:                               now.UnixNano(),
 			MaxNumberOfSemaphoresPerNamespace: maxSemaphores,
 		})
-		require.NoError(err, "Failed to create semaphore %d", i)
+		require.NoError(t, err, "Failed to create semaphore %d", i)
 	}
 
 	// Try to create one more semaphore (should fail)
@@ -904,13 +870,11 @@ func TestCreateSemaphoreMaxLimitReached(t *testing.T) {
 		MaxNumberOfSemaphoresPerNamespace: maxSemaphores,
 	})
 
-	require.Error(err)
-	require.Contains(err.Error(), "max number of semaphores per namespace reached")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "max number of semaphores per namespace reached")
 }
 
 func TestRunSemaphoresGarbageCollectionWithDeletedNamespace(t *testing.T) {
-	require := require.New(t)
-
 	semaphoresCore := newSemaphoresCore()
 
 	now := time.Now()
@@ -947,7 +911,7 @@ func TestRunSemaphoresGarbageCollectionWithDeletedNamespace(t *testing.T) {
 			Now:                               now.UnixNano(),
 			MaxNumberOfSemaphoresPerNamespace: 100,
 		})
-		require.NoError(err)
+		require.NoError(t, err)
 
 		// Acquire semaphores
 		response, err := semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
@@ -957,9 +921,9 @@ func TestRunSemaphoresGarbageCollectionWithDeletedNamespace(t *testing.T) {
 			ExpiresAt:   now.Add(time.Hour).UnixNano(),
 		})
 
-		require.NoError(err)
-		require.NotNil(response.Semaphore)
-		require.Equal(true, response.Success)
+		require.NoError(t, err)
+		require.NotNil(t, response.Semaphore)
+		require.True(t, response.Success)
 	}
 
 	// Verify that semaphores in a different namespace are accessible after GC
@@ -983,7 +947,7 @@ func TestRunSemaphoresGarbageCollectionWithDeletedNamespace(t *testing.T) {
 		Now:                               now.UnixNano(),
 		MaxNumberOfSemaphoresPerNamespace: 10,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	acquireResponse, err := semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
 		SemaphoreId: differentNamespaceSemaphoreId,
@@ -992,9 +956,9 @@ func TestRunSemaphoresGarbageCollectionWithDeletedNamespace(t *testing.T) {
 		ExpiresAt:   now.Add(time.Hour).UnixNano(),
 	})
 
-	require.NoError(err)
-	require.NotNil(acquireResponse.Semaphore)
-	require.Equal(true, acquireResponse.Success)
+	require.NoError(t, err)
+	require.NotNil(t, acquireResponse.Semaphore)
+	require.True(t, acquireResponse.Success)
 
 	// Verify semaphores exist by getting them
 	for _, semaphoreId := range semaphoreIds {
@@ -1003,9 +967,9 @@ func TestRunSemaphoresGarbageCollectionWithDeletedNamespace(t *testing.T) {
 			Now:         now.UnixNano(),
 		})
 
-		require.NoError(err)
-		require.NotNil(getResponse.Semaphore)
-		require.Len(getResponse.Semaphore.SemaphoreHolders, 1)
+		require.NoError(t, err)
+		require.NotNil(t, getResponse.Semaphore)
+		require.Len(t, getResponse.Semaphore.SemaphoreHolders, 1)
 	}
 
 	// Mark the namespace as deleted using SemaphoresDeleteNamespace
@@ -1018,8 +982,8 @@ func TestRunSemaphoresGarbageCollectionWithDeletedNamespace(t *testing.T) {
 		Now: now.UnixNano(),
 	})
 
-	require.NoError(err)
-	require.NotNil(deleteResponse)
+	require.NoError(t, err)
+	require.NotNil(t, deleteResponse)
 
 	// Run garbage collection to clean up the deleted namespace
 	gcResponse, err := semaphoresCore.RunSemaphoresGarbageCollection(&corepb.RunSemaphoresGarbageCollectionRequest{
@@ -1029,8 +993,8 @@ func TestRunSemaphoresGarbageCollectionWithDeletedNamespace(t *testing.T) {
 		MaxVisitedSemaphores:       1000,
 	})
 
-	require.NoError(err)
-	require.NotNil(gcResponse)
+	require.NoError(t, err)
+	require.NotNil(t, gcResponse)
 
 	// Verify that semaphores in the deleted namespace are no longer accessible
 	for _, semaphoreId := range semaphoreIds {
@@ -1039,8 +1003,8 @@ func TestRunSemaphoresGarbageCollectionWithDeletedNamespace(t *testing.T) {
 			Now:         now.UnixNano(),
 		})
 
-		require.Error(err)
-		require.Contains(err.Error(), "not found")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "not found")
 	}
 
 	// Verify the different namespace semaphore still exists after GC
@@ -1049,14 +1013,12 @@ func TestRunSemaphoresGarbageCollectionWithDeletedNamespace(t *testing.T) {
 		Now:         now.UnixNano(),
 	})
 
-	require.NoError(err)
-	require.NotNil(getResponse.Semaphore)
-	require.Len(getResponse.Semaphore.SemaphoreHolders, 1)
+	require.NoError(t, err)
+	require.NotNil(t, getResponse.Semaphore)
+	require.Len(t, getResponse.Semaphore.SemaphoreHolders, 1)
 }
 
 func TestRunSemaphoresGarbageCollectionWithMultipleExpiringSemaphores(t *testing.T) {
-	require := require.New(t)
-
 	semaphoresCore := newSemaphoresCore()
 
 	now := time.Now()
@@ -1097,7 +1059,7 @@ func TestRunSemaphoresGarbageCollectionWithMultipleExpiringSemaphores(t *testing
 			Now:                               now.UnixNano(),
 			MaxNumberOfSemaphoresPerNamespace: 100,
 		})
-		require.NoError(err)
+		require.NoError(t, err)
 
 		if i < 5 {
 			// Semaphores 0-4: All holders will expire
@@ -1107,9 +1069,9 @@ func TestRunSemaphoresGarbageCollectionWithMultipleExpiringSemaphores(t *testing
 				ProcessId:   fmt.Sprintf("process_%d", i),
 				ExpiresAt:   now.Add(30 * time.Minute).UnixNano(), // Will expire
 			})
-			require.NoError(err)
-			require.NotNil(response.Semaphore)
-			require.Equal(true, response.Success)
+			require.NoError(t, err)
+			require.NotNil(t, response.Semaphore)
+			require.True(t, response.Success)
 
 			// Add a second holder that will also expire
 			response2, err := semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
@@ -1118,9 +1080,9 @@ func TestRunSemaphoresGarbageCollectionWithMultipleExpiringSemaphores(t *testing
 				ProcessId:   fmt.Sprintf("process_%d_second", i),
 				ExpiresAt:   now.Add(30 * time.Minute).UnixNano(), // Will expire
 			})
-			require.NoError(err)
-			require.NotNil(response2.Semaphore)
-			require.Equal(true, response2.Success)
+			require.NoError(t, err)
+			require.NotNil(t, response2.Semaphore)
+			require.True(t, response2.Success)
 		} else if i < 10 {
 			// Semaphores 5-9: Some holders will expire, some will remain
 			response, err := semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
@@ -1129,9 +1091,9 @@ func TestRunSemaphoresGarbageCollectionWithMultipleExpiringSemaphores(t *testing
 				ProcessId:   fmt.Sprintf("process_%d", i),
 				ExpiresAt:   now.Add(30 * time.Minute).UnixNano(), // Will expire
 			})
-			require.NoError(err)
-			require.NotNil(response.Semaphore)
-			require.Equal(true, response.Success)
+			require.NoError(t, err)
+			require.NotNil(t, response.Semaphore)
+			require.True(t, response.Success)
 
 			// Add a second holder that will remain
 			response2, err := semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
@@ -1140,9 +1102,9 @@ func TestRunSemaphoresGarbageCollectionWithMultipleExpiringSemaphores(t *testing
 				ProcessId:   fmt.Sprintf("process_%d_second", i),
 				ExpiresAt:   now.Add(2 * time.Hour).UnixNano(), // Will remain
 			})
-			require.NoError(err)
-			require.NotNil(response2.Semaphore)
-			require.Equal(true, response2.Success)
+			require.NoError(t, err)
+			require.NotNil(t, response2.Semaphore)
+			require.True(t, response2.Success)
 		} else {
 			// Semaphores 10-14: All holders will remain
 			response, err := semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
@@ -1151,9 +1113,9 @@ func TestRunSemaphoresGarbageCollectionWithMultipleExpiringSemaphores(t *testing
 				ProcessId:   fmt.Sprintf("process_%d", i),
 				ExpiresAt:   now.Add(2 * time.Hour).UnixNano(), // Will remain
 			})
-			require.NoError(err)
-			require.NotNil(response.Semaphore)
-			require.Equal(true, response.Success)
+			require.NoError(t, err)
+			require.NotNil(t, response.Semaphore)
+			require.True(t, response.Success)
 
 			// Add a second holder that will also remain
 			response2, err := semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
@@ -1162,9 +1124,9 @@ func TestRunSemaphoresGarbageCollectionWithMultipleExpiringSemaphores(t *testing
 				ProcessId:   fmt.Sprintf("process_%d_second", i),
 				ExpiresAt:   now.Add(3 * time.Hour).UnixNano(), // Will remain
 			})
-			require.NoError(err)
-			require.NotNil(response2.Semaphore)
-			require.Equal(true, response2.Success)
+			require.NoError(t, err)
+			require.NotNil(t, response2.Semaphore)
+			require.True(t, response2.Success)
 		}
 	}
 
@@ -1174,9 +1136,9 @@ func TestRunSemaphoresGarbageCollectionWithMultipleExpiringSemaphores(t *testing
 			SemaphoreId: semaphoreId,
 			Now:         now.UnixNano(),
 		})
-		require.NoError(err)
-		require.NotNil(response.Semaphore)
-		require.Len(response.Semaphore.SemaphoreHolders, 2)
+		require.NoError(t, err)
+		require.NotNil(t, response.Semaphore)
+		require.Len(t, response.Semaphore.SemaphoreHolders, 2)
 	}
 
 	// Run garbage collection at the moment when some semaphores expire (T+31 minutes)
@@ -1188,8 +1150,8 @@ func TestRunSemaphoresGarbageCollectionWithMultipleExpiringSemaphores(t *testing
 		MaxVisitedSemaphores:       maxVisitedSemaphores,
 	})
 
-	require.NoError(err)
-	require.NotNil(gcResponse)
+	require.NoError(t, err)
+	require.NotNil(t, gcResponse)
 
 	// Verify the state of semaphores after garbage collection
 	// Note: We use the public GetSemaphore method which internally calls checkSemaphoreExpiration
@@ -1201,9 +1163,9 @@ func TestRunSemaphoresGarbageCollectionWithMultipleExpiringSemaphores(t *testing
 			SemaphoreId: semaphoreIds[i],
 			Now:         gcTime.UnixNano(),
 		})
-		require.NoError(err)
-		require.NotNil(response.Semaphore)
-		require.Len(response.Semaphore.SemaphoreHolders, 0, "Semaphore %d should have no holders", i)
+		require.NoError(t, err)
+		require.NotNil(t, response.Semaphore)
+		require.Len(t, response.Semaphore.SemaphoreHolders, 0, "Semaphore %d should have no holders", i)
 	}
 
 	// Semaphores 5-9 should still have one holder remaining
@@ -1212,10 +1174,10 @@ func TestRunSemaphoresGarbageCollectionWithMultipleExpiringSemaphores(t *testing
 			SemaphoreId: semaphoreIds[i],
 			Now:         gcTime.UnixNano(),
 		})
-		require.NoError(err)
-		require.NotNil(response.Semaphore)
-		require.Len(response.Semaphore.SemaphoreHolders, 1, "Semaphore %d should have exactly one holder remaining", i)
-		require.Equal(fmt.Sprintf("process_%d_second", i), response.Semaphore.SemaphoreHolders[0].ProcessId)
+		require.NoError(t, err)
+		require.NotNil(t, response.Semaphore)
+		require.Len(t, response.Semaphore.SemaphoreHolders, 1, "Semaphore %d should have exactly one holder remaining", i)
+		require.Equal(t, fmt.Sprintf("process_%d_second", i), response.Semaphore.SemaphoreHolders[0].ProcessId)
 	}
 
 	// Semaphores 10-14 should still have both holders
@@ -1224,15 +1186,15 @@ func TestRunSemaphoresGarbageCollectionWithMultipleExpiringSemaphores(t *testing
 			SemaphoreId: semaphoreIds[i],
 			Now:         gcTime.UnixNano(),
 		})
-		require.NoError(err)
-		require.NotNil(response.Semaphore)
-		require.Len(response.Semaphore.SemaphoreHolders, 2, "Semaphore %d should have both holders remaining", i)
+		require.NoError(t, err)
+		require.NotNil(t, response.Semaphore)
+		require.Len(t, response.Semaphore.SemaphoreHolders, 2, "Semaphore %d should have both holders remaining", i)
 		holderProcessIds := make([]string, len(response.Semaphore.SemaphoreHolders))
 		for j, holder := range response.Semaphore.SemaphoreHolders {
 			holderProcessIds[j] = holder.ProcessId
 		}
-		require.Contains(holderProcessIds, fmt.Sprintf("process_%d", i))
-		require.Contains(holderProcessIds, fmt.Sprintf("process_%d_second", i))
+		require.Contains(t, holderProcessIds, fmt.Sprintf("process_%d", i))
+		require.Contains(t, holderProcessIds, fmt.Sprintf("process_%d_second", i))
 	}
 
 	// Run garbage collection again to process the remaining semaphores
@@ -1244,8 +1206,8 @@ func TestRunSemaphoresGarbageCollectionWithMultipleExpiringSemaphores(t *testing
 		MaxVisitedSemaphores:       maxVisitedSemaphores,
 	})
 
-	require.NoError(err)
-	require.NotNil(gcResponse2)
+	require.NoError(t, err)
+	require.NotNil(t, gcResponse2)
 
 	// Verify that semaphores 5-9 still have their remaining holders
 	for i := 5; i < 10; i++ {
@@ -1253,9 +1215,9 @@ func TestRunSemaphoresGarbageCollectionWithMultipleExpiringSemaphores(t *testing
 			SemaphoreId: semaphoreIds[i],
 			Now:         gcTime.UnixNano(),
 		})
-		require.NoError(err)
-		require.NotNil(response.Semaphore)
-		require.Len(response.Semaphore.SemaphoreHolders, 1, "Semaphore %d should still have one holder after second GC", i)
+		require.NoError(t, err)
+		require.NotNil(t, response.Semaphore)
+		require.Len(t, response.Semaphore.SemaphoreHolders, 1, "Semaphore %d should still have one holder after second GC", i)
 	}
 
 	// Verify that semaphores 10-14 still have all their holders
@@ -1264,9 +1226,9 @@ func TestRunSemaphoresGarbageCollectionWithMultipleExpiringSemaphores(t *testing
 			SemaphoreId: semaphoreIds[i],
 			Now:         gcTime.UnixNano(),
 		})
-		require.NoError(err)
-		require.NotNil(response.Semaphore)
-		require.Len(response.Semaphore.SemaphoreHolders, 2, "Semaphore %d should still have both holders after second GC", i)
+		require.NoError(t, err)
+		require.NotNil(t, response.Semaphore)
+		require.Len(t, response.Semaphore.SemaphoreHolders, 2, "Semaphore %d should still have both holders after second GC", i)
 	}
 }
 

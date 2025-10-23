@@ -12,8 +12,6 @@ import (
 )
 
 func TestCreateAndGetNamespace(t *testing.T) {
-	require := require.New(t)
-
 	namespacesCore := newNamespacesCore()
 
 	now := time.Now()
@@ -27,21 +25,21 @@ func TestCreateAndGetNamespace(t *testing.T) {
 		MaxNumberOfNamespaces: 20,
 	})
 
-	require.NoError(err)
-	require.NotNil(response1.Namespace)
+	require.NoError(t, err)
+	require.NotNil(t, response1.Namespace)
 
 	// Get this newly created namespace
 	response2, err := namespacesCore.GetNamespace(&corepb.GetNamespaceRequest{
 		NamespaceId: response1.Namespace.Id,
 	})
 
-	require.NoError(err)
-	require.NotNil(response2.Namespace)
+	require.NoError(t, err)
+	require.NotNil(t, response2.Namespace)
 
-	require.Equal("test_namespace", response2.Namespace.Id.NamespaceName)
-	require.Equal("test description", response2.Namespace.Description)
-	require.Equal(now.UnixNano(), response2.Namespace.CreatedAt)
-	require.Equal(now.UnixNano(), response2.Namespace.UpdatedAt)
+	require.Equal(t, "test_namespace", response2.Namespace.Id.NamespaceName)
+	require.Equal(t, "test description", response2.Namespace.Description)
+	require.Equal(t, now.UnixNano(), response2.Namespace.CreatedAt)
+	require.Equal(t, now.UnixNano(), response2.Namespace.UpdatedAt)
 
 	// Get non-existent namespace
 	_, err = namespacesCore.GetNamespace(&corepb.GetNamespaceRequest{
@@ -51,12 +49,10 @@ func TestCreateAndGetNamespace(t *testing.T) {
 		},
 	})
 
-	require.Error(err)
+	require.Error(t, err)
 }
 
 func TestListNamespaces(t *testing.T) {
-	require := require.New(t)
-
 	namespacesCore := newNamespacesCore()
 
 	now := time.Now()
@@ -71,8 +67,8 @@ func TestListNamespaces(t *testing.T) {
 		MaxNumberOfNamespaces: 20,
 	})
 
-	require.NoError(err)
-	require.NotNil(response1.Namespace)
+	require.NoError(t, err)
+	require.NotNil(t, response1.Namespace)
 
 	// Create namespace 2
 	response2, err := namespacesCore.CreateNamespace(&corepb.CreateNamespaceRequest{
@@ -82,21 +78,19 @@ func TestListNamespaces(t *testing.T) {
 		MaxNumberOfNamespaces: 20,
 	})
 
-	require.NoError(err)
-	require.NotNil(response2.Namespace)
+	require.NoError(t, err)
+	require.NotNil(t, response2.Namespace)
 
 	// List namespaces
 	response3, err := namespacesCore.ListNamespaces(&corepb.ListNamespacesRequest{
 		AccountId: accountId,
 	})
 
-	require.NoError(err)
-	require.Len(response3.Namespaces, 2)
+	require.NoError(t, err)
+	require.Len(t, response3.Namespaces, 2)
 }
 
 func TestMaxNumberOfNamespaces(t *testing.T) {
-	require := require.New(t)
-
 	namespacesCore := newNamespacesCore()
 
 	now := time.Now()
@@ -111,8 +105,8 @@ func TestMaxNumberOfNamespaces(t *testing.T) {
 		MaxNumberOfNamespaces: 1,
 	})
 
-	require.NoError(err)
-	require.NotNil(response1.Namespace)
+	require.NoError(t, err)
+	require.NotNil(t, response1.Namespace)
 
 	// Create namespace 2
 	_, err = namespacesCore.CreateNamespace(&corepb.CreateNamespaceRequest{
@@ -122,7 +116,7 @@ func TestMaxNumberOfNamespaces(t *testing.T) {
 		MaxNumberOfNamespaces: 1,
 	})
 
-	require.Error(err)
+	require.Error(t, err)
 }
 
 func newNamespacesCore() *NamespacesCore {
@@ -130,8 +124,6 @@ func newNamespacesCore() *NamespacesCore {
 }
 
 func TestUpdateNamespace(t *testing.T) {
-	require := require.New(t)
-
 	namespacesCore := newNamespacesCore()
 	now := time.Now()
 	accountId := rand.Uint64()
@@ -145,9 +137,9 @@ func TestUpdateNamespace(t *testing.T) {
 		MaxNumberOfNamespaces: 20,
 	})
 
-	require.NoError(err)
-	require.NotNil(createResponse.Namespace)
-	require.Equal("original description", createResponse.Namespace.Description)
+	require.NoError(t, err)
+	require.NotNil(t, createResponse.Namespace)
+	require.Equal(t, "original description", createResponse.Namespace.Description)
 
 	// Update the namespace
 	updateTime := time.Now().Add(time.Hour)
@@ -157,26 +149,24 @@ func TestUpdateNamespace(t *testing.T) {
 		Now:         updateTime.UnixNano(),
 	})
 
-	require.NoError(err)
-	require.NotNil(updateResponse.Namespace)
-	require.Equal("updated description", updateResponse.Namespace.Description)
-	require.Equal(updateTime.UnixNano(), updateResponse.Namespace.UpdatedAt)
-	require.Equal(now.UnixNano(), updateResponse.Namespace.CreatedAt)
+	require.NoError(t, err)
+	require.NotNil(t, updateResponse.Namespace)
+	require.Equal(t, "updated description", updateResponse.Namespace.Description)
+	require.Equal(t, updateTime.UnixNano(), updateResponse.Namespace.UpdatedAt)
+	require.Equal(t, now.UnixNano(), updateResponse.Namespace.CreatedAt)
 
 	// Verify the update by getting the namespace
 	getResponse, err := namespacesCore.GetNamespace(&corepb.GetNamespaceRequest{
 		NamespaceId: createResponse.Namespace.Id,
 	})
 
-	require.NoError(err)
-	require.NotNil(getResponse.Namespace)
-	require.Equal("updated description", getResponse.Namespace.Description)
-	require.Equal(updateTime.UnixNano(), getResponse.Namespace.UpdatedAt)
+	require.NoError(t, err)
+	require.NotNil(t, getResponse.Namespace)
+	require.Equal(t, "updated description", getResponse.Namespace.Description)
+	require.Equal(t, updateTime.UnixNano(), getResponse.Namespace.UpdatedAt)
 }
 
 func TestUpdateNamespaceNotFound(t *testing.T) {
-	require := require.New(t)
-
 	namespacesCore := newNamespacesCore()
 	now := time.Now()
 
@@ -190,12 +180,10 @@ func TestUpdateNamespaceNotFound(t *testing.T) {
 		Now:         now.UnixNano(),
 	})
 
-	require.Error(err)
+	require.Error(t, err)
 }
 
 func TestUpdateNamespaceEmptyDescription(t *testing.T) {
-	require := require.New(t)
-
 	namespacesCore := newNamespacesCore()
 	now := time.Now()
 	accountId := rand.Uint64()
@@ -209,8 +197,8 @@ func TestUpdateNamespaceEmptyDescription(t *testing.T) {
 		MaxNumberOfNamespaces: 20,
 	})
 
-	require.NoError(err)
-	require.NotNil(createResponse.Namespace)
+	require.NoError(t, err)
+	require.NotNil(t, createResponse.Namespace)
 
 	// Update the namespace with empty description
 	updateTime := time.Now().Add(time.Hour)
@@ -220,15 +208,13 @@ func TestUpdateNamespaceEmptyDescription(t *testing.T) {
 		Now:         updateTime.UnixNano(),
 	})
 
-	require.NoError(err)
-	require.NotNil(updateResponse.Namespace)
-	require.Equal("", updateResponse.Namespace.Description)
-	require.Equal(updateTime.UnixNano(), updateResponse.Namespace.UpdatedAt)
+	require.NoError(t, err)
+	require.NotNil(t, updateResponse.Namespace)
+	require.Equal(t, "", updateResponse.Namespace.Description)
+	require.Equal(t, updateTime.UnixNano(), updateResponse.Namespace.UpdatedAt)
 }
 
 func TestDeleteNamespace(t *testing.T) {
-	require := require.New(t)
-
 	namespacesCore := newNamespacesCore()
 	now := time.Now()
 	accountId := rand.Uint64()
@@ -242,37 +228,35 @@ func TestDeleteNamespace(t *testing.T) {
 		MaxNumberOfNamespaces: 20,
 	})
 
-	require.NoError(err)
-	require.NotNil(createResponse.Namespace)
+	require.NoError(t, err)
+	require.NotNil(t, createResponse.Namespace)
 
 	// Verify the namespace exists
 	getResponse, err := namespacesCore.GetNamespace(&corepb.GetNamespaceRequest{
 		NamespaceId: createResponse.Namespace.Id,
 	})
 
-	require.NoError(err)
-	require.NotNil(getResponse.Namespace)
+	require.NoError(t, err)
+	require.NotNil(t, getResponse.Namespace)
 
 	// Delete the namespace
 	deleteResponse, err := namespacesCore.DeleteNamespace(&corepb.DeleteNamespaceRequest{
 		NamespaceId: createResponse.Namespace.Id,
 	})
 
-	require.NoError(err)
-	require.NotNil(deleteResponse)
+	require.NoError(t, err)
+	require.NotNil(t, deleteResponse)
 
 	// Verify the namespace no longer exists
 	_, err = namespacesCore.GetNamespace(&corepb.GetNamespaceRequest{
 		NamespaceId: createResponse.Namespace.Id,
 	})
 
-	require.Error(err)
+	require.Error(t, err)
 	// The error should be a NotFound error
 }
 
 func TestDeleteNamespaceNotFound(t *testing.T) {
-	require := require.New(t)
-
 	namespacesCore := newNamespacesCore()
 
 	// Try to delete a non-existent namespace
@@ -283,12 +267,10 @@ func TestDeleteNamespaceNotFound(t *testing.T) {
 		},
 	})
 
-	require.NoError(err)
+	require.NoError(t, err)
 }
 
 func TestDeleteNamespaceMultipleNamespaces(t *testing.T) {
-	require := require.New(t)
-
 	namespacesCore := newNamespacesCore()
 	now := time.Now()
 	accountId := rand.Uint64()
@@ -302,8 +284,8 @@ func TestDeleteNamespaceMultipleNamespaces(t *testing.T) {
 		MaxNumberOfNamespaces: 20,
 	})
 
-	require.NoError(err)
-	require.NotNil(createResponse1.Namespace)
+	require.NoError(t, err)
+	require.NotNil(t, createResponse1.Namespace)
 
 	createResponse2, err := namespacesCore.CreateNamespace(&corepb.CreateNamespaceRequest{
 		AccountId:             accountId,
@@ -313,54 +295,52 @@ func TestDeleteNamespaceMultipleNamespaces(t *testing.T) {
 		MaxNumberOfNamespaces: 20,
 	})
 
-	require.NoError(err)
-	require.NotNil(createResponse2.Namespace)
+	require.NoError(t, err)
+	require.NotNil(t, createResponse2.Namespace)
 
 	// Verify both namespaces exist
 	listResponse, err := namespacesCore.ListNamespaces(&corepb.ListNamespacesRequest{
 		AccountId: accountId,
 	})
 
-	require.NoError(err)
-	require.Len(listResponse.Namespaces, 2)
+	require.NoError(t, err)
+	require.Len(t, listResponse.Namespaces, 2)
 
 	// Delete the first namespace
 	deleteResponse, err := namespacesCore.DeleteNamespace(&corepb.DeleteNamespaceRequest{
 		NamespaceId: createResponse1.Namespace.Id,
 	})
 
-	require.NoError(err)
-	require.NotNil(deleteResponse)
+	require.NoError(t, err)
+	require.NotNil(t, deleteResponse)
 
 	// Verify only the second namespace remains
 	listResponse2, err := namespacesCore.ListNamespaces(&corepb.ListNamespacesRequest{
 		AccountId: accountId,
 	})
 
-	require.NoError(err)
-	require.Len(listResponse2.Namespaces, 1)
-	require.Equal("test_namespace_2", listResponse2.Namespaces[0].Id.NamespaceName)
+	require.NoError(t, err)
+	require.Len(t, listResponse2.Namespaces, 1)
+	require.Equal(t, "test_namespace_2", listResponse2.Namespaces[0].Id.NamespaceName)
 
 	// Verify the first namespace no longer exists
 	_, err = namespacesCore.GetNamespace(&corepb.GetNamespaceRequest{
 		NamespaceId: createResponse1.Namespace.Id,
 	})
 
-	require.Error(err)
+	require.Error(t, err)
 
 	// Verify the second namespace still exists
 	getResponse, err := namespacesCore.GetNamespace(&corepb.GetNamespaceRequest{
 		NamespaceId: createResponse2.Namespace.Id,
 	})
 
-	require.NoError(err)
-	require.NotNil(getResponse.Namespace)
-	require.Equal("test_namespace_2", getResponse.Namespace.Id.NamespaceName)
+	require.NoError(t, err)
+	require.NotNil(t, getResponse.Namespace)
+	require.Equal(t, "test_namespace_2", getResponse.Namespace.Id.NamespaceName)
 }
 
 func TestUpdateAndDeleteNamespaceWorkflow(t *testing.T) {
-	require := require.New(t)
-
 	namespacesCore := newNamespacesCore()
 	now := time.Now()
 	accountId := rand.Uint64()
@@ -374,8 +354,8 @@ func TestUpdateAndDeleteNamespaceWorkflow(t *testing.T) {
 		MaxNumberOfNamespaces: 20,
 	})
 
-	require.NoError(err)
-	require.NotNil(createResponse.Namespace)
+	require.NoError(t, err)
+	require.NotNil(t, createResponse.Namespace)
 
 	// Update the namespace multiple times
 	updateTime1 := time.Now().Add(time.Hour)
@@ -385,9 +365,9 @@ func TestUpdateAndDeleteNamespaceWorkflow(t *testing.T) {
 		Now:         updateTime1.UnixNano(),
 	})
 
-	require.NoError(err)
-	require.Equal("first update", updateResponse1.Namespace.Description)
-	require.Equal(updateTime1.UnixNano(), updateResponse1.Namespace.UpdatedAt)
+	require.NoError(t, err)
+	require.Equal(t, "first update", updateResponse1.Namespace.Description)
+	require.Equal(t, updateTime1.UnixNano(), updateResponse1.Namespace.UpdatedAt)
 
 	updateTime2 := time.Now().Add(2 * time.Hour)
 	updateResponse2, err := namespacesCore.UpdateNamespace(&corepb.UpdateNamespaceRequest{
@@ -396,32 +376,32 @@ func TestUpdateAndDeleteNamespaceWorkflow(t *testing.T) {
 		Now:         updateTime2.UnixNano(),
 	})
 
-	require.NoError(err)
-	require.Equal("second update", updateResponse2.Namespace.Description)
-	require.Equal(updateTime2.UnixNano(), updateResponse2.Namespace.UpdatedAt)
+	require.NoError(t, err)
+	require.Equal(t, "second update", updateResponse2.Namespace.Description)
+	require.Equal(t, updateTime2.UnixNano(), updateResponse2.Namespace.UpdatedAt)
 
 	// Verify the final state
 	getResponse, err := namespacesCore.GetNamespace(&corepb.GetNamespaceRequest{
 		NamespaceId: createResponse.Namespace.Id,
 	})
 
-	require.NoError(err)
-	require.Equal("second update", getResponse.Namespace.Description)
-	require.Equal(updateTime2.UnixNano(), getResponse.Namespace.UpdatedAt)
-	require.Equal(now.UnixNano(), getResponse.Namespace.CreatedAt)
+	require.NoError(t, err)
+	require.Equal(t, "second update", getResponse.Namespace.Description)
+	require.Equal(t, updateTime2.UnixNano(), getResponse.Namespace.UpdatedAt)
+	require.Equal(t, now.UnixNano(), getResponse.Namespace.CreatedAt)
 
 	// Delete the namespace
 	deleteResponse, err := namespacesCore.DeleteNamespace(&corepb.DeleteNamespaceRequest{
 		NamespaceId: createResponse.Namespace.Id,
 	})
 
-	require.NoError(err)
-	require.NotNil(deleteResponse)
+	require.NoError(t, err)
+	require.NotNil(t, deleteResponse)
 
 	// Verify it's gone
 	_, err = namespacesCore.GetNamespace(&corepb.GetNamespaceRequest{
 		NamespaceId: createResponse.Namespace.Id,
 	})
 
-	require.Error(err)
+	require.Error(t, err)
 }

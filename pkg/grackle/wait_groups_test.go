@@ -15,8 +15,6 @@ import (
 )
 
 func TestCreateAndGetWaitGroup(t *testing.T) {
-	require := require.New(t)
-
 	waitGroupsCore := newWaitGroupsCore()
 
 	now := time.Now()
@@ -45,28 +43,26 @@ func TestCreateAndGetWaitGroup(t *testing.T) {
 		MaxNumberOfWaitGroupsPerNamespace: 100,
 	})
 
-	require.NoError(err)
-	require.NotNil(createResponse.WaitGroup)
-	require.Equal("test description", createResponse.WaitGroup.Description)
-	require.EqualValues(10, createResponse.WaitGroup.Counter)
-	require.EqualValues(0, createResponse.WaitGroup.Completed)
-	require.Equal(expiresAt, createResponse.WaitGroup.ExpiresAt)
+	require.NoError(t, err)
+	require.NotNil(t, createResponse.WaitGroup)
+	require.Equal(t, "test description", createResponse.WaitGroup.Description)
+	require.EqualValues(t, 10, createResponse.WaitGroup.Counter)
+	require.EqualValues(t, 0, createResponse.WaitGroup.Completed)
+	require.Equal(t, expiresAt, createResponse.WaitGroup.ExpiresAt)
 
 	// Get wait group
 	getResponse, err := waitGroupsCore.GetWaitGroup(&corepb.GetWaitGroupRequest{
 		WaitGroupId: waitGroupId,
 	})
 
-	require.NoError(err)
-	require.NotNil(getResponse.WaitGroup)
-	require.Equal("test description", getResponse.WaitGroup.Description)
-	require.EqualValues(10, getResponse.WaitGroup.Counter)
-	require.EqualValues(0, getResponse.WaitGroup.Completed)
+	require.NoError(t, err)
+	require.NotNil(t, getResponse.WaitGroup)
+	require.Equal(t, "test description", getResponse.WaitGroup.Description)
+	require.EqualValues(t, 10, getResponse.WaitGroup.Counter)
+	require.EqualValues(t, 0, getResponse.WaitGroup.Completed)
 }
 
 func TestCreateWaitGroupWithDuplicateName(t *testing.T) {
-	require := require.New(t)
-
 	waitGroupsCore := newWaitGroupsCore()
 
 	now := time.Now()
@@ -89,7 +85,7 @@ func TestCreateWaitGroupWithDuplicateName(t *testing.T) {
 		ExpiresAt:                         expiresAt,
 		MaxNumberOfWaitGroupsPerNamespace: 100,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// Try to create a second wait group with the same name in the same namespace
 	_, err = waitGroupsCore.CreateWaitGroup(&corepb.CreateWaitGroupRequest{
@@ -102,12 +98,10 @@ func TestCreateWaitGroupWithDuplicateName(t *testing.T) {
 		MaxNumberOfWaitGroupsPerNamespace: 100,
 	})
 
-	require.Error(err)
+	require.Error(t, err)
 }
 
 func TestAddJobToWaitGroup(t *testing.T) {
-	require := require.New(t)
-
 	waitGroupsCore := newWaitGroupsCore()
 
 	now := time.Now()
@@ -135,7 +129,7 @@ func TestAddJobToWaitGroup(t *testing.T) {
 		ExpiresAt:                         expiresAt,
 		MaxNumberOfWaitGroupsPerNamespace: 100,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// T+1m: Add jobs to wait group
 	addResponse, err := waitGroupsCore.AddJobsToWaitGroup(&corepb.AddJobsToWaitGroupRequest{
@@ -145,15 +139,13 @@ func TestAddJobToWaitGroup(t *testing.T) {
 		MaxWaitGroupSize: 100,
 	})
 
-	require.NoError(err)
-	require.NotNil(addResponse.WaitGroup)
-	require.EqualValues(15, addResponse.WaitGroup.Counter)
-	require.EqualValues(0, addResponse.WaitGroup.Completed)
+	require.NoError(t, err)
+	require.NotNil(t, addResponse.WaitGroup)
+	require.EqualValues(t, 15, addResponse.WaitGroup.Counter)
+	require.EqualValues(t, 0, addResponse.WaitGroup.Completed)
 }
 
 func TestAddJobsToNonExistingWaitGroup(t *testing.T) {
-	require := require.New(t)
-
 	waitGroupsCore := newWaitGroupsCore()
 
 	now := time.Now()
@@ -174,12 +166,10 @@ func TestAddJobsToNonExistingWaitGroup(t *testing.T) {
 		MaxWaitGroupSize: 100,
 	})
 
-	require.Error(err)
+	require.Error(t, err)
 }
 
 func TestCompleteJobFromWaitGroup(t *testing.T) {
-	require := require.New(t)
-
 	waitGroupsCore := newWaitGroupsCore()
 
 	now := time.Now()
@@ -206,7 +196,7 @@ func TestCompleteJobFromWaitGroup(t *testing.T) {
 		ExpiresAt:                         now.Add(time.Hour).UnixNano(),
 		MaxNumberOfWaitGroupsPerNamespace: 100,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// T+1m: Complete jobs
 	completeResponse, err := waitGroupsCore.CompleteJobsFromWaitGroup(&corepb.CompleteJobsFromWaitGroupRequest{
@@ -215,10 +205,10 @@ func TestCompleteJobFromWaitGroup(t *testing.T) {
 		Now:         now.Add(time.Minute).UnixNano(),
 	})
 
-	require.NoError(err)
-	require.NotNil(completeResponse.WaitGroup)
-	require.EqualValues(10, completeResponse.WaitGroup.Counter)
-	require.EqualValues(3, completeResponse.WaitGroup.Completed)
+	require.NoError(t, err)
+	require.NotNil(t, completeResponse.WaitGroup)
+	require.EqualValues(t, 10, completeResponse.WaitGroup.Counter)
+	require.EqualValues(t, 3, completeResponse.WaitGroup.Completed)
 
 	// T+2m: Complete same jobs again (should not increase completed counter)
 	completeResponse, err = waitGroupsCore.CompleteJobsFromWaitGroup(&corepb.CompleteJobsFromWaitGroupRequest{
@@ -227,15 +217,13 @@ func TestCompleteJobFromWaitGroup(t *testing.T) {
 		Now:         now.Add(2 * time.Minute).UnixNano(),
 	})
 
-	require.NoError(err)
-	require.NotNil(completeResponse.WaitGroup)
-	require.EqualValues(10, completeResponse.WaitGroup.Counter)
-	require.EqualValues(3, completeResponse.WaitGroup.Completed)
+	require.NoError(t, err)
+	require.NotNil(t, completeResponse.WaitGroup)
+	require.EqualValues(t, 10, completeResponse.WaitGroup.Counter)
+	require.EqualValues(t, 3, completeResponse.WaitGroup.Completed)
 }
 
 func TestCompleteJobsFromNonExistingWaitGroup(t *testing.T) {
-	require := require.New(t)
-
 	waitGroupsCore := newWaitGroupsCore()
 
 	now := time.Now()
@@ -255,12 +243,10 @@ func TestCompleteJobsFromNonExistingWaitGroup(t *testing.T) {
 		Now:         now.UnixNano(),
 	})
 
-	require.Error(err)
+	require.Error(t, err)
 }
 
 func TestListWaitGroups(t *testing.T) {
-	require := require.New(t)
-
 	waitGroupsCore := newWaitGroupsCore()
 
 	now := time.Now()
@@ -282,7 +268,7 @@ func TestListWaitGroups(t *testing.T) {
 		ExpiresAt:                         now.Add(time.Hour).UnixNano(),
 		MaxNumberOfWaitGroupsPerNamespace: 100,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// T+1m: Create second wait group
 	_, err = waitGroupsCore.CreateWaitGroup(&corepb.CreateWaitGroupRequest{
@@ -294,20 +280,18 @@ func TestListWaitGroups(t *testing.T) {
 		ExpiresAt:                         now.Add(time.Minute).Add(time.Hour).UnixNano(),
 		MaxNumberOfWaitGroupsPerNamespace: 100,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// List wait groups
 	response, err := waitGroupsCore.ListWaitGroups(&corepb.ListWaitGroupsRequest{
 		NamespaceTimestampedId: namespaceTimestampedId,
 	})
 
-	require.NoError(err)
-	require.Len(response.WaitGroups, 2)
+	require.NoError(t, err)
+	require.Len(t, response.WaitGroups, 2)
 }
 
 func TestDeleteWaitGroup(t *testing.T) {
-	require := require.New(t)
-
 	waitGroupsCore := newWaitGroupsCore()
 
 	now := time.Now()
@@ -335,24 +319,22 @@ func TestDeleteWaitGroup(t *testing.T) {
 		ExpiresAt:                         expiresAt,
 		MaxNumberOfWaitGroupsPerNamespace: 100,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// Delete wait group
 	_, err = waitGroupsCore.DeleteWaitGroup(&corepb.DeleteWaitGroupRequest{
 		WaitGroupId: waitGroupId,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// Try to get deleted wait group
 	_, err = waitGroupsCore.GetWaitGroup(&corepb.GetWaitGroupRequest{
 		WaitGroupId: waitGroupId,
 	})
-	require.Error(err)
+	require.Error(t, err)
 }
 
 func TestDeleteNonExistingWaitGroup(t *testing.T) {
-	require := require.New(t)
-
 	waitGroupsCore := newWaitGroupsCore()
 
 	accountId := rand.Uint64()
@@ -369,12 +351,10 @@ func TestDeleteNonExistingWaitGroup(t *testing.T) {
 	})
 
 	// Deleting a non-exising wait group does not return errors
-	require.NoError(err)
+	require.NoError(t, err)
 }
 
 func TestLargeWaitGroup(t *testing.T) {
-	require := require.New(t)
-
 	waitGroupsCore := newWaitGroupsCore()
 
 	now := time.Now()
@@ -403,10 +383,10 @@ func TestLargeWaitGroup(t *testing.T) {
 		MaxNumberOfWaitGroupsPerNamespace: 100,
 	})
 
-	require.NoError(err)
-	require.NotNil(createResponse.WaitGroup)
-	require.EqualValues(groupSize, createResponse.WaitGroup.Counter)
-	require.EqualValues(0, createResponse.WaitGroup.Completed)
+	require.NoError(t, err)
+	require.NotNil(t, createResponse.WaitGroup)
+	require.EqualValues(t, groupSize, createResponse.WaitGroup.Counter)
+	require.EqualValues(t, 0, createResponse.WaitGroup.Completed)
 
 	// Complete all jobs in batches
 	batchSize := 10
@@ -424,8 +404,8 @@ func TestLargeWaitGroup(t *testing.T) {
 			Now:         now.Add(time.Duration(completedJobs) * time.Millisecond).UnixNano(),
 		})
 
-		require.NoError(err)
-		require.NotNil(completeResponse.WaitGroup)
+		require.NoError(t, err)
+		require.NotNil(t, completeResponse.WaitGroup)
 		completedJobs += uint64(batchSize)
 	}
 
@@ -434,21 +414,19 @@ func TestLargeWaitGroup(t *testing.T) {
 		WaitGroupId: waitGroupId,
 	})
 
-	require.NoError(err)
-	require.NotNil(getResponse.WaitGroup)
-	require.EqualValues(groupSize, getResponse.WaitGroup.Counter)
-	require.EqualValues(groupSize, getResponse.WaitGroup.Completed)
+	require.NoError(t, err)
+	require.NotNil(t, getResponse.WaitGroup)
+	require.EqualValues(t, groupSize, getResponse.WaitGroup.Counter)
+	require.EqualValues(t, groupSize, getResponse.WaitGroup.Completed)
 
 	// Delete wait group
 	_, err = waitGroupsCore.DeleteWaitGroup(&corepb.DeleteWaitGroupRequest{
 		WaitGroupId: waitGroupId,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 }
 
 func TestSnapshotAndRestoreWaitGroups(t *testing.T) {
-	require := require.New(t)
-
 	now := time.Now()
 
 	accountId := rand.Uint64()
@@ -477,7 +455,7 @@ func TestSnapshotAndRestoreWaitGroups(t *testing.T) {
 		ExpiresAt:                         now.Add(time.Hour).UnixNano(),
 		MaxNumberOfWaitGroupsPerNamespace: 100,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// T+1m: Complete some jobs
 	_, err = waitGroupsCore1.CompleteJobsFromWaitGroup(&corepb.CompleteJobsFromWaitGroupRequest{
@@ -485,7 +463,7 @@ func TestSnapshotAndRestoreWaitGroups(t *testing.T) {
 		ProcessIds:  []string{"process_1", "process_2", "process_3"},
 		Now:         now.Add(time.Minute).UnixNano(),
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// Take snapshot at this point
 	snapshot := waitGroupsCore1.Snapshot()
@@ -496,7 +474,7 @@ func TestSnapshotAndRestoreWaitGroups(t *testing.T) {
 		ProcessIds:  []string{"process_4", "process_5"},
 		Now:         now.Add(2 * time.Minute).UnixNano(),
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// T+3m: Add more jobs to wait group (after snapshot)
 	_, err = waitGroupsCore1.AddJobsToWaitGroup(&corepb.AddJobsToWaitGroupRequest{
@@ -505,26 +483,26 @@ func TestSnapshotAndRestoreWaitGroups(t *testing.T) {
 		Now:              now.Add(3 * time.Minute).UnixNano(),
 		MaxWaitGroupSize: 100,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// Write snapshot to buffer
 	buf := bytes.NewBuffer(nil)
 	err = snapshot.Write(buf)
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// Restore snapshot to second core
 	err = waitGroupsCore2.Restore(io.NopCloser(buf))
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// T+4m: Check that the restored state matches the snapshot state
 	// The wait group should exist with 3 completed jobs out of 10 total
 	response1, err := waitGroupsCore2.GetWaitGroup(&corepb.GetWaitGroupRequest{
 		WaitGroupId: waitGroupId,
 	})
-	require.NoError(err)
-	require.NotNil(response1.WaitGroup)
-	require.EqualValues(10, response1.WaitGroup.Counter)
-	require.EqualValues(3, response1.WaitGroup.Completed)
+	require.NoError(t, err)
+	require.NotNil(t, response1.WaitGroup)
+	require.EqualValues(t, 10, response1.WaitGroup.Counter)
+	require.EqualValues(t, 3, response1.WaitGroup.Completed)
 
 	// T+5m: Complete more jobs in restored state
 	_, err = waitGroupsCore2.CompleteJobsFromWaitGroup(&corepb.CompleteJobsFromWaitGroupRequest{
@@ -532,15 +510,15 @@ func TestSnapshotAndRestoreWaitGroups(t *testing.T) {
 		ProcessIds:  []string{"process_6", "process_7"},
 		Now:         now.Add(5 * time.Minute).UnixNano(),
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// T+6m: Verify state in restored core
 	response2, err := waitGroupsCore2.GetWaitGroup(&corepb.GetWaitGroupRequest{
 		WaitGroupId: waitGroupId,
 	})
-	require.NoError(err)
-	require.EqualValues(10, response2.WaitGroup.Counter)
-	require.EqualValues(5, response2.WaitGroup.Completed)
+	require.NoError(t, err)
+	require.EqualValues(t, 10, response2.WaitGroup.Counter)
+	require.EqualValues(t, 5, response2.WaitGroup.Completed)
 
 	// T+7m: Add more jobs in restored state
 	_, err = waitGroupsCore2.AddJobsToWaitGroup(&corepb.AddJobsToWaitGroupRequest{
@@ -549,28 +527,26 @@ func TestSnapshotAndRestoreWaitGroups(t *testing.T) {
 		Now:              now.Add(7 * time.Minute).UnixNano(),
 		MaxWaitGroupSize: 100,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// T+8m: Verify final state in restored core
 	response3, err := waitGroupsCore2.GetWaitGroup(&corepb.GetWaitGroupRequest{
 		WaitGroupId: waitGroupId,
 	})
-	require.NoError(err)
-	require.EqualValues(13, response3.WaitGroup.Counter)
-	require.EqualValues(5, response3.WaitGroup.Completed)
+	require.NoError(t, err)
+	require.EqualValues(t, 13, response3.WaitGroup.Counter)
+	require.EqualValues(t, 5, response3.WaitGroup.Completed)
 
 	// Verify that the original core has different state (it should have more completed jobs)
 	response4, err := waitGroupsCore1.GetWaitGroup(&corepb.GetWaitGroupRequest{
 		WaitGroupId: waitGroupId,
 	})
-	require.NoError(err)
-	require.EqualValues(15, response4.WaitGroup.Counter)  // 10 + 5 added after snapshot
-	require.EqualValues(5, response4.WaitGroup.Completed) // 3 + 2 completed after snapshot
+	require.NoError(t, err)
+	require.EqualValues(t, 15, response4.WaitGroup.Counter)  // 10 + 5 added after snapshot
+	require.EqualValues(t, 5, response4.WaitGroup.Completed) // 3 + 2 completed after snapshot
 }
 
 func TestCreateWaitGroupMaxNumberOfWaitGroupsPerNamespace(t *testing.T) {
-	require := require.New(t)
-
 	waitGroupsCore := newWaitGroupsCore()
 
 	now := time.Now()
@@ -595,7 +571,7 @@ func TestCreateWaitGroupMaxNumberOfWaitGroupsPerNamespace(t *testing.T) {
 			ExpiresAt:                         expiresAt,
 			MaxNumberOfWaitGroupsPerNamespace: maxWaitGroups,
 		})
-		require.NoError(err, "Failed to create wait group %d", i)
+		require.NoError(t, err, "Failed to create wait group %d", i)
 	}
 
 	// Try to create one more wait group, which should fail
@@ -609,12 +585,10 @@ func TestCreateWaitGroupMaxNumberOfWaitGroupsPerNamespace(t *testing.T) {
 		MaxNumberOfWaitGroupsPerNamespace: maxWaitGroups,
 	})
 
-	require.Error(err, "Expected error when exceeding MaxNumberOfWaitGroupsPerNamespace")
+	require.Error(t, err, "Expected error when exceeding MaxNumberOfWaitGroupsPerNamespace")
 }
 
 func TestAddJobsToWaitGroupMaxWaitGroupSize(t *testing.T) {
-	require := require.New(t)
-
 	waitGroupsCore := newWaitGroupsCore()
 
 	now := time.Now()
@@ -643,7 +617,7 @@ func TestAddJobsToWaitGroupMaxWaitGroupSize(t *testing.T) {
 		ExpiresAt:                         expiresAt,
 		MaxNumberOfWaitGroupsPerNamespace: 100,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// Add jobs up to the limit (5 + 5 = 10, which equals maxWaitGroupSize)
 	_, err = waitGroupsCore.AddJobsToWaitGroup(&corepb.AddJobsToWaitGroupRequest{
@@ -652,7 +626,7 @@ func TestAddJobsToWaitGroupMaxWaitGroupSize(t *testing.T) {
 		Now:              now.Add(time.Minute).UnixNano(),
 		MaxWaitGroupSize: maxWaitGroupSize,
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// Try to add one more job, which should fail (5 + 5 + 1 = 11 > 10)
 	_, err = waitGroupsCore.AddJobsToWaitGroup(&corepb.AddJobsToWaitGroupRequest{
@@ -662,12 +636,10 @@ func TestAddJobsToWaitGroupMaxWaitGroupSize(t *testing.T) {
 		MaxWaitGroupSize: maxWaitGroupSize,
 	})
 
-	require.Error(err, "Expected error when exceeding MaxWaitGroupSize")
+	require.Error(t, err, "Expected error when exceeding MaxWaitGroupSize")
 }
 
 func TestRunWaitGroupsGarbageCollection(t *testing.T) {
-	require := require.New(t)
-
 	waitGroupsCore := newWaitGroupsCore()
 	now := time.Now()
 
@@ -708,7 +680,7 @@ func TestRunWaitGroupsGarbageCollection(t *testing.T) {
 			ExpiresAt:                         now.Add(time.Hour).UnixNano(),
 			MaxNumberOfWaitGroupsPerNamespace: 100,
 		})
-		require.NoError(err)
+		require.NoError(t, err)
 
 		// Complete all jobs to create job records
 		processIds := make([]string, jobsPerGroup)
@@ -721,7 +693,7 @@ func TestRunWaitGroupsGarbageCollection(t *testing.T) {
 			ProcessIds:  processIds,
 			Now:         now.Add(time.Minute).UnixNano(),
 		})
-		require.NoError(err)
+		require.NoError(t, err)
 	}
 
 	// Create test data for account 2 with multiple namespaces
@@ -758,7 +730,7 @@ func TestRunWaitGroupsGarbageCollection(t *testing.T) {
 				ExpiresAt:                         now.Add(time.Hour).UnixNano(),
 				MaxNumberOfWaitGroupsPerNamespace: 100,
 			})
-			require.NoError(err)
+			require.NoError(t, err)
 
 			// Complete all jobs to create job records
 			processIds := make([]string, jobsPerWaitGroup)
@@ -771,7 +743,7 @@ func TestRunWaitGroupsGarbageCollection(t *testing.T) {
 				ProcessIds:  processIds,
 				Now:         now.Add(time.Minute).UnixNano(),
 			})
-			require.NoError(err)
+			require.NoError(t, err)
 		}
 	}
 
@@ -780,7 +752,7 @@ func TestRunWaitGroupsGarbageCollection(t *testing.T) {
 		RecordId:    rand.Uint64(),
 		WaitGroupId: waitGroupIds[0],
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// Delete one namespace from account 2 (this will create a GC record for entire namespace)
 	namespaceToDelete := &corepb.NamespaceTimestampedId{
@@ -793,7 +765,7 @@ func TestRunWaitGroupsGarbageCollection(t *testing.T) {
 		NamespaceTimestampedId: namespaceToDelete,
 		Now:                    now.UnixNano(),
 	})
-	require.NoError(err)
+	require.NoError(t, err)
 
 	// Run garbage collection multiple times to process all objects
 	// The first run should process some objects but not all due to MaxDeletedObjects limit
@@ -810,7 +782,7 @@ func TestRunWaitGroupsGarbageCollection(t *testing.T) {
 			GcRecordWaitGroupsPageSize: gcRecordWaitGroupsPageSize,
 			MaxDeletedObjects:          maxDeletedObjects,
 		})
-		require.NoError(err)
+		require.NoError(t, err)
 
 		// Check if both expected deletions have been completed
 		deletedWaitGroupAccessible := true
@@ -847,13 +819,13 @@ func TestRunWaitGroupsGarbageCollection(t *testing.T) {
 		}
 	}
 
-	require.Less(runCount, maxRuns, "Garbage collection did not complete within expected number of runs")
+	require.Less(t, runCount, maxRuns, "Garbage collection did not complete within expected number of runs")
 
 	// Verify that the deleted wait group is no longer accessible
 	_, err = waitGroupsCore.GetWaitGroup(&corepb.GetWaitGroupRequest{
 		WaitGroupId: waitGroupIds[0],
 	})
-	require.Error(err, "Deleted wait group should not be accessible")
+	require.Error(t, err, "Deleted wait group should not be accessible")
 
 	// Verify that the deleted namespace's wait groups are no longer accessible
 	_, err = waitGroupsCore.GetWaitGroup(&corepb.GetWaitGroupRequest{
@@ -864,13 +836,13 @@ func TestRunWaitGroupsGarbageCollection(t *testing.T) {
 			WaitGroupName:      "test_wait_group_0",
 		},
 	})
-	require.Error(err, "Deleted namespace's wait groups should not be accessible")
+	require.Error(t, err, "Deleted namespace's wait groups should not be accessible")
 
 	// Verify that other wait groups and namespaces are still accessible
 	_, err = waitGroupsCore.GetWaitGroup(&corepb.GetWaitGroupRequest{
 		WaitGroupId: waitGroupIds[1],
 	})
-	require.NoError(err, "Other wait groups should still be accessible")
+	require.NoError(t, err, "Other wait groups should still be accessible")
 
 	// Debug: Check what namespaces actually exist
 	t.Logf("Checking if namespace 3 exists...")
@@ -901,7 +873,7 @@ func TestRunWaitGroupsGarbageCollection(t *testing.T) {
 	} else {
 		t.Logf("Namespace 3 is accessible (expected)")
 	}
-	require.NoError(err, "Other namespaces should still be accessible")
+	require.NoError(t, err, "Other namespaces should still be accessible")
 
 	// Also verify that namespace 4 (if it exists) is still accessible
 	_, err = waitGroupsCore.GetWaitGroup(&corepb.GetWaitGroupRequest{
