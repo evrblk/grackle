@@ -1,7 +1,6 @@
 package grackle
 
 var (
-	// Grackle
 	GrackleLocksTableId                      = []byte{0x05, 0x00}
 	GrackleSemaphoresTableId                 = []byte{0x05, 0x01}
 	GrackleWaitGroupsTableId                 = []byte{0x05, 0x02}
