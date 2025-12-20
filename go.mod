@@ -6,7 +6,6 @@ require (
 	github.com/evrblk/evrblk-go v0.0.0-20251023233135-0790a1a0de0c
 	github.com/evrblk/monstera v0.0.0-20251014211823-7717d34e6850
 	github.com/evrblk/yellowstone-common v0.0.0-20251001110147-7261de2bff54
-	github.com/go-errors/errors v1.5.1
 	github.com/prometheus/client_golang v1.23.2
 	github.com/samber/lo v1.52.0
 	github.com/spf13/cobra v1.10.1
@@ -25,6 +24,7 @@ require (
 	github.com/dgraph-io/ristretto/v2 v2.3.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fatih/color v1.18.0 // indirect
+	github.com/go-errors/errors v1.5.1 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/google/flatbuffers v25.9.23+incompatible // indirect

@@ -30,18 +30,8 @@ github.com/dgryski/go-farm v0.0.0-20240924180020-3414d57e47da h1:aIftn67I1fkbMa5
 github.com/dgryski/go-farm v0.0.0-20240924180020-3414d57e47da/go.mod h1:SqUrOPUnsFjfmXRMNPybcSiG0BgUW2AuFH8PAnS2iTw=
 github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkpeCY=
 github.com/dustin/go-humanize v1.0.1/go.mod h1:Mu1zIs6XwVuF/gI1OepvI0qD18qycQx+mFykh5fBlto=
-github.com/evrblk/evrblk-go v0.0.0-20250930112409-f33f0fd23d10 h1:Tb/q2UwO3m8OrB88S8ZQTEhpZPFN7rX/hd8E4FJUbIY=
-github.com/evrblk/evrblk-go v0.0.0-20250930112409-f33f0fd23d10/go.mod h1:zcmuq1DgoV0Tqvyh2c8/kad5XcuFS7JKd/64NF/hsNA=
-github.com/evrblk/evrblk-go v0.0.0-20251011114654-da7ec23a74a0 h1:i1oiITNPJG6TSiuorw3gUhnPiP3ijEi2ZLzctJZiOig=
-github.com/evrblk/evrblk-go v0.0.0-20251011114654-da7ec23a74a0/go.mod h1:zcmuq1DgoV0Tqvyh2c8/kad5XcuFS7JKd/64NF/hsNA=
-github.com/evrblk/evrblk-go v0.0.0-20251023232203-f2abd3f691c7 h1:5TGKb6EKr/g731chzpf0w197O1ZbcCfs5Qq1J8LmFtc=
-github.com/evrblk/evrblk-go v0.0.0-20251023232203-f2abd3f691c7/go.mod h1:zcmuq1DgoV0Tqvyh2c8/kad5XcuFS7JKd/64NF/hsNA=
 github.com/evrblk/evrblk-go v0.0.0-20251023233135-0790a1a0de0c h1:PjNIKE8R4tXGSH6w+s8yaK8/Kc0kSE12pcOGGOzTTU0=
 github.com/evrblk/evrblk-go v0.0.0-20251023233135-0790a1a0de0c/go.mod h1:zcmuq1DgoV0Tqvyh2c8/kad5XcuFS7JKd/64NF/hsNA=
-github.com/evrblk/monstera v0.0.0-20251010173051-87b556328d2a h1:rAYrcPt7YsG73PurLUoyXCte8EgVslFM/fbBv6TokKk=
-github.com/evrblk/monstera v0.0.0-20251010173051-87b556328d2a/go.mod h1:Y38iHr1Zt9vGD69B359Z2QugXVVmVbCfEhEvuErfkqc=
-github.com/evrblk/monstera v0.0.0-20251010183913-12b449cb84ce h1:0j35JaDjIDbYaUsbgaWHMdDUeQWD0QxE1MmTTp2R9oY=
-github.com/evrblk/monstera v0.0.0-20251010183913-12b449cb84ce/go.mod h1:Y38iHr1Zt9vGD69B359Z2QugXVVmVbCfEhEvuErfkqc=
 github.com/evrblk/monstera v0.0.0-20251014211823-7717d34e6850 h1:U30dPzmUOBIfEx/SyyPLZgAEGIDuW6DsVCqetCOVI9g=
 github.com/evrblk/monstera v0.0.0-20251014211823-7717d34e6850/go.mod h1:Y38iHr1Zt9vGD69B359Z2QugXVVmVbCfEhEvuErfkqc=
 github.com/evrblk/yellowstone-common v0.0.0-20251001110147-7261de2bff54 h1:mPlU8jtShzfFmQFRhhbAkiQ4X+jo4lwmonv+kI2dbHk=
@@ -192,7 +182,6 @@ github.com/sirupsen/logrus v1.4.2/go.mod h1:tLMulIdttU9McNUspp0xgXVQah82FyeX6Mwd
 github.com/sirupsen/logrus v1.6.0/go.mod h1:7uNnSEd1DgxDLC74fIahvMZmmYsHGZGEOFrfsX/uA88=
 github.com/spf13/cobra v1.10.1 h1:lJeBwCfmrnXthfAupyUTzJ/J4Nc1RsHC/mSRU2dll/s=
 github.com/spf13/cobra v1.10.1/go.mod h1:7SmJGaTHFVBY0jW4NXGluQoLvhqFQM+6XSKD+P4XaB0=
-github.com/spf13/pflag v1.0.9 h1:9exaQaMOCwffKiiiYk6/BndUBv+iRViNW+4lEMi0PvY=
 github.com/spf13/pflag v1.0.9/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=
 github.com/spf13/pflag v1.0.10 h1:4EBh2KAYBwaONj6b2Ye1GiHfwjqyROoF4RwYO+vPwFk=
 github.com/spf13/pflag v1.0.10/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=
@@ -272,8 +261,6 @@ golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8T
 gonum.org/v1/gonum v0.16.0 h1:5+ul4Swaf3ESvrOnidPp4GZbzf0mxVQpDCYUQE7OJfk=
 gonum.org/v1/gonum v0.16.0/go.mod h1:fef3am4MQ93R2HHpKnLk4/Tbh/s0+wqD5nfa6Pnwy4E=
 google.golang.org/appengine v1.4.0/go.mod h1:xpcJRLb0r/rnEns0DIKYYv+WjYCduHsrkT7/EB5XEv4=
-google.golang.org/genproto/googleapis/rpc v0.0.0-20251007200510-49b9836ed3ff h1:A90eA31Wq6HOMIQlLfzFwzqGKBTuaVztYu/g8sn+8Zc=
-google.golang.org/genproto/googleapis/rpc v0.0.0-20251007200510-49b9836ed3ff/go.mod h1:7i2o+ce6H/6BluujYR+kqX3GKH+dChPTQU19wjRPiGk=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20251014184007-4626949a642f h1:1FTH6cpXFsENbPR5Bu8NQddPSaUUE6NA2XdZdDSAJK4=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20251014184007-4626949a642f/go.mod h1:7i2o+ce6H/6BluujYR+kqX3GKH+dChPTQU19wjRPiGk=
 google.golang.org/grpc v1.76.0 h1:UnVkv1+uMLYXoIz6o7chp59WfQUYA2ex/BXQ9rHZu7A=

@@ -1,10 +1,9 @@
 package grackle
 
 import (
+	"errors"
 	"fmt"
 	"io"
-
-	"github.com/go-errors/errors"
 
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/monstera"

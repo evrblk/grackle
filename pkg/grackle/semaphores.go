@@ -1,10 +1,10 @@
 package grackle
 
 import (
+	"errors"
 	"fmt"
 	"io"
 
-	"github.com/go-errors/errors"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
 
