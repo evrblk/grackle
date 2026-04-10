@@ -1,0 +1,12 @@
+# Data directories
+.data/
+
+# Generated config
+cluster_config.json
+
+# Binary
+debug-cluster
+
+# Profiling data
+*.prof
+cpu.prof

@@ -1,0 +1,142 @@
+go_code:
+  output_package: github.com/evrblk/grackle/pkg/monsteragen
+  corepb_package: github.com/evrblk/grackle/pkg/corepb
+cores:
+  - name: GrackleLocks
+    reads:
+      - method: ListLocks
+        sharded: true
+    updates:
+      - method: AcquireLock
+        sharded: true
+      - method: ReleaseLock
+        sharded: true
+      - method: DeleteLock
+        sharded: true
+      - method: GetLock
+        sharded: true
+      - method: RunLocksGarbageCollection
+        sharded: false
+      - method: LocksDeleteNamespace
+        sharded: true
+    update_request_proto: GrackleUpdateRequest
+    update_response_proto: GrackleUpdateResponse
+    read_request_proto: GrackleReadRequest
+    read_response_proto: GrackleReadResponse
+
+  - name: GrackleSemaphores
+    reads:
+      - method: GetSemaphore
+        sharded: true
+      - method: GetSemaphoreByName
+        sharded: true
+      - method: ListSemaphores
+        sharded: true
+      - method: ListSemaphoreHolders
+        sharded: true
+    updates:
+      - method: AcquireSemaphore
+        sharded: true
+      - method: ReleaseSemaphore
+        sharded: true
+      - method: CreateSemaphore
+        sharded: true
+      - method: UpdateSemaphore
+        sharded: true
+      - method: DeleteSemaphore
+        sharded: true
+      - method: RunSemaphoresGarbageCollection
+        sharded: false
+      - method: SemaphoresDeleteNamespace
+        sharded: true
+    update_request_proto: GrackleUpdateRequest
+    update_response_proto: GrackleUpdateResponse
+    read_request_proto: GrackleReadRequest
+    read_response_proto: GrackleReadResponse
+
+  - name: GrackleNamespaces
+    reads:
+      - method: GetNamespace
+        sharded: true
+      - method: GetNamespaceByName
+        sharded: true
+      - method: ListNamespaces
+        sharded: true
+    updates:
+      - method: CreateNamespace
+        sharded: true
+      - method: UpdateNamespace
+        sharded: true
+      - method: DeleteNamespace
+        sharded: true
+    update_request_proto: GrackleUpdateRequest
+    update_response_proto: GrackleUpdateResponse
+    read_request_proto: GrackleReadRequest
+    read_response_proto: GrackleReadResponse
+
+  - name: GrackleWaitGroups
+    reads:
+      - method: GetWaitGroup
+        sharded: true
+      - method: GetWaitGroupByName
+        sharded: true
+      - method: ListWaitGroups
+        sharded: true
+      - method: ListWaitGroupJobs
+        sharded: true
+    updates:
+      - method: AddJobsToWaitGroup
+        sharded: true
+      - method: CompleteJobsFromWaitGroup
+        sharded: true
+      - method: CreateWaitGroup
+        sharded: true
+      - method: DeleteWaitGroup
+        sharded: true
+      - method: RunWaitGroupsGarbageCollection
+        sharded: false
+      - method: WaitGroupsDeleteNamespace
+        sharded: true
+    update_request_proto: GrackleUpdateRequest
+    update_response_proto: GrackleUpdateResponse
+    read_request_proto: GrackleReadRequest
+    read_response_proto: GrackleReadResponse
+
+  - name: GrackleBarriers
+    reads:
+      - method: GetBarrier
+        sharded: true
+      - method: GetBarrierByName
+        sharded: true
+      - method: ListBarriers
+        sharded: true
+      - method: ListBarrierParticipants
+        sharded: true
+    updates:
+      - method: CreateBarrier
+        sharded: true
+      - method: DeleteBarrier
+        sharded: true
+      - method: UpdateBarrier
+        sharded: true
+      - method: ArriveAtBarrier
+        sharded: true
+      - method: WaitAtBarrier
+        sharded: true
+      - method: RunBarriersGarbageCollection
+        sharded: false
+      - method: BarriersDeleteNamespace
+        sharded: true
+    update_request_proto: GrackleUpdateRequest
+    update_response_proto: GrackleUpdateResponse
+    read_request_proto: GrackleReadRequest
+    read_response_proto: GrackleReadResponse
+
+stubs:
+  - name: Grackle
+    cores:
+      - GrackleLocks
+      - GrackleSemaphores
+      - GrackleNamespaces
+      - GrackleWaitGroups
+      - GrackleBarriers

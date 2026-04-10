@@ -11,12 +11,21 @@ import (
 	"syscall"
 
 	gracklepb "github.com/evrblk/evrblk-go/grackle/preview"
-	"github.com/evrblk/grackle/pkg/grackle"
-	grackle_preview "github.com/evrblk/grackle/pkg/preview"
-	"github.com/evrblk/monstera"
+	"github.com/evrblk/monstera/store"
+	"github.com/evrblk/monstera/utils"
 	"github.com/evrblk/yellowstone-common/metrics"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
+
+	"github.com/evrblk/grackle/pkg/barriers"
+	"github.com/evrblk/grackle/pkg/locks"
+	"github.com/evrblk/grackle/pkg/monsteragen"
+	"github.com/evrblk/grackle/pkg/namespaces"
+	"github.com/evrblk/grackle/pkg/semaphores"
+	grackle_preview "github.com/evrblk/grackle/pkg/server/preview"
+	"github.com/evrblk/grackle/pkg/sharding"
+	"github.com/evrblk/grackle/pkg/waitgroups"
+	"github.com/evrblk/grackle/pkg/workers"
 )
 
 var nonclusteredCmdCfg struct {
@@ -43,7 +52,10 @@ var nonclusteredCmd = &cobra.Command{
 		metricsSrv.Start()
 
 		// Create shared Badger store for application cores
-		dataStore := monstera.NewBadgerStore(filepath.Join(nonclusteredCmdCfg.dataDir, "data"))
+		dataStore, err := store.NewBadgerStore(filepath.Join(nonclusteredCmdCfg.dataDir, "data"))
+		if err != nil {
+			log.Fatalf("failed to create data store: %v", err)
+		}
 
 		// Middleware
 		unaryInterceptors := make([]grpc.UnaryServerInterceptor, 0)
@@ -52,28 +64,31 @@ var nonclusteredCmd = &cobra.Command{
 		}
 
 		// Grackle nonclustered client
-		coresFactory := &grackle.GrackleNonclusteredApplicationCoresFactory{
-			GrackleLocksCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) grackle.GrackleLocksCoreApi {
-				return grackle.NewLocksCore(dataStore, monstera.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
+		coresFactory := &monsteragen.GrackleNonclusteredApplicationCoresFactory{
+			GrackleLocksCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) monsteragen.GrackleLocksCoreApi {
+				return locks.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
 			},
-			GrackleNamespacesCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) grackle.GrackleNamespacesCoreApi {
-				return grackle.NewNamespacesCore(dataStore, monstera.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
+			GrackleNamespacesCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) monsteragen.GrackleNamespacesCoreApi {
+				return namespaces.NewCore(dataStore, lowerBound, upperBound)
 			},
-			GrackleSemaphoresCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) grackle.GrackleSemaphoresCoreApi {
-				return grackle.NewSemaphoresCore(dataStore, monstera.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
+			GrackleSemaphoresCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) monsteragen.GrackleSemaphoresCoreApi {
+				return semaphores.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
 			},
-			GrackleWaitGroupsCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) grackle.GrackleWaitGroupsCoreApi {
-				return grackle.NewWaitGroupsCore(dataStore, monstera.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
+			GrackleWaitGroupsCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) monsteragen.GrackleWaitGroupsCoreApi {
+				return waitgroups.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
+			},
+			GrackleBarriersCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) monsteragen.GrackleBarriersCoreApi {
+				return barriers.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
 			},
 		}
-		grackleCoreApiClient := grackle.NewGrackleCoreApiNonclusteredStub(nonclusteredCmdCfg.shardsCount, coresFactory, &grackle.GrackleShardKeyCalculator{})
+		grackleCoreApiClient := monsteragen.NewGrackleCoreApiNonclusteredStub(nonclusteredCmdCfg.shardsCount, coresFactory, &sharding.GrackleShardKeyCalculator{})
 
 		// Grackle workers
-		grackeLocksGarbageCollectionWorker := grackle.NewGrackleLocksGCWorker(grackleCoreApiClient)
+		grackeLocksGarbageCollectionWorker := workers.NewGrackleLocksGCWorker(grackleCoreApiClient)
 		grackeLocksGarbageCollectionWorker.Start()
-		grackeSemaphoresGarbageCollectionWorker := grackle.NewGrackleSemaphoresGCWorker(grackleCoreApiClient)
+		grackeSemaphoresGarbageCollectionWorker := workers.NewGrackleSemaphoresGCWorker(grackleCoreApiClient)
 		grackeSemaphoresGarbageCollectionWorker.Start()
-		grackeWaitGroupsGarbageCollectionWorker := grackle.NewGrackleWaitGroupsGCWorker(grackleCoreApiClient)
+		grackeWaitGroupsGarbageCollectionWorker := workers.NewGrackleWaitGroupsGCWorker(grackleCoreApiClient)
 		grackeWaitGroupsGarbageCollectionWorker.Start()
 
 		grpcServer := grpc.NewServer(

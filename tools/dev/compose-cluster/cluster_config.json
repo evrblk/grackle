@@ -1,0 +1,1422 @@
+{
+  "applications": [
+    {
+      "name": "GrackleLocks",
+      "implementation": "GrackleLocks",
+      "shards": [
+        {
+          "id": "GrackleLocks_00_0f",
+          "lower_bound": "00",
+          "upper_bound": "0f",
+          "replicas": [
+            {
+              "id": "GrackleLocks_00_0f_d351f8bf",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleLocks_00_0f_89ab678c",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleLocks_00_0f_b66c2a25",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleLocks_10_1f",
+          "lower_bound": "10",
+          "upper_bound": "1f",
+          "replicas": [
+            {
+              "id": "GrackleLocks_10_1f_f29d79b1",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleLocks_10_1f_af79621b",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleLocks_10_1f_4a5e6bac",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleLocks_20_2f",
+          "lower_bound": "20",
+          "upper_bound": "2f",
+          "replicas": [
+            {
+              "id": "GrackleLocks_20_2f_d7896aa0",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleLocks_20_2f_80a09f27",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleLocks_20_2f_405f7be1",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleLocks_30_3f",
+          "lower_bound": "30",
+          "upper_bound": "3f",
+          "replicas": [
+            {
+              "id": "GrackleLocks_30_3f_bfd47e27",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleLocks_30_3f_fbd26255",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleLocks_30_3f_1c14cbb5",
+              "node_id": "node-2"
+            }
+          ]
+        },
+        {
+          "id": "GrackleLocks_40_4f",
+          "lower_bound": "40",
+          "upper_bound": "4f",
+          "replicas": [
+            {
+              "id": "GrackleLocks_40_4f_2d8f68f8",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleLocks_40_4f_8b57d30b",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleLocks_40_4f_faf27c02",
+              "node_id": "node-1"
+            }
+          ]
+        },
+        {
+          "id": "GrackleLocks_50_5f",
+          "lower_bound": "50",
+          "upper_bound": "5f",
+          "replicas": [
+            {
+              "id": "GrackleLocks_50_5f_dc7ffda5",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleLocks_50_5f_4c7582cf",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleLocks_50_5f_715d2931",
+              "node_id": "node-1"
+            }
+          ]
+        },
+        {
+          "id": "GrackleLocks_60_6f",
+          "lower_bound": "60",
+          "upper_bound": "6f",
+          "replicas": [
+            {
+              "id": "GrackleLocks_60_6f_f8ca31c",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleLocks_60_6f_71a74bb3",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleLocks_60_6f_774548f7",
+              "node_id": "node-1"
+            }
+          ]
+        },
+        {
+          "id": "GrackleLocks_70_7f",
+          "lower_bound": "70",
+          "upper_bound": "7f",
+          "replicas": [
+            {
+              "id": "GrackleLocks_70_7f_3d33b425",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleLocks_70_7f_8730d496",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleLocks_70_7f_f97ff926",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleLocks_80_8f",
+          "lower_bound": "80",
+          "upper_bound": "8f",
+          "replicas": [
+            {
+              "id": "GrackleLocks_80_8f_26bf3f2c",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleLocks_80_8f_6698773b",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleLocks_80_8f_28c58aca",
+              "node_id": "node-1"
+            }
+          ]
+        },
+        {
+          "id": "GrackleLocks_90_9f",
+          "lower_bound": "90",
+          "upper_bound": "9f",
+          "replicas": [
+            {
+              "id": "GrackleLocks_90_9f_873bcfc1",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleLocks_90_9f_79664af4",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleLocks_90_9f_6206d6f5",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleLocks_a0_af",
+          "lower_bound": "a0",
+          "upper_bound": "af",
+          "replicas": [
+            {
+              "id": "GrackleLocks_a0_af_ff3f81f9",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleLocks_a0_af_772ca983",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleLocks_a0_af_7c212508",
+              "node_id": "node-2"
+            }
+          ]
+        },
+        {
+          "id": "GrackleLocks_b0_bf",
+          "lower_bound": "b0",
+          "upper_bound": "bf",
+          "replicas": [
+            {
+              "id": "GrackleLocks_b0_bf_f1059e73",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleLocks_b0_bf_131319c0",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleLocks_b0_bf_7ade5b47",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleLocks_c0_cf",
+          "lower_bound": "c0",
+          "upper_bound": "cf",
+          "replicas": [
+            {
+              "id": "GrackleLocks_c0_cf_27e2403",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleLocks_c0_cf_38f38f6f",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleLocks_c0_cf_f0c8e58",
+              "node_id": "node-2"
+            }
+          ]
+        },
+        {
+          "id": "GrackleLocks_d0_df",
+          "lower_bound": "d0",
+          "upper_bound": "df",
+          "replicas": [
+            {
+              "id": "GrackleLocks_d0_df_2cb32397",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleLocks_d0_df_d70ac99b",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleLocks_d0_df_609c1c8",
+              "node_id": "node-1"
+            }
+          ]
+        },
+        {
+          "id": "GrackleLocks_e0_ef",
+          "lower_bound": "e0",
+          "upper_bound": "ef",
+          "replicas": [
+            {
+              "id": "GrackleLocks_e0_ef_5844779c",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleLocks_e0_ef_afd0d982",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleLocks_e0_ef_4975e68d",
+              "node_id": "node-1"
+            }
+          ]
+        },
+        {
+          "id": "GrackleLocks_f0_ff",
+          "lower_bound": "f0",
+          "upper_bound": "ff",
+          "replicas": [
+            {
+              "id": "GrackleLocks_f0_ff_40c04801",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleLocks_f0_ff_7a262258",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleLocks_f0_ff_cc9c6309",
+              "node_id": "node-2"
+            }
+          ]
+        }
+      ],
+      "replication_factor": 3
+    },
+    {
+      "name": "GrackleSemaphores",
+      "implementation": "GrackleSemaphores",
+      "shards": [
+        {
+          "id": "GrackleSemaphores_00_0f",
+          "lower_bound": "00",
+          "upper_bound": "0f",
+          "replicas": [
+            {
+              "id": "GrackleSemaphores_00_0f_61fb4e7d",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleSemaphores_00_0f_744721a2",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleSemaphores_00_0f_aacaf77a",
+              "node_id": "node-1"
+            }
+          ]
+        },
+        {
+          "id": "GrackleSemaphores_10_1f",
+          "lower_bound": "10",
+          "upper_bound": "1f",
+          "replicas": [
+            {
+              "id": "GrackleSemaphores_10_1f_a2b16bff",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleSemaphores_10_1f_1cc1367d",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleSemaphores_10_1f_2f2b009f",
+              "node_id": "node-1"
+            }
+          ]
+        },
+        {
+          "id": "GrackleSemaphores_20_2f",
+          "lower_bound": "20",
+          "upper_bound": "2f",
+          "replicas": [
+            {
+              "id": "GrackleSemaphores_20_2f_1811901d",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleSemaphores_20_2f_7252d51b",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleSemaphores_20_2f_f2e040a6",
+              "node_id": "node-2"
+            }
+          ]
+        },
+        {
+          "id": "GrackleSemaphores_30_3f",
+          "lower_bound": "30",
+          "upper_bound": "3f",
+          "replicas": [
+            {
+              "id": "GrackleSemaphores_30_3f_fad9cf92",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleSemaphores_30_3f_d936d677",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleSemaphores_30_3f_b7bd55bb",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleSemaphores_40_4f",
+          "lower_bound": "40",
+          "upper_bound": "4f",
+          "replicas": [
+            {
+              "id": "GrackleSemaphores_40_4f_7e3fe78d",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleSemaphores_40_4f_c6bea2c",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleSemaphores_40_4f_f9704b1b",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleSemaphores_50_5f",
+          "lower_bound": "50",
+          "upper_bound": "5f",
+          "replicas": [
+            {
+              "id": "GrackleSemaphores_50_5f_10f764c6",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleSemaphores_50_5f_6bf5e5f8",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleSemaphores_50_5f_f60f18a8",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleSemaphores_60_6f",
+          "lower_bound": "60",
+          "upper_bound": "6f",
+          "replicas": [
+            {
+              "id": "GrackleSemaphores_60_6f_cdd76b1e",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleSemaphores_60_6f_1f1b82f7",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleSemaphores_60_6f_16b0b06f",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleSemaphores_70_7f",
+          "lower_bound": "70",
+          "upper_bound": "7f",
+          "replicas": [
+            {
+              "id": "GrackleSemaphores_70_7f_359cb011",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleSemaphores_70_7f_850fb09e",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleSemaphores_70_7f_931d5599",
+              "node_id": "node-1"
+            }
+          ]
+        },
+        {
+          "id": "GrackleSemaphores_80_8f",
+          "lower_bound": "80",
+          "upper_bound": "8f",
+          "replicas": [
+            {
+              "id": "GrackleSemaphores_80_8f_ad944807",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleSemaphores_80_8f_64858640",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleSemaphores_80_8f_916006ab",
+              "node_id": "node-2"
+            }
+          ]
+        },
+        {
+          "id": "GrackleSemaphores_90_9f",
+          "lower_bound": "90",
+          "upper_bound": "9f",
+          "replicas": [
+            {
+              "id": "GrackleSemaphores_90_9f_7eee732c",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleSemaphores_90_9f_2353e6ef",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleSemaphores_90_9f_211b5eb9",
+              "node_id": "node-2"
+            }
+          ]
+        },
+        {
+          "id": "GrackleSemaphores_a0_af",
+          "lower_bound": "a0",
+          "upper_bound": "af",
+          "replicas": [
+            {
+              "id": "GrackleSemaphores_a0_af_d4bf2b9f",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleSemaphores_a0_af_1e76c8c2",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleSemaphores_a0_af_887b3038",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleSemaphores_b0_bf",
+          "lower_bound": "b0",
+          "upper_bound": "bf",
+          "replicas": [
+            {
+              "id": "GrackleSemaphores_b0_bf_48f6f639",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleSemaphores_b0_bf_fd147327",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleSemaphores_b0_bf_965cf5f2",
+              "node_id": "node-2"
+            }
+          ]
+        },
+        {
+          "id": "GrackleSemaphores_c0_cf",
+          "lower_bound": "c0",
+          "upper_bound": "cf",
+          "replicas": [
+            {
+              "id": "GrackleSemaphores_c0_cf_2bfc9158",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleSemaphores_c0_cf_6283cf99",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleSemaphores_c0_cf_927ecff6",
+              "node_id": "node-2"
+            }
+          ]
+        },
+        {
+          "id": "GrackleSemaphores_d0_df",
+          "lower_bound": "d0",
+          "upper_bound": "df",
+          "replicas": [
+            {
+              "id": "GrackleSemaphores_d0_df_4044323a",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleSemaphores_d0_df_46e01bf9",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleSemaphores_d0_df_7b5588e0",
+              "node_id": "node-2"
+            }
+          ]
+        },
+        {
+          "id": "GrackleSemaphores_e0_ef",
+          "lower_bound": "e0",
+          "upper_bound": "ef",
+          "replicas": [
+            {
+              "id": "GrackleSemaphores_e0_ef_24ef053a",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleSemaphores_e0_ef_fc9729a8",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleSemaphores_e0_ef_e2c8066",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleSemaphores_f0_ff",
+          "lower_bound": "f0",
+          "upper_bound": "ff",
+          "replicas": [
+            {
+              "id": "GrackleSemaphores_f0_ff_401a0c5c",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleSemaphores_f0_ff_9ff5408e",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleSemaphores_f0_ff_a28b6699",
+              "node_id": "node-2"
+            }
+          ]
+        }
+      ],
+      "replication_factor": 3
+    },
+    {
+      "name": "GrackleWaitGroups",
+      "implementation": "GrackleWaitGroups",
+      "shards": [
+        {
+          "id": "GrackleWaitGroups_00_0f",
+          "lower_bound": "00",
+          "upper_bound": "0f",
+          "replicas": [
+            {
+              "id": "GrackleWaitGroups_00_0f_4c7d0d9e",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleWaitGroups_00_0f_2cfc32",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleWaitGroups_00_0f_a568d96c",
+              "node_id": "node-1"
+            }
+          ]
+        },
+        {
+          "id": "GrackleWaitGroups_10_1f",
+          "lower_bound": "10",
+          "upper_bound": "1f",
+          "replicas": [
+            {
+              "id": "GrackleWaitGroups_10_1f_7af1a78a",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleWaitGroups_10_1f_14641274",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleWaitGroups_10_1f_be14db8a",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleWaitGroups_20_2f",
+          "lower_bound": "20",
+          "upper_bound": "2f",
+          "replicas": [
+            {
+              "id": "GrackleWaitGroups_20_2f_b2b97472",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleWaitGroups_20_2f_51825eb7",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleWaitGroups_20_2f_65517d9b",
+              "node_id": "node-2"
+            }
+          ]
+        },
+        {
+          "id": "GrackleWaitGroups_30_3f",
+          "lower_bound": "30",
+          "upper_bound": "3f",
+          "replicas": [
+            {
+              "id": "GrackleWaitGroups_30_3f_49e4c524",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleWaitGroups_30_3f_e4fc057d",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleWaitGroups_30_3f_cef3921e",
+              "node_id": "node-1"
+            }
+          ]
+        },
+        {
+          "id": "GrackleWaitGroups_40_4f",
+          "lower_bound": "40",
+          "upper_bound": "4f",
+          "replicas": [
+            {
+              "id": "GrackleWaitGroups_40_4f_4a6e55e9",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleWaitGroups_40_4f_5b3b3f5d",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleWaitGroups_40_4f_96396e46",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleWaitGroups_50_5f",
+          "lower_bound": "50",
+          "upper_bound": "5f",
+          "replicas": [
+            {
+              "id": "GrackleWaitGroups_50_5f_eeb9f9f2",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleWaitGroups_50_5f_7f16869e",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleWaitGroups_50_5f_81ff39d1",
+              "node_id": "node-2"
+            }
+          ]
+        },
+        {
+          "id": "GrackleWaitGroups_60_6f",
+          "lower_bound": "60",
+          "upper_bound": "6f",
+          "replicas": [
+            {
+              "id": "GrackleWaitGroups_60_6f_89973558",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleWaitGroups_60_6f_83c4d70c",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleWaitGroups_60_6f_4bad8948",
+              "node_id": "node-2"
+            }
+          ]
+        },
+        {
+          "id": "GrackleWaitGroups_70_7f",
+          "lower_bound": "70",
+          "upper_bound": "7f",
+          "replicas": [
+            {
+              "id": "GrackleWaitGroups_70_7f_a67d43da",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleWaitGroups_70_7f_275dc700",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleWaitGroups_70_7f_ac6b7bb3",
+              "node_id": "node-1"
+            }
+          ]
+        },
+        {
+          "id": "GrackleWaitGroups_80_8f",
+          "lower_bound": "80",
+          "upper_bound": "8f",
+          "replicas": [
+            {
+              "id": "GrackleWaitGroups_80_8f_b318a49",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleWaitGroups_80_8f_d155833",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleWaitGroups_80_8f_891ce392",
+              "node_id": "node-2"
+            }
+          ]
+        },
+        {
+          "id": "GrackleWaitGroups_90_9f",
+          "lower_bound": "90",
+          "upper_bound": "9f",
+          "replicas": [
+            {
+              "id": "GrackleWaitGroups_90_9f_37d6f9b0",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleWaitGroups_90_9f_aa7122e0",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleWaitGroups_90_9f_88e02c5f",
+              "node_id": "node-1"
+            }
+          ]
+        },
+        {
+          "id": "GrackleWaitGroups_a0_af",
+          "lower_bound": "a0",
+          "upper_bound": "af",
+          "replicas": [
+            {
+              "id": "GrackleWaitGroups_a0_af_74ea821f",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleWaitGroups_a0_af_6e500f8c",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleWaitGroups_a0_af_a208193a",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleWaitGroups_b0_bf",
+          "lower_bound": "b0",
+          "upper_bound": "bf",
+          "replicas": [
+            {
+              "id": "GrackleWaitGroups_b0_bf_6485c868",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleWaitGroups_b0_bf_684e1053",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleWaitGroups_b0_bf_9c1b01f8",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleWaitGroups_c0_cf",
+          "lower_bound": "c0",
+          "upper_bound": "cf",
+          "replicas": [
+            {
+              "id": "GrackleWaitGroups_c0_cf_a8f8eef8",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleWaitGroups_c0_cf_941fc86a",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleWaitGroups_c0_cf_9e1f1d48",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleWaitGroups_d0_df",
+          "lower_bound": "d0",
+          "upper_bound": "df",
+          "replicas": [
+            {
+              "id": "GrackleWaitGroups_d0_df_79c2f84",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleWaitGroups_d0_df_9249e2ef",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleWaitGroups_d0_df_d439dca5",
+              "node_id": "node-2"
+            }
+          ]
+        },
+        {
+          "id": "GrackleWaitGroups_e0_ef",
+          "lower_bound": "e0",
+          "upper_bound": "ef",
+          "replicas": [
+            {
+              "id": "GrackleWaitGroups_e0_ef_86edd4a",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleWaitGroups_e0_ef_ecc115bb",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleWaitGroups_e0_ef_3b720b5a",
+              "node_id": "node-2"
+            }
+          ]
+        },
+        {
+          "id": "GrackleWaitGroups_f0_ff",
+          "lower_bound": "f0",
+          "upper_bound": "ff",
+          "replicas": [
+            {
+              "id": "GrackleWaitGroups_f0_ff_61a637de",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleWaitGroups_f0_ff_956b743d",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleWaitGroups_f0_ff_178e673c",
+              "node_id": "node-2"
+            }
+          ]
+        }
+      ],
+      "replication_factor": 3
+    },
+    {
+      "name": "GrackleBarriers",
+      "implementation": "GrackleBarriers",
+      "shards": [
+        {
+          "id": "GrackleBarriers_00_0f",
+          "lower_bound": "00",
+          "upper_bound": "0f",
+          "replicas": [
+            {
+              "id": "GrackleBarriers_00_0f_2d7fa420",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleBarriers_00_0f_ce7e3b2f",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleBarriers_00_0f_95bcdbce",
+              "node_id": "node-1"
+            }
+          ]
+        },
+        {
+          "id": "GrackleBarriers_10_1f",
+          "lower_bound": "10",
+          "upper_bound": "1f",
+          "replicas": [
+            {
+              "id": "GrackleBarriers_10_1f_67ef2486",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleBarriers_10_1f_a013c938",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleBarriers_10_1f_6a352d11",
+              "node_id": "node-1"
+            }
+          ]
+        },
+        {
+          "id": "GrackleBarriers_20_2f",
+          "lower_bound": "20",
+          "upper_bound": "2f",
+          "replicas": [
+            {
+              "id": "GrackleBarriers_20_2f_beec50a7",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleBarriers_20_2f_b3b0d7e",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleBarriers_20_2f_33c8195",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleBarriers_30_3f",
+          "lower_bound": "30",
+          "upper_bound": "3f",
+          "replicas": [
+            {
+              "id": "GrackleBarriers_30_3f_3461c6f5",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleBarriers_30_3f_a1badcc3",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleBarriers_30_3f_ac902f84",
+              "node_id": "node-2"
+            }
+          ]
+        },
+        {
+          "id": "GrackleBarriers_40_4f",
+          "lower_bound": "40",
+          "upper_bound": "4f",
+          "replicas": [
+            {
+              "id": "GrackleBarriers_40_4f_affddaf4",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleBarriers_40_4f_1e8f4542",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleBarriers_40_4f_335617b2",
+              "node_id": "node-2"
+            }
+          ]
+        },
+        {
+          "id": "GrackleBarriers_50_5f",
+          "lower_bound": "50",
+          "upper_bound": "5f",
+          "replicas": [
+            {
+              "id": "GrackleBarriers_50_5f_61ff0535",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleBarriers_50_5f_2d8f0c0a",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleBarriers_50_5f_d3b9ca53",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleBarriers_60_6f",
+          "lower_bound": "60",
+          "upper_bound": "6f",
+          "replicas": [
+            {
+              "id": "GrackleBarriers_60_6f_9b3b5506",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleBarriers_60_6f_2f9f11ff",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleBarriers_60_6f_23fe430e",
+              "node_id": "node-2"
+            }
+          ]
+        },
+        {
+          "id": "GrackleBarriers_70_7f",
+          "lower_bound": "70",
+          "upper_bound": "7f",
+          "replicas": [
+            {
+              "id": "GrackleBarriers_70_7f_921b11eb",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleBarriers_70_7f_404905e3",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleBarriers_70_7f_50b303da",
+              "node_id": "node-1"
+            }
+          ]
+        },
+        {
+          "id": "GrackleBarriers_80_8f",
+          "lower_bound": "80",
+          "upper_bound": "8f",
+          "replicas": [
+            {
+              "id": "GrackleBarriers_80_8f_56dfeb13",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleBarriers_80_8f_2cdb1e41",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleBarriers_80_8f_d36dc971",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleBarriers_90_9f",
+          "lower_bound": "90",
+          "upper_bound": "9f",
+          "replicas": [
+            {
+              "id": "GrackleBarriers_90_9f_82dfe872",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleBarriers_90_9f_b4d83430",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleBarriers_90_9f_31d5e71d",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleBarriers_a0_af",
+          "lower_bound": "a0",
+          "upper_bound": "af",
+          "replicas": [
+            {
+              "id": "GrackleBarriers_a0_af_a37aa88f",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleBarriers_a0_af_62980ddc",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleBarriers_a0_af_7561cb12",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleBarriers_b0_bf",
+          "lower_bound": "b0",
+          "upper_bound": "bf",
+          "replicas": [
+            {
+              "id": "GrackleBarriers_b0_bf_d5112c16",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleBarriers_b0_bf_e94505da",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleBarriers_b0_bf_4e40b9d3",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleBarriers_c0_cf",
+          "lower_bound": "c0",
+          "upper_bound": "cf",
+          "replicas": [
+            {
+              "id": "GrackleBarriers_c0_cf_35f9c277",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleBarriers_c0_cf_8a872c91",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleBarriers_c0_cf_bf9c10e1",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleBarriers_d0_df",
+          "lower_bound": "d0",
+          "upper_bound": "df",
+          "replicas": [
+            {
+              "id": "GrackleBarriers_d0_df_65b176be",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleBarriers_d0_df_bde7d177",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleBarriers_d0_df_6738a7fd",
+              "node_id": "node-1"
+            }
+          ]
+        },
+        {
+          "id": "GrackleBarriers_e0_ef",
+          "lower_bound": "e0",
+          "upper_bound": "ef",
+          "replicas": [
+            {
+              "id": "GrackleBarriers_e0_ef_2d4f79d0",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleBarriers_e0_ef_2d33aa53",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleBarriers_e0_ef_ffe732ef",
+              "node_id": "node-1"
+            }
+          ]
+        },
+        {
+          "id": "GrackleBarriers_f0_ff",
+          "lower_bound": "f0",
+          "upper_bound": "ff",
+          "replicas": [
+            {
+              "id": "GrackleBarriers_f0_ff_8c3888ce",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleBarriers_f0_ff_56288580",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleBarriers_f0_ff_a073eb67",
+              "node_id": "node-1"
+            }
+          ]
+        }
+      ],
+      "replication_factor": 3
+    },
+    {
+      "name": "GrackleNamespaces",
+      "implementation": "GrackleNamespaces",
+      "shards": [
+        {
+          "id": "GrackleNamespaces_00_1f",
+          "lower_bound": "00",
+          "upper_bound": "1f",
+          "replicas": [
+            {
+              "id": "GrackleNamespaces_00_1f_e07d5a87",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleNamespaces_00_1f_59186665",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleNamespaces_00_1f_a8b868df",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleNamespaces_20_3f",
+          "lower_bound": "20",
+          "upper_bound": "3f",
+          "replicas": [
+            {
+              "id": "GrackleNamespaces_20_3f_bdd6cbf2",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleNamespaces_20_3f_d1b0071b",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleNamespaces_20_3f_4e5f5fd",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleNamespaces_40_5f",
+          "lower_bound": "40",
+          "upper_bound": "5f",
+          "replicas": [
+            {
+              "id": "GrackleNamespaces_40_5f_87c7c123",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleNamespaces_40_5f_7772a377",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleNamespaces_40_5f_b12e07e8",
+              "node_id": "node-3"
+            }
+          ]
+        },
+        {
+          "id": "GrackleNamespaces_60_7f",
+          "lower_bound": "60",
+          "upper_bound": "7f",
+          "replicas": [
+            {
+              "id": "GrackleNamespaces_60_7f_5a35b51e",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleNamespaces_60_7f_81d31a98",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleNamespaces_60_7f_62c9fd4",
+              "node_id": "node-2"
+            }
+          ]
+        },
+        {
+          "id": "GrackleNamespaces_80_9f",
+          "lower_bound": "80",
+          "upper_bound": "9f",
+          "replicas": [
+            {
+              "id": "GrackleNamespaces_80_9f_e7e715d0",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleNamespaces_80_9f_20107068",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleNamespaces_80_9f_dbfdbcc3",
+              "node_id": "node-1"
+            }
+          ]
+        },
+        {
+          "id": "GrackleNamespaces_a0_bf",
+          "lower_bound": "a0",
+          "upper_bound": "bf",
+          "replicas": [
+            {
+              "id": "GrackleNamespaces_a0_bf_2f90f9e8",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleNamespaces_a0_bf_93cb9056",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleNamespaces_a0_bf_b4bfec81",
+              "node_id": "node-2"
+            }
+          ]
+        },
+        {
+          "id": "GrackleNamespaces_c0_df",
+          "lower_bound": "c0",
+          "upper_bound": "df",
+          "replicas": [
+            {
+              "id": "GrackleNamespaces_c0_df_51c2cb88",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleNamespaces_c0_df_1ef6b4fe",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleNamespaces_c0_df_ffe5dac3",
+              "node_id": "node-1"
+            }
+          ]
+        },
+        {
+          "id": "GrackleNamespaces_e0_ff",
+          "lower_bound": "e0",
+          "upper_bound": "ff",
+          "replicas": [
+            {
+              "id": "GrackleNamespaces_e0_ff_cf614e3a",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleNamespaces_e0_ff_c1f3cf59",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleNamespaces_e0_ff_abfb34c7",
+              "node_id": "node-3"
+            }
+          ]
+        }
+      ],
+      "replication_factor": 3
+    }
+  ],
+  "nodes": [
+    {
+      "id": "node-1",
+      "grpc_address": "node-1:8001"
+    },
+    {
+      "id": "node-2",
+      "grpc_address": "node-2:8002"
+    },
+    {
+      "id": "node-3",
+      "grpc_address": "node-3:8003"
+    }
+  ],
+  "version": 6
+}

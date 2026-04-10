@@ -1,0 +1,60 @@
+services:
+  node-1:
+    build:
+      context: .
+      dockerfile: dev.dockerfile
+    image: grackle
+    command: ["sh", "-c", "exec ./grackle run node --node-id=node-1 --data-dir=./data --monstera-config=./cluster_config.json"]
+    ports:
+      - 8001:8001
+    volumes:
+      - .data/node-1:/grackle/data:delegated
+
+  node-2:
+    build:
+      context: .
+      dockerfile: dev.dockerfile
+    image: grackle
+    command: ["sh", "-c", "exec ./grackle run node --node-id=node-2 --data-dir=./data --monstera-config=./cluster_config.json"]
+    ports:
+      - 8002:8002
+    volumes:
+      - .data/node-2:/grackle/data:delegated
+
+  node-3:
+    build:
+      context: .
+      dockerfile: dev.dockerfile
+    image: grackle
+    command: ["sh", "-c", "exec ./grackle run node --node-id=node-3 --data-dir=./data --monstera-config=./cluster_config.json"]
+    ports:
+      - 8003:8003
+    volumes:
+      - .data/node-3:/grackle/data:delegated
+
+  prometheus:
+    image: prom/prometheus:latest
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --enable-feature=native-histograms
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - node-1
+      - node-2
+      - node-3
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - 3000:3000
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_USERS_DEFAULT_THEME=light
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus

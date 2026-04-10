@@ -2,29 +2,35 @@ package commands
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"net"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"sync"
 	"syscall"
 
+	"github.com/evrblk/monstera"
+	"github.com/evrblk/monstera/cluster"
+	"github.com/evrblk/monstera/store"
+	"github.com/evrblk/monstera/transport/grpc"
+	"github.com/evrblk/monstera/utils"
+	"github.com/evrblk/yellowstone-common/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
 
-	"github.com/evrblk/grackle/pkg/grackle"
-	"github.com/evrblk/monstera"
-	"github.com/evrblk/yellowstone-common/metrics"
+	"github.com/evrblk/grackle/pkg/barriers"
+	"github.com/evrblk/grackle/pkg/locks"
+	"github.com/evrblk/grackle/pkg/monsteragen"
+	"github.com/evrblk/grackle/pkg/namespaces"
+	"github.com/evrblk/grackle/pkg/semaphores"
+	"github.com/evrblk/grackle/pkg/waitgroups"
 )
 
 var nodeCmdCfg struct {
 	prometheusPort     int
 	dataDir            string
 	monsteraConfigPath string
-	nodeAddress        string
+	nodeId             string
 }
 
 var nodeCmd = &cobra.Command{
@@ -38,82 +44,85 @@ var nodeCmd = &cobra.Command{
 		metricsSrv.Start()
 
 		// Load monstera cluster config
-		clusterConfig, err := monstera.LoadConfigFromFile(nodeCmdCfg.monsteraConfigPath)
+		clusterConfig, err := cluster.LoadConfigFromFile(nodeCmdCfg.monsteraConfigPath)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		node, err := clusterConfig.GetNode(nodeCmdCfg.nodeId)
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		// Create shared Badger store for application cores
-		dataStore := monstera.NewBadgerStore(filepath.Join(nodeCmdCfg.dataDir, "data"))
+		dataStore, err := store.NewBadgerStore(filepath.Join(nodeCmdCfg.dataDir, "data"))
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		// TODO set timeouts
 		monsteraNodeConfig := monstera.DefaultMonsteraNodeConfig
+		monsteraNodeConfig.UseInMemoryRaftStore = true
 
 		applicationDescriptors := monstera.ApplicationCoreDescriptors{
 			"GrackleLocks": {
 				RestoreSnapshotOnStart: false,
-				CoreFactoryFunc: func(shard *monstera.Shard, replica *monstera.Replica) monstera.ApplicationCore {
-					return grackle.NewGrackleLocksCoreAdapter(
+				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
+					return monsteragen.NewGrackleLocksCoreAdapter(
 						shard.Id, replica.Id,
-						grackle.NewLocksCore(dataStore, monstera.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
+						locks.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
 				},
 			},
 			"GrackleNamespaces": {
 				RestoreSnapshotOnStart: false,
-				CoreFactoryFunc: func(shard *monstera.Shard, replica *monstera.Replica) monstera.ApplicationCore {
-					return grackle.NewGrackleNamespacesCoreAdapter(
+				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
+					return monsteragen.NewGrackleNamespacesCoreAdapter(
 						shard.Id, replica.Id,
-						grackle.NewNamespacesCore(dataStore, monstera.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
+						namespaces.NewCore(dataStore, shard.LowerBound, shard.UpperBound))
 				},
 			},
 			"GrackleWaitGroups": {
 				RestoreSnapshotOnStart: false,
-				CoreFactoryFunc: func(shard *monstera.Shard, replica *monstera.Replica) monstera.ApplicationCore {
-					return grackle.NewGrackleWaitGroupsCoreAdapter(
+				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
+					return monsteragen.NewGrackleWaitGroupsCoreAdapter(
 						shard.Id, replica.Id,
-						grackle.NewWaitGroupsCore(dataStore, monstera.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
+						waitgroups.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
+				},
+			},
+			"GrackleBarriers": {
+				RestoreSnapshotOnStart: false,
+				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
+					return monsteragen.NewGrackleBarriersCoreAdapter(
+						shard.Id, replica.Id,
+						barriers.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
 				},
 			},
 			"GrackleSemaphores": {
 				RestoreSnapshotOnStart: false,
-				CoreFactoryFunc: func(shard *monstera.Shard, replica *monstera.Replica) monstera.ApplicationCore {
-					return grackle.NewGrackleSemaphoresCoreAdapter(
+				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
+					return monsteragen.NewGrackleSemaphoresCoreAdapter(
 						shard.Id, replica.Id,
-						grackle.NewSemaphoresCore(dataStore, monstera.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
+						semaphores.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
 				},
 			},
 		}
 
-		monsteraNode, err := monstera.NewNode(nodeCmdCfg.dataDir, nodeCmdCfg.nodeAddress, clusterConfig, applicationDescriptors, monsteraNodeConfig)
+		transport := grpc.NewGrpcTransport(clusterConfig)
+
+		monsteraNode, err := monstera.NewNode(nodeCmdCfg.dataDir, nodeCmdCfg.nodeId, clusterConfig, applicationDescriptors, monsteraNodeConfig, transport)
 		if err != nil {
 			log.Fatalf("failed to create Monstera node: %v", err)
 		}
 
-		// TODO
-		// Middleware
-		//monitoringMiddleware := yellowstone.NewMonitoringMiddleware()
-		//monsteraMetricsMiddleware := yellowstone.NewMonsteraMetricsMiddleware(nodeCmdCfg.nodeId)
-
 		// Starting Monstera node
 		monsteraNode.Start()
-
-		// Starting Monstera gRPC server
-		_, port, err := net.SplitHostPort(nodeCmdCfg.nodeAddress)
-		if err != nil {
-			log.Fatalf("failed to parse node address: %v", err)
-		}
-
-		lis, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
-		if err != nil {
-			log.Fatalf("failed to listen: %v", err)
-		}
 
 		// Register node metrics
 		err = prometheus.Register(prometheus.NewGaugeFunc(
 			prometheus.GaugeOpts{
 				Name:        "monstera_node_ready",
 				Help:        "Monstera node is ready",
-				ConstLabels: prometheus.Labels{"node": nodeCmdCfg.nodeAddress},
+				ConstLabels: prometheus.Labels{"node": nodeCmdCfg.nodeId},
 			},
 			func() float64 {
 				if monsteraNode.NodeState() == monstera.READY {
@@ -127,16 +136,7 @@ var nodeCmd = &cobra.Command{
 			log.Fatalf("failed to register node metrics: %v", err)
 		}
 
-		monsteraServer := monstera.NewMonsteraServer(monsteraNode)
-
-		grpcServer := grpc.NewServer(
-			grpc.ChainUnaryInterceptor(
-			//monitoringMiddleware.Unary,
-			//monsteraMetricsMiddleware.Unary,
-			),
-			grpc.MaxRecvMsgSize(50*1024*1024),
-		)
-		monstera.RegisterMonsteraApiServer(grpcServer, monsteraServer)
+		monsteraServer := grpc.NewGrpcServer(monsteraNode)
 
 		cleanupDone := &sync.WaitGroup{}
 		cleanupDone.Add(1)
@@ -149,8 +149,8 @@ var nodeCmd = &cobra.Command{
 			case <-c:
 				log.Println("Received SIGINT. Shutting down...")
 				cancel()
-				grpcServer.Stop()
 				monsteraNode.Stop()
+				monsteraServer.Stop()
 				dataStore.Close()
 				metricsSrv.Stop()
 			case <-ctx.Done():
@@ -163,11 +163,11 @@ var nodeCmd = &cobra.Command{
 			cancel()
 		}()
 
-		err = grpcServer.Serve(lis)
+		err = monsteraServer.Serve(node.GrpcAddress)
 		if err != nil {
-			log.Printf("Monstera gRPC server stopped: %s", err)
+			log.Printf("Monstera server stopped: %s", err)
 		} else {
-			log.Printf("Monstera gRPC server stopped")
+			log.Printf("Monstera server stopped")
 		}
 
 		cleanupDone.Wait()
@@ -186,15 +186,13 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-
 	nodeCmd.PersistentFlags().StringVarP(&nodeCmdCfg.dataDir, "data-dir", "", "", "Base directory for data")
 	err = nodeCmd.MarkPersistentFlagRequired("data-dir")
 	if err != nil {
 		panic(err)
 	}
-
-	nodeCmd.PersistentFlags().StringVarP(&nodeCmdCfg.nodeAddress, "node-address", "", "", "Monstera node address (host:port)")
-	err = nodeCmd.MarkPersistentFlagRequired("node-address")
+	nodeCmd.PersistentFlags().StringVarP(&nodeCmdCfg.nodeId, "node-id", "", "", "Monstera node ID")
+	err = nodeCmd.MarkPersistentFlagRequired("node-id")
 	if err != nil {
 		panic(err)
 	}

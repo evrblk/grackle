@@ -5,12 +5,13 @@
 
 Everblack Grackle is a distributed-synchronization-primitives-as-a-service:
 
-* __read/write locks__ (can be exclusively locked for writing by a single process, or it can be locked for reading by multiple processes)
-* __semaphores__ (tracks how many units of a particular resource are available)
+* __hierarchical locks__ (can be exclusively locked by a single process, or shared by multiple processes)
+* __weighted semaphores__ (tracks how many units of a particular resource are available)
 * __wait groups__ (merge or fan-in of millions of tasks, similar to `sync.WaitGroup` in Go)
+* __barriers__ (wait for millions of processes to reach a certain point)
 
-Grackle state is durable. All holds have a set expiration time. Process crash will not cause a dangling lock. 
-Long-running processes can extend the hold. All operations are atomic and safe to retry.
+Grackle state is durable. All holds have a set expiration time. Process crash will not cause dangling locks. 
+Long-running processes can extend their holds. All operations are atomic and safe to retry.
 
 Grackle can operate in a clustered mode (with replication and sharding), or it can run in a single-process nonclustered 
 mode (full state on disk, no replication, no sharding). It has no external dependencies (no databases, no kafka, no redis, no zookeeper, 
@@ -75,6 +76,12 @@ $ go tool github.com/evrblk/monstera/cmd/monstera config add-application \
   --config=./cluster_config.json \
   --name=GrackleWaitGroups \
   --implementation=GrackleWaitGroups \
+  --shards-count=16
+
+$ go tool github.com/evrblk/monstera/cmd/monstera config add-application \
+  --config=./cluster_config.json \
+  --name=GrackleBarriers \
+  --implementation=GrackleBarriers \
   --shards-count=16
   
 $ go tool github.com/evrblk/monstera/cmd/monstera config add-application \

@@ -1,0 +1,8 @@
+# Data directories
+.data/
+
+# Generated config
+cluster_config.json
+
+# Binary
+grackle

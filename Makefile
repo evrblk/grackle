@@ -1,17 +1,32 @@
-.PHONY: build generate-proto grackle
+.PHONY: build generate grackle clean grackle-image
 
-# Build task: runs proto generation, go generate, and then builds all artifacts
-build: generate-proto
-	@echo "Running go generate..."
-	go generate ./...
+DONT_FIND := -name .git -prune -o -name .cache -prune -o -name .pkg -prune -o
+
+# Builds all artifacts
+build:
 	go vet ./...
 	go fmt ./...
 	go build ./...
 
-generate-proto:
+# Generates protos and go:generate
+generate:
+	@echo "Running go generate..."
+	go generate ./...
 	@echo "Generating proto files..."
-	$(eval MONSTERA_PROTO_ROOT := $(shell go list -f '{{.Dir}}' -m github.com/evrblk/monstera))
-	protoc --proto_path=. --proto_path="$(MONSTERA_PROTO_ROOT)" --go_out=. --go_opt=paths=source_relative ./pkg/corepb/*.proto
+	protoc --proto_path=. --go_out=. --go_opt=paths=source_relative ./pkg/corepb/*.proto
 
 grackle: build
-	go build ./cmd/grackle
+	go build -o ./cmd/grackle/grackle ./cmd/grackle
+
+format:
+	find . $(DONT_FIND) -name '*.pb.go' -prune -o -name '*.y.go' -prune -o -name '*.rl.go' -prune -o \
+		-name '*_vfsdata.go' -prune -o -type f -name '*.go' -exec gofmt -w -s {} \;
+	find . $(DONT_FIND) -name '*.pb.go' -prune -o -name '*.y.go' -prune -o -name '*.rl.go' -prune -o \
+		-name '*_vfsdata.go' -prune -o -type f -name '*.go' -exec goimports -w -local github.com/evrblk/grackle {} \;
+
+clean:
+	rm -rf cmd/grackle/grackle
+	go clean ./...
+
+grackle-image:
+	docker build -t evrblk/grackle -f cmd/grackle/Dockerfile .

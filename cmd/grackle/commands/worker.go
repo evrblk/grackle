@@ -10,9 +10,14 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/evrblk/grackle/pkg/grackle"
 	"github.com/evrblk/monstera"
+	"github.com/evrblk/monstera/cluster"
+	"github.com/evrblk/monstera/transport/grpc"
 	"github.com/evrblk/yellowstone-common/metrics"
+
+	"github.com/evrblk/grackle/pkg/monsteragen"
+	"github.com/evrblk/grackle/pkg/sharding"
+	"github.com/evrblk/grackle/pkg/workers"
 )
 
 var workerCmdCfg struct {
@@ -31,25 +36,28 @@ var workerCmd = &cobra.Command{
 		metricsSrv.Start()
 
 		// Monstera cluster config
-		clusterConfig, err := monstera.LoadConfigFromFile(workerCmdCfg.monsteraConfigPath)
+		clusterConfig, err := cluster.LoadConfigFromFile(workerCmdCfg.monsteraConfigPath)
 		if err != nil {
 			log.Fatal(err)
 		}
 
+		// Monstera transport
+		transport := grpc.NewGrpcTransport(clusterConfig)
+
 		// Create Monstera client
-		monsteraClient := monstera.NewMonsteraClient(clusterConfig)
+		monsteraClient := monstera.NewMonsteraClient(clusterConfig, transport, monstera.DefaultClientConfig())
 		monsteraClient.Start()
 		defer monsteraClient.Stop()
 
 		// Grackle client
-		grackleCoreApiClient := grackle.NewGrackleCoreApiMonsteraStub(monsteraClient, &grackle.GrackleShardKeyCalculator{})
+		grackleCoreApiClient := monsteragen.NewGrackleCoreApiMonsteraStub(monsteraClient, &sharding.GrackleShardKeyCalculator{})
 
 		// Grackle workers
-		grackeLocksGarbageCollectionWorker := grackle.NewGrackleLocksGCWorker(grackleCoreApiClient)
+		grackeLocksGarbageCollectionWorker := workers.NewGrackleLocksGCWorker(grackleCoreApiClient)
 		grackeLocksGarbageCollectionWorker.Start()
-		grackeSemaphoresGarbageCollectionWorker := grackle.NewGrackleSemaphoresGCWorker(grackleCoreApiClient)
+		grackeSemaphoresGarbageCollectionWorker := workers.NewGrackleSemaphoresGCWorker(grackleCoreApiClient)
 		grackeSemaphoresGarbageCollectionWorker.Start()
-		grackeWaitGroupsGarbageCollectionWorker := grackle.NewGrackleWaitGroupsGCWorker(grackleCoreApiClient)
+		grackeWaitGroupsGarbageCollectionWorker := workers.NewGrackleWaitGroupsGCWorker(grackleCoreApiClient)
 		grackeWaitGroupsGarbageCollectionWorker.Start()
 
 		wg := sync.WaitGroup{}

@@ -1,116 +1,137 @@
 syntax = "proto3";
 
-option go_package = "github.com/evrblk/grackle/pkg/corepb";
-
 package com.evrblk.grackle.corepb;
 
+import "pkg/corepb/barriers.proto";
 import "pkg/corepb/locks.proto";
 import "pkg/corepb/namespaces.proto";
 import "pkg/corepb/semaphores.proto";
 import "pkg/corepb/wait_groups.proto";
-import "x/errors.proto";
+
+option go_package = "github.com/evrblk/grackle/pkg/corepb";
 
 message GrackleReadRequest {
-  reserved 1;
-
   oneof request {
-    GetSemaphoreRequest get_semaphore_request = 2;
+    GetSemaphoreRequest get_semaphore_request = 1;
+    GetSemaphoreByNameRequest get_semaphore_by_name_request = 2;
     ListSemaphoresRequest list_semaphores_request = 3;
+    ListSemaphoreHoldersRequest list_semaphore_holders_request = 4;
 
-    GetWaitGroupRequest get_wait_group_request = 4;
-    ListWaitGroupsRequest list_wait_groups_request = 5;
+    GetWaitGroupRequest get_wait_group_request = 5;
+    GetWaitGroupByNameRequest get_wait_group_by_name_request = 6;
+    ListWaitGroupsRequest list_wait_groups_request = 7;
+    ListWaitGroupJobsRequest list_wait_group_jobs_request = 8;
 
-    GetNamespaceRequest get_namespace_request = 6;
-    ListNamespacesRequest list_namespaces_request = 7;
+    GetNamespaceRequest get_namespace_request = 9;
+    GetNamespaceByNameRequest get_namespace_by_name_request = 10;
+    ListNamespacesRequest list_namespaces_request = 11;
 
-    ListLocksRequest list_locks_request = 8;
+    ListLocksRequest list_locks_request = 12;
+
+    GetBarrierRequest get_barrier_request = 13;
+    GetBarrierByNameRequest get_barrier_by_name_request = 14;
+    ListBarriersRequest list_barriers_request = 15;
+    ListBarrierParticipantsRequest list_barrier_participants_request = 16;
   }
 }
 
 message GrackleReadResponse {
-  com.evrblk.monstera.monsterax.Error error = 1;
-
   oneof response {
-    GetSemaphoreResponse get_semaphore_response = 2;
+    GetSemaphoreResponse get_semaphore_response = 1;
+    GetSemaphoreByNameResponse get_semaphore_by_name_response = 2;
     ListSemaphoresResponse list_semaphores_response = 3;
+    ListSemaphoreHoldersResponse list_semaphore_holders_response = 4;
 
-    GetWaitGroupResponse get_wait_group_response = 4;
-    ListWaitGroupsResponse list_wait_groups_response = 5;
+    GetWaitGroupResponse get_wait_group_response = 5;
+    GetWaitGroupByNameResponse get_wait_group_by_name_response = 6;
+    ListWaitGroupsResponse list_wait_groups_response = 7;
+    ListWaitGroupJobsResponse list_wait_group_jobs_response = 8;
 
-    GetNamespaceResponse get_namespace_response = 6;
-    ListNamespacesResponse list_namespaces_response = 7;
+    GetNamespaceResponse get_namespace_response = 9;
+    GetNamespaceByNameResponse get_namespace_by_name_response = 10;
+    ListNamespacesResponse list_namespaces_response = 11;
 
-    ListLocksResponse list_locks_response = 8;
+    ListLocksResponse list_locks_response = 12;
+
+    GetBarrierResponse get_barrier_response = 13;
+    GetBarrierByNameResponse get_barrier_by_name_response = 14;
+    ListBarriersResponse list_barriers_response = 15;
+    ListBarrierParticipantsResponse list_barrier_participants_response = 16;
   }
 }
 
 message GrackleUpdateRequest {
-  reserved 1;
-
   oneof request {
-    CreateSemaphoreRequest create_semaphore_request = 2;
-    UpdateSemaphoreRequest update_semaphore_request = 3;
-    DeleteSemaphoreRequest delete_semaphore_request = 4;
-    AcquireSemaphoreRequest acquire_semaphore_request = 5;
-    ReleaseSemaphoreRequest release_semaphore_request = 6;
-    RunSemaphoresGarbageCollectionRequest
-        run_semaphores_garbage_collection_request = 7;
-    SemaphoresDeleteNamespaceRequest semaphores_delete_namespace_request = 8;
+    CreateSemaphoreRequest create_semaphore_request = 1;
+    UpdateSemaphoreRequest update_semaphore_request = 2;
+    DeleteSemaphoreRequest delete_semaphore_request = 3;
+    AcquireSemaphoreRequest acquire_semaphore_request = 4;
+    ReleaseSemaphoreRequest release_semaphore_request = 5;
+    RunSemaphoresGarbageCollectionRequest run_semaphores_garbage_collection_request = 6;
+    SemaphoresDeleteNamespaceRequest semaphores_delete_namespace_request = 7;
 
-    CreateWaitGroupRequest create_wait_group_request = 9;
-    DeleteWaitGroupRequest delete_wait_group_request = 10;
-    AddJobsToWaitGroupRequest add_jobs_to_wait_group_request = 11;
-    CompleteJobsFromWaitGroupRequest complete_jobs_from_wait_group_request = 12;
-    RunWaitGroupsGarbageCollectionRequest
-        run_wait_groups_garbage_collection_request = 13;
-    WaitGroupsDeleteNamespaceRequest wait_groups_delete_namespace_request = 14;
+    CreateWaitGroupRequest create_wait_group_request = 8;
+    DeleteWaitGroupRequest delete_wait_group_request = 9;
+    AddJobsToWaitGroupRequest add_jobs_to_wait_group_request = 10;
+    CompleteJobsFromWaitGroupRequest complete_jobs_from_wait_group_request = 11;
+    RunWaitGroupsGarbageCollectionRequest run_wait_groups_garbage_collection_request = 12;
+    WaitGroupsDeleteNamespaceRequest wait_groups_delete_namespace_request = 13;
 
-    AcquireLockRequest acquire_lock_request = 15;
-    ReleaseLockRequest release_lock_request = 16;
-    DeleteLockRequest delete_lock_request = 17;
-    GetLockRequest get_lock_request = 18;
-    RunLocksGarbageCollectionRequest run_locks_garbage_collection_request = 19;
-    LocksDeleteNamespaceRequest locks_delete_namespace_request = 20;
+    AcquireLockRequest acquire_lock_request = 14;
+    ReleaseLockRequest release_lock_request = 15;
+    DeleteLockRequest delete_lock_request = 16;
+    GetLockRequest get_lock_request = 17;
+    RunLocksGarbageCollectionRequest run_locks_garbage_collection_request = 18;
+    LocksDeleteNamespaceRequest locks_delete_namespace_request = 19;
 
-    CreateNamespaceRequest create_namespace_request = 21;
-    UpdateNamespaceRequest update_namespace_request = 22;
-    DeleteNamespaceRequest delete_namespace_request = 23;
+    CreateNamespaceRequest create_namespace_request = 20;
+    UpdateNamespaceRequest update_namespace_request = 21;
+    DeleteNamespaceRequest delete_namespace_request = 22;
+
+    CreateBarrierRequest create_barrier_request = 23;
+    DeleteBarrierRequest delete_barrier_request = 24;
+    UpdateBarrierRequest update_barrier_request = 25;
+    ArriveAtBarrierRequest arrive_at_barrier_request = 26;
+    WaitAtBarrierRequest wait_at_barrier_request = 27;
+    RunBarriersGarbageCollectionRequest run_barriers_garbage_collection_request = 28;
+    BarriersDeleteNamespaceRequest barriers_delete_namespace_request = 29;
   }
 }
 
 message GrackleUpdateResponse {
-  com.evrblk.monstera.monsterax.Error error = 1;
-
   oneof response {
-    CreateSemaphoreResponse create_semaphore_response = 2;
-    UpdateSemaphoreResponse update_semaphore_response = 3;
-    DeleteSemaphoreResponse delete_semaphore_response = 4;
-    AcquireSemaphoreResponse acquire_semaphore_response = 5;
-    ReleaseSemaphoreResponse release_semaphore_response = 6;
-    RunSemaphoresGarbageCollectionResponse
-        run_semaphores_garbage_collection_response = 7;
-    SemaphoresDeleteNamespaceResponse semaphores_delete_namespace_response = 8;
+    CreateSemaphoreResponse create_semaphore_response = 1;
+    UpdateSemaphoreResponse update_semaphore_response = 2;
+    DeleteSemaphoreResponse delete_semaphore_response = 3;
+    AcquireSemaphoreResponse acquire_semaphore_response = 4;
+    ReleaseSemaphoreResponse release_semaphore_response = 5;
+    RunSemaphoresGarbageCollectionResponse run_semaphores_garbage_collection_response = 6;
+    SemaphoresDeleteNamespaceResponse semaphores_delete_namespace_response = 7;
 
-    CreateWaitGroupResponse create_wait_group_response = 9;
-    DeleteWaitGroupResponse delete_wait_group_response = 10;
-    AddJobsToWaitGroupResponse add_jobs_to_wait_group_response = 11;
-    CompleteJobsFromWaitGroupResponse complete_jobs_from_wait_group_response =
-        12;
-    RunWaitGroupsGarbageCollectionResponse
-        run_wait_groups_garbage_collection_response = 13;
-    WaitGroupsDeleteNamespaceResponse wait_groups_delete_namespace_response =
-        14;
+    CreateWaitGroupResponse create_wait_group_response = 8;
+    DeleteWaitGroupResponse delete_wait_group_response = 9;
+    AddJobsToWaitGroupResponse add_jobs_to_wait_group_response = 10;
+    CompleteJobsFromWaitGroupResponse complete_jobs_from_wait_group_response = 11;
+    RunWaitGroupsGarbageCollectionResponse run_wait_groups_garbage_collection_response = 12;
+    WaitGroupsDeleteNamespaceResponse wait_groups_delete_namespace_response = 13;
 
-    AcquireLockResponse acquire_lock_response = 15;
-    ReleaseLockResponse release_lock_response = 16;
-    DeleteLockResponse delete_lock_response = 17;
-    GetLockResponse get_lock_response = 18;
-    RunLocksGarbageCollectionResponse run_locks_garbage_collection_response =
-        19;
-    LocksDeleteNamespaceResponse locks_delete_namespace_response = 20;
+    AcquireLockResponse acquire_lock_response = 14;
+    ReleaseLockResponse release_lock_response = 15;
+    DeleteLockResponse delete_lock_response = 16;
+    GetLockResponse get_lock_response = 17;
+    RunLocksGarbageCollectionResponse run_locks_garbage_collection_response = 18;
+    LocksDeleteNamespaceResponse locks_delete_namespace_response = 19;
 
-    CreateNamespaceResponse create_namespace_response = 21;
-    UpdateNamespaceResponse update_namespace_response = 22;
-    DeleteNamespaceResponse delete_namespace_response = 23;
+    CreateNamespaceResponse create_namespace_response = 20;
+    UpdateNamespaceResponse update_namespace_response = 21;
+    DeleteNamespaceResponse delete_namespace_response = 22;
+
+    CreateBarrierResponse create_barrier_response = 23;
+    DeleteBarrierResponse delete_barrier_response = 24;
+    UpdateBarrierResponse update_barrier_response = 25;
+    ArriveAtBarrierResponse arrive_at_barrier_response = 26;
+    WaitAtBarrierResponse wait_at_barrier_response = 27;
+    RunBarriersGarbageCollectionResponse run_barriers_garbage_collection_response = 28;
+    BarriersDeleteNamespaceResponse barriers_delete_namespace_response = 29;
   }
 }

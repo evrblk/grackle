@@ -1,13 +1,13 @@
 syntax = "proto3";
 
-option go_package = "github.com/evrblk/grackle/pkg/corepb";
-
 package com.evrblk.grackle.corepb;
 
 import "pkg/corepb/common.proto";
 
+option go_package = "github.com/evrblk/grackle/pkg/corepb";
+
 message CreateNamespaceRequest {
-  uint64 account_id = 1;
+  NamespaceId namespace_id = 1;
   string name = 2;
   string description = 3;
   int64 now = 4;
@@ -38,10 +38,18 @@ message GetNamespaceResponse {
   Namespace namespace = 1;
 }
 
+message GetNamespaceByNameRequest {
+  uint64 account_id = 1;
+  string namespace_name = 2;
+}
+
+message GetNamespaceByNameResponse {
+  Namespace namespace = 1;
+}
+
 message DeleteNamespaceRequest {
   NamespaceId namespace_id = 1;
-  int64 namespace_created_at = 2;
-  int64 now = 3;
+  int64 now = 2;
 }
 
 message DeleteNamespaceResponse {}
@@ -58,20 +66,15 @@ message UpdateNamespaceResponse {
 
 message Namespace {
   NamespaceId id = 1;
-  string description = 2;
-  int64 created_at = 3;
-  int64 updated_at = 4;
+  string name = 2;
+  string description = 3;
+  int64 created_at = 4;
+  int64 updated_at = 5;
 }
 
 message NamespaceId {
   uint64 account_id = 1;
-  string namespace_name = 2;
-}
-
-message NamespaceTimestampedId {
-  uint64 account_id = 1;
-  string namespace_name = 2;
-  int64 namespace_created_at = 3;
+  uint32 namespace_id = 2;
 }
 
 message NamespacesCounter {

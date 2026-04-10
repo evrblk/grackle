@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+  scrape_native_histograms: true
+
+scrape_configs:
+  - job_name: grackle
+    native_histogram_bucket_limit: 128
+    static_configs:
+      - targets:
+          - node-1:2112
+          - node-2:2112
+          - node-3:2112

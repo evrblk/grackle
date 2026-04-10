@@ -1,6 +1,8 @@
 *.so
 *.dylib
 
+cmd/grackle/grackle
+
 # Test binary, built with `go test -c`
 *.test
 
@@ -13,4 +15,3 @@ data/
 target
 .ijwb
 .intellij
-

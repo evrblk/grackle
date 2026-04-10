@@ -9,14 +9,17 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/evrblk/monstera"
+	"github.com/evrblk/monstera/cluster"
+	monstrea_grpc "github.com/evrblk/monstera/transport/grpc"
+	"github.com/evrblk/yellowstone-common/metrics"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
 	gracklepb "github.com/evrblk/evrblk-go/grackle/preview"
-	"github.com/evrblk/grackle/pkg/grackle"
-	grackle_preview "github.com/evrblk/grackle/pkg/preview"
-	"github.com/evrblk/monstera"
-	"github.com/evrblk/yellowstone-common/metrics"
+	"github.com/evrblk/grackle/pkg/monsteragen"
+	grackle_preview "github.com/evrblk/grackle/pkg/server/preview"
+	"github.com/evrblk/grackle/pkg/sharding"
 )
 
 var gatewayCmdCfg struct {
@@ -44,13 +47,16 @@ var gatewayCmd = &cobra.Command{
 		metricsSrv.Start()
 
 		// Load monstera cluster config
-		clusterConfig, err := monstera.LoadConfigFromFile(gatewayCmdCfg.monsteraConfigPath)
+		clusterConfig, err := cluster.LoadConfigFromFile(gatewayCmdCfg.monsteraConfigPath)
 		if err != nil {
 			log.Fatal(err)
 		}
 
+		// Create transport
+		transport := monstrea_grpc.NewGrpcTransport(clusterConfig)
+
 		// Create Monstera client
-		monsteraClient := monstera.NewMonsteraClient(clusterConfig)
+		monsteraClient := monstera.NewMonsteraClient(clusterConfig, transport, monstera.DefaultClientConfig())
 		monsteraClient.Start()
 
 		// Middleware
@@ -83,7 +89,7 @@ var gatewayCmd = &cobra.Command{
 		}()
 
 		// Grackle API Gateway
-		grackleCoreApiClient := grackle.NewGrackleCoreApiMonsteraStub(monsteraClient, &grackle.GrackleShardKeyCalculator{})
+		grackleCoreApiClient := monsteragen.NewGrackleCoreApiMonsteraStub(monsteraClient, &sharding.GrackleShardKeyCalculator{})
 		grackleApiGatewayServer := grackle_preview.NewGrackleApiServer(grackleCoreApiClient)
 		defer grackleApiGatewayServer.Close()
 		gracklepb.RegisterGracklePreviewApiServer(grpcServer, grackleApiGatewayServer)

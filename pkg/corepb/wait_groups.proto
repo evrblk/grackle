@@ -1,14 +1,14 @@
 syntax = "proto3";
 
-option go_package = "github.com/evrblk/grackle/pkg/corepb";
-
 package com.evrblk.grackle.corepb;
 
 import "pkg/corepb/common.proto";
 import "pkg/corepb/namespaces.proto";
 
+option go_package = "github.com/evrblk/grackle/pkg/corepb";
+
 message CreateWaitGroupRequest {
-  NamespaceTimestampedId namespace_timestamped_id = 1;
+  WaitGroupId wait_group_id = 1;
   string name = 2;
   string description = 3;
   int64 now = 4;
@@ -22,7 +22,7 @@ message CreateWaitGroupResponse {
 }
 
 message ListWaitGroupsRequest {
-  NamespaceTimestampedId namespace_timestamped_id = 1;
+  NamespaceId namespace_id = 1;
   PaginationToken pagination_token = 2;
   int32 limit = 3;
 }
@@ -41,18 +41,29 @@ message GetWaitGroupResponse {
   WaitGroup wait_group = 1;
 }
 
+message GetWaitGroupByNameRequest {
+  NamespaceId namespace_id = 1;
+  string wait_group_name = 2;
+}
+
+message GetWaitGroupByNameResponse {
+  WaitGroup wait_group = 1;
+}
+
 message DeleteWaitGroupRequest {
-  uint64 record_id = 1;
-  WaitGroupId wait_group_id = 2;
+  NamespaceId namespace_id = 1;
+  string wait_group_name = 2;
+  uint64 record_id = 3;
 }
 
 message DeleteWaitGroupResponse {}
 
 message AddJobsToWaitGroupRequest {
-  WaitGroupId wait_group_id = 1;
-  uint64 counter = 2;
-  int64 now = 3;
-  int64 max_wait_group_size = 4;
+  NamespaceId namespace_id = 1;
+  string wait_group_name = 2;
+  uint64 counter = 3;
+  int64 now = 4;
+  int64 max_wait_group_size = 5;
 }
 
 message AddJobsToWaitGroupResponse {
@@ -60,13 +71,27 @@ message AddJobsToWaitGroupResponse {
 }
 
 message CompleteJobsFromWaitGroupRequest {
-  WaitGroupId wait_group_id = 1;
-  repeated string process_ids = 2;
-  int64 now = 3;
+  NamespaceId namespace_id = 1;
+  string wait_group_name = 2;
+  repeated string process_ids = 3;
+  int64 now = 4;
 }
 
 message CompleteJobsFromWaitGroupResponse {
   WaitGroup wait_group = 1;
+}
+
+message ListWaitGroupJobsRequest {
+  NamespaceId namespace_id = 1;
+  string wait_group_name = 2;
+  PaginationToken pagination_token = 3;
+  int32 limit = 4;
+}
+
+message ListWaitGroupJobsResponse {
+  repeated WaitGroupJob jobs = 1;
+  PaginationToken next_pagination_token = 2;
+  PaginationToken previous_pagination_token = 3;
 }
 
 message RunWaitGroupsGarbageCollectionRequest {
@@ -80,7 +105,7 @@ message RunWaitGroupsGarbageCollectionResponse {}
 
 message WaitGroupsDeleteNamespaceRequest {
   uint64 record_id = 1;
-  NamespaceTimestampedId namespace_timestamped_id = 2;
+  NamespaceId namespace_id = 2;
   int64 now = 3;
 }
 
@@ -88,12 +113,13 @@ message WaitGroupsDeleteNamespaceResponse {}
 
 message WaitGroup {
   WaitGroupId id = 1;
-  string description = 2;
-  int64 created_at = 3;
-  int64 updated_at = 4;
-  int64 expires_at = 5;
-  uint64 counter = 6;
-  uint64 completed = 7;
+  string name = 2;
+  string description = 3;
+  int64 created_at = 4;
+  int64 updated_at = 5;
+  int64 expires_at = 6;
+  uint64 counter = 7;
+  uint64 completed = 8;
 }
 
 message WaitGroupJob {
@@ -103,33 +129,31 @@ message WaitGroupJob {
 
 message WaitGroupJobId {
   uint64 account_id = 1;
-  string namespace_name = 2;
-  int64 namespace_created_at = 4;
-  string wait_group_name = 5;
-  string process_id = 6;
+  uint32 namespace_id = 2;
+  uint64 wait_group_id = 3;
+  string process_id = 4;
 }
 
 message WaitGroupId {
   uint64 account_id = 1;
-  string namespace_name = 2;
-  int64 namespace_created_at = 3;
-  string wait_group_name = 4;
+  uint32 namespace_id = 2;
+  uint64 wait_group_id = 3;
 }
 
 message WaitGroupsCounter {
-  NamespaceTimestampedId namespace_timestamped_id = 1;
+  NamespaceId namespace_id = 1;
   int64 number_of_wait_groups = 2;
 }
 
-message WaitGroupsGCRecord {
+message WaitGroupsGarbageCollectionRecord {
   uint64 id = 1;
   oneof record {
-    NamespaceTimestampedId namespace_timestamped_id = 2;
+    NamespaceId namespace_id = 2;
     WaitGroupId wait_group_id = 3;
   }
 }
 
-message WaitGroupsExpirationGlobalIndexRecord {
+message WaitGroupsExpirationRecord {
   WaitGroupId wait_group_id = 1;
   int64 expires_at = 2;
 }

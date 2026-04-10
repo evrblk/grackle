@@ -1,16 +1,16 @@
 syntax = "proto3";
 
-option go_package = "github.com/evrblk/grackle/pkg/corepb";
-
 package com.evrblk.grackle.corepb;
 
 import "pkg/corepb/common.proto";
 import "pkg/corepb/namespaces.proto";
 
+option go_package = "github.com/evrblk/grackle/pkg/corepb";
+
 message AcquireLockRequest {
   LockId lock_id = 1;
   string process_id = 2;
-  bool write_lock = 3;
+  bool exclusive = 3;
   int64 now = 4;
   int64 expires_at = 5;
   int64 max_number_of_locks_per_namespace = 6;
@@ -48,7 +48,7 @@ message DeleteLockRequest {
 message DeleteLockResponse {}
 
 message ListLocksRequest {
-  NamespaceTimestampedId namespace_timestamped_id = 1;
+  NamespaceId namespace_id = 1;
   int64 now = 2;
   PaginationToken pagination_token = 3;
   int32 limit = 4;
@@ -70,7 +70,7 @@ message RunLocksGarbageCollectionRequest {
 message RunLocksGarbageCollectionResponse {}
 
 message LocksDeleteNamespaceRequest {
-  NamespaceTimestampedId namespace_timestamped_id = 1;
+  NamespaceId namespace_id = 1;
   uint64 record_id = 2;
   int64 now = 3;
 }
@@ -81,8 +81,7 @@ message Lock {
   LockId id = 1;
   LockState state = 2;
   int64 locked_at = 3;
-  LockHolder write_lock_holder = 4;
-  repeated LockHolder read_lock_holders = 5;
+  repeated LockHolder lock_holders = 4;
 }
 
 message LockHolder {
@@ -93,28 +92,33 @@ message LockHolder {
 
 enum LockState {
   UNLOCKED = 0;
-  READ_LOCKED = 1;
-  WRITE_LOCKED = 2;
+  SHARED_LOCKED = 1;
+  EXCLUSIVE_LOCKED = 2;
 }
 
 message LockId {
   uint64 account_id = 1;
-  string namespace_name = 2;
-  int64 namespace_created_at = 3;
-  string lock_name = 4;
+  uint32 namespace_id = 2;
+  string lock_name = 3;
 }
 
 message LocksCounter {
-  NamespaceTimestampedId namespace_timestamped_id = 1;
+  NamespaceId namespace_id = 1;
   int64 number_of_locks = 2;
 }
 
-message LocksGCRecord {
+message LocksGarbageCollectionRecord {
   uint64 id = 1;
-  NamespaceTimestampedId namespace_timestamped_id = 2;
+  NamespaceId namespace_id = 2;
 }
 
-message LocksExpirationGlobalIndexRecord {
+message LocksExpirationRecord {
   LockId lock_id = 1;
   int64 expires_at = 2;
+}
+
+message LockAncestor {
+  LockId id = 1;
+  int64 exclusive_count = 2;
+  int64 shared_count = 3;
 }
