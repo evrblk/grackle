@@ -55,9 +55,9 @@ Running in the clustered mode requires Monstera cluster config file. To generate
 
 ```shell
 $ go tool github.com/evrblk/monstera/cmd/monstera config init \
-  --node=localhost:7001 \
-  --node=localhost:7002 \
-  --node=localhost:7003 \
+  --node-id=node_01 --node-address=localhost:7001 \
+  --node-id=node_02 --node-address=localhost:7002 \
+  --node-id=node_03 --node-address=localhost:7003 \
   --output=./cluster_config.json
 
 $ go tool github.com/evrblk/monstera/cmd/monstera config add-application \
@@ -97,9 +97,9 @@ Take a look inside to see how actually simple it is.
 Then run all components:
 
 ```shell
-$ ./grackle run node --node-address=localhost:7001 --data-dir=./data/node1 --monstera-config=./cluster_config.json
-$ ./grackle run node --node-address=localhost:7002 --data-dir=./data/node2 --monstera-config=./cluster_config.json
-$ ./grackle run node --node-address=localhost:7003 --data-dir=./data/node3 --monstera-config=./cluster_config.json
+$ ./grackle run node --node-id=node_01 --data-dir=./data/node_01 --monstera-config=./cluster_config.json
+$ ./grackle run node --node-id=node_02 --data-dir=./data/node_02 --monstera-config=./cluster_config.json
+$ ./grackle run node --node-id=node_03 --data-dir=./data/node_03 --monstera-config=./cluster_config.json
 
 $ ./grackle run worker --monstera-config=./cluster_config.json
 
