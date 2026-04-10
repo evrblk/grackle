@@ -31,11 +31,11 @@ import (
 )
 
 var (
-	configPath      = flag.String("config", "./cluster_config.json", "Path to cluster config file")
-	baseDataDir     = flag.String("data-dir", "./.data", "Base directory for node data")
-	prometheusPort  = flag.Int("prometheus-port", 2112, "Prometheus metrics port")
-	cpuProfile      = flag.String("cpu-profile", "", "Write CPU profile to file")
-	transportType   = flag.String("transport", "grpc", "Transport type: 'grpc' or 'local'")
+	configPath     = flag.String("config", "./cluster_config.json", "Path to cluster config file")
+	baseDataDir    = flag.String("data-dir", "./.data", "Base directory for node data")
+	prometheusPort = flag.Int("prometheus-port", 2112, "Prometheus metrics port")
+	cpuProfile     = flag.String("cpu-profile", "", "Write CPU profile to file")
+	transportType  = flag.String("transport", "grpc", "Transport type: 'grpc' or 'local'")
 )
 
 type nodeRunner struct {
