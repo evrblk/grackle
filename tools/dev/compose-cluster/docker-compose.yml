@@ -32,6 +32,15 @@ services:
     volumes:
       - .data/node-3:/grackle/data:delegated
 
+  gateway:
+    build:
+      context: .
+      dockerfile: dev.dockerfile
+    image: grackle
+    command: ["sh", "-c", "exec ./grackle run gateway --port=9000 --monstera-config=./cluster_config.json"]
+    ports:
+      - 9000:9000
+
   prometheus:
     image: prom/prometheus:latest
     command:

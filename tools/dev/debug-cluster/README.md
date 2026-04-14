@@ -1,15 +1,13 @@
 # Debug Cluster
 
-A development tool that runs multiple Monstera nodes in a single process for local debugging and testing.
+A development tool that runs a complete Grackle cluster (nodes + gateway) in a single process for local debugging and testing.
 
 ## Overview
 
-This tool simplifies local development by running a complete Grackle cluster in one process, eliminating the need for Docker Compose or multiple terminal windows. All nodes defined in the cluster configuration communicate via localhost on different ports.
-
-## Prerequisites
-
-- Go 1.26 or later
-- Monstera CLI tools installed (`github.com/evrblk/monstera/cmd/monstera`)
+This tool simplifies local development by running a complete Grackle cluster in one process, eliminating the need for Docker Compose or multiple terminal windows. It includes:
+- All Monstera nodes defined in the cluster configuration
+- API gateway for client connections
+- All nodes communicate via localhost (gRPC) or in-memory (local transport)
 
 ## Setup
 
@@ -21,19 +19,7 @@ First, generate the cluster configuration file:
 ./generate_config.sh
 ```
 
-This creates `cluster_config.json` with 5 nodes:
-- node-1: localhost:8001
-- node-2: localhost:8002
-- node-3: localhost:8003
-- node-4: localhost:8004
-- node-5: localhost:8005
-
-The configuration includes all Grackle applications:
-- GrackleLocks (32 shards)
-- GrackleSemaphores (32 shards)
-- GrackleWaitGroups (32 shards)
-- GrackleBarriers (32 shards)
-- GrackleNamespaces (16 shards)
+This creates `cluster_config.json` with 5 nodes. The configuration includes all Grackle applications.
 
 ### 2. Build the Binary
 
@@ -57,17 +43,12 @@ Optional flags:
 - `--prometheus-port` - Prometheus metrics port (default: `2112`)
 - `--cpu-profile` - Write CPU profile to file (e.g., `cpu.prof`)
 - `--transport` - Transport type: `grpc` or `local` (default: `grpc`)
+- `--gateway-port` - Gateway port for client connections (default: `0` = disabled)
 
-Example with custom settings:
-
-```bash
-./debug-cluster --config ./my_config.json --data-dir ./my_data --prometheus-port 9090
-```
-
-Example for performance testing (local transport + CPU profiling):
+Example (gateway + local transport + profiling):
 
 ```bash
-./debug-cluster --transport local --cpu-profile cpu.prof
+./debug-cluster --gateway-port=9000 --transport=local --cpu-profile=cpu.prof
 ```
 
 ### Stop the Cluster
@@ -96,7 +77,7 @@ Uses real gRPC connections over localhost network interfaces. This mode:
 - Slightly higher overhead due to serialization and network stack
 
 ```bash
-./debug-cluster --transport grpc
+./debug-cluster --transport=grpc
 ```
 
 ### Local Transport
@@ -110,10 +91,8 @@ Uses in-memory function calls between nodes. This mode:
 - Ideal for rapid development iteration
 
 ```bash
-./debug-cluster --transport local
+./debug-cluster --transport=local
 ```
-
-**Recommendation**: Use `local` transport for CPU profiling and performance testing to eliminate network overhead from your measurements. Use `grpc` transport when you need to test network behavior or want production-like communication patterns.
 
 ## Monitoring
 
@@ -126,7 +105,7 @@ Prometheus metrics are exposed at `http://localhost:2112/metrics` (or your custo
 Enable CPU profiling to analyze performance:
 
 ```bash
-./debug-cluster --cpu-profile cpu.prof
+./debug-cluster --cpu-profile=cpu.prof
 ```
 
 The profiler will run until you stop the cluster with `Ctrl+C`. Analyze the profile with:
@@ -135,49 +114,28 @@ The profiler will run until you stop the cluster with `Ctrl+C`. Analyze the prof
 go tool pprof cpu.prof
 ```
 
-Common pprof commands:
-- `top` - Show top CPU consumers
-- `list <function>` - Show annotated source for a function
-- `web` - Open interactive graph in browser (requires Graphviz)
-- `pdf` - Generate PDF call graph
+### Architecture
 
-Example analysis session:
-
-```bash
-# Interactive mode
-go tool pprof cpu.prof
-
-# Generate SVG call graph
-go tool pprof -svg cpu.prof > profile.svg
-
-# Show top 20 functions
-go tool pprof -top cpu.prof
 ```
-
-## Structure
-
-- `main.go` - Main application that runs all nodes from cluster config concurrently
-- `generate_config.sh` - Script to generate cluster configuration (currently creates 5 nodes)
-- `cluster_config.json` - Generated cluster configuration (git-ignored)
-- `.data/` - Data directories for each node (git-ignored)
-  - `node-1/` through `node-5/` - Data for each node
-
-## Differences from compose-cluster
-
-- **Single Process**: All nodes run in one process vs separate containers
-- **Transport Options**: Choose between gRPC (network) or local (in-memory) transport
-- **Localhost**: When using gRPC, nodes communicate via localhost vs Docker network
-- **No Docker**: No Docker or Docker Compose required
-- **Faster Startup**: Quicker iteration for development and debugging
-- **Single Metrics Port**: All nodes share one Prometheus endpoint
-- **Better Profiling**: CPU profiling captures all nodes in a single profile
-
-## Use Cases
-
-- **Local development and testing** - Run a full cluster on your machine
-- **Debugging cluster behavior** - Single process makes debugging easier
-- **Performance testing** - Use local transport to eliminate network overhead
-- **CPU profiling** - Profile all nodes together in one process
-- **Quick iteration** - No Docker overhead, instant startup
-- **Learning** - Understand how Monstera clustering works
-- **Integration testing** - Test distributed coordination primitives locally
+┌─────────────────────────────────────────────────┐
+│         Single Process (debug-cluster)          │
+│                                                 │
+│  ┌────────────────────────────────────────────┐ │
+│  │  Gateway (optional, :9000)                 │ │
+│  │  - Accepts client gRPC requests            │ │
+│  │  - Routes to shards automatically          │ │
+│  └────────────┬───────────────────────────────┘ │
+│               │                                 │
+│               │ Transport (gRPC or local)       │
+│               ▼                                 │
+│  ┌────────────────────────────────────────────┐ │
+│  │  Monstera Nodes                            │ │
+│  │  - node-1 (:8001) │ node-2 (:8002) │ ...   │ │
+│  │  - Each hosts multiple shard replicas      │ │
+│  └────────────────────────────────────────────┘ │
+│                                                 │
+│  ┌────────────────────────────────────────────┐ │
+│  │  Prometheus Metrics (:2112)                │ │
+│  └────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────┘
+```

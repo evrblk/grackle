@@ -10,16 +10,16 @@
           "upper_bound": "0f",
           "replicas": [
             {
-              "id": "GrackleLocks_00_0f_d351f8bf",
-              "node_id": "node-2"
-            },
-            {
-              "id": "GrackleLocks_00_0f_89ab678c",
+              "id": "GrackleLocks_00_0f_d564982c",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleLocks_00_0f_b66c2a25",
+              "id": "GrackleLocks_00_0f_87ae1962",
               "node_id": "node-3"
+            },
+            {
+              "id": "GrackleLocks_00_0f_2e24777e",
+              "node_id": "node-2"
             }
           ]
         },
@@ -29,16 +29,16 @@
           "upper_bound": "1f",
           "replicas": [
             {
-              "id": "GrackleLocks_10_1f_f29d79b1",
+              "id": "GrackleLocks_10_1f_22b93fc5",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleLocks_10_1f_8c233d3",
               "node_id": "node-2"
             },
             {
-              "id": "GrackleLocks_10_1f_af79621b",
+              "id": "GrackleLocks_10_1f_a8b5ba48",
               "node_id": "node-1"
-            },
-            {
-              "id": "GrackleLocks_10_1f_4a5e6bac",
-              "node_id": "node-3"
             }
           ]
         },
@@ -48,15 +48,15 @@
           "upper_bound": "2f",
           "replicas": [
             {
-              "id": "GrackleLocks_20_2f_d7896aa0",
+              "id": "GrackleLocks_20_2f_f56a5169",
               "node_id": "node-2"
             },
             {
-              "id": "GrackleLocks_20_2f_80a09f27",
+              "id": "GrackleLocks_20_2f_3e463347",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleLocks_20_2f_405f7be1",
+              "id": "GrackleLocks_20_2f_93263623",
               "node_id": "node-3"
             }
           ]
@@ -67,16 +67,16 @@
           "upper_bound": "3f",
           "replicas": [
             {
-              "id": "GrackleLocks_30_3f_bfd47e27",
+              "id": "GrackleLocks_30_3f_3fc5c490",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleLocks_30_3f_fbd26255",
-              "node_id": "node-1"
+              "id": "GrackleLocks_30_3f_a85ea0c9",
+              "node_id": "node-2"
             },
             {
-              "id": "GrackleLocks_30_3f_1c14cbb5",
-              "node_id": "node-2"
+              "id": "GrackleLocks_30_3f_889788eb",
+              "node_id": "node-1"
             }
           ]
         },
@@ -86,16 +86,16 @@
           "upper_bound": "4f",
           "replicas": [
             {
-              "id": "GrackleLocks_40_4f_2d8f68f8",
+              "id": "GrackleLocks_40_4f_84a12fe5",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleLocks_40_4f_d1bbfff0",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleLocks_40_4f_8b57d30b",
+              "id": "GrackleLocks_40_4f_f288800e",
               "node_id": "node-2"
-            },
-            {
-              "id": "GrackleLocks_40_4f_faf27c02",
-              "node_id": "node-1"
             }
           ]
         },
@@ -105,16 +105,16 @@
           "upper_bound": "5f",
           "replicas": [
             {
-              "id": "GrackleLocks_50_5f_dc7ffda5",
+              "id": "GrackleLocks_50_5f_8591abee",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleLocks_50_5f_e6688594",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleLocks_50_5f_4c7582cf",
+              "id": "GrackleLocks_50_5f_1c9199c1",
               "node_id": "node-2"
-            },
-            {
-              "id": "GrackleLocks_50_5f_715d2931",
-              "node_id": "node-1"
             }
           ]
         },
@@ -124,16 +124,16 @@
           "upper_bound": "6f",
           "replicas": [
             {
-              "id": "GrackleLocks_60_6f_f8ca31c",
-              "node_id": "node-3"
-            },
-            {
-              "id": "GrackleLocks_60_6f_71a74bb3",
+              "id": "GrackleLocks_60_6f_156268cf",
               "node_id": "node-2"
             },
             {
-              "id": "GrackleLocks_60_6f_774548f7",
+              "id": "GrackleLocks_60_6f_8bf251b6",
               "node_id": "node-1"
+            },
+            {
+              "id": "GrackleLocks_60_6f_b265640b",
+              "node_id": "node-3"
             }
           ]
         },
@@ -143,15 +143,15 @@
           "upper_bound": "7f",
           "replicas": [
             {
-              "id": "GrackleLocks_70_7f_3d33b425",
-              "node_id": "node-1"
-            },
-            {
-              "id": "GrackleLocks_70_7f_8730d496",
+              "id": "GrackleLocks_70_7f_52b0246d",
               "node_id": "node-2"
             },
             {
-              "id": "GrackleLocks_70_7f_f97ff926",
+              "id": "GrackleLocks_70_7f_8a722080",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleLocks_70_7f_1c05167a",
               "node_id": "node-3"
             }
           ]
@@ -162,15 +162,15 @@
           "upper_bound": "8f",
           "replicas": [
             {
-              "id": "GrackleLocks_80_8f_26bf3f2c",
+              "id": "GrackleLocks_80_8f_7573a970",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleLocks_80_8f_6698773b",
+              "id": "GrackleLocks_80_8f_3c966784",
               "node_id": "node-2"
             },
             {
-              "id": "GrackleLocks_80_8f_28c58aca",
+              "id": "GrackleLocks_80_8f_53c577bb",
               "node_id": "node-1"
             }
           ]
@@ -181,15 +181,15 @@
           "upper_bound": "9f",
           "replicas": [
             {
-              "id": "GrackleLocks_90_9f_873bcfc1",
+              "id": "GrackleLocks_90_9f_ae5d9ccf",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleLocks_90_9f_79664af4",
+              "id": "GrackleLocks_90_9f_8ec06a29",
               "node_id": "node-2"
             },
             {
-              "id": "GrackleLocks_90_9f_6206d6f5",
+              "id": "GrackleLocks_90_9f_efc83de8",
               "node_id": "node-3"
             }
           ]
@@ -200,16 +200,16 @@
           "upper_bound": "af",
           "replicas": [
             {
-              "id": "GrackleLocks_a0_af_ff3f81f9",
+              "id": "GrackleLocks_a0_af_c1c9df8b",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleLocks_a0_af_772ca983",
-              "node_id": "node-3"
+              "id": "GrackleLocks_a0_af_7e5d3bfa",
+              "node_id": "node-2"
             },
             {
-              "id": "GrackleLocks_a0_af_7c212508",
-              "node_id": "node-2"
+              "id": "GrackleLocks_a0_af_768a2ad3",
+              "node_id": "node-3"
             }
           ]
         },
@@ -219,16 +219,16 @@
           "upper_bound": "bf",
           "replicas": [
             {
-              "id": "GrackleLocks_b0_bf_f1059e73",
-              "node_id": "node-2"
-            },
-            {
-              "id": "GrackleLocks_b0_bf_131319c0",
+              "id": "GrackleLocks_b0_bf_5442f4a7",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleLocks_b0_bf_7ade5b47",
+              "id": "GrackleLocks_b0_bf_17e7cbef",
               "node_id": "node-3"
+            },
+            {
+              "id": "GrackleLocks_b0_bf_344bad19",
+              "node_id": "node-2"
             }
           ]
         },
@@ -238,16 +238,16 @@
           "upper_bound": "cf",
           "replicas": [
             {
-              "id": "GrackleLocks_c0_cf_27e2403",
+              "id": "GrackleLocks_c0_cf_6eb66a87",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleLocks_c0_cf_b6e0f493",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleLocks_c0_cf_38f38f6f",
+              "id": "GrackleLocks_c0_cf_27176ea1",
               "node_id": "node-3"
-            },
-            {
-              "id": "GrackleLocks_c0_cf_f0c8e58",
-              "node_id": "node-2"
             }
           ]
         },
@@ -257,16 +257,16 @@
           "upper_bound": "df",
           "replicas": [
             {
-              "id": "GrackleLocks_d0_df_2cb32397",
+              "id": "GrackleLocks_d0_df_3b182c0d",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleLocks_d0_df_d70ac99b",
-              "node_id": "node-2"
+              "id": "GrackleLocks_d0_df_9a76e0d3",
+              "node_id": "node-1"
             },
             {
-              "id": "GrackleLocks_d0_df_609c1c8",
-              "node_id": "node-1"
+              "id": "GrackleLocks_d0_df_895d118b",
+              "node_id": "node-2"
             }
           ]
         },
@@ -276,16 +276,16 @@
           "upper_bound": "ef",
           "replicas": [
             {
-              "id": "GrackleLocks_e0_ef_5844779c",
-              "node_id": "node-2"
+              "id": "GrackleLocks_e0_ef_e2f91c14",
+              "node_id": "node-1"
             },
             {
-              "id": "GrackleLocks_e0_ef_afd0d982",
+              "id": "GrackleLocks_e0_ef_7e320507",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleLocks_e0_ef_4975e68d",
-              "node_id": "node-1"
+              "id": "GrackleLocks_e0_ef_276f842a",
+              "node_id": "node-2"
             }
           ]
         },
@@ -295,15 +295,15 @@
           "upper_bound": "ff",
           "replicas": [
             {
-              "id": "GrackleLocks_f0_ff_40c04801",
-              "node_id": "node-1"
-            },
-            {
-              "id": "GrackleLocks_f0_ff_7a262258",
+              "id": "GrackleLocks_f0_ff_bd90eadd",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleLocks_f0_ff_cc9c6309",
+              "id": "GrackleLocks_f0_ff_96a5835",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleLocks_f0_ff_cd45dde9",
               "node_id": "node-2"
             }
           ]
@@ -321,15 +321,15 @@
           "upper_bound": "0f",
           "replicas": [
             {
-              "id": "GrackleSemaphores_00_0f_61fb4e7d",
+              "id": "GrackleSemaphores_00_0f_366bfec8",
               "node_id": "node-2"
             },
             {
-              "id": "GrackleSemaphores_00_0f_744721a2",
+              "id": "GrackleSemaphores_00_0f_fe445c60",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleSemaphores_00_0f_aacaf77a",
+              "id": "GrackleSemaphores_00_0f_5fbd8fc4",
               "node_id": "node-1"
             }
           ]
@@ -340,16 +340,16 @@
           "upper_bound": "1f",
           "replicas": [
             {
-              "id": "GrackleSemaphores_10_1f_a2b16bff",
-              "node_id": "node-3"
+              "id": "GrackleSemaphores_10_1f_d9bee787",
+              "node_id": "node-1"
             },
             {
-              "id": "GrackleSemaphores_10_1f_1cc1367d",
+              "id": "GrackleSemaphores_10_1f_bf83d4d6",
               "node_id": "node-2"
             },
             {
-              "id": "GrackleSemaphores_10_1f_2f2b009f",
-              "node_id": "node-1"
+              "id": "GrackleSemaphores_10_1f_d4e55eba",
+              "node_id": "node-3"
             }
           ]
         },
@@ -359,16 +359,16 @@
           "upper_bound": "2f",
           "replicas": [
             {
-              "id": "GrackleSemaphores_20_2f_1811901d",
-              "node_id": "node-1"
+              "id": "GrackleSemaphores_20_2f_e42620e9",
+              "node_id": "node-2"
             },
             {
-              "id": "GrackleSemaphores_20_2f_7252d51b",
+              "id": "GrackleSemaphores_20_2f_91d41f86",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleSemaphores_20_2f_f2e040a6",
-              "node_id": "node-2"
+              "id": "GrackleSemaphores_20_2f_246980dd",
+              "node_id": "node-1"
             }
           ]
         },
@@ -378,15 +378,15 @@
           "upper_bound": "3f",
           "replicas": [
             {
-              "id": "GrackleSemaphores_30_3f_fad9cf92",
+              "id": "GrackleSemaphores_30_3f_ec666261",
               "node_id": "node-2"
             },
             {
-              "id": "GrackleSemaphores_30_3f_d936d677",
+              "id": "GrackleSemaphores_30_3f_7ead6f43",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleSemaphores_30_3f_b7bd55bb",
+              "id": "GrackleSemaphores_30_3f_9b57b983",
               "node_id": "node-3"
             }
           ]
@@ -397,16 +397,16 @@
           "upper_bound": "4f",
           "replicas": [
             {
-              "id": "GrackleSemaphores_40_4f_7e3fe78d",
-              "node_id": "node-2"
-            },
-            {
-              "id": "GrackleSemaphores_40_4f_c6bea2c",
+              "id": "GrackleSemaphores_40_4f_8d326f59",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleSemaphores_40_4f_f9704b1b",
+              "id": "GrackleSemaphores_40_4f_f59a8a1f",
               "node_id": "node-3"
+            },
+            {
+              "id": "GrackleSemaphores_40_4f_bcdffc45",
+              "node_id": "node-2"
             }
           ]
         },
@@ -416,16 +416,16 @@
           "upper_bound": "5f",
           "replicas": [
             {
-              "id": "GrackleSemaphores_50_5f_10f764c6",
+              "id": "GrackleSemaphores_50_5f_6b14c24f",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleSemaphores_50_5f_6bf5e5f8",
-              "node_id": "node-2"
+              "id": "GrackleSemaphores_50_5f_bd84ea05",
+              "node_id": "node-3"
             },
             {
-              "id": "GrackleSemaphores_50_5f_f60f18a8",
-              "node_id": "node-3"
+              "id": "GrackleSemaphores_50_5f_5c50c428",
+              "node_id": "node-2"
             }
           ]
         },
@@ -435,16 +435,16 @@
           "upper_bound": "6f",
           "replicas": [
             {
-              "id": "GrackleSemaphores_60_6f_cdd76b1e",
+              "id": "GrackleSemaphores_60_6f_c618c111",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleSemaphores_60_6f_21983f62",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleSemaphores_60_6f_1f1b82f7",
+              "id": "GrackleSemaphores_60_6f_d771541e",
               "node_id": "node-2"
-            },
-            {
-              "id": "GrackleSemaphores_60_6f_16b0b06f",
-              "node_id": "node-3"
             }
           ]
         },
@@ -454,15 +454,15 @@
           "upper_bound": "7f",
           "replicas": [
             {
-              "id": "GrackleSemaphores_70_7f_359cb011",
-              "node_id": "node-2"
-            },
-            {
-              "id": "GrackleSemaphores_70_7f_850fb09e",
+              "id": "GrackleSemaphores_70_7f_408abfd2",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleSemaphores_70_7f_931d5599",
+              "id": "GrackleSemaphores_70_7f_1e205f27",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleSemaphores_70_7f_fb663bdc",
               "node_id": "node-1"
             }
           ]
@@ -473,16 +473,16 @@
           "upper_bound": "8f",
           "replicas": [
             {
-              "id": "GrackleSemaphores_80_8f_ad944807",
+              "id": "GrackleSemaphores_80_8f_56815d04",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleSemaphores_80_8f_64858640",
-              "node_id": "node-1"
+              "id": "GrackleSemaphores_80_8f_e3d75f88",
+              "node_id": "node-2"
             },
             {
-              "id": "GrackleSemaphores_80_8f_916006ab",
-              "node_id": "node-2"
+              "id": "GrackleSemaphores_80_8f_b21e2d77",
+              "node_id": "node-1"
             }
           ]
         },
@@ -492,15 +492,15 @@
           "upper_bound": "9f",
           "replicas": [
             {
-              "id": "GrackleSemaphores_90_9f_7eee732c",
+              "id": "GrackleSemaphores_90_9f_3f2b7b28",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleSemaphores_90_9f_2353e6ef",
+              "id": "GrackleSemaphores_90_9f_1c533520",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleSemaphores_90_9f_211b5eb9",
+              "id": "GrackleSemaphores_90_9f_120cd662",
               "node_id": "node-2"
             }
           ]
@@ -511,15 +511,15 @@
           "upper_bound": "af",
           "replicas": [
             {
-              "id": "GrackleSemaphores_a0_af_d4bf2b9f",
+              "id": "GrackleSemaphores_a0_af_669403b9",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleSemaphores_a0_af_1e76c8c2",
+              "id": "GrackleSemaphores_a0_af_6485b76e",
               "node_id": "node-2"
             },
             {
-              "id": "GrackleSemaphores_a0_af_887b3038",
+              "id": "GrackleSemaphores_a0_af_ca5b2eda",
               "node_id": "node-3"
             }
           ]
@@ -530,16 +530,16 @@
           "upper_bound": "bf",
           "replicas": [
             {
-              "id": "GrackleSemaphores_b0_bf_48f6f639",
+              "id": "GrackleSemaphores_b0_bf_d8dec5fc",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleSemaphores_b0_bf_2cdd8d45",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleSemaphores_b0_bf_fd147327",
+              "id": "GrackleSemaphores_b0_bf_7222959e",
               "node_id": "node-3"
-            },
-            {
-              "id": "GrackleSemaphores_b0_bf_965cf5f2",
-              "node_id": "node-2"
             }
           ]
         },
@@ -549,16 +549,16 @@
           "upper_bound": "cf",
           "replicas": [
             {
-              "id": "GrackleSemaphores_c0_cf_2bfc9158",
-              "node_id": "node-1"
+              "id": "GrackleSemaphores_c0_cf_d4a8cadb",
+              "node_id": "node-2"
             },
             {
-              "id": "GrackleSemaphores_c0_cf_6283cf99",
+              "id": "GrackleSemaphores_c0_cf_d4cbe96b",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleSemaphores_c0_cf_927ecff6",
-              "node_id": "node-2"
+              "id": "GrackleSemaphores_c0_cf_e1723bd4",
+              "node_id": "node-1"
             }
           ]
         },
@@ -568,16 +568,16 @@
           "upper_bound": "df",
           "replicas": [
             {
-              "id": "GrackleSemaphores_d0_df_4044323a",
+              "id": "GrackleSemaphores_d0_df_99e83541",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleSemaphores_d0_df_7d1b8a8b",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleSemaphores_d0_df_46e01bf9",
+              "id": "GrackleSemaphores_d0_df_8a4f9963",
               "node_id": "node-3"
-            },
-            {
-              "id": "GrackleSemaphores_d0_df_7b5588e0",
-              "node_id": "node-2"
             }
           ]
         },
@@ -587,16 +587,16 @@
           "upper_bound": "ef",
           "replicas": [
             {
-              "id": "GrackleSemaphores_e0_ef_24ef053a",
+              "id": "GrackleSemaphores_e0_ef_b90b0c8f",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleSemaphores_e0_ef_8491e65",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleSemaphores_e0_ef_fc9729a8",
+              "id": "GrackleSemaphores_e0_ef_53652103",
               "node_id": "node-2"
-            },
-            {
-              "id": "GrackleSemaphores_e0_ef_e2c8066",
-              "node_id": "node-3"
             }
           ]
         },
@@ -606,15 +606,15 @@
           "upper_bound": "ff",
           "replicas": [
             {
-              "id": "GrackleSemaphores_f0_ff_401a0c5c",
+              "id": "GrackleSemaphores_f0_ff_3d3ce02a",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleSemaphores_f0_ff_9ff5408e",
+              "id": "GrackleSemaphores_f0_ff_abec8453",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleSemaphores_f0_ff_a28b6699",
+              "id": "GrackleSemaphores_f0_ff_7180688f",
               "node_id": "node-2"
             }
           ]
@@ -632,16 +632,16 @@
           "upper_bound": "0f",
           "replicas": [
             {
-              "id": "GrackleWaitGroups_00_0f_4c7d0d9e",
+              "id": "GrackleWaitGroups_00_0f_12c3bb85",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleWaitGroups_00_0f_2cfc32",
-              "node_id": "node-2"
+              "id": "GrackleWaitGroups_00_0f_9b4e949d",
+              "node_id": "node-1"
             },
             {
-              "id": "GrackleWaitGroups_00_0f_a568d96c",
-              "node_id": "node-1"
+              "id": "GrackleWaitGroups_00_0f_4091ca9a",
+              "node_id": "node-2"
             }
           ]
         },
@@ -651,16 +651,16 @@
           "upper_bound": "1f",
           "replicas": [
             {
-              "id": "GrackleWaitGroups_10_1f_7af1a78a",
-              "node_id": "node-2"
+              "id": "GrackleWaitGroups_10_1f_47aecea6",
+              "node_id": "node-3"
             },
             {
-              "id": "GrackleWaitGroups_10_1f_14641274",
+              "id": "GrackleWaitGroups_10_1f_236d63a7",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleWaitGroups_10_1f_be14db8a",
-              "node_id": "node-3"
+              "id": "GrackleWaitGroups_10_1f_c1a1921e",
+              "node_id": "node-2"
             }
           ]
         },
@@ -670,16 +670,16 @@
           "upper_bound": "2f",
           "replicas": [
             {
-              "id": "GrackleWaitGroups_20_2f_b2b97472",
-              "node_id": "node-3"
+              "id": "GrackleWaitGroups_20_2f_69b04483",
+              "node_id": "node-2"
             },
             {
-              "id": "GrackleWaitGroups_20_2f_51825eb7",
+              "id": "GrackleWaitGroups_20_2f_9b2026f9",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleWaitGroups_20_2f_65517d9b",
-              "node_id": "node-2"
+              "id": "GrackleWaitGroups_20_2f_c6c284dc",
+              "node_id": "node-3"
             }
           ]
         },
@@ -689,16 +689,16 @@
           "upper_bound": "3f",
           "replicas": [
             {
-              "id": "GrackleWaitGroups_30_3f_49e4c524",
-              "node_id": "node-2"
+              "id": "GrackleWaitGroups_30_3f_93ae79da",
+              "node_id": "node-1"
             },
             {
-              "id": "GrackleWaitGroups_30_3f_e4fc057d",
+              "id": "GrackleWaitGroups_30_3f_1d0b5793",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleWaitGroups_30_3f_cef3921e",
-              "node_id": "node-1"
+              "id": "GrackleWaitGroups_30_3f_b405895d",
+              "node_id": "node-2"
             }
           ]
         },
@@ -708,16 +708,16 @@
           "upper_bound": "4f",
           "replicas": [
             {
-              "id": "GrackleWaitGroups_40_4f_4a6e55e9",
-              "node_id": "node-1"
-            },
-            {
-              "id": "GrackleWaitGroups_40_4f_5b3b3f5d",
+              "id": "GrackleWaitGroups_40_4f_f1d1e848",
               "node_id": "node-2"
             },
             {
-              "id": "GrackleWaitGroups_40_4f_96396e46",
+              "id": "GrackleWaitGroups_40_4f_f28109fa",
               "node_id": "node-3"
+            },
+            {
+              "id": "GrackleWaitGroups_40_4f_50305c03",
+              "node_id": "node-1"
             }
           ]
         },
@@ -727,16 +727,16 @@
           "upper_bound": "5f",
           "replicas": [
             {
-              "id": "GrackleWaitGroups_50_5f_eeb9f9f2",
-              "node_id": "node-1"
-            },
-            {
-              "id": "GrackleWaitGroups_50_5f_7f16869e",
+              "id": "GrackleWaitGroups_50_5f_fe960f9",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleWaitGroups_50_5f_81ff39d1",
+              "id": "GrackleWaitGroups_50_5f_fd802294",
               "node_id": "node-2"
+            },
+            {
+              "id": "GrackleWaitGroups_50_5f_cf053d39",
+              "node_id": "node-1"
             }
           ]
         },
@@ -746,16 +746,16 @@
           "upper_bound": "6f",
           "replicas": [
             {
-              "id": "GrackleWaitGroups_60_6f_89973558",
+              "id": "GrackleWaitGroups_60_6f_af0ce4e2",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleWaitGroups_60_6f_47d98df1",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleWaitGroups_60_6f_83c4d70c",
+              "id": "GrackleWaitGroups_60_6f_720be373",
               "node_id": "node-3"
-            },
-            {
-              "id": "GrackleWaitGroups_60_6f_4bad8948",
-              "node_id": "node-2"
             }
           ]
         },
@@ -765,16 +765,16 @@
           "upper_bound": "7f",
           "replicas": [
             {
-              "id": "GrackleWaitGroups_70_7f_a67d43da",
-              "node_id": "node-2"
-            },
-            {
-              "id": "GrackleWaitGroups_70_7f_275dc700",
+              "id": "GrackleWaitGroups_70_7f_118284ad",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleWaitGroups_70_7f_ac6b7bb3",
+              "id": "GrackleWaitGroups_70_7f_c7a5185c",
               "node_id": "node-1"
+            },
+            {
+              "id": "GrackleWaitGroups_70_7f_305fe05",
+              "node_id": "node-2"
             }
           ]
         },
@@ -784,15 +784,15 @@
           "upper_bound": "8f",
           "replicas": [
             {
-              "id": "GrackleWaitGroups_80_8f_b318a49",
-              "node_id": "node-1"
-            },
-            {
-              "id": "GrackleWaitGroups_80_8f_d155833",
+              "id": "GrackleWaitGroups_80_8f_3c9cf7b6",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleWaitGroups_80_8f_891ce392",
+              "id": "GrackleWaitGroups_80_8f_f6737411",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleWaitGroups_80_8f_d6c584c",
               "node_id": "node-2"
             }
           ]
@@ -803,16 +803,16 @@
           "upper_bound": "9f",
           "replicas": [
             {
-              "id": "GrackleWaitGroups_90_9f_37d6f9b0",
+              "id": "GrackleWaitGroups_90_9f_5e5b0dd9",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleWaitGroups_90_9f_76abc0a2",
               "node_id": "node-2"
             },
             {
-              "id": "GrackleWaitGroups_90_9f_aa7122e0",
+              "id": "GrackleWaitGroups_90_9f_d97697d2",
               "node_id": "node-3"
-            },
-            {
-              "id": "GrackleWaitGroups_90_9f_88e02c5f",
-              "node_id": "node-1"
             }
           ]
         },
@@ -822,16 +822,16 @@
           "upper_bound": "af",
           "replicas": [
             {
-              "id": "GrackleWaitGroups_a0_af_74ea821f",
+              "id": "GrackleWaitGroups_a0_af_f90e2fd1",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleWaitGroups_a0_af_b6635a3e",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleWaitGroups_a0_af_6e500f8c",
+              "id": "GrackleWaitGroups_a0_af_9850ac59",
               "node_id": "node-2"
-            },
-            {
-              "id": "GrackleWaitGroups_a0_af_a208193a",
-              "node_id": "node-3"
             }
           ]
         },
@@ -841,16 +841,16 @@
           "upper_bound": "bf",
           "replicas": [
             {
-              "id": "GrackleWaitGroups_b0_bf_6485c868",
+              "id": "GrackleWaitGroups_b0_bf_ffcba466",
               "node_id": "node-2"
             },
             {
-              "id": "GrackleWaitGroups_b0_bf_684e1053",
-              "node_id": "node-1"
+              "id": "GrackleWaitGroups_b0_bf_ea97ee5d",
+              "node_id": "node-3"
             },
             {
-              "id": "GrackleWaitGroups_b0_bf_9c1b01f8",
-              "node_id": "node-3"
+              "id": "GrackleWaitGroups_b0_bf_9645542a",
+              "node_id": "node-1"
             }
           ]
         },
@@ -860,16 +860,16 @@
           "upper_bound": "cf",
           "replicas": [
             {
-              "id": "GrackleWaitGroups_c0_cf_a8f8eef8",
-              "node_id": "node-1"
-            },
-            {
-              "id": "GrackleWaitGroups_c0_cf_941fc86a",
+              "id": "GrackleWaitGroups_c0_cf_9fa0032c",
               "node_id": "node-2"
             },
             {
-              "id": "GrackleWaitGroups_c0_cf_9e1f1d48",
+              "id": "GrackleWaitGroups_c0_cf_1f77975a",
               "node_id": "node-3"
+            },
+            {
+              "id": "GrackleWaitGroups_c0_cf_9e01f4e7",
+              "node_id": "node-1"
             }
           ]
         },
@@ -879,15 +879,15 @@
           "upper_bound": "df",
           "replicas": [
             {
-              "id": "GrackleWaitGroups_d0_df_79c2f84",
+              "id": "GrackleWaitGroups_d0_df_52b879b8",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleWaitGroups_d0_df_9249e2ef",
+              "id": "GrackleWaitGroups_d0_df_c12bbbd9",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleWaitGroups_d0_df_d439dca5",
+              "id": "GrackleWaitGroups_d0_df_82ec5252",
               "node_id": "node-2"
             }
           ]
@@ -898,15 +898,15 @@
           "upper_bound": "ef",
           "replicas": [
             {
-              "id": "GrackleWaitGroups_e0_ef_86edd4a",
-              "node_id": "node-1"
-            },
-            {
-              "id": "GrackleWaitGroups_e0_ef_ecc115bb",
+              "id": "GrackleWaitGroups_e0_ef_607a1205",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleWaitGroups_e0_ef_3b720b5a",
+              "id": "GrackleWaitGroups_e0_ef_137ff095",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleWaitGroups_e0_ef_59db0d6f",
               "node_id": "node-2"
             }
           ]
@@ -917,16 +917,16 @@
           "upper_bound": "ff",
           "replicas": [
             {
-              "id": "GrackleWaitGroups_f0_ff_61a637de",
-              "node_id": "node-3"
-            },
-            {
-              "id": "GrackleWaitGroups_f0_ff_956b743d",
+              "id": "GrackleWaitGroups_f0_ff_4f114f46",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleWaitGroups_f0_ff_178e673c",
+              "id": "GrackleWaitGroups_f0_ff_21c2d9a3",
               "node_id": "node-2"
+            },
+            {
+              "id": "GrackleWaitGroups_f0_ff_8cd187f2",
+              "node_id": "node-3"
             }
           ]
         }
@@ -943,16 +943,16 @@
           "upper_bound": "0f",
           "replicas": [
             {
-              "id": "GrackleBarriers_00_0f_2d7fa420",
+              "id": "GrackleBarriers_00_0f_1365083f",
               "node_id": "node-2"
             },
             {
-              "id": "GrackleBarriers_00_0f_ce7e3b2f",
-              "node_id": "node-3"
+              "id": "GrackleBarriers_00_0f_93abafbb",
+              "node_id": "node-1"
             },
             {
-              "id": "GrackleBarriers_00_0f_95bcdbce",
-              "node_id": "node-1"
+              "id": "GrackleBarriers_00_0f_4f494d1a",
+              "node_id": "node-3"
             }
           ]
         },
@@ -962,16 +962,16 @@
           "upper_bound": "1f",
           "replicas": [
             {
-              "id": "GrackleBarriers_10_1f_67ef2486",
+              "id": "GrackleBarriers_10_1f_9dadd156",
+              "node_id": "node-1"
+            },
+            {
+              "id": "GrackleBarriers_10_1f_dc4dea8f",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleBarriers_10_1f_a013c938",
+              "id": "GrackleBarriers_10_1f_1d42ac26",
               "node_id": "node-2"
-            },
-            {
-              "id": "GrackleBarriers_10_1f_6a352d11",
-              "node_id": "node-1"
             }
           ]
         },
@@ -981,16 +981,16 @@
           "upper_bound": "2f",
           "replicas": [
             {
-              "id": "GrackleBarriers_20_2f_beec50a7",
+              "id": "GrackleBarriers_20_2f_7552bac5",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleBarriers_20_2f_51098dc0",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleBarriers_20_2f_b3b0d7e",
+              "id": "GrackleBarriers_20_2f_b3e8c21a",
               "node_id": "node-2"
-            },
-            {
-              "id": "GrackleBarriers_20_2f_33c8195",
-              "node_id": "node-3"
             }
           ]
         },
@@ -1000,16 +1000,16 @@
           "upper_bound": "3f",
           "replicas": [
             {
-              "id": "GrackleBarriers_30_3f_3461c6f5",
+              "id": "GrackleBarriers_30_3f_6af4edfd",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleBarriers_30_3f_6d927ac2",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleBarriers_30_3f_a1badcc3",
+              "id": "GrackleBarriers_30_3f_adb0687c",
               "node_id": "node-1"
-            },
-            {
-              "id": "GrackleBarriers_30_3f_ac902f84",
-              "node_id": "node-2"
             }
           ]
         },
@@ -1019,16 +1019,16 @@
           "upper_bound": "4f",
           "replicas": [
             {
-              "id": "GrackleBarriers_40_4f_affddaf4",
-              "node_id": "node-1"
+              "id": "GrackleBarriers_40_4f_59e18b7d",
+              "node_id": "node-2"
             },
             {
-              "id": "GrackleBarriers_40_4f_1e8f4542",
+              "id": "GrackleBarriers_40_4f_7a116b2e",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleBarriers_40_4f_335617b2",
-              "node_id": "node-2"
+              "id": "GrackleBarriers_40_4f_bd803297",
+              "node_id": "node-1"
             }
           ]
         },
@@ -1038,16 +1038,16 @@
           "upper_bound": "5f",
           "replicas": [
             {
-              "id": "GrackleBarriers_50_5f_61ff0535",
+              "id": "GrackleBarriers_50_5f_92f2c02e",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleBarriers_50_5f_2d8f0c0a",
-              "node_id": "node-2"
+              "id": "GrackleBarriers_50_5f_ed312ed7",
+              "node_id": "node-3"
             },
             {
-              "id": "GrackleBarriers_50_5f_d3b9ca53",
-              "node_id": "node-3"
+              "id": "GrackleBarriers_50_5f_54d4e964",
+              "node_id": "node-2"
             }
           ]
         },
@@ -1057,16 +1057,16 @@
           "upper_bound": "6f",
           "replicas": [
             {
-              "id": "GrackleBarriers_60_6f_9b3b5506",
+              "id": "GrackleBarriers_60_6f_a4680bbe",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleBarriers_60_6f_2f9f11ff",
-              "node_id": "node-1"
+              "id": "GrackleBarriers_60_6f_f8ca7bee",
+              "node_id": "node-2"
             },
             {
-              "id": "GrackleBarriers_60_6f_23fe430e",
-              "node_id": "node-2"
+              "id": "GrackleBarriers_60_6f_9b520f93",
+              "node_id": "node-1"
             }
           ]
         },
@@ -1076,16 +1076,16 @@
           "upper_bound": "7f",
           "replicas": [
             {
-              "id": "GrackleBarriers_70_7f_921b11eb",
+              "id": "GrackleBarriers_70_7f_e97edc11",
               "node_id": "node-2"
             },
             {
-              "id": "GrackleBarriers_70_7f_404905e3",
-              "node_id": "node-3"
+              "id": "GrackleBarriers_70_7f_fe809bbf",
+              "node_id": "node-1"
             },
             {
-              "id": "GrackleBarriers_70_7f_50b303da",
-              "node_id": "node-1"
+              "id": "GrackleBarriers_70_7f_3bd47554",
+              "node_id": "node-3"
             }
           ]
         },
@@ -1095,15 +1095,15 @@
           "upper_bound": "8f",
           "replicas": [
             {
-              "id": "GrackleBarriers_80_8f_56dfeb13",
+              "id": "GrackleBarriers_80_8f_9119707a",
               "node_id": "node-2"
             },
             {
-              "id": "GrackleBarriers_80_8f_2cdb1e41",
+              "id": "GrackleBarriers_80_8f_61d03f12",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleBarriers_80_8f_d36dc971",
+              "id": "GrackleBarriers_80_8f_58458fff",
               "node_id": "node-3"
             }
           ]
@@ -1114,15 +1114,15 @@
           "upper_bound": "9f",
           "replicas": [
             {
-              "id": "GrackleBarriers_90_9f_82dfe872",
-              "node_id": "node-2"
-            },
-            {
-              "id": "GrackleBarriers_90_9f_b4d83430",
+              "id": "GrackleBarriers_90_9f_19bf8340",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleBarriers_90_9f_31d5e71d",
+              "id": "GrackleBarriers_90_9f_920c1605",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleBarriers_90_9f_c1384cfc",
               "node_id": "node-3"
             }
           ]
@@ -1133,15 +1133,15 @@
           "upper_bound": "af",
           "replicas": [
             {
-              "id": "GrackleBarriers_a0_af_a37aa88f",
-              "node_id": "node-2"
-            },
-            {
-              "id": "GrackleBarriers_a0_af_62980ddc",
+              "id": "GrackleBarriers_a0_af_4fc89e43",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleBarriers_a0_af_7561cb12",
+              "id": "GrackleBarriers_a0_af_fcb12b7a",
+              "node_id": "node-2"
+            },
+            {
+              "id": "GrackleBarriers_a0_af_dadee425",
               "node_id": "node-3"
             }
           ]
@@ -1152,16 +1152,16 @@
           "upper_bound": "bf",
           "replicas": [
             {
-              "id": "GrackleBarriers_b0_bf_d5112c16",
+              "id": "GrackleBarriers_b0_bf_ab3a27a7",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleBarriers_b0_bf_e94505da",
-              "node_id": "node-2"
+              "id": "GrackleBarriers_b0_bf_4f0059f6",
+              "node_id": "node-3"
             },
             {
-              "id": "GrackleBarriers_b0_bf_4e40b9d3",
-              "node_id": "node-3"
+              "id": "GrackleBarriers_b0_bf_ccfd002a",
+              "node_id": "node-2"
             }
           ]
         },
@@ -1171,16 +1171,16 @@
           "upper_bound": "cf",
           "replicas": [
             {
-              "id": "GrackleBarriers_c0_cf_35f9c277",
+              "id": "GrackleBarriers_c0_cf_f1c32f67",
               "node_id": "node-2"
             },
             {
-              "id": "GrackleBarriers_c0_cf_8a872c91",
-              "node_id": "node-1"
+              "id": "GrackleBarriers_c0_cf_6eac84ec",
+              "node_id": "node-3"
             },
             {
-              "id": "GrackleBarriers_c0_cf_bf9c10e1",
-              "node_id": "node-3"
+              "id": "GrackleBarriers_c0_cf_d87daf93",
+              "node_id": "node-1"
             }
           ]
         },
@@ -1190,16 +1190,16 @@
           "upper_bound": "df",
           "replicas": [
             {
-              "id": "GrackleBarriers_d0_df_65b176be",
-              "node_id": "node-2"
+              "id": "GrackleBarriers_d0_df_8145b3b6",
+              "node_id": "node-1"
             },
             {
-              "id": "GrackleBarriers_d0_df_bde7d177",
+              "id": "GrackleBarriers_d0_df_4fde9f93",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleBarriers_d0_df_6738a7fd",
-              "node_id": "node-1"
+              "id": "GrackleBarriers_d0_df_4a3b8635",
+              "node_id": "node-2"
             }
           ]
         },
@@ -1209,16 +1209,16 @@
           "upper_bound": "ef",
           "replicas": [
             {
-              "id": "GrackleBarriers_e0_ef_2d4f79d0",
-              "node_id": "node-2"
+              "id": "GrackleBarriers_e0_ef_ed19a980",
+              "node_id": "node-1"
             },
             {
-              "id": "GrackleBarriers_e0_ef_2d33aa53",
+              "id": "GrackleBarriers_e0_ef_8d8f1681",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleBarriers_e0_ef_ffe732ef",
-              "node_id": "node-1"
+              "id": "GrackleBarriers_e0_ef_52e71951",
+              "node_id": "node-2"
             }
           ]
         },
@@ -1228,16 +1228,16 @@
           "upper_bound": "ff",
           "replicas": [
             {
-              "id": "GrackleBarriers_f0_ff_8c3888ce",
-              "node_id": "node-2"
+              "id": "GrackleBarriers_f0_ff_45fb38f6",
+              "node_id": "node-1"
             },
             {
-              "id": "GrackleBarriers_f0_ff_56288580",
+              "id": "GrackleBarriers_f0_ff_416ac584",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleBarriers_f0_ff_a073eb67",
-              "node_id": "node-1"
+              "id": "GrackleBarriers_f0_ff_a819bbe1",
+              "node_id": "node-2"
             }
           ]
         }
@@ -1254,16 +1254,16 @@
           "upper_bound": "1f",
           "replicas": [
             {
-              "id": "GrackleNamespaces_00_1f_e07d5a87",
+              "id": "GrackleNamespaces_00_1f_b1f4d6fa",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleNamespaces_00_1f_59186665",
-              "node_id": "node-2"
+              "id": "GrackleNamespaces_00_1f_51cf291d",
+              "node_id": "node-3"
             },
             {
-              "id": "GrackleNamespaces_00_1f_a8b868df",
-              "node_id": "node-3"
+              "id": "GrackleNamespaces_00_1f_bfbc60d7",
+              "node_id": "node-2"
             }
           ]
         },
@@ -1273,16 +1273,16 @@
           "upper_bound": "3f",
           "replicas": [
             {
-              "id": "GrackleNamespaces_20_3f_bdd6cbf2",
-              "node_id": "node-1"
+              "id": "GrackleNamespaces_20_3f_e7cf5dcb",
+              "node_id": "node-3"
             },
             {
-              "id": "GrackleNamespaces_20_3f_d1b0071b",
+              "id": "GrackleNamespaces_20_3f_9217e754",
               "node_id": "node-2"
             },
             {
-              "id": "GrackleNamespaces_20_3f_4e5f5fd",
-              "node_id": "node-3"
+              "id": "GrackleNamespaces_20_3f_fa10d91a",
+              "node_id": "node-1"
             }
           ]
         },
@@ -1292,16 +1292,16 @@
           "upper_bound": "5f",
           "replicas": [
             {
-              "id": "GrackleNamespaces_40_5f_87c7c123",
-              "node_id": "node-1"
-            },
-            {
-              "id": "GrackleNamespaces_40_5f_7772a377",
+              "id": "GrackleNamespaces_40_5f_a200978",
               "node_id": "node-2"
             },
             {
-              "id": "GrackleNamespaces_40_5f_b12e07e8",
+              "id": "GrackleNamespaces_40_5f_48bf7d4",
               "node_id": "node-3"
+            },
+            {
+              "id": "GrackleNamespaces_40_5f_6da97d73",
+              "node_id": "node-1"
             }
           ]
         },
@@ -1311,15 +1311,15 @@
           "upper_bound": "7f",
           "replicas": [
             {
-              "id": "GrackleNamespaces_60_7f_5a35b51e",
-              "node_id": "node-3"
-            },
-            {
-              "id": "GrackleNamespaces_60_7f_81d31a98",
+              "id": "GrackleNamespaces_60_7f_78556fa4",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleNamespaces_60_7f_62c9fd4",
+              "id": "GrackleNamespaces_60_7f_93cce792",
+              "node_id": "node-3"
+            },
+            {
+              "id": "GrackleNamespaces_60_7f_37c91efb",
               "node_id": "node-2"
             }
           ]
@@ -1330,16 +1330,16 @@
           "upper_bound": "9f",
           "replicas": [
             {
-              "id": "GrackleNamespaces_80_9f_e7e715d0",
+              "id": "GrackleNamespaces_80_9f_ba506ff7",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleNamespaces_80_9f_20107068",
-              "node_id": "node-2"
+              "id": "GrackleNamespaces_80_9f_317435a8",
+              "node_id": "node-1"
             },
             {
-              "id": "GrackleNamespaces_80_9f_dbfdbcc3",
-              "node_id": "node-1"
+              "id": "GrackleNamespaces_80_9f_826a411c",
+              "node_id": "node-2"
             }
           ]
         },
@@ -1349,16 +1349,16 @@
           "upper_bound": "bf",
           "replicas": [
             {
-              "id": "GrackleNamespaces_a0_bf_2f90f9e8",
-              "node_id": "node-3"
+              "id": "GrackleNamespaces_a0_bf_81459b2e",
+              "node_id": "node-2"
             },
             {
-              "id": "GrackleNamespaces_a0_bf_93cb9056",
+              "id": "GrackleNamespaces_a0_bf_b77f6c5f",
               "node_id": "node-1"
             },
             {
-              "id": "GrackleNamespaces_a0_bf_b4bfec81",
-              "node_id": "node-2"
+              "id": "GrackleNamespaces_a0_bf_49143ba3",
+              "node_id": "node-3"
             }
           ]
         },
@@ -1368,16 +1368,16 @@
           "upper_bound": "df",
           "replicas": [
             {
-              "id": "GrackleNamespaces_c0_df_51c2cb88",
-              "node_id": "node-2"
-            },
-            {
-              "id": "GrackleNamespaces_c0_df_1ef6b4fe",
+              "id": "GrackleNamespaces_c0_df_5690e53f",
               "node_id": "node-3"
             },
             {
-              "id": "GrackleNamespaces_c0_df_ffe5dac3",
+              "id": "GrackleNamespaces_c0_df_7a92da31",
               "node_id": "node-1"
+            },
+            {
+              "id": "GrackleNamespaces_c0_df_8297a3e",
+              "node_id": "node-2"
             }
           ]
         },
@@ -1387,16 +1387,16 @@
           "upper_bound": "ff",
           "replicas": [
             {
-              "id": "GrackleNamespaces_e0_ff_cf614e3a",
-              "node_id": "node-1"
-            },
-            {
-              "id": "GrackleNamespaces_e0_ff_c1f3cf59",
+              "id": "GrackleNamespaces_e0_ff_9dbaff9f",
               "node_id": "node-2"
             },
             {
-              "id": "GrackleNamespaces_e0_ff_abfb34c7",
+              "id": "GrackleNamespaces_e0_ff_fe5fabaa",
               "node_id": "node-3"
+            },
+            {
+              "id": "GrackleNamespaces_e0_ff_6c642258",
+              "node_id": "node-1"
             }
           ]
         }

@@ -1,3 +1,6 @@
 grackle
 .data/
 .src/
+
+# Generated config
+cluster_config.json

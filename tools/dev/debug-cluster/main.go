@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -21,12 +22,16 @@ import (
 	"github.com/evrblk/monstera/utils"
 	"github.com/evrblk/yellowstone-common/metrics"
 	"github.com/prometheus/client_golang/prometheus"
+	grpc_server "google.golang.org/grpc"
 
+	gracklepb "github.com/evrblk/evrblk-go/grackle/preview"
 	"github.com/evrblk/grackle/pkg/barriers"
 	"github.com/evrblk/grackle/pkg/locks"
 	"github.com/evrblk/grackle/pkg/monsteragen"
 	"github.com/evrblk/grackle/pkg/namespaces"
 	"github.com/evrblk/grackle/pkg/semaphores"
+	grackle_preview "github.com/evrblk/grackle/pkg/server/preview"
+	"github.com/evrblk/grackle/pkg/sharding"
 	"github.com/evrblk/grackle/pkg/waitgroups"
 )
 
@@ -36,6 +41,7 @@ var (
 	prometheusPort = flag.Int("prometheus-port", 2112, "Prometheus metrics port")
 	cpuProfile     = flag.String("cpu-profile", "", "Write CPU profile to file")
 	transportType  = flag.String("transport", "grpc", "Transport type: 'grpc' or 'local'")
+	gatewayPort    = flag.Int("gateway-port", 0, "Gateway port for client connections (0 = disabled)")
 )
 
 type nodeRunner struct {
@@ -267,6 +273,52 @@ func main() {
 
 	log.Println("All nodes started successfully!")
 
+	// Start gateway if port is specified
+	var monsteraClient *monstera.Client
+	var grpcServer *grpc_server.Server
+	var grackleApiGatewayServer *grackle_preview.GrackleApiServer
+
+	if *gatewayPort > 0 {
+		log.Printf("Starting gateway on port %d...", *gatewayPort)
+
+		// Register gateway metrics
+		grackle_preview.RegisterMetrics()
+
+		// Create listener
+		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *gatewayPort))
+		if err != nil {
+			log.Fatalf("Failed to listen on gateway port: %v", err)
+		}
+
+		// Create transport for the client (reuse the same type as nodes)
+		var clientTransport transport.Transport
+		if useGrpc {
+			clientTransport = grpc.NewGrpcTransport(clusterConfig)
+		} else {
+			clientTransport = nodeTransport
+		}
+
+		// Create Monstera client
+		monsteraClient = monstera.NewMonsteraClient(clusterConfig, clientTransport, monstera.DefaultClientConfig())
+		monsteraClient.Start()
+
+		// Create gRPC server
+		grpcServer = grpc_server.NewServer()
+
+		// Create Grackle API Gateway
+		grackleCoreApiClient := monsteragen.NewGrackleCoreApiMonsteraStub(monsteraClient, &sharding.GrackleShardKeyCalculator{})
+		grackleApiGatewayServer = grackle_preview.NewGrackleApiServer(grackleCoreApiClient)
+		gracklepb.RegisterGracklePreviewApiServer(grpcServer, grackleApiGatewayServer)
+
+		// Start serving in a goroutine
+		go func() {
+			log.Printf("Gateway listening on port %d", *gatewayPort)
+			if err := grpcServer.Serve(lis); err != nil {
+				log.Printf("Gateway server stopped: %v", err)
+			}
+		}()
+	}
+
 	// Setup signal handling for graceful shutdown
 	cleanupDone := &sync.WaitGroup{}
 	cleanupDone.Add(1)
@@ -279,6 +331,19 @@ func main() {
 		case <-c:
 			log.Println("Received SIGINT. Shutting down...")
 			cancel()
+
+			// Stop gateway if running
+			if grpcServer != nil {
+				log.Println("Stopping gateway...")
+				grpcServer.GracefulStop()
+			}
+			if grackleApiGatewayServer != nil {
+				grackleApiGatewayServer.Close()
+			}
+			if monsteraClient != nil {
+				monsteraClient.Stop()
+			}
+
 			// Stop all nodes
 			for _, runner := range runners {
 				runner.stop()

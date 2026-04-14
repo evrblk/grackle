@@ -1,0 +1,9 @@
+# Binary
+load-generator
+
+# Profiling data
+*.prof
+cpu.prof
+
+# Generated config
+cluster_config.json

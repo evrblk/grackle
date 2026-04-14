@@ -10,6 +10,7 @@ require (
 	github.com/samber/lo v1.52.0
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
+	golang.org/x/time v0.15.0
 	google.golang.org/grpc v1.80.0
 	google.golang.org/protobuf v1.36.11
 )
@@ -66,3 +67,5 @@ tool github.com/evrblk/monstera/cmd/monstera
 // replace github.com/evrblk/monstera v0.0.0-20260410182857-272483cddbcb => ../monstera
 
 // replace github.com/evrblk/evrblk-go v0.0.0-20260310190356-13503754e4aa => ../evrblk-go
+
+// replace github.com/hashicorp/raft v1.7.3 => ../raft
