@@ -41,7 +41,7 @@ func (t *countersTable) Set(txn *store.Txn, accountId uint64, namespaceId uint32
 }
 
 func (t *countersTable) Get(txn *store.Txn, accountId uint64, namespaceId uint32) (*corepb.LocksCounter, error) {
-	countres, err := t.table.Get(txn, t.tablePK(accountId, namespaceId))
+	counters, err := t.table.Get(txn, t.tablePK(accountId, namespaceId))
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &corepb.LocksCounter{
@@ -54,7 +54,7 @@ func (t *countersTable) Get(txn *store.Txn, accountId uint64, namespaceId uint32
 		}
 		return nil, err
 	}
-	return countres, nil
+	return counters, nil
 }
 
 func (t *countersTable) Delete(txn *store.Txn, accountId uint64, namespaceId uint32) error {

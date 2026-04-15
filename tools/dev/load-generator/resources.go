@@ -29,10 +29,10 @@ type SemaphoreHandle struct {
 // ResourcePool manages all pre-created resources and tracks acquisitions
 type ResourcePool struct {
 	// Pre-created resource names
-	namespaces  []string
-	locks       map[string][]string // namespace -> lock names
-	semaphores  map[string][]string // namespace -> semaphore names
-	waitGroups  map[string][]string // namespace -> waitgroup names
+	namespaces []string
+	locks      map[string][]string // namespace -> lock names
+	semaphores map[string][]string // namespace -> semaphore names
+	waitGroups map[string][]string // namespace -> waitgroup names
 
 	// Tracking acquired resources per worker
 	acquiredLocks      sync.Map // workerID -> []LockHandle

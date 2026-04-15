@@ -8,8 +8,8 @@ import (
 
 // StatsCollector collects and reports statistics
 type StatsCollector struct {
-	mu         sync.Mutex
-	startTime  time.Time
+	mu        sync.Mutex
+	startTime time.Time
 
 	// Overall counters
 	totalRequests uint64

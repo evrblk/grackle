@@ -472,208 +472,776 @@ func TestCore_AcquireLock(t *testing.T) {
 		require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, response.Lock.State)
 	})
 
-	t.Run("hierarchical lock name", func(t *testing.T) {
-		locksCore := newLocksCore(t)
+	t.Run("parent exclusive blocks descendant shared", func(t *testing.T) {
+		core := newLocksCore(t)
 
 		now := time.Now()
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint32()
 
-		lockIdABC := &corepb.LockId{
-			AccountId:   accountId,
-			NamespaceId: namespaceId,
-			LockName:    "a/b/c",
-		}
-		lockIdABD := &corepb.LockId{
-			AccountId:   accountId,
-			NamespaceId: namespaceId,
-			LockName:    "a/b/d",
-		}
-
-		// T+0: Acquire a/b/c exclusive
-		response1, err := locksCore.AcquireLock(&corepb.AcquireLockRequest{
-			LockId:                       lockIdABC,
-			Now:                          now.UnixNano(),
-			ProcessId:                    "process_1",
-			Exclusive:                    true,
-			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
-			MaxNumberOfLocksPerNamespace: 10,
-		})
-
-		require.NoError(t, err)
-		require.True(t, response1.Success)
-		require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, response1.Lock.State)
-
-		// Ancestors "a" and "a/b" must reflect the exclusive lock
-		txn := locksCore.badgerStore.View()
-		anc_a, err := locksCore.ancestors.Get(txn, &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a"})
-		require.NoError(t, err)
-		require.EqualValues(t, 1, anc_a.ExclusiveCount)
-		require.EqualValues(t, 0, anc_a.SharedCount)
-
-		anc_ab, err := locksCore.ancestors.Get(txn, &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a/b"})
-		require.NoError(t, err)
-		require.EqualValues(t, 1, anc_ab.ExclusiveCount)
-		require.EqualValues(t, 0, anc_ab.SharedCount)
-		txn.Discard()
-
-		// T+1m: Acquire a/b/d shared
-		response2, err := locksCore.AcquireLock(&corepb.AcquireLockRequest{
-			LockId:                       lockIdABD,
-			Now:                          now.Add(time.Minute).UnixNano(),
-			ProcessId:                    "process_2",
-			Exclusive:                    false,
-			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
-			MaxNumberOfLocksPerNamespace: 10,
-		})
-
-		require.NoError(t, err)
-		require.True(t, response2.Success)
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, response2.Lock.State)
-
-		// Ancestor "a" now has both exclusive (a/b/c) and shared (a/b/d) descendants
-		txn = locksCore.badgerStore.View()
-		anc_a, err = locksCore.ancestors.Get(txn, &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a"})
-		require.NoError(t, err)
-		require.EqualValues(t, 1, anc_a.ExclusiveCount)
-		require.EqualValues(t, 1, anc_a.SharedCount)
-
-		// Ancestor "a/b" has both as well
-		anc_ab, err = locksCore.ancestors.Get(txn, &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a/b"})
-		require.NoError(t, err)
-		require.EqualValues(t, 1, anc_ab.ExclusiveCount)
-		require.EqualValues(t, 1, anc_ab.SharedCount)
-		txn.Discard()
-
-		// T+2m: Release a/b/c
-		response3, err := locksCore.ReleaseLock(&corepb.ReleaseLockRequest{
-			LockId:    lockIdABC,
-			ProcessId: "process_1",
-			Now:       now.Add(2 * time.Minute).UnixNano(),
-		})
-
-		require.NoError(t, err)
-		require.Equal(t, corepb.LockState_UNLOCKED, response3.Lock.State)
-
-		// Ancestor "a" now only has the shared (a/b/d) descendant
-		txn = locksCore.badgerStore.View()
-		anc_a, err = locksCore.ancestors.Get(txn, &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a"})
-		require.NoError(t, err)
-		require.EqualValues(t, 0, anc_a.ExclusiveCount)
-		require.EqualValues(t, 1, anc_a.SharedCount)
-
-		anc_ab, err = locksCore.ancestors.Get(txn, &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a/b"})
-		require.NoError(t, err)
-		require.EqualValues(t, 0, anc_ab.ExclusiveCount)
-		require.EqualValues(t, 1, anc_ab.SharedCount)
-		txn.Discard()
-
-		// T+3m: Release a/b/d
-		response4, err := locksCore.ReleaseLock(&corepb.ReleaseLockRequest{
-			LockId:    lockIdABD,
-			ProcessId: "process_2",
-			Now:       now.Add(3 * time.Minute).UnixNano(),
-		})
-
-		require.NoError(t, err)
-		require.Equal(t, corepb.LockState_UNLOCKED, response4.Lock.State)
-
-		// All ancestor entries should be gone
-		txn = locksCore.badgerStore.View()
-		anc_a, err = locksCore.ancestors.Get(txn, &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a"})
-		require.NoError(t, err)
-		require.EqualValues(t, 0, anc_a.ExclusiveCount)
-		require.EqualValues(t, 0, anc_a.SharedCount)
-		txn.Discard()
-	})
-
-	t.Run("acquire child while parent path is exclusively locked", func(t *testing.T) {
-		locksCore := newLocksCore(t)
-
-		now := time.Now()
-
-		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
-
-		lockIdAB := &corepb.LockId{
+		parentLock := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
 			LockName:    "a/b",
 		}
-		lockIdABC := &corepb.LockId{
+		childLock := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
 			LockName:    "a/b/c",
 		}
 
-		// T+0: process_1 acquires a/b exclusively
-		response1, err := locksCore.AcquireLock(&corepb.AcquireLockRequest{
-			LockId:                       lockIdAB,
+		// Acquire exclusive lock on parent
+		resp1, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       parentLock,
 			Now:                          now.UnixNano(),
-			ProcessId:                    "process_1",
+			ProcessId:                    "proc1",
 			Exclusive:                    true,
 			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
-			MaxNumberOfLocksPerNamespace: 10,
+			MaxNumberOfLocksPerNamespace: 100,
 		})
-
 		require.NoError(t, err)
-		require.True(t, response1.Success)
-		require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, response1.Lock.State)
+		require.True(t, resp1.Success)
 
-		// Ancestor "a" reflects the a/b lock
-		txn := locksCore.badgerStore.View()
-		anc_a, err := locksCore.ancestors.Get(txn, &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a"})
-		require.NoError(t, err)
-		require.EqualValues(t, 1, anc_a.ExclusiveCount)
-		require.EqualValues(t, 0, anc_a.SharedCount)
-		txn.Discard()
-
-		// T+1m: process_2 acquires a/b/c shared — succeeds because a/b and a/b/c are separate locks
-		response2, err := locksCore.AcquireLock(&corepb.AcquireLockRequest{
-			LockId:                       lockIdABC,
-			Now:                          now.Add(time.Minute).UnixNano(),
-			ProcessId:                    "process_2",
+		// Try to acquire shared lock on child - should BLOCK
+		resp2, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       childLock,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc2",
 			Exclusive:                    false,
 			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
-			MaxNumberOfLocksPerNamespace: 10,
+			MaxNumberOfLocksPerNamespace: 100,
 		})
-
 		require.NoError(t, err)
-		require.True(t, response2.Success)
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, response2.Lock.State)
+		require.False(t, resp2.Success) // BLOCKED by parent exclusive
 
-		// Ancestor "a" now reflects both locks: a/b (exclusive) and a/b/c (shared)
-		txn = locksCore.badgerStore.View()
-		anc_a, err = locksCore.ancestors.Get(txn, &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a"})
-		require.NoError(t, err)
-		require.EqualValues(t, 1, anc_a.ExclusiveCount) // from a/b
-		require.EqualValues(t, 1, anc_a.SharedCount)    // from a/b/c
-
-		// Ancestor "a/b" in the ancestors table reflects only a/b/c (the a/b lock entry is in the locks table)
-		anc_ab, err := locksCore.ancestors.Get(txn, &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a/b"})
-		require.NoError(t, err)
-		require.EqualValues(t, 0, anc_ab.ExclusiveCount)
-		require.EqualValues(t, 1, anc_ab.SharedCount) // from a/b/c
-		txn.Discard()
-
-		// T+2m: process_1 releases a/b
-		response3, err := locksCore.ReleaseLock(&corepb.ReleaseLockRequest{
-			LockId:    lockIdAB,
-			ProcessId: "process_1",
-			Now:       now.Add(2 * time.Minute).UnixNano(),
+		// Release parent
+		_, err = core.ReleaseLock(&corepb.ReleaseLockRequest{
+			LockId:    parentLock,
+			ProcessId: "proc1",
+			Now:       now.Add(time.Minute).UnixNano(),
 		})
-
 		require.NoError(t, err)
-		require.Equal(t, corepb.LockState_UNLOCKED, response3.Lock.State)
 
-		// a/b/c is still held; ancestor "a" retains only the shared count from a/b/c
-		txn = locksCore.badgerStore.View()
-		anc_a, err = locksCore.ancestors.Get(txn, &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a"})
+		// Now child lock should succeed
+		resp3, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       childLock,
+			Now:                          now.Add(2 * time.Minute).UnixNano(),
+			ProcessId:                    "proc2",
+			Exclusive:                    false,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
 		require.NoError(t, err)
-		require.EqualValues(t, 0, anc_a.ExclusiveCount)
-		require.EqualValues(t, 1, anc_a.SharedCount)
-		txn.Discard()
+		require.True(t, resp3.Success)
+	})
+
+	t.Run("parent exclusive blocks descendant exclusive", func(t *testing.T) {
+		core := newLocksCore(t)
+
+		now := time.Now()
+
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		parentLock := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "a/b",
+		}
+		childLock := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "a/b/c",
+		}
+
+		// Acquire exclusive lock on parent
+		resp1, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       parentLock,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc1",
+			Exclusive:                    true,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.True(t, resp1.Success)
+
+		// Try to acquire exclusive lock on child - should BLOCK
+		resp2, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       childLock,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc2",
+			Exclusive:                    true,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.False(t, resp2.Success) // BLOCKED by parent exclusive
+	})
+
+	t.Run("parent shared allows descendant shared", func(t *testing.T) {
+		core := newLocksCore(t)
+
+		now := time.Now()
+
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		parentLock := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "a/b",
+		}
+		childLock := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "a/b/c",
+		}
+
+		// Acquire shared lock on parent
+		resp1, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       parentLock,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc1",
+			Exclusive:                    false,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.True(t, resp1.Success)
+
+		// Acquire shared lock on child - should ALLOW
+		resp2, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       childLock,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc2",
+			Exclusive:                    false,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.True(t, resp2.Success) // ALLOWED
+	})
+
+	t.Run("parent shared blocks descendant exclusive", func(t *testing.T) {
+		core := newLocksCore(t)
+
+		now := time.Now()
+
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		parentLock := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "a/b",
+		}
+		childLock := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "a/b/c",
+		}
+
+		// Acquire shared lock on parent
+		resp1, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       parentLock,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc1",
+			Exclusive:                    false,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.True(t, resp1.Success)
+
+		// Try to acquire exclusive lock on child - should BLOCK
+		resp2, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       childLock,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc2",
+			Exclusive:                    true,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.False(t, resp2.Success) // BLOCKED by parent shared
+	})
+
+	t.Run("descendant exclusive blocks ancestor shared", func(t *testing.T) {
+		core := newLocksCore(t)
+
+		now := time.Now()
+
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		parentLock := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "a/b",
+		}
+		childLock := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "a/b/c",
+		}
+
+		// Acquire exclusive lock on child
+		resp1, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       childLock,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc1",
+			Exclusive:                    true,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.True(t, resp1.Success)
+
+		// Try to acquire shared lock on parent - should BLOCK
+		resp2, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       parentLock,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc2",
+			Exclusive:                    false,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.False(t, resp2.Success) // BLOCKED by child exclusive
+	})
+
+	t.Run("descendant exclusive blocks ancestor exclusive", func(t *testing.T) {
+		core := newLocksCore(t)
+
+		now := time.Now()
+
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		parentLock := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "a/b",
+		}
+		childLock := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "a/b/c",
+		}
+
+		// Acquire exclusive lock on child
+		resp1, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       childLock,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc1",
+			Exclusive:                    true,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.True(t, resp1.Success)
+
+		// Try to acquire exclusive lock on parent - should BLOCK
+		resp2, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       parentLock,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc2",
+			Exclusive:                    true,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.False(t, resp2.Success) // BLOCKED by child exclusive
+	})
+
+	t.Run("descendant shared allows ancestor shared", func(t *testing.T) {
+		core := newLocksCore(t)
+
+		now := time.Now()
+
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		parentLock := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "a/b",
+		}
+		childLock := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "a/b/c",
+		}
+
+		// Acquire shared lock on child
+		resp1, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       childLock,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc1",
+			Exclusive:                    false,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.True(t, resp1.Success)
+
+		// Acquire shared lock on parent - should ALLOW
+		resp2, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       parentLock,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc2",
+			Exclusive:                    false,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.True(t, resp2.Success) // ALLOWED
+	})
+
+	t.Run("descendant shared blocks ancestor exclusive", func(t *testing.T) {
+		core := newLocksCore(t)
+
+		now := time.Now()
+
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		parentLock := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "a/b",
+		}
+		childLock := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "a/b/c",
+		}
+
+		// Acquire shared lock on child
+		resp1, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       childLock,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc1",
+			Exclusive:                    false,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.True(t, resp1.Success)
+
+		// Try to acquire exclusive lock on parent - should BLOCK
+		resp2, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       parentLock,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc2",
+			Exclusive:                    true,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.False(t, resp2.Success) // BLOCKED by child shared
+	})
+
+	t.Run("sibling paths independent", func(t *testing.T) {
+		core := newLocksCore(t)
+
+		now := time.Now()
+
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		lock1 := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "a/b",
+		}
+		lock2 := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "a/c",
+		}
+
+		// Acquire exclusive lock on a/b
+		resp1, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       lock1,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc1",
+			Exclusive:                    true,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.True(t, resp1.Success)
+
+		// Acquire exclusive lock on a/c - should ALLOW (siblings are independent)
+		resp2, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       lock2,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc2",
+			Exclusive:                    true,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.True(t, resp2.Success) // ALLOWED - siblings are independent
+	})
+
+	t.Run("deep hierarchy", func(t *testing.T) {
+		core := newLocksCore(t)
+
+		now := time.Now()
+
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		lock1 := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "a",
+		}
+		lock2 := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "a/b",
+		}
+		lock3 := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "a/b/c",
+		}
+		lock4 := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "a/b/c/d",
+		}
+
+		// Acquire exclusive lock on a/b
+		resp1, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       lock2,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc1",
+			Exclusive:                    true,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.True(t, resp1.Success)
+
+		// Try to acquire lock on a (ancestor) - should BLOCK
+		resp2, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       lock1,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc2",
+			Exclusive:                    false,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.False(t, resp2.Success) // BLOCKED by descendant exclusive
+
+		// Try to acquire lock on a/b/c (descendant) - should BLOCK
+		resp3, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       lock3,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc3",
+			Exclusive:                    false,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.False(t, resp3.Success) // BLOCKED by parent exclusive
+
+		// Try to acquire lock on a/b/c/d (deep descendant) - should BLOCK
+		resp4, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       lock4,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc4",
+			Exclusive:                    false,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.False(t, resp4.Success) // BLOCKED by ancestor exclusive
+	})
+
+	t.Run("multiple shared locks", func(t *testing.T) {
+		core := newLocksCore(t)
+
+		now := time.Now()
+
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		lock1 := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "a/b",
+		}
+		lock2 := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "a/b/c",
+		}
+		lock3 := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "a/b/c/d",
+		}
+
+		// Acquire shared lock on a/b
+		resp1, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       lock1,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc1",
+			Exclusive:                    false,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.True(t, resp1.Success)
+
+		// Acquire shared lock on a/b/c - should ALLOW
+		resp2, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       lock2,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc2",
+			Exclusive:                    false,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.True(t, resp2.Success) // ALLOWED
+
+		// Acquire shared lock on a/b/c/d - should ALLOW
+		resp3, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       lock3,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc3",
+			Exclusive:                    false,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.True(t, resp3.Success) // ALLOWED
+
+		// Try to acquire exclusive lock on any of them - should BLOCK
+		resp4, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       lock2,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc4",
+			Exclusive:                    true,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.False(t, resp4.Success) // BLOCKED - has both ancestor and descendant shared
+	})
+
+	t.Run("flat lock no hierarchy", func(t *testing.T) {
+		core := newLocksCore(t)
+
+		now := time.Now()
+
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		lock1 := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "flatlock1",
+		}
+		lock2 := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "flatlock2",
+		}
+
+		// Acquire exclusive lock
+		resp1, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       lock1,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc1",
+			Exclusive:                    true,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.True(t, resp1.Success)
+
+		// Acquire different exclusive lock - should ALLOW (no hierarchy, independent locks)
+		resp2, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       lock2,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "proc2",
+			Exclusive:                    true,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.True(t, resp2.Success) // ALLOWED - different flat locks
+	})
+
+	t.Run("safe read pattern", func(t *testing.T) {
+		core := newLocksCore(t)
+
+		now := time.Now()
+
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		usersLock := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "users",
+		}
+		user123Lock := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "users/123",
+		}
+		user456Lock := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "users/456",
+		}
+
+		// Client A: Acquire shared lock on users/
+		resp1, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       usersLock,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "clientA",
+			Exclusive:                    false,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.True(t, resp1.Success)
+
+		// Client B: Acquire shared lock on users/123
+		resp2, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       user123Lock,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "clientB",
+			Exclusive:                    false,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.True(t, resp2.Success)
+
+		// Client C: Acquire shared lock on users/456
+		resp3, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       user456Lock,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "clientC",
+			Exclusive:                    false,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.True(t, resp3.Success)
+
+		// Client D: Acquire another shared lock on users/
+		resp4, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       usersLock,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "clientD",
+			Exclusive:                    false,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.True(t, resp4.Success)
+	})
+
+	t.Run("exclusive write pattern", func(t *testing.T) {
+		core := newLocksCore(t)
+
+		now := time.Now()
+
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		user123Lock := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "users/123",
+		}
+		usersLock := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "users",
+		}
+
+		// Client A: Acquire exclusive lock on users/123
+		resp1, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       user123Lock,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "clientA",
+			Exclusive:                    true,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.True(t, resp1.Success)
+
+		// Client B: Try to acquire shared lock on users/123 - BLOCKS
+		resp2, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       user123Lock,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "clientB",
+			Exclusive:                    false,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.False(t, resp2.Success)
+
+		// Client C: Try to acquire shared lock on users/ - BLOCKS (descendant has exclusive)
+		resp3, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       usersLock,
+			Now:                          now.UnixNano(),
+			ProcessId:                    "clientC",
+			Exclusive:                    false,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.False(t, resp3.Success)
+
+		// Client A: Release lock on users/123
+		_, err = core.ReleaseLock(&corepb.ReleaseLockRequest{
+			LockId:    user123Lock,
+			ProcessId: "clientA",
+			Now:       now.Add(time.Minute).UnixNano(),
+		})
+		require.NoError(t, err)
+
+		// Client B: Acquire shared lock - SUCCESS
+		resp4, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       user123Lock,
+			Now:                          now.Add(2 * time.Minute).UnixNano(),
+			ProcessId:                    "clientB",
+			Exclusive:                    false,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.True(t, resp4.Success)
+
+		// Client C: Acquire shared lock - SUCCESS
+		resp5, err := core.AcquireLock(&corepb.AcquireLockRequest{
+			LockId:                       usersLock,
+			Now:                          now.Add(2 * time.Minute).UnixNano(),
+			ProcessId:                    "clientC",
+			Exclusive:                    false,
+			ExpiresAt:                    now.Add(time.Hour).UnixNano(),
+			MaxNumberOfLocksPerNamespace: 100,
+		})
+		require.NoError(t, err)
+		require.True(t, resp5.Success)
 	})
 }
 

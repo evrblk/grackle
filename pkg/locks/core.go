@@ -242,6 +242,17 @@ func (c *Core) AcquireLock(request *corepb.AcquireLockRequest) (*corepb.AcquireL
 	// Remove expired holders
 	updatedLock := c.checkLockExpiration(lock, request.Now)
 
+	// Check hierarchical conflicts before attempting acquisition
+	canAcquire, err := c.checkHierarchicalConflicts(txn, request.LockId, request.Exclusive)
+	panicIfNotNil(err)
+	if !canAcquire {
+		// Hierarchical conflict detected - return failure
+		return &corepb.AcquireLockResponse{
+			Lock:    updatedLock,
+			Success: false,
+		}, nil
+	}
+
 	lockHolder := &corepb.LockHolder{
 		ProcessId: request.ProcessId,
 		LockedAt:  request.Now,
@@ -697,6 +708,78 @@ func (c *Core) swapAncestorMode(txn *store.Txn, lockId *corepb.LockId, wasExclus
 		err = c.ancestors.Set(txn, ancestor)
 		panicIfNotNil(err)
 	}
+}
+
+// checkAncestorConflicts verifies that no ancestor locks block the requested lock.
+// Returns (true, nil) if no conflicts, (false, nil) if blocked by ancestor.
+func (c *Core) checkAncestorConflicts(txn *store.Txn, lockId *corepb.LockId, requestExclusive bool) (bool, error) {
+	ancestors := lockAncestorNames(lockId.LockName)
+	for _, ancestorName := range ancestors {
+		ancestorId := &corepb.LockId{
+			AccountId:   lockId.AccountId,
+			NamespaceId: lockId.NamespaceId,
+			LockName:    ancestorName,
+		}
+
+		// Check if there's an actual lock on this ancestor path
+		ancestorLock, err := c.locks.Get(txn, ancestorId)
+		if err != nil {
+			if err == store.ErrNotFound {
+				// No lock on this ancestor, continue checking others
+				continue
+			}
+			return false, err
+		}
+
+		// Any ancestor with exclusive lock blocks everything
+		if ancestorLock.State == corepb.LockState_EXCLUSIVE_LOCKED {
+			return false, nil
+		}
+
+		// Ancestor shared lock blocks descendant exclusive
+		if requestExclusive && ancestorLock.State == corepb.LockState_SHARED_LOCKED {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+// checkDescendantConflicts verifies that no descendant locks block the requested lock.
+// Returns (true, nil) if no conflicts, (false, nil) if blocked by descendants.
+func (c *Core) checkDescendantConflicts(txn *store.Txn, lockId *corepb.LockId, requestExclusive bool) (bool, error) {
+	// Check the ancestors table for this path to see if it has any descendants with locks
+	ancestor, err := c.ancestors.Get(txn, lockId)
+	if err != nil {
+		return false, err
+	}
+
+	// Any descendant with exclusive lock blocks everything
+	if ancestor.ExclusiveCount > 0 {
+		return false, nil
+	}
+
+	// Any descendant lock blocks ancestor exclusive
+	if requestExclusive && ancestor.SharedCount > 0 {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+// checkHierarchicalConflicts checks both ancestor and descendant conflicts.
+// Returns (true, nil) if lock can be acquired, (false, nil) if blocked.
+func (c *Core) checkHierarchicalConflicts(txn *store.Txn, lockId *corepb.LockId, requestExclusive bool) (bool, error) {
+	// Check ancestors first (direct lock lookups)
+	ancestorOK, err := c.checkAncestorConflicts(txn, lockId, requestExclusive)
+	if err != nil {
+		return false, err
+	}
+	if !ancestorOK {
+		return false, nil
+	}
+
+	// Check descendants (ancestor table lookup for descendant counts)
+	return c.checkDescendantConflicts(txn, lockId, requestExclusive)
 }
 
 func panicIfNotNil(err error) {
