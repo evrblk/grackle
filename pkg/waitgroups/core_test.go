@@ -643,7 +643,7 @@ func TestCore_DeleteWaitGroup(t *testing.T) {
 			WaitGroupName: "nonexistent_wait_group",
 		})
 
-		// Deleting a non-exising wait group does not return errors
+		// Deleting a nonexistent wait group does not return errors
 		require.NoError(t, err)
 	})
 

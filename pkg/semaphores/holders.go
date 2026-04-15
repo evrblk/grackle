@@ -115,6 +115,9 @@ func (t *holdersTable) Delete(txn *store.Txn, holderId *corepb.SemaphoreHolderId
 		utils.ConcatBytes(
 			t.expirationIndexPK(holder.Id.AccountId, holder.Id.NamespaceId, holder.Id.SemaphoreId),
 			t.expirationIndexSK(holder.ExpiresAt, holderId.ProcessId)))
+	if err != nil {
+		return err
+	}
 
 	return t.table.Delete(txn,
 		utils.ConcatBytes(

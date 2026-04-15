@@ -353,7 +353,7 @@ func TestCore_AcquireLock(t *testing.T) {
 			LockName:    "lock_exceeding_limit",
 		}
 
-		response, err := locksCore.AcquireLock(&corepb.AcquireLockRequest{
+		_, err := locksCore.AcquireLock(&corepb.AcquireLockRequest{
 			LockId:                       lockId,
 			Now:                          now.Add(time.Second).UnixNano(),
 			ProcessId:                    "process_exceeding_limit",
@@ -382,7 +382,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		}
 
 		// Now try to acquire the same lock again - this should succeed because it's reusing an existing lock
-		response, err = locksCore.AcquireLock(&corepb.AcquireLockRequest{
+		response, err := locksCore.AcquireLock(&corepb.AcquireLockRequest{
 			LockId:                       existingLockId,
 			Now:                          now.Add(time.Second * 2).UnixNano(),
 			ProcessId:                    "process_reuse",

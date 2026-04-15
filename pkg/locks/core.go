@@ -558,6 +558,7 @@ func (c *Core) RunLocksGarbageCollection(request *corepb.RunLocksGarbageCollecti
 			// Stop if we have visited enough locks
 			return visitedLocks < request.MaxVisitedLocks, nil
 		})
+		panicIfNotNil(err)
 	}
 
 commit:

@@ -569,6 +569,7 @@ func (c *Core) RunSemaphoresGarbageCollection(request *corepb.RunSemaphoresGarba
 			// Stop if we have visited enough locks
 			return visitedSemaphores < request.MaxVisitedSemaphores, nil
 		})
+		panicIfNotNil(err)
 	}
 
 commit:

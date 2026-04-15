@@ -208,7 +208,7 @@ func TestListNamespacesPagination(t *testing.T) {
 	require.Len(t, allNamespaces, 25)
 
 	// Test backward pagination from the last page
-	var backwardNamespaces []*gracklepb.Namespace
+	var backwardNamespaces = resp3.Namespaces
 
 	// Go back to page 2
 	resp4, err := server.ListNamespaces(ctx, &gracklepb.ListNamespacesRequest{
@@ -233,6 +233,9 @@ func TestListNamespacesPagination(t *testing.T) {
 	require.Empty(t, resp5.PreviousPaginationToken) // First page has no previous token
 
 	backwardNamespaces = append(backwardNamespaces, resp5.Namespaces...)
+
+	// Verify we got all 25 namespaces
+	require.Len(t, backwardNamespaces, 25)
 
 	// Test pagination with different limits
 	resp6, err := server.ListNamespaces(ctx, &gracklepb.ListNamespacesRequest{
