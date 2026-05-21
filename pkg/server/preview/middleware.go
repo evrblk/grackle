@@ -16,7 +16,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -91,9 +90,9 @@ func (m *AuthenticationMiddleware) Unary(
 }
 
 func (m *AuthenticationMiddleware) verifySignature(req interface{}, key *apiKey, signature string, timestamp int64, method string) error {
-	requestProto, ok := req.(proto.Message)
+	requestProto, ok := req.(authn.VTProtoMessage)
 	if !ok {
-		return errors.New("request does not implement proto.Message")
+		return errors.New("request does not implement VTProtoMessage")
 	}
 
 	now := time.Now()

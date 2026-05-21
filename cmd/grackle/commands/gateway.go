@@ -89,7 +89,13 @@ var gatewayCmd = &cobra.Command{
 		}()
 
 		// Grackle API Gateway
-		grackleCoreApiClient := monsteragen.NewGrackleCoreApiMonsteraStub(monsteraClient, &sharding.GrackleShardKeyCalculator{})
+		grackleCoreApiClient := monsteragen.NewGrackleCoreApiMonsteraStub(
+			monsteraClient,
+			&sharding.GrackleShardKeyCalculator{},
+			&monsteragen.GrackleReadRequestProtoCodec{},
+			&monsteragen.GrackleReadResponseProtoCodec{},
+			&monsteragen.GrackleUpdateRequestProtoCodec{},
+			&monsteragen.GrackleUpdateResponseProtoCodec{})
 		grackleApiGatewayServer := grackle_preview.NewGrackleApiServer(grackleCoreApiClient)
 		defer grackleApiGatewayServer.Close()
 		gracklepb.RegisterGracklePreviewApiServer(grpcServer, grackleApiGatewayServer)

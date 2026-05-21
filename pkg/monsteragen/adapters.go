@@ -7,44 +7,60 @@ import (
 	monstera "github.com/evrblk/monstera"
 	monsterax "github.com/evrblk/monstera/x"
 	prometheus "github.com/prometheus/client_golang/prometheus"
-	proto "google.golang.org/protobuf/proto"
 	"io"
 	"time"
 )
 
-var monsteraCoreMethodDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-	Help:                            "Monstera core method duration",
-	Name:                            "monstera_core_method_duration_seconds",
-	NativeHistogramBucketFactor:     1.1,
-	NativeHistogramMaxBucketNumber:  100,
-	NativeHistogramMinResetDuration: time.Hour,
-}, []string{"core", "method", "shard", "replica"})
+var (
+	monsteraCoreMethodDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Help:                            "Monstera core method duration",
+		Name:                            "monstera_core_method_duration_seconds",
+		NativeHistogramBucketFactor:     1.1,
+		NativeHistogramMaxBucketNumber:  100,
+		NativeHistogramMinResetDuration: time.Hour,
+	}, []string{"core", "method", "shard", "replica"})
+	monsteraCoreMethodCount = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Help: "Monstera core method count",
+		Name: "monstera_core_method_count",
+	}, []string{"core", "method", "shard", "replica"})
+)
 
 type GrackleLocksCoreAdapter struct {
 	shardId   string
 	replicaId string
 
 	grackleLocksCore GrackleLocksCoreApi
+
+	readRequestCodec    GrackleReadRequestCodec
+	readResponseCodec   GrackleReadResponseCodec
+	updateRequestCodec  GrackleUpdateRequestCodec
+	updateResponseCodec GrackleUpdateResponseCodec
 }
 
 var _ monstera.ApplicationCore = &GrackleLocksCoreAdapter{}
 
-func NewGrackleLocksCoreAdapter(shardId string, replicaId string, grackleLocksCore GrackleLocksCoreApi) *GrackleLocksCoreAdapter {
+func NewGrackleLocksCoreAdapter(shardId string, replicaId string, grackleLocksCore GrackleLocksCoreApi, readRequestCodec GrackleReadRequestCodec, readResponseCodec GrackleReadResponseCodec, updateRequestCodec GrackleUpdateRequestCodec, updateResponseCodec GrackleUpdateResponseCodec) *GrackleLocksCoreAdapter {
 	return &GrackleLocksCoreAdapter{
-		grackleLocksCore: grackleLocksCore,
-		replicaId:        replicaId,
-		shardId:          shardId,
+		grackleLocksCore:    grackleLocksCore,
+		readRequestCodec:    readRequestCodec,
+		readResponseCodec:   readResponseCodec,
+		replicaId:           replicaId,
+		shardId:             shardId,
+		updateRequestCodec:  updateRequestCodec,
+		updateResponseCodec: updateResponseCodec,
 	}
 }
 
 func (a *GrackleLocksCoreAdapter) Snapshot() monstera.ApplicationCoreSnapshot {
 	defer monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "Snapshot", a.shardId, a.replicaId), time.Now())
+	monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "Snapshot", a.shardId, a.replicaId).Inc()
 
 	return a.grackleLocksCore.Snapshot()
 }
 
 func (a *GrackleLocksCoreAdapter) Restore(r io.ReadCloser) error {
 	defer monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "Restore", a.shardId, a.replicaId), time.Now())
+	monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "Restore", a.shardId, a.replicaId).Inc()
 
 	return a.grackleLocksCore.Restore(r)
 }
@@ -53,12 +69,12 @@ func (a *GrackleLocksCoreAdapter) Close() {
 	a.grackleLocksCore.Close()
 }
 
-func (a *GrackleLocksCoreAdapter) Update(request []byte) []byte {
+func (a *GrackleLocksCoreAdapter) Update(request []byte) monstera.UpdateResponse {
 	wrappedResponse := &monsterax.Response{}
 	coreRequest := &corepb.GrackleUpdateRequest{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
 
-	err := proto.Unmarshal(request, coreRequest)
+	err := a.updateRequestCodec.Decode(request, coreRequest)
 	if err != nil {
 		panic(err)
 	}
@@ -69,56 +85,63 @@ func (a *GrackleLocksCoreAdapter) Update(request []byte) []byte {
 	case *corepb.GrackleUpdateRequest_AcquireLockRequest:
 		r, err := a.grackleLocksCore.AcquireLock(req.AcquireLockRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "AcquireLock", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "AcquireLock", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_AcquireLockResponse{AcquireLockResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_ReleaseLockRequest:
 		r, err := a.grackleLocksCore.ReleaseLock(req.ReleaseLockRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "ReleaseLock", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "ReleaseLock", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_ReleaseLockResponse{ReleaseLockResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_DeleteLockRequest:
 		r, err := a.grackleLocksCore.DeleteLock(req.DeleteLockRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "DeleteLock", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "DeleteLock", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_DeleteLockResponse{DeleteLockResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_GetLockRequest:
 		r, err := a.grackleLocksCore.GetLock(req.GetLockRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "GetLock", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "GetLock", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_GetLockResponse{GetLockResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_RunLocksGarbageCollectionRequest:
 		r, err := a.grackleLocksCore.RunLocksGarbageCollection(req.RunLocksGarbageCollectionRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "RunLocksGarbageCollection", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "RunLocksGarbageCollection", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_RunLocksGarbageCollectionResponse{RunLocksGarbageCollectionResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_LocksDeleteNamespaceRequest:
 		r, err := a.grackleLocksCore.LocksDeleteNamespace(req.LocksDeleteNamespaceRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "LocksDeleteNamespace", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "LocksDeleteNamespace", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_LocksDeleteNamespaceResponse{LocksDeleteNamespaceResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	default:
 		panic("no matching handlers")
 	}
 
-	data, err := proto.Marshal(coreResponse)
+	data, err := a.updateResponseCodec.Encode(coreResponse)
 	if err != nil {
 		panic(err)
 	}
 	wrappedResponse.Data = data
-	response, err := proto.Marshal(wrappedResponse)
+	data, err = wrappedResponse.MarshalVT()
 	if err != nil {
 		panic(err)
 	}
+	response := monstera.UpdateResponse{Data: data}
 
 	return response
 }
 
-func (a *GrackleLocksCoreAdapter) Read(request []byte) []byte {
+func (a *GrackleLocksCoreAdapter) Read(request []byte) monstera.ReadResponse {
 	wrappedResponse := &monsterax.Response{}
 	coreRequest := &corepb.GrackleReadRequest{}
 	coreResponse := &corepb.GrackleReadResponse{}
 
-	err := proto.Unmarshal(request, coreRequest)
+	err := a.readRequestCodec.Decode(request, coreRequest)
 	if err != nil {
 		panic(err)
 	}
@@ -129,21 +152,23 @@ func (a *GrackleLocksCoreAdapter) Read(request []byte) []byte {
 	case *corepb.GrackleReadRequest_ListLocksRequest:
 		r, err := a.grackleLocksCore.ListLocks(req.ListLocksRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "ListLocks", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "ListLocks", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleReadResponse_ListLocksResponse{ListLocksResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	default:
 		panic("no matching handlers")
 	}
 
-	data, err := proto.Marshal(coreResponse)
+	data, err := a.readResponseCodec.Encode(coreResponse)
 	if err != nil {
 		panic(err)
 	}
 	wrappedResponse.Data = data
-	response, err := proto.Marshal(wrappedResponse)
+	data, err = wrappedResponse.MarshalVT()
 	if err != nil {
 		panic(err)
 	}
+	response := monstera.ReadResponse{Data: data}
 
 	return response
 }
@@ -153,26 +178,37 @@ type GrackleSemaphoresCoreAdapter struct {
 	replicaId string
 
 	grackleSemaphoresCore GrackleSemaphoresCoreApi
+
+	readRequestCodec    GrackleReadRequestCodec
+	readResponseCodec   GrackleReadResponseCodec
+	updateRequestCodec  GrackleUpdateRequestCodec
+	updateResponseCodec GrackleUpdateResponseCodec
 }
 
 var _ monstera.ApplicationCore = &GrackleSemaphoresCoreAdapter{}
 
-func NewGrackleSemaphoresCoreAdapter(shardId string, replicaId string, grackleSemaphoresCore GrackleSemaphoresCoreApi) *GrackleSemaphoresCoreAdapter {
+func NewGrackleSemaphoresCoreAdapter(shardId string, replicaId string, grackleSemaphoresCore GrackleSemaphoresCoreApi, readRequestCodec GrackleReadRequestCodec, readResponseCodec GrackleReadResponseCodec, updateRequestCodec GrackleUpdateRequestCodec, updateResponseCodec GrackleUpdateResponseCodec) *GrackleSemaphoresCoreAdapter {
 	return &GrackleSemaphoresCoreAdapter{
 		grackleSemaphoresCore: grackleSemaphoresCore,
+		readRequestCodec:      readRequestCodec,
+		readResponseCodec:     readResponseCodec,
 		replicaId:             replicaId,
 		shardId:               shardId,
+		updateRequestCodec:    updateRequestCodec,
+		updateResponseCodec:   updateResponseCodec,
 	}
 }
 
 func (a *GrackleSemaphoresCoreAdapter) Snapshot() monstera.ApplicationCoreSnapshot {
 	defer monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "Snapshot", a.shardId, a.replicaId), time.Now())
+	monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "Snapshot", a.shardId, a.replicaId).Inc()
 
 	return a.grackleSemaphoresCore.Snapshot()
 }
 
 func (a *GrackleSemaphoresCoreAdapter) Restore(r io.ReadCloser) error {
 	defer monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "Restore", a.shardId, a.replicaId), time.Now())
+	monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "Restore", a.shardId, a.replicaId).Inc()
 
 	return a.grackleSemaphoresCore.Restore(r)
 }
@@ -181,12 +217,12 @@ func (a *GrackleSemaphoresCoreAdapter) Close() {
 	a.grackleSemaphoresCore.Close()
 }
 
-func (a *GrackleSemaphoresCoreAdapter) Update(request []byte) []byte {
+func (a *GrackleSemaphoresCoreAdapter) Update(request []byte) monstera.UpdateResponse {
 	wrappedResponse := &monsterax.Response{}
 	coreRequest := &corepb.GrackleUpdateRequest{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
 
-	err := proto.Unmarshal(request, coreRequest)
+	err := a.updateRequestCodec.Decode(request, coreRequest)
 	if err != nil {
 		panic(err)
 	}
@@ -197,61 +233,69 @@ func (a *GrackleSemaphoresCoreAdapter) Update(request []byte) []byte {
 	case *corepb.GrackleUpdateRequest_AcquireSemaphoreRequest:
 		r, err := a.grackleSemaphoresCore.AcquireSemaphore(req.AcquireSemaphoreRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "AcquireSemaphore", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "AcquireSemaphore", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_AcquireSemaphoreResponse{AcquireSemaphoreResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_ReleaseSemaphoreRequest:
 		r, err := a.grackleSemaphoresCore.ReleaseSemaphore(req.ReleaseSemaphoreRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "ReleaseSemaphore", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "ReleaseSemaphore", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_ReleaseSemaphoreResponse{ReleaseSemaphoreResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_CreateSemaphoreRequest:
 		r, err := a.grackleSemaphoresCore.CreateSemaphore(req.CreateSemaphoreRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "CreateSemaphore", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "CreateSemaphore", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_CreateSemaphoreResponse{CreateSemaphoreResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_UpdateSemaphoreRequest:
 		r, err := a.grackleSemaphoresCore.UpdateSemaphore(req.UpdateSemaphoreRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "UpdateSemaphore", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "UpdateSemaphore", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_UpdateSemaphoreResponse{UpdateSemaphoreResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_DeleteSemaphoreRequest:
 		r, err := a.grackleSemaphoresCore.DeleteSemaphore(req.DeleteSemaphoreRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "DeleteSemaphore", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "DeleteSemaphore", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_DeleteSemaphoreResponse{DeleteSemaphoreResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_RunSemaphoresGarbageCollectionRequest:
 		r, err := a.grackleSemaphoresCore.RunSemaphoresGarbageCollection(req.RunSemaphoresGarbageCollectionRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "RunSemaphoresGarbageCollection", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "RunSemaphoresGarbageCollection", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_RunSemaphoresGarbageCollectionResponse{RunSemaphoresGarbageCollectionResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_SemaphoresDeleteNamespaceRequest:
 		r, err := a.grackleSemaphoresCore.SemaphoresDeleteNamespace(req.SemaphoresDeleteNamespaceRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "SemaphoresDeleteNamespace", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "SemaphoresDeleteNamespace", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_SemaphoresDeleteNamespaceResponse{SemaphoresDeleteNamespaceResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	default:
 		panic("no matching handlers")
 	}
 
-	data, err := proto.Marshal(coreResponse)
+	data, err := a.updateResponseCodec.Encode(coreResponse)
 	if err != nil {
 		panic(err)
 	}
 	wrappedResponse.Data = data
-	response, err := proto.Marshal(wrappedResponse)
+	data, err = wrappedResponse.MarshalVT()
 	if err != nil {
 		panic(err)
 	}
+	response := monstera.UpdateResponse{Data: data}
 
 	return response
 }
 
-func (a *GrackleSemaphoresCoreAdapter) Read(request []byte) []byte {
+func (a *GrackleSemaphoresCoreAdapter) Read(request []byte) monstera.ReadResponse {
 	wrappedResponse := &monsterax.Response{}
 	coreRequest := &corepb.GrackleReadRequest{}
 	coreResponse := &corepb.GrackleReadResponse{}
 
-	err := proto.Unmarshal(request, coreRequest)
+	err := a.readRequestCodec.Decode(request, coreRequest)
 	if err != nil {
 		panic(err)
 	}
@@ -262,36 +306,41 @@ func (a *GrackleSemaphoresCoreAdapter) Read(request []byte) []byte {
 	case *corepb.GrackleReadRequest_GetSemaphoreRequest:
 		r, err := a.grackleSemaphoresCore.GetSemaphore(req.GetSemaphoreRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "GetSemaphore", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "GetSemaphore", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleReadResponse_GetSemaphoreResponse{GetSemaphoreResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleReadRequest_GetSemaphoreByNameRequest:
 		r, err := a.grackleSemaphoresCore.GetSemaphoreByName(req.GetSemaphoreByNameRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "GetSemaphoreByName", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "GetSemaphoreByName", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleReadResponse_GetSemaphoreByNameResponse{GetSemaphoreByNameResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleReadRequest_ListSemaphoresRequest:
 		r, err := a.grackleSemaphoresCore.ListSemaphores(req.ListSemaphoresRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "ListSemaphores", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "ListSemaphores", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleReadResponse_ListSemaphoresResponse{ListSemaphoresResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleReadRequest_ListSemaphoreHoldersRequest:
 		r, err := a.grackleSemaphoresCore.ListSemaphoreHolders(req.ListSemaphoreHoldersRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "ListSemaphoreHolders", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "ListSemaphoreHolders", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleReadResponse_ListSemaphoreHoldersResponse{ListSemaphoreHoldersResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	default:
 		panic("no matching handlers")
 	}
 
-	data, err := proto.Marshal(coreResponse)
+	data, err := a.readResponseCodec.Encode(coreResponse)
 	if err != nil {
 		panic(err)
 	}
 	wrappedResponse.Data = data
-	response, err := proto.Marshal(wrappedResponse)
+	data, err = wrappedResponse.MarshalVT()
 	if err != nil {
 		panic(err)
 	}
+	response := monstera.ReadResponse{Data: data}
 
 	return response
 }
@@ -301,26 +350,37 @@ type GrackleNamespacesCoreAdapter struct {
 	replicaId string
 
 	grackleNamespacesCore GrackleNamespacesCoreApi
+
+	readRequestCodec    GrackleReadRequestCodec
+	readResponseCodec   GrackleReadResponseCodec
+	updateRequestCodec  GrackleUpdateRequestCodec
+	updateResponseCodec GrackleUpdateResponseCodec
 }
 
 var _ monstera.ApplicationCore = &GrackleNamespacesCoreAdapter{}
 
-func NewGrackleNamespacesCoreAdapter(shardId string, replicaId string, grackleNamespacesCore GrackleNamespacesCoreApi) *GrackleNamespacesCoreAdapter {
+func NewGrackleNamespacesCoreAdapter(shardId string, replicaId string, grackleNamespacesCore GrackleNamespacesCoreApi, readRequestCodec GrackleReadRequestCodec, readResponseCodec GrackleReadResponseCodec, updateRequestCodec GrackleUpdateRequestCodec, updateResponseCodec GrackleUpdateResponseCodec) *GrackleNamespacesCoreAdapter {
 	return &GrackleNamespacesCoreAdapter{
 		grackleNamespacesCore: grackleNamespacesCore,
+		readRequestCodec:      readRequestCodec,
+		readResponseCodec:     readResponseCodec,
 		replicaId:             replicaId,
 		shardId:               shardId,
+		updateRequestCodec:    updateRequestCodec,
+		updateResponseCodec:   updateResponseCodec,
 	}
 }
 
 func (a *GrackleNamespacesCoreAdapter) Snapshot() monstera.ApplicationCoreSnapshot {
 	defer monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleNamespaces", "Snapshot", a.shardId, a.replicaId), time.Now())
+	monsteraCoreMethodCount.WithLabelValues("GrackleNamespaces", "Snapshot", a.shardId, a.replicaId).Inc()
 
 	return a.grackleNamespacesCore.Snapshot()
 }
 
 func (a *GrackleNamespacesCoreAdapter) Restore(r io.ReadCloser) error {
 	defer monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleNamespaces", "Restore", a.shardId, a.replicaId), time.Now())
+	monsteraCoreMethodCount.WithLabelValues("GrackleNamespaces", "Restore", a.shardId, a.replicaId).Inc()
 
 	return a.grackleNamespacesCore.Restore(r)
 }
@@ -329,12 +389,12 @@ func (a *GrackleNamespacesCoreAdapter) Close() {
 	a.grackleNamespacesCore.Close()
 }
 
-func (a *GrackleNamespacesCoreAdapter) Update(request []byte) []byte {
+func (a *GrackleNamespacesCoreAdapter) Update(request []byte) monstera.UpdateResponse {
 	wrappedResponse := &monsterax.Response{}
 	coreRequest := &corepb.GrackleUpdateRequest{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
 
-	err := proto.Unmarshal(request, coreRequest)
+	err := a.updateRequestCodec.Decode(request, coreRequest)
 	if err != nil {
 		panic(err)
 	}
@@ -345,41 +405,45 @@ func (a *GrackleNamespacesCoreAdapter) Update(request []byte) []byte {
 	case *corepb.GrackleUpdateRequest_CreateNamespaceRequest:
 		r, err := a.grackleNamespacesCore.CreateNamespace(req.CreateNamespaceRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleNamespaces", "CreateNamespace", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleNamespaces", "CreateNamespace", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_CreateNamespaceResponse{CreateNamespaceResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_UpdateNamespaceRequest:
 		r, err := a.grackleNamespacesCore.UpdateNamespace(req.UpdateNamespaceRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleNamespaces", "UpdateNamespace", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleNamespaces", "UpdateNamespace", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_UpdateNamespaceResponse{UpdateNamespaceResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_DeleteNamespaceRequest:
 		r, err := a.grackleNamespacesCore.DeleteNamespace(req.DeleteNamespaceRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleNamespaces", "DeleteNamespace", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleNamespaces", "DeleteNamespace", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_DeleteNamespaceResponse{DeleteNamespaceResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	default:
 		panic("no matching handlers")
 	}
 
-	data, err := proto.Marshal(coreResponse)
+	data, err := a.updateResponseCodec.Encode(coreResponse)
 	if err != nil {
 		panic(err)
 	}
 	wrappedResponse.Data = data
-	response, err := proto.Marshal(wrappedResponse)
+	data, err = wrappedResponse.MarshalVT()
 	if err != nil {
 		panic(err)
 	}
+	response := monstera.UpdateResponse{Data: data}
 
 	return response
 }
 
-func (a *GrackleNamespacesCoreAdapter) Read(request []byte) []byte {
+func (a *GrackleNamespacesCoreAdapter) Read(request []byte) monstera.ReadResponse {
 	wrappedResponse := &monsterax.Response{}
 	coreRequest := &corepb.GrackleReadRequest{}
 	coreResponse := &corepb.GrackleReadResponse{}
 
-	err := proto.Unmarshal(request, coreRequest)
+	err := a.readRequestCodec.Decode(request, coreRequest)
 	if err != nil {
 		panic(err)
 	}
@@ -390,31 +454,35 @@ func (a *GrackleNamespacesCoreAdapter) Read(request []byte) []byte {
 	case *corepb.GrackleReadRequest_GetNamespaceRequest:
 		r, err := a.grackleNamespacesCore.GetNamespace(req.GetNamespaceRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleNamespaces", "GetNamespace", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleNamespaces", "GetNamespace", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleReadResponse_GetNamespaceResponse{GetNamespaceResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleReadRequest_GetNamespaceByNameRequest:
 		r, err := a.grackleNamespacesCore.GetNamespaceByName(req.GetNamespaceByNameRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleNamespaces", "GetNamespaceByName", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleNamespaces", "GetNamespaceByName", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleReadResponse_GetNamespaceByNameResponse{GetNamespaceByNameResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleReadRequest_ListNamespacesRequest:
 		r, err := a.grackleNamespacesCore.ListNamespaces(req.ListNamespacesRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleNamespaces", "ListNamespaces", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleNamespaces", "ListNamespaces", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleReadResponse_ListNamespacesResponse{ListNamespacesResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	default:
 		panic("no matching handlers")
 	}
 
-	data, err := proto.Marshal(coreResponse)
+	data, err := a.readResponseCodec.Encode(coreResponse)
 	if err != nil {
 		panic(err)
 	}
 	wrappedResponse.Data = data
-	response, err := proto.Marshal(wrappedResponse)
+	data, err = wrappedResponse.MarshalVT()
 	if err != nil {
 		panic(err)
 	}
+	response := monstera.ReadResponse{Data: data}
 
 	return response
 }
@@ -424,26 +492,37 @@ type GrackleWaitGroupsCoreAdapter struct {
 	replicaId string
 
 	grackleWaitGroupsCore GrackleWaitGroupsCoreApi
+
+	readRequestCodec    GrackleReadRequestCodec
+	readResponseCodec   GrackleReadResponseCodec
+	updateRequestCodec  GrackleUpdateRequestCodec
+	updateResponseCodec GrackleUpdateResponseCodec
 }
 
 var _ monstera.ApplicationCore = &GrackleWaitGroupsCoreAdapter{}
 
-func NewGrackleWaitGroupsCoreAdapter(shardId string, replicaId string, grackleWaitGroupsCore GrackleWaitGroupsCoreApi) *GrackleWaitGroupsCoreAdapter {
+func NewGrackleWaitGroupsCoreAdapter(shardId string, replicaId string, grackleWaitGroupsCore GrackleWaitGroupsCoreApi, readRequestCodec GrackleReadRequestCodec, readResponseCodec GrackleReadResponseCodec, updateRequestCodec GrackleUpdateRequestCodec, updateResponseCodec GrackleUpdateResponseCodec) *GrackleWaitGroupsCoreAdapter {
 	return &GrackleWaitGroupsCoreAdapter{
 		grackleWaitGroupsCore: grackleWaitGroupsCore,
+		readRequestCodec:      readRequestCodec,
+		readResponseCodec:     readResponseCodec,
 		replicaId:             replicaId,
 		shardId:               shardId,
+		updateRequestCodec:    updateRequestCodec,
+		updateResponseCodec:   updateResponseCodec,
 	}
 }
 
 func (a *GrackleWaitGroupsCoreAdapter) Snapshot() monstera.ApplicationCoreSnapshot {
 	defer monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "Snapshot", a.shardId, a.replicaId), time.Now())
+	monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "Snapshot", a.shardId, a.replicaId).Inc()
 
 	return a.grackleWaitGroupsCore.Snapshot()
 }
 
 func (a *GrackleWaitGroupsCoreAdapter) Restore(r io.ReadCloser) error {
 	defer monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "Restore", a.shardId, a.replicaId), time.Now())
+	monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "Restore", a.shardId, a.replicaId).Inc()
 
 	return a.grackleWaitGroupsCore.Restore(r)
 }
@@ -452,12 +531,12 @@ func (a *GrackleWaitGroupsCoreAdapter) Close() {
 	a.grackleWaitGroupsCore.Close()
 }
 
-func (a *GrackleWaitGroupsCoreAdapter) Update(request []byte) []byte {
+func (a *GrackleWaitGroupsCoreAdapter) Update(request []byte) monstera.UpdateResponse {
 	wrappedResponse := &monsterax.Response{}
 	coreRequest := &corepb.GrackleUpdateRequest{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
 
-	err := proto.Unmarshal(request, coreRequest)
+	err := a.updateRequestCodec.Decode(request, coreRequest)
 	if err != nil {
 		panic(err)
 	}
@@ -468,56 +547,63 @@ func (a *GrackleWaitGroupsCoreAdapter) Update(request []byte) []byte {
 	case *corepb.GrackleUpdateRequest_AddJobsToWaitGroupRequest:
 		r, err := a.grackleWaitGroupsCore.AddJobsToWaitGroup(req.AddJobsToWaitGroupRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "AddJobsToWaitGroup", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "AddJobsToWaitGroup", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_AddJobsToWaitGroupResponse{AddJobsToWaitGroupResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_CompleteJobsFromWaitGroupRequest:
 		r, err := a.grackleWaitGroupsCore.CompleteJobsFromWaitGroup(req.CompleteJobsFromWaitGroupRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "CompleteJobsFromWaitGroup", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "CompleteJobsFromWaitGroup", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_CompleteJobsFromWaitGroupResponse{CompleteJobsFromWaitGroupResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_CreateWaitGroupRequest:
 		r, err := a.grackleWaitGroupsCore.CreateWaitGroup(req.CreateWaitGroupRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "CreateWaitGroup", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "CreateWaitGroup", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_CreateWaitGroupResponse{CreateWaitGroupResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_DeleteWaitGroupRequest:
 		r, err := a.grackleWaitGroupsCore.DeleteWaitGroup(req.DeleteWaitGroupRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "DeleteWaitGroup", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "DeleteWaitGroup", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_DeleteWaitGroupResponse{DeleteWaitGroupResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_RunWaitGroupsGarbageCollectionRequest:
 		r, err := a.grackleWaitGroupsCore.RunWaitGroupsGarbageCollection(req.RunWaitGroupsGarbageCollectionRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "RunWaitGroupsGarbageCollection", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "RunWaitGroupsGarbageCollection", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_RunWaitGroupsGarbageCollectionResponse{RunWaitGroupsGarbageCollectionResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_WaitGroupsDeleteNamespaceRequest:
 		r, err := a.grackleWaitGroupsCore.WaitGroupsDeleteNamespace(req.WaitGroupsDeleteNamespaceRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "WaitGroupsDeleteNamespace", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "WaitGroupsDeleteNamespace", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_WaitGroupsDeleteNamespaceResponse{WaitGroupsDeleteNamespaceResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	default:
 		panic("no matching handlers")
 	}
 
-	data, err := proto.Marshal(coreResponse)
+	data, err := a.updateResponseCodec.Encode(coreResponse)
 	if err != nil {
 		panic(err)
 	}
 	wrappedResponse.Data = data
-	response, err := proto.Marshal(wrappedResponse)
+	data, err = wrappedResponse.MarshalVT()
 	if err != nil {
 		panic(err)
 	}
+	response := monstera.UpdateResponse{Data: data}
 
 	return response
 }
 
-func (a *GrackleWaitGroupsCoreAdapter) Read(request []byte) []byte {
+func (a *GrackleWaitGroupsCoreAdapter) Read(request []byte) monstera.ReadResponse {
 	wrappedResponse := &monsterax.Response{}
 	coreRequest := &corepb.GrackleReadRequest{}
 	coreResponse := &corepb.GrackleReadResponse{}
 
-	err := proto.Unmarshal(request, coreRequest)
+	err := a.readRequestCodec.Decode(request, coreRequest)
 	if err != nil {
 		panic(err)
 	}
@@ -528,36 +614,41 @@ func (a *GrackleWaitGroupsCoreAdapter) Read(request []byte) []byte {
 	case *corepb.GrackleReadRequest_GetWaitGroupRequest:
 		r, err := a.grackleWaitGroupsCore.GetWaitGroup(req.GetWaitGroupRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "GetWaitGroup", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "GetWaitGroup", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleReadResponse_GetWaitGroupResponse{GetWaitGroupResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleReadRequest_GetWaitGroupByNameRequest:
 		r, err := a.grackleWaitGroupsCore.GetWaitGroupByName(req.GetWaitGroupByNameRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "GetWaitGroupByName", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "GetWaitGroupByName", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleReadResponse_GetWaitGroupByNameResponse{GetWaitGroupByNameResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleReadRequest_ListWaitGroupsRequest:
 		r, err := a.grackleWaitGroupsCore.ListWaitGroups(req.ListWaitGroupsRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "ListWaitGroups", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "ListWaitGroups", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleReadResponse_ListWaitGroupsResponse{ListWaitGroupsResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleReadRequest_ListWaitGroupJobsRequest:
 		r, err := a.grackleWaitGroupsCore.ListWaitGroupJobs(req.ListWaitGroupJobsRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "ListWaitGroupJobs", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "ListWaitGroupJobs", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleReadResponse_ListWaitGroupJobsResponse{ListWaitGroupJobsResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	default:
 		panic("no matching handlers")
 	}
 
-	data, err := proto.Marshal(coreResponse)
+	data, err := a.readResponseCodec.Encode(coreResponse)
 	if err != nil {
 		panic(err)
 	}
 	wrappedResponse.Data = data
-	response, err := proto.Marshal(wrappedResponse)
+	data, err = wrappedResponse.MarshalVT()
 	if err != nil {
 		panic(err)
 	}
+	response := monstera.ReadResponse{Data: data}
 
 	return response
 }
@@ -567,26 +658,37 @@ type GrackleBarriersCoreAdapter struct {
 	replicaId string
 
 	grackleBarriersCore GrackleBarriersCoreApi
+
+	readRequestCodec    GrackleReadRequestCodec
+	readResponseCodec   GrackleReadResponseCodec
+	updateRequestCodec  GrackleUpdateRequestCodec
+	updateResponseCodec GrackleUpdateResponseCodec
 }
 
 var _ monstera.ApplicationCore = &GrackleBarriersCoreAdapter{}
 
-func NewGrackleBarriersCoreAdapter(shardId string, replicaId string, grackleBarriersCore GrackleBarriersCoreApi) *GrackleBarriersCoreAdapter {
+func NewGrackleBarriersCoreAdapter(shardId string, replicaId string, grackleBarriersCore GrackleBarriersCoreApi, readRequestCodec GrackleReadRequestCodec, readResponseCodec GrackleReadResponseCodec, updateRequestCodec GrackleUpdateRequestCodec, updateResponseCodec GrackleUpdateResponseCodec) *GrackleBarriersCoreAdapter {
 	return &GrackleBarriersCoreAdapter{
 		grackleBarriersCore: grackleBarriersCore,
+		readRequestCodec:    readRequestCodec,
+		readResponseCodec:   readResponseCodec,
 		replicaId:           replicaId,
 		shardId:             shardId,
+		updateRequestCodec:  updateRequestCodec,
+		updateResponseCodec: updateResponseCodec,
 	}
 }
 
 func (a *GrackleBarriersCoreAdapter) Snapshot() monstera.ApplicationCoreSnapshot {
 	defer monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "Snapshot", a.shardId, a.replicaId), time.Now())
+	monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "Snapshot", a.shardId, a.replicaId).Inc()
 
 	return a.grackleBarriersCore.Snapshot()
 }
 
 func (a *GrackleBarriersCoreAdapter) Restore(r io.ReadCloser) error {
 	defer monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "Restore", a.shardId, a.replicaId), time.Now())
+	monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "Restore", a.shardId, a.replicaId).Inc()
 
 	return a.grackleBarriersCore.Restore(r)
 }
@@ -595,12 +697,12 @@ func (a *GrackleBarriersCoreAdapter) Close() {
 	a.grackleBarriersCore.Close()
 }
 
-func (a *GrackleBarriersCoreAdapter) Update(request []byte) []byte {
+func (a *GrackleBarriersCoreAdapter) Update(request []byte) monstera.UpdateResponse {
 	wrappedResponse := &monsterax.Response{}
 	coreRequest := &corepb.GrackleUpdateRequest{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
 
-	err := proto.Unmarshal(request, coreRequest)
+	err := a.updateRequestCodec.Decode(request, coreRequest)
 	if err != nil {
 		panic(err)
 	}
@@ -611,61 +713,69 @@ func (a *GrackleBarriersCoreAdapter) Update(request []byte) []byte {
 	case *corepb.GrackleUpdateRequest_CreateBarrierRequest:
 		r, err := a.grackleBarriersCore.CreateBarrier(req.CreateBarrierRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "CreateBarrier", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "CreateBarrier", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_CreateBarrierResponse{CreateBarrierResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_DeleteBarrierRequest:
 		r, err := a.grackleBarriersCore.DeleteBarrier(req.DeleteBarrierRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "DeleteBarrier", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "DeleteBarrier", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_DeleteBarrierResponse{DeleteBarrierResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_UpdateBarrierRequest:
 		r, err := a.grackleBarriersCore.UpdateBarrier(req.UpdateBarrierRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "UpdateBarrier", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "UpdateBarrier", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_UpdateBarrierResponse{UpdateBarrierResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_ArriveAtBarrierRequest:
 		r, err := a.grackleBarriersCore.ArriveAtBarrier(req.ArriveAtBarrierRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "ArriveAtBarrier", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "ArriveAtBarrier", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_ArriveAtBarrierResponse{ArriveAtBarrierResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_WaitAtBarrierRequest:
 		r, err := a.grackleBarriersCore.WaitAtBarrier(req.WaitAtBarrierRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "WaitAtBarrier", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "WaitAtBarrier", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_WaitAtBarrierResponse{WaitAtBarrierResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_RunBarriersGarbageCollectionRequest:
 		r, err := a.grackleBarriersCore.RunBarriersGarbageCollection(req.RunBarriersGarbageCollectionRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "RunBarriersGarbageCollection", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "RunBarriersGarbageCollection", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_RunBarriersGarbageCollectionResponse{RunBarriersGarbageCollectionResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_BarriersDeleteNamespaceRequest:
 		r, err := a.grackleBarriersCore.BarriersDeleteNamespace(req.BarriersDeleteNamespaceRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "BarriersDeleteNamespace", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "BarriersDeleteNamespace", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_BarriersDeleteNamespaceResponse{BarriersDeleteNamespaceResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	default:
 		panic("no matching handlers")
 	}
 
-	data, err := proto.Marshal(coreResponse)
+	data, err := a.updateResponseCodec.Encode(coreResponse)
 	if err != nil {
 		panic(err)
 	}
 	wrappedResponse.Data = data
-	response, err := proto.Marshal(wrappedResponse)
+	data, err = wrappedResponse.MarshalVT()
 	if err != nil {
 		panic(err)
 	}
+	response := monstera.UpdateResponse{Data: data}
 
 	return response
 }
 
-func (a *GrackleBarriersCoreAdapter) Read(request []byte) []byte {
+func (a *GrackleBarriersCoreAdapter) Read(request []byte) monstera.ReadResponse {
 	wrappedResponse := &monsterax.Response{}
 	coreRequest := &corepb.GrackleReadRequest{}
 	coreResponse := &corepb.GrackleReadResponse{}
 
-	err := proto.Unmarshal(request, coreRequest)
+	err := a.readRequestCodec.Decode(request, coreRequest)
 	if err != nil {
 		panic(err)
 	}
@@ -676,36 +786,41 @@ func (a *GrackleBarriersCoreAdapter) Read(request []byte) []byte {
 	case *corepb.GrackleReadRequest_GetBarrierRequest:
 		r, err := a.grackleBarriersCore.GetBarrier(req.GetBarrierRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "GetBarrier", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "GetBarrier", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleReadResponse_GetBarrierResponse{GetBarrierResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleReadRequest_GetBarrierByNameRequest:
 		r, err := a.grackleBarriersCore.GetBarrierByName(req.GetBarrierByNameRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "GetBarrierByName", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "GetBarrierByName", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleReadResponse_GetBarrierByNameResponse{GetBarrierByNameResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleReadRequest_ListBarriersRequest:
 		r, err := a.grackleBarriersCore.ListBarriers(req.ListBarriersRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "ListBarriers", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "ListBarriers", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleReadResponse_ListBarriersResponse{ListBarriersResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleReadRequest_ListBarrierParticipantsRequest:
 		r, err := a.grackleBarriersCore.ListBarrierParticipants(req.ListBarrierParticipantsRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "ListBarrierParticipants", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "ListBarrierParticipants", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleReadResponse_ListBarrierParticipantsResponse{ListBarrierParticipantsResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	default:
 		panic("no matching handlers")
 	}
 
-	data, err := proto.Marshal(coreResponse)
+	data, err := a.readResponseCodec.Encode(coreResponse)
 	if err != nil {
 		panic(err)
 	}
 	wrappedResponse.Data = data
-	response, err := proto.Marshal(wrappedResponse)
+	data, err = wrappedResponse.MarshalVT()
 	if err != nil {
 		panic(err)
 	}
+	response := monstera.ReadResponse{Data: data}
 
 	return response
 }

@@ -11,7 +11,6 @@ import (
 	monstera "github.com/evrblk/monstera"
 	cluster "github.com/evrblk/monstera/cluster"
 	monsterax "github.com/evrblk/monstera/x"
-	proto "google.golang.org/protobuf/proto"
 	"sync"
 )
 
@@ -64,15 +63,19 @@ type GrackleMonsteraShardKeyCalculator interface {
 }
 
 type GrackleCoreApiMonsteraStub struct {
-	monsteraClient     *monstera.Client
-	shardKeyCalculator GrackleMonsteraShardKeyCalculator
+	monsteraClient             *monstera.Client
+	shardKeyCalculator         GrackleMonsteraShardKeyCalculator
+	grackleReadRequestCodec    GrackleReadRequestCodec
+	grackleReadResponseCodec   GrackleReadResponseCodec
+	grackleUpdateRequestCodec  GrackleUpdateRequestCodec
+	grackleUpdateResponseCodec GrackleUpdateResponseCodec
 }
 
 var _ GrackleCoreApi = &GrackleCoreApiMonsteraStub{}
 
 func (s *GrackleCoreApiMonsteraStub) ListLocks(ctx context.Context, request *corepb.ListLocksRequest) (*corepb.ListLocksResponse, error) {
 	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_ListLocksRequest{ListLocksRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -86,11 +89,11 @@ func (s *GrackleCoreApiMonsteraStub) ListLocks(ctx context.Context, request *cor
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleReadResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleReadResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -105,7 +108,7 @@ func (s *GrackleCoreApiMonsteraStub) ListLocks(ctx context.Context, request *cor
 
 func (s *GrackleCoreApiMonsteraStub) AcquireLock(ctx context.Context, request *corepb.AcquireLockRequest) (*corepb.AcquireLockResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_AcquireLockRequest{AcquireLockRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -119,11 +122,11 @@ func (s *GrackleCoreApiMonsteraStub) AcquireLock(ctx context.Context, request *c
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -138,7 +141,7 @@ func (s *GrackleCoreApiMonsteraStub) AcquireLock(ctx context.Context, request *c
 
 func (s *GrackleCoreApiMonsteraStub) ReleaseLock(ctx context.Context, request *corepb.ReleaseLockRequest) (*corepb.ReleaseLockResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_ReleaseLockRequest{ReleaseLockRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -152,11 +155,11 @@ func (s *GrackleCoreApiMonsteraStub) ReleaseLock(ctx context.Context, request *c
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -171,7 +174,7 @@ func (s *GrackleCoreApiMonsteraStub) ReleaseLock(ctx context.Context, request *c
 
 func (s *GrackleCoreApiMonsteraStub) DeleteLock(ctx context.Context, request *corepb.DeleteLockRequest) (*corepb.DeleteLockResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_DeleteLockRequest{DeleteLockRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -185,11 +188,11 @@ func (s *GrackleCoreApiMonsteraStub) DeleteLock(ctx context.Context, request *co
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -204,7 +207,7 @@ func (s *GrackleCoreApiMonsteraStub) DeleteLock(ctx context.Context, request *co
 
 func (s *GrackleCoreApiMonsteraStub) GetLock(ctx context.Context, request *corepb.GetLockRequest) (*corepb.GetLockResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_GetLockRequest{GetLockRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -218,11 +221,11 @@ func (s *GrackleCoreApiMonsteraStub) GetLock(ctx context.Context, request *corep
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -237,7 +240,7 @@ func (s *GrackleCoreApiMonsteraStub) GetLock(ctx context.Context, request *corep
 
 func (s *GrackleCoreApiMonsteraStub) RunLocksGarbageCollection(ctx context.Context, request *corepb.RunLocksGarbageCollectionRequest, shardId string) (*corepb.RunLocksGarbageCollectionResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_RunLocksGarbageCollectionRequest{RunLocksGarbageCollectionRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -249,11 +252,11 @@ func (s *GrackleCoreApiMonsteraStub) RunLocksGarbageCollection(ctx context.Conte
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -268,7 +271,7 @@ func (s *GrackleCoreApiMonsteraStub) RunLocksGarbageCollection(ctx context.Conte
 
 func (s *GrackleCoreApiMonsteraStub) LocksDeleteNamespace(ctx context.Context, request *corepb.LocksDeleteNamespaceRequest) (*corepb.LocksDeleteNamespaceResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_LocksDeleteNamespaceRequest{LocksDeleteNamespaceRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -282,11 +285,11 @@ func (s *GrackleCoreApiMonsteraStub) LocksDeleteNamespace(ctx context.Context, r
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -301,7 +304,7 @@ func (s *GrackleCoreApiMonsteraStub) LocksDeleteNamespace(ctx context.Context, r
 
 func (s *GrackleCoreApiMonsteraStub) GetSemaphore(ctx context.Context, request *corepb.GetSemaphoreRequest) (*corepb.GetSemaphoreResponse, error) {
 	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_GetSemaphoreRequest{GetSemaphoreRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -315,11 +318,11 @@ func (s *GrackleCoreApiMonsteraStub) GetSemaphore(ctx context.Context, request *
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleReadResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleReadResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -334,7 +337,7 @@ func (s *GrackleCoreApiMonsteraStub) GetSemaphore(ctx context.Context, request *
 
 func (s *GrackleCoreApiMonsteraStub) GetSemaphoreByName(ctx context.Context, request *corepb.GetSemaphoreByNameRequest) (*corepb.GetSemaphoreByNameResponse, error) {
 	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_GetSemaphoreByNameRequest{GetSemaphoreByNameRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -348,11 +351,11 @@ func (s *GrackleCoreApiMonsteraStub) GetSemaphoreByName(ctx context.Context, req
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleReadResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleReadResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -367,7 +370,7 @@ func (s *GrackleCoreApiMonsteraStub) GetSemaphoreByName(ctx context.Context, req
 
 func (s *GrackleCoreApiMonsteraStub) ListSemaphores(ctx context.Context, request *corepb.ListSemaphoresRequest) (*corepb.ListSemaphoresResponse, error) {
 	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_ListSemaphoresRequest{ListSemaphoresRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -381,11 +384,11 @@ func (s *GrackleCoreApiMonsteraStub) ListSemaphores(ctx context.Context, request
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleReadResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleReadResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -400,7 +403,7 @@ func (s *GrackleCoreApiMonsteraStub) ListSemaphores(ctx context.Context, request
 
 func (s *GrackleCoreApiMonsteraStub) ListSemaphoreHolders(ctx context.Context, request *corepb.ListSemaphoreHoldersRequest) (*corepb.ListSemaphoreHoldersResponse, error) {
 	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_ListSemaphoreHoldersRequest{ListSemaphoreHoldersRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -414,11 +417,11 @@ func (s *GrackleCoreApiMonsteraStub) ListSemaphoreHolders(ctx context.Context, r
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleReadResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleReadResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -433,7 +436,7 @@ func (s *GrackleCoreApiMonsteraStub) ListSemaphoreHolders(ctx context.Context, r
 
 func (s *GrackleCoreApiMonsteraStub) AcquireSemaphore(ctx context.Context, request *corepb.AcquireSemaphoreRequest) (*corepb.AcquireSemaphoreResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_AcquireSemaphoreRequest{AcquireSemaphoreRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -447,11 +450,11 @@ func (s *GrackleCoreApiMonsteraStub) AcquireSemaphore(ctx context.Context, reque
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -466,7 +469,7 @@ func (s *GrackleCoreApiMonsteraStub) AcquireSemaphore(ctx context.Context, reque
 
 func (s *GrackleCoreApiMonsteraStub) ReleaseSemaphore(ctx context.Context, request *corepb.ReleaseSemaphoreRequest) (*corepb.ReleaseSemaphoreResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_ReleaseSemaphoreRequest{ReleaseSemaphoreRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -480,11 +483,11 @@ func (s *GrackleCoreApiMonsteraStub) ReleaseSemaphore(ctx context.Context, reque
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -499,7 +502,7 @@ func (s *GrackleCoreApiMonsteraStub) ReleaseSemaphore(ctx context.Context, reque
 
 func (s *GrackleCoreApiMonsteraStub) CreateSemaphore(ctx context.Context, request *corepb.CreateSemaphoreRequest) (*corepb.CreateSemaphoreResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_CreateSemaphoreRequest{CreateSemaphoreRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -513,11 +516,11 @@ func (s *GrackleCoreApiMonsteraStub) CreateSemaphore(ctx context.Context, reques
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -532,7 +535,7 @@ func (s *GrackleCoreApiMonsteraStub) CreateSemaphore(ctx context.Context, reques
 
 func (s *GrackleCoreApiMonsteraStub) UpdateSemaphore(ctx context.Context, request *corepb.UpdateSemaphoreRequest) (*corepb.UpdateSemaphoreResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_UpdateSemaphoreRequest{UpdateSemaphoreRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -546,11 +549,11 @@ func (s *GrackleCoreApiMonsteraStub) UpdateSemaphore(ctx context.Context, reques
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -565,7 +568,7 @@ func (s *GrackleCoreApiMonsteraStub) UpdateSemaphore(ctx context.Context, reques
 
 func (s *GrackleCoreApiMonsteraStub) DeleteSemaphore(ctx context.Context, request *corepb.DeleteSemaphoreRequest) (*corepb.DeleteSemaphoreResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_DeleteSemaphoreRequest{DeleteSemaphoreRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -579,11 +582,11 @@ func (s *GrackleCoreApiMonsteraStub) DeleteSemaphore(ctx context.Context, reques
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -598,7 +601,7 @@ func (s *GrackleCoreApiMonsteraStub) DeleteSemaphore(ctx context.Context, reques
 
 func (s *GrackleCoreApiMonsteraStub) RunSemaphoresGarbageCollection(ctx context.Context, request *corepb.RunSemaphoresGarbageCollectionRequest, shardId string) (*corepb.RunSemaphoresGarbageCollectionResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_RunSemaphoresGarbageCollectionRequest{RunSemaphoresGarbageCollectionRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -610,11 +613,11 @@ func (s *GrackleCoreApiMonsteraStub) RunSemaphoresGarbageCollection(ctx context.
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -629,7 +632,7 @@ func (s *GrackleCoreApiMonsteraStub) RunSemaphoresGarbageCollection(ctx context.
 
 func (s *GrackleCoreApiMonsteraStub) SemaphoresDeleteNamespace(ctx context.Context, request *corepb.SemaphoresDeleteNamespaceRequest) (*corepb.SemaphoresDeleteNamespaceResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_SemaphoresDeleteNamespaceRequest{SemaphoresDeleteNamespaceRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -643,11 +646,11 @@ func (s *GrackleCoreApiMonsteraStub) SemaphoresDeleteNamespace(ctx context.Conte
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -662,7 +665,7 @@ func (s *GrackleCoreApiMonsteraStub) SemaphoresDeleteNamespace(ctx context.Conte
 
 func (s *GrackleCoreApiMonsteraStub) GetNamespace(ctx context.Context, request *corepb.GetNamespaceRequest) (*corepb.GetNamespaceResponse, error) {
 	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_GetNamespaceRequest{GetNamespaceRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -676,11 +679,11 @@ func (s *GrackleCoreApiMonsteraStub) GetNamespace(ctx context.Context, request *
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleReadResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleReadResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -695,7 +698,7 @@ func (s *GrackleCoreApiMonsteraStub) GetNamespace(ctx context.Context, request *
 
 func (s *GrackleCoreApiMonsteraStub) GetNamespaceByName(ctx context.Context, request *corepb.GetNamespaceByNameRequest) (*corepb.GetNamespaceByNameResponse, error) {
 	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_GetNamespaceByNameRequest{GetNamespaceByNameRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -709,11 +712,11 @@ func (s *GrackleCoreApiMonsteraStub) GetNamespaceByName(ctx context.Context, req
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleReadResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleReadResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -728,7 +731,7 @@ func (s *GrackleCoreApiMonsteraStub) GetNamespaceByName(ctx context.Context, req
 
 func (s *GrackleCoreApiMonsteraStub) ListNamespaces(ctx context.Context, request *corepb.ListNamespacesRequest) (*corepb.ListNamespacesResponse, error) {
 	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_ListNamespacesRequest{ListNamespacesRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -742,11 +745,11 @@ func (s *GrackleCoreApiMonsteraStub) ListNamespaces(ctx context.Context, request
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleReadResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleReadResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -761,7 +764,7 @@ func (s *GrackleCoreApiMonsteraStub) ListNamespaces(ctx context.Context, request
 
 func (s *GrackleCoreApiMonsteraStub) CreateNamespace(ctx context.Context, request *corepb.CreateNamespaceRequest) (*corepb.CreateNamespaceResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_CreateNamespaceRequest{CreateNamespaceRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -775,11 +778,11 @@ func (s *GrackleCoreApiMonsteraStub) CreateNamespace(ctx context.Context, reques
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -794,7 +797,7 @@ func (s *GrackleCoreApiMonsteraStub) CreateNamespace(ctx context.Context, reques
 
 func (s *GrackleCoreApiMonsteraStub) UpdateNamespace(ctx context.Context, request *corepb.UpdateNamespaceRequest) (*corepb.UpdateNamespaceResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_UpdateNamespaceRequest{UpdateNamespaceRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -808,11 +811,11 @@ func (s *GrackleCoreApiMonsteraStub) UpdateNamespace(ctx context.Context, reques
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -827,7 +830,7 @@ func (s *GrackleCoreApiMonsteraStub) UpdateNamespace(ctx context.Context, reques
 
 func (s *GrackleCoreApiMonsteraStub) DeleteNamespace(ctx context.Context, request *corepb.DeleteNamespaceRequest) (*corepb.DeleteNamespaceResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_DeleteNamespaceRequest{DeleteNamespaceRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -841,11 +844,11 @@ func (s *GrackleCoreApiMonsteraStub) DeleteNamespace(ctx context.Context, reques
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -860,7 +863,7 @@ func (s *GrackleCoreApiMonsteraStub) DeleteNamespace(ctx context.Context, reques
 
 func (s *GrackleCoreApiMonsteraStub) GetWaitGroup(ctx context.Context, request *corepb.GetWaitGroupRequest) (*corepb.GetWaitGroupResponse, error) {
 	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_GetWaitGroupRequest{GetWaitGroupRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -874,11 +877,11 @@ func (s *GrackleCoreApiMonsteraStub) GetWaitGroup(ctx context.Context, request *
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleReadResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleReadResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -893,7 +896,7 @@ func (s *GrackleCoreApiMonsteraStub) GetWaitGroup(ctx context.Context, request *
 
 func (s *GrackleCoreApiMonsteraStub) GetWaitGroupByName(ctx context.Context, request *corepb.GetWaitGroupByNameRequest) (*corepb.GetWaitGroupByNameResponse, error) {
 	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_GetWaitGroupByNameRequest{GetWaitGroupByNameRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -907,11 +910,11 @@ func (s *GrackleCoreApiMonsteraStub) GetWaitGroupByName(ctx context.Context, req
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleReadResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleReadResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -926,7 +929,7 @@ func (s *GrackleCoreApiMonsteraStub) GetWaitGroupByName(ctx context.Context, req
 
 func (s *GrackleCoreApiMonsteraStub) ListWaitGroups(ctx context.Context, request *corepb.ListWaitGroupsRequest) (*corepb.ListWaitGroupsResponse, error) {
 	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_ListWaitGroupsRequest{ListWaitGroupsRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -940,11 +943,11 @@ func (s *GrackleCoreApiMonsteraStub) ListWaitGroups(ctx context.Context, request
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleReadResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleReadResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -959,7 +962,7 @@ func (s *GrackleCoreApiMonsteraStub) ListWaitGroups(ctx context.Context, request
 
 func (s *GrackleCoreApiMonsteraStub) ListWaitGroupJobs(ctx context.Context, request *corepb.ListWaitGroupJobsRequest) (*corepb.ListWaitGroupJobsResponse, error) {
 	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_ListWaitGroupJobsRequest{ListWaitGroupJobsRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -973,11 +976,11 @@ func (s *GrackleCoreApiMonsteraStub) ListWaitGroupJobs(ctx context.Context, requ
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleReadResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleReadResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -992,7 +995,7 @@ func (s *GrackleCoreApiMonsteraStub) ListWaitGroupJobs(ctx context.Context, requ
 
 func (s *GrackleCoreApiMonsteraStub) AddJobsToWaitGroup(ctx context.Context, request *corepb.AddJobsToWaitGroupRequest) (*corepb.AddJobsToWaitGroupResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_AddJobsToWaitGroupRequest{AddJobsToWaitGroupRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -1006,11 +1009,11 @@ func (s *GrackleCoreApiMonsteraStub) AddJobsToWaitGroup(ctx context.Context, req
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -1025,7 +1028,7 @@ func (s *GrackleCoreApiMonsteraStub) AddJobsToWaitGroup(ctx context.Context, req
 
 func (s *GrackleCoreApiMonsteraStub) CompleteJobsFromWaitGroup(ctx context.Context, request *corepb.CompleteJobsFromWaitGroupRequest) (*corepb.CompleteJobsFromWaitGroupResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_CompleteJobsFromWaitGroupRequest{CompleteJobsFromWaitGroupRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -1039,11 +1042,11 @@ func (s *GrackleCoreApiMonsteraStub) CompleteJobsFromWaitGroup(ctx context.Conte
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -1058,7 +1061,7 @@ func (s *GrackleCoreApiMonsteraStub) CompleteJobsFromWaitGroup(ctx context.Conte
 
 func (s *GrackleCoreApiMonsteraStub) CreateWaitGroup(ctx context.Context, request *corepb.CreateWaitGroupRequest) (*corepb.CreateWaitGroupResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_CreateWaitGroupRequest{CreateWaitGroupRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -1072,11 +1075,11 @@ func (s *GrackleCoreApiMonsteraStub) CreateWaitGroup(ctx context.Context, reques
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -1091,7 +1094,7 @@ func (s *GrackleCoreApiMonsteraStub) CreateWaitGroup(ctx context.Context, reques
 
 func (s *GrackleCoreApiMonsteraStub) DeleteWaitGroup(ctx context.Context, request *corepb.DeleteWaitGroupRequest) (*corepb.DeleteWaitGroupResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_DeleteWaitGroupRequest{DeleteWaitGroupRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -1105,11 +1108,11 @@ func (s *GrackleCoreApiMonsteraStub) DeleteWaitGroup(ctx context.Context, reques
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -1124,7 +1127,7 @@ func (s *GrackleCoreApiMonsteraStub) DeleteWaitGroup(ctx context.Context, reques
 
 func (s *GrackleCoreApiMonsteraStub) RunWaitGroupsGarbageCollection(ctx context.Context, request *corepb.RunWaitGroupsGarbageCollectionRequest, shardId string) (*corepb.RunWaitGroupsGarbageCollectionResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_RunWaitGroupsGarbageCollectionRequest{RunWaitGroupsGarbageCollectionRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -1136,11 +1139,11 @@ func (s *GrackleCoreApiMonsteraStub) RunWaitGroupsGarbageCollection(ctx context.
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -1155,7 +1158,7 @@ func (s *GrackleCoreApiMonsteraStub) RunWaitGroupsGarbageCollection(ctx context.
 
 func (s *GrackleCoreApiMonsteraStub) WaitGroupsDeleteNamespace(ctx context.Context, request *corepb.WaitGroupsDeleteNamespaceRequest) (*corepb.WaitGroupsDeleteNamespaceResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_WaitGroupsDeleteNamespaceRequest{WaitGroupsDeleteNamespaceRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -1169,11 +1172,11 @@ func (s *GrackleCoreApiMonsteraStub) WaitGroupsDeleteNamespace(ctx context.Conte
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -1188,7 +1191,7 @@ func (s *GrackleCoreApiMonsteraStub) WaitGroupsDeleteNamespace(ctx context.Conte
 
 func (s *GrackleCoreApiMonsteraStub) GetBarrier(ctx context.Context, request *corepb.GetBarrierRequest) (*corepb.GetBarrierResponse, error) {
 	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_GetBarrierRequest{GetBarrierRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -1202,11 +1205,11 @@ func (s *GrackleCoreApiMonsteraStub) GetBarrier(ctx context.Context, request *co
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleReadResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleReadResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -1221,7 +1224,7 @@ func (s *GrackleCoreApiMonsteraStub) GetBarrier(ctx context.Context, request *co
 
 func (s *GrackleCoreApiMonsteraStub) GetBarrierByName(ctx context.Context, request *corepb.GetBarrierByNameRequest) (*corepb.GetBarrierByNameResponse, error) {
 	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_GetBarrierByNameRequest{GetBarrierByNameRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -1235,11 +1238,11 @@ func (s *GrackleCoreApiMonsteraStub) GetBarrierByName(ctx context.Context, reque
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleReadResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleReadResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -1254,7 +1257,7 @@ func (s *GrackleCoreApiMonsteraStub) GetBarrierByName(ctx context.Context, reque
 
 func (s *GrackleCoreApiMonsteraStub) ListBarriers(ctx context.Context, request *corepb.ListBarriersRequest) (*corepb.ListBarriersResponse, error) {
 	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_ListBarriersRequest{ListBarriersRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -1268,11 +1271,11 @@ func (s *GrackleCoreApiMonsteraStub) ListBarriers(ctx context.Context, request *
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleReadResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleReadResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -1287,7 +1290,7 @@ func (s *GrackleCoreApiMonsteraStub) ListBarriers(ctx context.Context, request *
 
 func (s *GrackleCoreApiMonsteraStub) ListBarrierParticipants(ctx context.Context, request *corepb.ListBarrierParticipantsRequest) (*corepb.ListBarrierParticipantsResponse, error) {
 	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_ListBarrierParticipantsRequest{ListBarrierParticipantsRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -1301,11 +1304,11 @@ func (s *GrackleCoreApiMonsteraStub) ListBarrierParticipants(ctx context.Context
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleReadResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleReadResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -1320,7 +1323,7 @@ func (s *GrackleCoreApiMonsteraStub) ListBarrierParticipants(ctx context.Context
 
 func (s *GrackleCoreApiMonsteraStub) CreateBarrier(ctx context.Context, request *corepb.CreateBarrierRequest) (*corepb.CreateBarrierResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_CreateBarrierRequest{CreateBarrierRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -1334,11 +1337,11 @@ func (s *GrackleCoreApiMonsteraStub) CreateBarrier(ctx context.Context, request 
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -1353,7 +1356,7 @@ func (s *GrackleCoreApiMonsteraStub) CreateBarrier(ctx context.Context, request 
 
 func (s *GrackleCoreApiMonsteraStub) DeleteBarrier(ctx context.Context, request *corepb.DeleteBarrierRequest) (*corepb.DeleteBarrierResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_DeleteBarrierRequest{DeleteBarrierRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -1367,11 +1370,11 @@ func (s *GrackleCoreApiMonsteraStub) DeleteBarrier(ctx context.Context, request 
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -1386,7 +1389,7 @@ func (s *GrackleCoreApiMonsteraStub) DeleteBarrier(ctx context.Context, request 
 
 func (s *GrackleCoreApiMonsteraStub) UpdateBarrier(ctx context.Context, request *corepb.UpdateBarrierRequest) (*corepb.UpdateBarrierResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_UpdateBarrierRequest{UpdateBarrierRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -1400,11 +1403,11 @@ func (s *GrackleCoreApiMonsteraStub) UpdateBarrier(ctx context.Context, request 
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -1419,7 +1422,7 @@ func (s *GrackleCoreApiMonsteraStub) UpdateBarrier(ctx context.Context, request 
 
 func (s *GrackleCoreApiMonsteraStub) ArriveAtBarrier(ctx context.Context, request *corepb.ArriveAtBarrierRequest) (*corepb.ArriveAtBarrierResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_ArriveAtBarrierRequest{ArriveAtBarrierRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -1433,11 +1436,11 @@ func (s *GrackleCoreApiMonsteraStub) ArriveAtBarrier(ctx context.Context, reques
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -1452,7 +1455,7 @@ func (s *GrackleCoreApiMonsteraStub) ArriveAtBarrier(ctx context.Context, reques
 
 func (s *GrackleCoreApiMonsteraStub) WaitAtBarrier(ctx context.Context, request *corepb.WaitAtBarrierRequest) (*corepb.WaitAtBarrierResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_WaitAtBarrierRequest{WaitAtBarrierRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -1466,11 +1469,11 @@ func (s *GrackleCoreApiMonsteraStub) WaitAtBarrier(ctx context.Context, request 
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -1485,7 +1488,7 @@ func (s *GrackleCoreApiMonsteraStub) WaitAtBarrier(ctx context.Context, request 
 
 func (s *GrackleCoreApiMonsteraStub) RunBarriersGarbageCollection(ctx context.Context, request *corepb.RunBarriersGarbageCollectionRequest, shardId string) (*corepb.RunBarriersGarbageCollectionResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_RunBarriersGarbageCollectionRequest{RunBarriersGarbageCollectionRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -1497,11 +1500,11 @@ func (s *GrackleCoreApiMonsteraStub) RunBarriersGarbageCollection(ctx context.Co
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -1516,7 +1519,7 @@ func (s *GrackleCoreApiMonsteraStub) RunBarriersGarbageCollection(ctx context.Co
 
 func (s *GrackleCoreApiMonsteraStub) BarriersDeleteNamespace(ctx context.Context, request *corepb.BarriersDeleteNamespaceRequest) (*corepb.BarriersDeleteNamespaceResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_BarriersDeleteNamespaceRequest{BarriersDeleteNamespaceRequest: request}}
-	requestBytes, err := proto.Marshal(coreRequest)
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
 	}
@@ -1530,11 +1533,11 @@ func (s *GrackleCoreApiMonsteraStub) BarriersDeleteNamespace(ctx context.Context
 
 	wrappedResponse := &monsterax.Response{}
 	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = proto.Unmarshal(responseBytes, wrappedResponse)
+	err = wrappedResponse.UnmarshalVT(responseBytes)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
-	err = proto.Unmarshal(wrappedResponse.Data, coreResponse)
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
 	if err != nil {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
 	}
@@ -1559,8 +1562,8 @@ func (s *GrackleCoreApiMonsteraStub) ListShards(applicationName string) ([]strin
 	return shardIds, nil
 }
 
-func NewGrackleCoreApiMonsteraStub(monsteraClient *monstera.Client, shardKeyCalculator GrackleMonsteraShardKeyCalculator) *GrackleCoreApiMonsteraStub {
-	return &GrackleCoreApiMonsteraStub{monsteraClient: monsteraClient, shardKeyCalculator: shardKeyCalculator}
+func NewGrackleCoreApiMonsteraStub(monsteraClient *monstera.Client, shardKeyCalculator GrackleMonsteraShardKeyCalculator, grackleReadRequestCodec GrackleReadRequestCodec, grackleReadResponseCodec GrackleReadResponseCodec, grackleUpdateRequestCodec GrackleUpdateRequestCodec, grackleUpdateResponseCodec GrackleUpdateResponseCodec) *GrackleCoreApiMonsteraStub {
+	return &GrackleCoreApiMonsteraStub{monsteraClient: monsteraClient, shardKeyCalculator: shardKeyCalculator, grackleReadRequestCodec: grackleReadRequestCodec, grackleReadResponseCodec: grackleReadResponseCodec, grackleUpdateRequestCodec: grackleUpdateRequestCodec, grackleUpdateResponseCodec: grackleUpdateResponseCodec}
 }
 
 func nilifyIfEmpty(err *monsterax.Error) error {

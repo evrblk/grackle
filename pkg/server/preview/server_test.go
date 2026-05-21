@@ -878,6 +878,85 @@ func TestCreateWaitGroupMaxSizeValidation(t *testing.T) {
 	require.Contains(t, err.Error(), fmt.Sprintf("wait group size is too big, max: %d", uint64(defaultServiceLimits.MaxWaitGroupSize)))
 }
 
+func TestWaitForWaitGroup(t *testing.T) {
+	server := setupGrackleApiServer(t)
+	ctx := context.Background()
+
+	// Create namespace
+	_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
+		Name: "test-namespace",
+	})
+	require.NoError(t, err)
+
+	// Create wait group with counter=2
+	_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
+		NamespaceName: "test-namespace",
+		WaitGroupName: "test-wg",
+		Counter:       2,
+	})
+	require.NoError(t, err)
+
+	// Test 1: Wait for a wait group that completes within timeout
+	go func() {
+		time.Sleep(500 * time.Millisecond)
+		// Complete first job
+		_, _ = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
+			NamespaceName: "test-namespace",
+			WaitGroupName: "test-wg",
+			ProcessIds:    []string{"proc1"},
+		})
+		time.Sleep(500 * time.Millisecond)
+		// Complete second job
+		_, _ = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
+			NamespaceName: "test-namespace",
+			WaitGroupName: "test-wg",
+			ProcessIds:    []string{"proc2"},
+		})
+	}()
+
+	// Wait for completion with 5 second timeout
+	resp, err := server.WaitForWaitGroup(ctx, &gracklepb.WaitForWaitGroupRequest{
+		NamespaceName:  "test-namespace",
+		WaitGroupName:  "test-wg",
+		TimeoutSeconds: 5,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.True(t, resp.Completed)
+	require.False(t, resp.TimedOut)
+	require.Equal(t, uint64(2), resp.WaitGroup.Counter)
+	require.Equal(t, uint64(2), resp.WaitGroup.Completed)
+
+	// Test 2: Wait for a wait group that times out
+	_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
+		NamespaceName: "test-namespace",
+		WaitGroupName: "test-wg-timeout",
+		Counter:       10,
+	})
+	require.NoError(t, err)
+
+	// Complete only 5 jobs
+	_, err = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
+		NamespaceName: "test-namespace",
+		WaitGroupName: "test-wg-timeout",
+		ProcessIds:    []string{"p1", "p2", "p3", "p4", "p5"},
+	})
+	require.NoError(t, err)
+
+	// Wait with 1 second timeout (should timeout)
+	resp2, err := server.WaitForWaitGroup(ctx, &gracklepb.WaitForWaitGroupRequest{
+		NamespaceName:  "test-namespace",
+		WaitGroupName:  "test-wg-timeout",
+		TimeoutSeconds: 1,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, resp2)
+	require.False(t, resp2.Completed)
+	require.True(t, resp2.TimedOut)
+	require.Equal(t, uint64(10), resp2.WaitGroup.Counter)
+	require.Equal(t, uint64(5), resp2.WaitGroup.Completed)
+}
+
 func setupGrackleApiServer(t *testing.T) *GrackleApiServer {
 	dataStore, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)

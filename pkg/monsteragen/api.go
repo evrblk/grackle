@@ -325,3 +325,23 @@ type GrackleBarriersCoreApi interface {
 	RunBarriersGarbageCollection(request *corepb.RunBarriersGarbageCollectionRequest) (*corepb.RunBarriersGarbageCollectionResponse, error)
 	BarriersDeleteNamespace(request *corepb.BarriersDeleteNamespaceRequest) (*corepb.BarriersDeleteNamespaceResponse, error)
 }
+
+type GrackleReadRequestCodec interface {
+	Encode(p *corepb.GrackleReadRequest) ([]byte, error)
+	Decode(data []byte, out *corepb.GrackleReadRequest) error
+}
+
+type GrackleReadResponseCodec interface {
+	Encode(p *corepb.GrackleReadResponse) ([]byte, error)
+	Decode(data []byte, out *corepb.GrackleReadResponse) error
+}
+
+type GrackleUpdateRequestCodec interface {
+	Encode(p *corepb.GrackleUpdateRequest) ([]byte, error)
+	Decode(data []byte, out *corepb.GrackleUpdateRequest) error
+}
+
+type GrackleUpdateResponseCodec interface {
+	Encode(p *corepb.GrackleUpdateResponse) ([]byte, error)
+	Decode(data []byte, out *corepb.GrackleUpdateResponse) error
+}

@@ -2,6 +2,7 @@ package preview
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"regexp"
 
@@ -99,6 +100,26 @@ func ValidateGetWaitGroupRequest(request *gracklepb.GetWaitGroupRequest) error {
 
 	if err := validateWaitGroupName(request.WaitGroupName, "GetWaitGroupRequest.WaitGroupName"); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func ValidateWaitForWaitGroupRequest(request *gracklepb.WaitForWaitGroupRequest) error {
+	if err := validateNamespaceName(request.NamespaceName, "WaitForWaitGroupRequest.NamespaceName"); err != nil {
+		return err
+	}
+
+	if err := validateWaitGroupName(request.WaitGroupName, "WaitForWaitGroupRequest.WaitGroupName"); err != nil {
+		return err
+	}
+
+	if request.TimeoutSeconds <= 0 {
+		return errors.New("WaitForWaitGroupRequest.TimeoutSeconds must be greater than 0")
+	}
+
+	if request.TimeoutSeconds > 300 {
+		return errors.New("WaitForWaitGroupRequest.TimeoutSeconds must be less than or equal to 300")
 	}
 
 	return nil

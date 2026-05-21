@@ -13,16 +13,22 @@ generate:
 	@echo "Running go generate..."
 	go generate ./...
 	@echo "Generating proto files..."
-	protoc --proto_path=. --go_out=. --go_opt=paths=source_relative ./pkg/corepb/*.proto
+	protoc --proto_path=. \
+		--go_out=. \
+		--go_opt=paths=source_relative \
+		--go-vtproto_out=. \
+		--go-vtproto_opt=features=marshal+unmarshal+size \
+		--go-vtproto_opt=paths=source_relative \
+		./pkg/corepb/*.proto
 
 grackle: build
 	go build -o ./cmd/grackle/grackle ./cmd/grackle
 
 format:
-	find . $(DONT_FIND) -name '*.pb.go' -prune -o -name '*.y.go' -prune -o -name '*.rl.go' -prune -o \
-		-name '*_vfsdata.go' -prune -o -type f -name '*.go' -exec gofmt -w -s {} \;
-	find . $(DONT_FIND) -name '*.pb.go' -prune -o -name '*.y.go' -prune -o -name '*.rl.go' -prune -o \
-		-name '*_vfsdata.go' -prune -o -type f -name '*.go' -exec goimports -w -local github.com/evrblk/grackle {} \;
+	find . $(DONT_FIND) -name '*.pb.go' \
+		-type f -name '*.go' -exec gofmt -w -s {} \;
+	find . $(DONT_FIND) -name '*.pb.go' \
+		-type f -name '*.go' -exec goimports -w -local github.com/evrblk/grackle {} \;
 
 clean:
 	rm -rf cmd/grackle/grackle

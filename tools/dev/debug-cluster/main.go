@@ -84,13 +84,22 @@ func (nr *nodeRunner) start(transport transport.Transport, useGrpc bool) error {
 	monsteraNodeConfig := monstera.DefaultMonsteraNodeConfig
 	monsteraNodeConfig.UseInMemoryRaftStore = true
 
+	readRequestCodec := &monsteragen.GrackleReadRequestProtoCodec{}
+	readResponseCodec := &monsteragen.GrackleReadResponseProtoCodec{}
+	updateRequestCodec := &monsteragen.GrackleUpdateRequestProtoCodec{}
+	updateResponseCodec := &monsteragen.GrackleUpdateResponseProtoCodec{}
+
 	applicationDescriptors := monstera.ApplicationCoreDescriptors{
 		"GrackleLocks": {
 			RestoreSnapshotOnStart: false,
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 				return monsteragen.NewGrackleLocksCoreAdapter(
 					shard.Id, replica.Id,
-					locks.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
+					locks.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound),
+					readRequestCodec,
+					readResponseCodec,
+					updateRequestCodec,
+					updateResponseCodec)
 			},
 		},
 		"GrackleNamespaces": {
@@ -98,7 +107,11 @@ func (nr *nodeRunner) start(transport transport.Transport, useGrpc bool) error {
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 				return monsteragen.NewGrackleNamespacesCoreAdapter(
 					shard.Id, replica.Id,
-					namespaces.NewCore(nr.dataStore, shard.LowerBound, shard.UpperBound))
+					namespaces.NewCore(nr.dataStore, shard.LowerBound, shard.UpperBound),
+					readRequestCodec,
+					readResponseCodec,
+					updateRequestCodec,
+					updateResponseCodec)
 			},
 		},
 		"GrackleWaitGroups": {
@@ -106,7 +119,11 @@ func (nr *nodeRunner) start(transport transport.Transport, useGrpc bool) error {
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 				return monsteragen.NewGrackleWaitGroupsCoreAdapter(
 					shard.Id, replica.Id,
-					waitgroups.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
+					waitgroups.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound),
+					readRequestCodec,
+					readResponseCodec,
+					updateRequestCodec,
+					updateResponseCodec)
 			},
 		},
 		"GrackleBarriers": {
@@ -114,7 +131,11 @@ func (nr *nodeRunner) start(transport transport.Transport, useGrpc bool) error {
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 				return monsteragen.NewGrackleBarriersCoreAdapter(
 					shard.Id, replica.Id,
-					barriers.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
+					barriers.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound),
+					readRequestCodec,
+					readResponseCodec,
+					updateRequestCodec,
+					updateResponseCodec)
 			},
 		},
 		"GrackleSemaphores": {
@@ -122,7 +143,11 @@ func (nr *nodeRunner) start(transport transport.Transport, useGrpc bool) error {
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 				return monsteragen.NewGrackleSemaphoresCoreAdapter(
 					shard.Id, replica.Id,
-					semaphores.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
+					semaphores.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound),
+					readRequestCodec,
+					readResponseCodec,
+					updateRequestCodec,
+					updateResponseCodec)
 			},
 		},
 	}
@@ -306,7 +331,14 @@ func main() {
 		grpcServer = grpc_server.NewServer()
 
 		// Create Grackle API Gateway
-		grackleCoreApiClient := monsteragen.NewGrackleCoreApiMonsteraStub(monsteraClient, &sharding.GrackleShardKeyCalculator{})
+		grackleCoreApiClient := monsteragen.NewGrackleCoreApiMonsteraStub(
+			monsteraClient,
+			&sharding.GrackleShardKeyCalculator{},
+			&monsteragen.GrackleReadRequestProtoCodec{},
+			&monsteragen.GrackleReadResponseProtoCodec{},
+			&monsteragen.GrackleUpdateRequestProtoCodec{},
+			&monsteragen.GrackleUpdateResponseProtoCodec{},
+		)
 		grackleApiGatewayServer = grackle_preview.NewGrackleApiServer(grackleCoreApiClient)
 		gracklepb.RegisterGracklePreviewApiServer(grpcServer, grackleApiGatewayServer)
 

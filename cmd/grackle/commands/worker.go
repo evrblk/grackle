@@ -50,7 +50,13 @@ var workerCmd = &cobra.Command{
 		defer monsteraClient.Stop()
 
 		// Grackle client
-		grackleCoreApiClient := monsteragen.NewGrackleCoreApiMonsteraStub(monsteraClient, &sharding.GrackleShardKeyCalculator{})
+		grackleCoreApiClient := monsteragen.NewGrackleCoreApiMonsteraStub(
+			monsteraClient,
+			&sharding.GrackleShardKeyCalculator{},
+			&monsteragen.GrackleReadRequestProtoCodec{},
+			&monsteragen.GrackleReadResponseProtoCodec{},
+			&monsteragen.GrackleUpdateRequestProtoCodec{},
+			&monsteragen.GrackleUpdateResponseProtoCodec{})
 
 		// Grackle workers
 		grackeLocksGarbageCollectionWorker := workers.NewGrackleLocksGCWorker(grackleCoreApiClient)

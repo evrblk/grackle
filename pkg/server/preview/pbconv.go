@@ -60,6 +60,7 @@ func waitGroupToFront(waitGroup *corepb.WaitGroup) *gracklepb.WaitGroup {
 		CreatedAt:   waitGroup.CreatedAt,
 		UpdatedAt:   waitGroup.UpdatedAt,
 		Counter:     waitGroup.Counter,
+		Completed:   waitGroup.Completed,
 		ExpiresAt:   waitGroup.ExpiresAt,
 	}
 }

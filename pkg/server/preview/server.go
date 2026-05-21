@@ -127,6 +127,17 @@ func (s *GrackleApiServer) GetWaitGroup(ctx context.Context, request *gracklepb.
 	return s.handler.GetWaitGroup(ctx, request, 0, defaultServiceLimits)
 }
 
+func (s *GrackleApiServer) WaitForWaitGroup(ctx context.Context, request *gracklepb.WaitForWaitGroupRequest) (*gracklepb.WaitForWaitGroupResponse, error) {
+	if err := ValidateWaitForWaitGroupRequest(request); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
+	}
+
+	// Increment counter of total wait groups operations
+	waitGroupsOperationsTotal.Inc()
+
+	return s.handler.WaitForWaitGroup(ctx, request, 0, defaultServiceLimits)
+}
+
 func (s *GrackleApiServer) AddJobsToWaitGroup(ctx context.Context, request *gracklepb.AddJobsToWaitGroupRequest) (*gracklepb.AddJobsToWaitGroupResponse, error) {
 	if err := ValidateAddJobsToWaitGroupRequest(request); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)

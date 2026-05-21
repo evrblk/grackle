@@ -64,13 +64,22 @@ var nodeCmd = &cobra.Command{
 		monsteraNodeConfig := monstera.DefaultMonsteraNodeConfig
 		monsteraNodeConfig.UseInMemoryRaftStore = true
 
+		readRequestCodec := &monsteragen.GrackleReadRequestProtoCodec{}
+		readResponseCodec := &monsteragen.GrackleReadResponseProtoCodec{}
+		updateRequestCodec := &monsteragen.GrackleUpdateRequestProtoCodec{}
+		updateResponseCodec := &monsteragen.GrackleUpdateResponseProtoCodec{}
+
 		applicationDescriptors := monstera.ApplicationCoreDescriptors{
 			"GrackleLocks": {
 				RestoreSnapshotOnStart: false,
 				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 					return monsteragen.NewGrackleLocksCoreAdapter(
 						shard.Id, replica.Id,
-						locks.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
+						locks.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound),
+						readRequestCodec,
+						readResponseCodec,
+						updateRequestCodec,
+						updateResponseCodec)
 				},
 			},
 			"GrackleNamespaces": {
@@ -78,7 +87,11 @@ var nodeCmd = &cobra.Command{
 				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 					return monsteragen.NewGrackleNamespacesCoreAdapter(
 						shard.Id, replica.Id,
-						namespaces.NewCore(dataStore, shard.LowerBound, shard.UpperBound))
+						namespaces.NewCore(dataStore, shard.LowerBound, shard.UpperBound),
+						readRequestCodec,
+						readResponseCodec,
+						updateRequestCodec,
+						updateResponseCodec)
 				},
 			},
 			"GrackleWaitGroups": {
@@ -86,7 +99,11 @@ var nodeCmd = &cobra.Command{
 				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 					return monsteragen.NewGrackleWaitGroupsCoreAdapter(
 						shard.Id, replica.Id,
-						waitgroups.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
+						waitgroups.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound),
+						readRequestCodec,
+						readResponseCodec,
+						updateRequestCodec,
+						updateResponseCodec)
 				},
 			},
 			"GrackleBarriers": {
@@ -94,7 +111,12 @@ var nodeCmd = &cobra.Command{
 				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 					return monsteragen.NewGrackleBarriersCoreAdapter(
 						shard.Id, replica.Id,
-						barriers.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
+						barriers.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound),
+						readRequestCodec,
+						readResponseCodec,
+						updateRequestCodec,
+						updateResponseCodec,
+					)
 				},
 			},
 			"GrackleSemaphores": {
@@ -102,7 +124,12 @@ var nodeCmd = &cobra.Command{
 				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 					return monsteragen.NewGrackleSemaphoresCoreAdapter(
 						shard.Id, replica.Id,
-						semaphores.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
+						semaphores.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound),
+						readRequestCodec,
+						readResponseCodec,
+						updateRequestCodec,
+						updateResponseCodec,
+					)
 				},
 			},
 		}

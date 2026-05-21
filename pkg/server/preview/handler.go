@@ -227,6 +227,84 @@ func (s *GrackleApiServerHandler) GetWaitGroup(ctx context.Context, request *gra
 	}, nil
 }
 
+func (s *GrackleApiServerHandler) WaitForWaitGroup(ctx context.Context, request *gracklepb.WaitForWaitGroupRequest, accountId uint64, limits grackle.GrackleServiceLimits) (*gracklepb.WaitForWaitGroupResponse, error) {
+	// Get namespace ID once
+	resp1, err := s.grackleCoreApiClient.GetNamespaceByName(ctx, &corepb.GetNamespaceByNameRequest{
+		AccountId:     accountId,
+		NamespaceName: request.NamespaceName,
+	})
+	if err != nil {
+		return nil, monsterax.ErrorToGRPC(err)
+	}
+
+	// Calculate deadline
+	deadline := time.Now().Add(time.Duration(request.TimeoutSeconds) * time.Second)
+
+	// Initial poll interval of 100ms
+	pollInterval := 100 * time.Millisecond
+	maxPollInterval := 1 * time.Second
+
+	for {
+		// Check if context is cancelled
+		if ctx.Err() != nil {
+			return nil, status.Errorf(codes.Canceled, "request cancelled")
+		}
+
+		// Check if timeout has been reached
+		if time.Now().After(deadline) {
+			// Return the last known state with timed_out=true
+			resp, err := s.grackleCoreApiClient.GetWaitGroupByName(ctx, &corepb.GetWaitGroupByNameRequest{
+				NamespaceId:   resp1.Namespace.Id,
+				WaitGroupName: request.WaitGroupName,
+			})
+			if err != nil {
+				return nil, monsterax.ErrorToGRPC(err)
+			}
+
+			return &gracklepb.WaitForWaitGroupResponse{
+				WaitGroup: waitGroupToFront(resp.WaitGroup),
+				Completed: resp.WaitGroup.Counter == resp.WaitGroup.Completed,
+				TimedOut:  true,
+			}, nil
+		}
+
+		// Get current wait group state
+		resp2, err := s.grackleCoreApiClient.GetWaitGroupByName(ctx, &corepb.GetWaitGroupByNameRequest{
+			NamespaceId:   resp1.Namespace.Id,
+			WaitGroupName: request.WaitGroupName,
+		})
+		if err != nil {
+			return nil, monsterax.ErrorToGRPC(err)
+		}
+
+		// Check if wait group is completed
+		if resp2.WaitGroup.Counter == resp2.WaitGroup.Completed {
+			return &gracklepb.WaitForWaitGroupResponse{
+				WaitGroup: waitGroupToFront(resp2.WaitGroup),
+				Completed: true,
+				TimedOut:  false,
+			}, nil
+		}
+
+		// Sleep before next poll, respecting both timeout and context cancellation
+		sleepDuration := pollInterval
+		if timeUntilDeadline := time.Until(deadline); timeUntilDeadline < sleepDuration {
+			sleepDuration = timeUntilDeadline
+		}
+
+		select {
+		case <-time.After(sleepDuration):
+			// Exponential backoff with maximum
+			pollInterval = pollInterval * 2
+			if pollInterval > maxPollInterval {
+				pollInterval = maxPollInterval
+			}
+		case <-ctx.Done():
+			return nil, status.Errorf(codes.Canceled, "request cancelled")
+		}
+	}
+}
+
 func (s *GrackleApiServerHandler) AddJobsToWaitGroup(ctx context.Context, request *gracklepb.AddJobsToWaitGroupRequest, accountId uint64, limits grackle.GrackleServiceLimits) (*gracklepb.AddJobsToWaitGroupResponse, error) {
 	now := time.Now()
 
