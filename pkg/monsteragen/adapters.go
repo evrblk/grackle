@@ -734,12 +734,6 @@ func (a *GrackleBarriersCoreAdapter) Update(request []byte) monstera.UpdateRespo
 		monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "ArriveAtBarrier", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_ArriveAtBarrierResponse{ArriveAtBarrierResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
-	case *corepb.GrackleUpdateRequest_WaitAtBarrierRequest:
-		r, err := a.grackleBarriersCore.WaitAtBarrier(req.WaitAtBarrierRequest)
-		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "WaitAtBarrier", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "WaitAtBarrier", a.shardId, a.replicaId).Inc()
-		coreResponse.Response = &corepb.GrackleUpdateResponse_WaitAtBarrierResponse{WaitAtBarrierResponse: r}
-		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleUpdateRequest_RunBarriersGarbageCollectionRequest:
 		r, err := a.grackleBarriersCore.RunBarriersGarbageCollection(req.RunBarriersGarbageCollectionRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "RunBarriersGarbageCollection", a.shardId, a.replicaId), t1)

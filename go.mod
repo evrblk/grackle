@@ -3,7 +3,7 @@ module github.com/evrblk/grackle
 go 1.26.0
 
 require (
-	github.com/evrblk/evrblk-go v0.0.0-20260521205608-37740ffedb97
+	github.com/evrblk/evrblk-go v0.0.0-20260522160117-279069e7d218
 	github.com/evrblk/monstera v0.0.0-20260521210225-51c185396627
 	github.com/evrblk/yellowstone-common v0.0.0-20260317193758-e5d4f0d6d632
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10
@@ -54,7 +54,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.43.0 // indirect
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
-	golang.org/x/crypto v0.51.0 // indirect
+	golang.org/x/crypto v0.52.0 // indirect
 	golang.org/x/net v0.54.0 // indirect
 	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/text v0.37.0 // indirect

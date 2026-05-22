@@ -551,6 +551,163 @@ func TestCore_DeleteBarrier(t *testing.T) {
 	})
 }
 
+func TestCore_UpdateBarrier(t *testing.T) {
+	t.Run("update barrier successfully", func(t *testing.T) {
+		barriersCore := newBarriersCore(t)
+
+		now := time.Now()
+
+		barrierId := &corepb.BarrierId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+			BarrierId:   rand.Uint64(),
+		}
+
+		// T+0: Create barrier
+		createResponse, err := barriersCore.CreateBarrier(&corepb.CreateBarrierRequest{
+			BarrierId:                       barrierId,
+			Name:                            "test_barrier",
+			Description:                     "Original description",
+			ExpectedProcesses:               3,
+			MaxNumberOfBarriersPerNamespace: 10,
+			Now:                             now.UnixNano(),
+		})
+
+		require.NoError(t, err)
+		require.NotNil(t, createResponse.Barrier)
+		require.Equal(t, "Original description", createResponse.Barrier.Description)
+		require.EqualValues(t, 3, createResponse.Barrier.ExpectedProcesses)
+		require.Equal(t, now.UnixNano(), createResponse.Barrier.UpdatedAt)
+
+		// T+1m: Update barrier
+		updateTime := now.Add(time.Minute)
+		updateResponse, err := barriersCore.UpdateBarrier(&corepb.UpdateBarrierRequest{
+			BarrierId:         barrierId,
+			Description:       "Updated description",
+			ExpectedProcesses: 5,
+			Now:               updateTime.UnixNano(),
+		})
+
+		require.NoError(t, err)
+		require.NotNil(t, updateResponse.Barrier)
+		require.Equal(t, "Updated description", updateResponse.Barrier.Description)
+		require.EqualValues(t, 5, updateResponse.Barrier.ExpectedProcesses)
+		require.Equal(t, updateTime.UnixNano(), updateResponse.Barrier.UpdatedAt)
+		require.Equal(t, now.UnixNano(), updateResponse.Barrier.CreatedAt) // CreatedAt should not change
+
+		// T+2m: Get barrier to verify update persisted
+		getResponse, err := barriersCore.GetBarrier(&corepb.GetBarrierRequest{
+			BarrierId: barrierId,
+		})
+
+		require.NoError(t, err)
+		require.NotNil(t, getResponse.Barrier)
+		require.Equal(t, "Updated description", getResponse.Barrier.Description)
+		require.EqualValues(t, 5, getResponse.Barrier.ExpectedProcesses)
+		require.Equal(t, updateTime.UnixNano(), getResponse.Barrier.UpdatedAt)
+	})
+
+	t.Run("update nonexistent barrier", func(t *testing.T) {
+		barriersCore := newBarriersCore(t)
+
+		now := time.Now()
+
+		barrierId := &corepb.BarrierId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+			BarrierId:   rand.Uint64(),
+		}
+
+		// Try to update a barrier that doesn't exist
+		_, err := barriersCore.UpdateBarrier(&corepb.UpdateBarrierRequest{
+			BarrierId:         barrierId,
+			Description:       "Updated description",
+			ExpectedProcesses: 5,
+			Now:               now.UnixNano(),
+		})
+
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "barrier not found")
+	})
+
+	t.Run("cannot reduce expected_processes below arrived_processes", func(t *testing.T) {
+		barriersCore := newBarriersCore(t)
+
+		now := time.Now()
+
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+		}
+
+		barrierId := &corepb.BarrierId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			BarrierId:   rand.Uint64(),
+		}
+
+		// T+0: Create barrier with expected_processes = 5
+		createResponse, err := barriersCore.CreateBarrier(&corepb.CreateBarrierRequest{
+			BarrierId:                       barrierId,
+			Name:                            "test_barrier",
+			Description:                     "Test barrier",
+			ExpectedProcesses:               5,
+			MaxNumberOfBarriersPerNamespace: 10,
+			Now:                             now.UnixNano(),
+		})
+
+		require.NoError(t, err)
+		require.NotNil(t, createResponse.Barrier)
+
+		// T+1m: Have 3 processes arrive at the barrier
+		for i := 0; i < 3; i++ {
+			_, err := barriersCore.ArriveAtBarrier(&corepb.ArriveAtBarrierRequest{
+				NamespaceId: namespaceId,
+				BarrierName: "test_barrier",
+				ProcessId:   fmt.Sprintf("process-%d", i),
+				Generation:  1,
+				Now:         now.Add(time.Minute).UnixNano(),
+			})
+			require.NoError(t, err)
+		}
+
+		// T+2m: Try to update expected_processes to 2 (less than 3 arrived processes)
+		_, err = barriersCore.UpdateBarrier(&corepb.UpdateBarrierRequest{
+			BarrierId:         barrierId,
+			Description:       "Updated description",
+			ExpectedProcesses: 2,
+			Now:               now.Add(2 * time.Minute).UnixNano(),
+		})
+
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "there are currently more arrived processes than the new expected processes")
+
+		// T+3m: Update to expected_processes = 3 (equal to arrived_processes) should succeed
+		updateResponse, err := barriersCore.UpdateBarrier(&corepb.UpdateBarrierRequest{
+			BarrierId:         barrierId,
+			Description:       "Updated description",
+			ExpectedProcesses: 3,
+			Now:               now.Add(3 * time.Minute).UnixNano(),
+		})
+
+		require.NoError(t, err)
+		require.NotNil(t, updateResponse.Barrier)
+		require.EqualValues(t, 3, updateResponse.Barrier.ExpectedProcesses)
+
+		// T+4m: Update to expected_processes = 10 (greater than arrived_processes) should succeed
+		updateResponse2, err := barriersCore.UpdateBarrier(&corepb.UpdateBarrierRequest{
+			BarrierId:         barrierId,
+			Description:       "Updated description again",
+			ExpectedProcesses: 10,
+			Now:               now.Add(4 * time.Minute).UnixNano(),
+		})
+
+		require.NoError(t, err)
+		require.NotNil(t, updateResponse2.Barrier)
+		require.EqualValues(t, 10, updateResponse2.Barrier.ExpectedProcesses)
+	})
+}
+
 func TestCore_ArriveAtBarrier(t *testing.T) {
 	t.Run("multiple processes", func(t *testing.T) {
 		barriersCore := newBarriersCore(t)

@@ -56,7 +56,6 @@ type GrackleCoreApi interface {
 	DeleteBarrier(ctx context.Context, request *corepb.DeleteBarrierRequest) (*corepb.DeleteBarrierResponse, error)
 	UpdateBarrier(ctx context.Context, request *corepb.UpdateBarrierRequest) (*corepb.UpdateBarrierResponse, error)
 	ArriveAtBarrier(ctx context.Context, request *corepb.ArriveAtBarrierRequest) (*corepb.ArriveAtBarrierResponse, error)
-	WaitAtBarrier(ctx context.Context, request *corepb.WaitAtBarrierRequest) (*corepb.WaitAtBarrierResponse, error)
 	RunBarriersGarbageCollection(ctx context.Context, request *corepb.RunBarriersGarbageCollectionRequest, shardId string) (*corepb.RunBarriersGarbageCollectionResponse, error)
 	BarriersDeleteNamespace(ctx context.Context, request *corepb.BarriersDeleteNamespaceRequest) (*corepb.BarriersDeleteNamespaceResponse, error)
 
@@ -235,10 +234,6 @@ func (a *UnimplementedGrackleCoreApi) ArriveAtBarrier(ctx context.Context, reque
 	panic("not implemented")
 }
 
-func (a *UnimplementedGrackleCoreApi) WaitAtBarrier(ctx context.Context, request *corepb.WaitAtBarrierRequest) (*corepb.WaitAtBarrierResponse, error) {
-	panic("not implemented")
-}
-
 func (a *UnimplementedGrackleCoreApi) RunBarriersGarbageCollection(ctx context.Context, request *corepb.RunBarriersGarbageCollectionRequest, shardId string) (*corepb.RunBarriersGarbageCollectionResponse, error) {
 	panic("not implemented")
 }
@@ -321,7 +316,6 @@ type GrackleBarriersCoreApi interface {
 	DeleteBarrier(request *corepb.DeleteBarrierRequest) (*corepb.DeleteBarrierResponse, error)
 	UpdateBarrier(request *corepb.UpdateBarrierRequest) (*corepb.UpdateBarrierResponse, error)
 	ArriveAtBarrier(request *corepb.ArriveAtBarrierRequest) (*corepb.ArriveAtBarrierResponse, error)
-	WaitAtBarrier(request *corepb.WaitAtBarrierRequest) (*corepb.WaitAtBarrierResponse, error)
 	RunBarriersGarbageCollection(request *corepb.RunBarriersGarbageCollectionRequest) (*corepb.RunBarriersGarbageCollectionResponse, error)
 	BarriersDeleteNamespace(request *corepb.BarriersDeleteNamespaceRequest) (*corepb.BarriersDeleteNamespaceResponse, error)
 }

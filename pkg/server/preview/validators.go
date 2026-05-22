@@ -20,6 +20,7 @@ const (
 	maxCompleteJobBatchSize  = 50
 	maxPaginationTokenLength = 1024
 	maxPaginationLimit       = 100
+	maxTimeoutSeconds        = 300
 
 	nameRegex     = "^[-_0-9a-zA-Z]*$"
 	lockNameRegex = "^[-_0-9a-zA-Z//]*$"
@@ -118,8 +119,8 @@ func ValidateWaitForWaitGroupRequest(request *gracklepb.WaitForWaitGroupRequest)
 		return errors.New("WaitForWaitGroupRequest.TimeoutSeconds must be greater than 0")
 	}
 
-	if request.TimeoutSeconds > 300 {
-		return errors.New("WaitForWaitGroupRequest.TimeoutSeconds must be less than or equal to 300")
+	if request.TimeoutSeconds > maxTimeoutSeconds {
+		return fmt.Errorf("WaitForWaitGroupRequest.TimeoutSeconds must be less than or equal to %d", maxTimeoutSeconds)
 	}
 
 	return nil
@@ -483,6 +484,14 @@ func ValidateUpdateBarrierRequest(request *gracklepb.UpdateBarrierRequest) error
 		return err
 	}
 
+	if err := validateDescription(request.Description, "UpdateBarrierRequest.Description"); err != nil {
+		return err
+	}
+
+	if request.ExpectedProcesses <= 0 {
+		return invalid("UpdateBarrierRequest.ExpectedProcesses", "must be greater than 0")
+	}
+
 	return nil
 }
 
@@ -517,6 +526,14 @@ func ValidateWaitAtBarrierRequest(request *gracklepb.WaitAtBarrierRequest) error
 
 	if request.ExpectedGeneration <= 0 {
 		return invalid("WaitAtBarrierRequest.ExpectedGeneration", "must be greater than 0")
+	}
+
+	if request.TimeoutSeconds <= 0 {
+		return errors.New("WaitAtBarrierRequest.TimeoutSeconds must be greater than 0")
+	}
+
+	if request.TimeoutSeconds > maxTimeoutSeconds {
+		return fmt.Errorf("WaitAtBarrierRequest.TimeoutSeconds must be less than or equal to %d", maxTimeoutSeconds)
 	}
 
 	return nil

@@ -250,24 +250,6 @@ func (s *GrackleApiServerHandler) WaitForWaitGroup(ctx context.Context, request 
 			return nil, status.Errorf(codes.Canceled, "request cancelled")
 		}
 
-		// Check if timeout has been reached
-		if time.Now().After(deadline) {
-			// Return the last known state with timed_out=true
-			resp, err := s.grackleCoreApiClient.GetWaitGroupByName(ctx, &corepb.GetWaitGroupByNameRequest{
-				NamespaceId:   resp1.Namespace.Id,
-				WaitGroupName: request.WaitGroupName,
-			})
-			if err != nil {
-				return nil, monsterax.ErrorToGRPC(err)
-			}
-
-			return &gracklepb.WaitForWaitGroupResponse{
-				WaitGroup: waitGroupToFront(resp.WaitGroup),
-				Completed: resp.WaitGroup.Counter == resp.WaitGroup.Completed,
-				TimedOut:  true,
-			}, nil
-		}
-
 		// Get current wait group state
 		resp2, err := s.grackleCoreApiClient.GetWaitGroupByName(ctx, &corepb.GetWaitGroupByNameRequest{
 			NamespaceId:   resp1.Namespace.Id,
@@ -277,12 +259,17 @@ func (s *GrackleApiServerHandler) WaitForWaitGroup(ctx context.Context, request 
 			return nil, monsterax.ErrorToGRPC(err)
 		}
 
+		// Check if timeout has been reached
+		timedOut := time.Now().After(deadline)
+
 		// Check if wait group is completed
-		if resp2.WaitGroup.Counter == resp2.WaitGroup.Completed {
+		completed := resp2.WaitGroup.Counter == resp2.WaitGroup.Completed
+
+		if timedOut || completed {
 			return &gracklepb.WaitForWaitGroupResponse{
 				WaitGroup: waitGroupToFront(resp2.WaitGroup),
-				Completed: true,
-				TimedOut:  false,
+				Completed: completed,
+				TimedOut:  timedOut,
 			}, nil
 		}
 
@@ -865,11 +852,74 @@ func (s *GrackleApiServerHandler) DeleteSemaphore(ctx context.Context, request *
 }
 
 func (s *GrackleApiServerHandler) CreateBarrier(ctx context.Context, request *gracklepb.CreateBarrierRequest, accountId uint64, limits grackle.GrackleServiceLimits) (*gracklepb.CreateBarrierResponse, error) {
-	return &gracklepb.CreateBarrierResponse{}, nil
+	now := time.Now()
+
+	resp1, err := s.grackleCoreApiClient.GetNamespaceByName(ctx, &corepb.GetNamespaceByNameRequest{
+		AccountId:     accountId,
+		NamespaceName: request.NamespaceName,
+	})
+	if err != nil {
+		return nil, monsterax.ErrorToGRPC(err)
+	}
+
+	resp2, err := s.grackleCoreApiClient.CreateBarrier(ctx, &corepb.CreateBarrierRequest{
+		BarrierId: &corepb.BarrierId{
+			AccountId:   accountId,
+			NamespaceId: resp1.Namespace.Id.NamespaceId,
+			BarrierId:   rand.Uint64(),
+		},
+		Name:                            request.BarrierName,
+		Description:                     request.Description,
+		ExpectedProcesses:               request.ExpectedProcesses,
+		Now:                             now.UnixNano(),
+		MaxNumberOfBarriersPerNamespace: limits.MaxNumberOfBarriersPerNamespace,
+	})
+	if err != nil {
+		return nil, monsterax.ErrorToGRPC(err)
+	}
+
+	return &gracklepb.CreateBarrierResponse{
+		Barrier: barrierToFront(resp2.Barrier),
+	}, nil
 }
 
 func (s *GrackleApiServerHandler) ListBarriers(ctx context.Context, request *gracklepb.ListBarriersRequest, accountId uint64, limits grackle.GrackleServiceLimits) (*gracklepb.ListBarriersResponse, error) {
-	return &gracklepb.ListBarriersResponse{}, nil
+	resp1, err := s.grackleCoreApiClient.GetNamespaceByName(ctx, &corepb.GetNamespaceByNameRequest{
+		AccountId:     accountId,
+		NamespaceName: request.NamespaceName,
+	})
+	if err != nil {
+		return nil, monsterax.ErrorToGRPC(err)
+	}
+
+	paginationToken, err := paginationTokenFromFront(request.PaginationToken)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
+	}
+
+	resp2, err := s.grackleCoreApiClient.ListBarriers(ctx, &corepb.ListBarriersRequest{
+		NamespaceId:     resp1.Namespace.Id,
+		PaginationToken: paginationToken,
+		Limit:           request.Limit,
+	})
+	if err != nil {
+		return nil, monsterax.ErrorToGRPC(err)
+	}
+
+	nextPaginationToken, err := paginationTokenToFront(resp2.NextPaginationToken)
+	if err != nil {
+		return nil, monsterax.ErrorToGRPC(err)
+	}
+	previousPaginationToken, err := paginationTokenToFront(resp2.PreviousPaginationToken)
+	if err != nil {
+		return nil, monsterax.ErrorToGRPC(err)
+	}
+
+	return &gracklepb.ListBarriersResponse{
+		Barriers:                barriersToFront(resp2.Barriers),
+		NextPaginationToken:     nextPaginationToken,
+		PreviousPaginationToken: previousPaginationToken,
+	}, nil
 }
 
 func (s *GrackleApiServerHandler) GetBarrier(ctx context.Context, request *gracklepb.GetBarrierRequest, accountId uint64, limits grackle.GrackleServiceLimits) (*gracklepb.GetBarrierResponse, error) {
@@ -895,23 +945,211 @@ func (s *GrackleApiServerHandler) GetBarrier(ctx context.Context, request *grack
 }
 
 func (s *GrackleApiServerHandler) DeleteBarrier(ctx context.Context, request *gracklepb.DeleteBarrierRequest, accountId uint64, limits grackle.GrackleServiceLimits) (*gracklepb.DeleteBarrierResponse, error) {
+	now := time.Now()
+
+	resp1, err := s.grackleCoreApiClient.GetNamespaceByName(ctx, &corepb.GetNamespaceByNameRequest{
+		AccountId:     accountId,
+		NamespaceName: request.NamespaceName,
+	})
+	if err != nil {
+		return nil, monsterax.ErrorToGRPC(err)
+	}
+
+	_, err = s.grackleCoreApiClient.DeleteBarrier(ctx, &corepb.DeleteBarrierRequest{
+		NamespaceId: resp1.Namespace.Id,
+		BarrierName: request.BarrierName,
+		Now:         now.UnixNano(),
+	})
+	if err != nil {
+		return nil, monsterax.ErrorToGRPC(err)
+	}
+
 	return &gracklepb.DeleteBarrierResponse{}, nil
 }
 
 func (s *GrackleApiServerHandler) UpdateBarrier(ctx context.Context, request *gracklepb.UpdateBarrierRequest, accountId uint64, limits grackle.GrackleServiceLimits) (*gracklepb.UpdateBarrierResponse, error) {
-	return &gracklepb.UpdateBarrierResponse{}, nil
+	now := time.Now()
+
+	resp1, err := s.grackleCoreApiClient.GetNamespaceByName(ctx, &corepb.GetNamespaceByNameRequest{
+		AccountId:     accountId,
+		NamespaceName: request.NamespaceName,
+	})
+	if err != nil {
+		return nil, monsterax.ErrorToGRPC(err)
+	}
+
+	// Get the barrier to retrieve its ID
+	resp2, err := s.grackleCoreApiClient.GetBarrierByName(ctx, &corepb.GetBarrierByNameRequest{
+		NamespaceId: resp1.Namespace.Id,
+		BarrierName: request.BarrierName,
+	})
+	if err != nil {
+		return nil, monsterax.ErrorToGRPC(err)
+	}
+
+	resp3, err := s.grackleCoreApiClient.UpdateBarrier(ctx, &corepb.UpdateBarrierRequest{
+		BarrierId:         resp2.Barrier.Id,
+		Description:       request.Description,
+		ExpectedProcesses: request.ExpectedProcesses,
+		Now:               now.UnixNano(),
+	})
+	if err != nil {
+		return nil, monsterax.ErrorToGRPC(err)
+	}
+
+	return &gracklepb.UpdateBarrierResponse{
+		Barrier: barrierToFront(resp3.Barrier),
+	}, nil
 }
 
 func (s *GrackleApiServerHandler) ArriveAtBarrier(ctx context.Context, request *gracklepb.ArriveAtBarrierRequest, accountId uint64, limits grackle.GrackleServiceLimits) (*gracklepb.ArriveAtBarrierResponse, error) {
-	return &gracklepb.ArriveAtBarrierResponse{}, nil
+	now := time.Now()
+
+	resp1, err := s.grackleCoreApiClient.GetNamespaceByName(ctx, &corepb.GetNamespaceByNameRequest{
+		AccountId:     accountId,
+		NamespaceName: request.NamespaceName,
+	})
+	if err != nil {
+		return nil, monsterax.ErrorToGRPC(err)
+	}
+
+	_, err = s.grackleCoreApiClient.ArriveAtBarrier(ctx, &corepb.ArriveAtBarrierRequest{
+		NamespaceId: resp1.Namespace.Id,
+		BarrierName: request.BarrierName,
+		ProcessId:   request.ProcessId,
+		Generation:  request.ExpectedGeneration,
+		Now:         now.UnixNano(),
+	})
+	if err != nil {
+		return nil, monsterax.ErrorToGRPC(err)
+	}
+
+	// Get the updated barrier state
+	resp2, err := s.grackleCoreApiClient.GetBarrierByName(ctx, &corepb.GetBarrierByNameRequest{
+		NamespaceId: resp1.Namespace.Id,
+		BarrierName: request.BarrierName,
+	})
+	if err != nil {
+		return nil, monsterax.ErrorToGRPC(err)
+	}
+
+	allArrived := resp2.Barrier.ArrivedProcesses >= resp2.Barrier.ExpectedProcesses &&
+		resp2.Barrier.Generation == request.ExpectedGeneration
+
+	return &gracklepb.ArriveAtBarrierResponse{
+		Barrier:        barrierToFront(resp2.Barrier),
+		AllArrived:     allArrived,
+		NextGeneration: resp2.Barrier.Generation + 1,
+	}, nil
 }
 
 func (s *GrackleApiServerHandler) WaitAtBarrier(ctx context.Context, request *gracklepb.WaitAtBarrierRequest, accountId uint64, limits grackle.GrackleServiceLimits) (*gracklepb.WaitAtBarrierResponse, error) {
-	return &gracklepb.WaitAtBarrierResponse{}, nil
+	// Get namespace ID once
+	resp1, err := s.grackleCoreApiClient.GetNamespaceByName(ctx, &corepb.GetNamespaceByNameRequest{
+		AccountId:     accountId,
+		NamespaceName: request.NamespaceName,
+	})
+	if err != nil {
+		return nil, monsterax.ErrorToGRPC(err)
+	}
+
+	// Calculate deadline
+	deadline := time.Now().Add(time.Duration(request.TimeoutSeconds) * time.Second)
+
+	// Initial poll interval of 100ms
+	pollInterval := 100 * time.Millisecond
+	maxPollInterval := 1 * time.Second
+
+	for {
+		// Check if context is cancelled
+		if ctx.Err() != nil {
+			return nil, status.Errorf(codes.Canceled, "request cancelled")
+		}
+
+		// Get current barrier state
+		resp2, err := s.grackleCoreApiClient.GetBarrierByName(ctx, &corepb.GetBarrierByNameRequest{
+			NamespaceId: resp1.Namespace.Id,
+			BarrierName: request.BarrierName,
+		})
+		if err != nil {
+			return nil, monsterax.ErrorToGRPC(err)
+		}
+
+		// Check if all processes have arrived at the expected generation
+		allArrived := resp2.Barrier.ArrivedProcesses >= resp2.Barrier.ExpectedProcesses &&
+			resp2.Barrier.Generation == request.ExpectedGeneration
+
+		// Check if timeout has been reached
+		timedOut := time.Now().After(deadline)
+
+		if timedOut || allArrived {
+			// Return the last known state
+			return &gracklepb.WaitAtBarrierResponse{
+				Barrier:        barrierToFront(resp2.Barrier),
+				AllArrived:     allArrived,
+				NextGeneration: resp2.Barrier.Generation + 1,
+				TimedOut:       timedOut,
+			}, nil
+		}
+
+		// Sleep before next poll, respecting both timeout and context cancellation
+		sleepDuration := pollInterval
+		if timeUntilDeadline := time.Until(deadline); timeUntilDeadline < sleepDuration {
+			sleepDuration = timeUntilDeadline
+		}
+
+		select {
+		case <-time.After(sleepDuration):
+			// Exponential backoff with maximum
+			pollInterval = pollInterval * 2
+			if pollInterval > maxPollInterval {
+				pollInterval = maxPollInterval
+			}
+		case <-ctx.Done():
+			return nil, status.Errorf(codes.Canceled, "request cancelled")
+		}
+	}
 }
 
 func (s *GrackleApiServerHandler) ListBarrierParticipants(ctx context.Context, request *gracklepb.ListBarrierParticipantsRequest, accountId uint64, limits grackle.GrackleServiceLimits) (*gracklepb.ListBarrierParticipantsResponse, error) {
-	return &gracklepb.ListBarrierParticipantsResponse{}, nil
+	resp1, err := s.grackleCoreApiClient.GetNamespaceByName(ctx, &corepb.GetNamespaceByNameRequest{
+		AccountId:     accountId,
+		NamespaceName: request.NamespaceName,
+	})
+	if err != nil {
+		return nil, monsterax.ErrorToGRPC(err)
+	}
+
+	paginationToken, err := paginationTokenFromFront(request.PaginationToken)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
+	}
+
+	resp2, err := s.grackleCoreApiClient.ListBarrierParticipants(ctx, &corepb.ListBarrierParticipantsRequest{
+		NamespaceId:     resp1.Namespace.Id,
+		BarrierName:     request.BarrierName,
+		Generation:      request.Generation,
+		PaginationToken: paginationToken,
+		Limit:           request.Limit,
+	})
+	if err != nil {
+		return nil, monsterax.ErrorToGRPC(err)
+	}
+
+	nextPaginationToken, err := paginationTokenToFront(resp2.NextPaginationToken)
+	if err != nil {
+		return nil, monsterax.ErrorToGRPC(err)
+	}
+	previousPaginationToken, err := paginationTokenToFront(resp2.PreviousPaginationToken)
+	if err != nil {
+		return nil, monsterax.ErrorToGRPC(err)
+	}
+
+	return &gracklepb.ListBarrierParticipantsResponse{
+		Participants:            barrierParticipantsToFront(resp2.Participants),
+		NextPaginationToken:     nextPaginationToken,
+		PreviousPaginationToken: previousPaginationToken,
+	}, nil
 }
 
 func NewGrackleApiServerHandler(grackleCoreApiClient monsteragen.GrackleCoreApi) *GrackleApiServerHandler {

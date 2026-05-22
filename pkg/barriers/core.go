@@ -237,7 +237,44 @@ func (c *Core) DeleteBarrier(request *corepb.DeleteBarrierRequest) (*corepb.Dele
 }
 
 func (c *Core) UpdateBarrier(request *corepb.UpdateBarrierRequest) (*corepb.UpdateBarrierResponse, error) {
-	return &corepb.UpdateBarrierResponse{}, nil
+	txn := c.badgerStore.Update()
+	defer txn.Discard()
+
+	barrier, err := c.barriers.Get(txn, request.BarrierId)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			return nil, monsterax.NewErrorWithContext(
+				monsterax.NotFound,
+				"barrier not found",
+				map[string]string{
+					"barrier_id": ids.EncodeBarrierId(request.BarrierId),
+				})
+		} else {
+			panic(err)
+		}
+	}
+
+	// If there are currently more arrived processes than the new expected processes
+	if barrier.ArrivedProcesses > request.ExpectedProcesses {
+		return nil, monsterax.NewErrorWithContext(
+			monsterax.InvalidArgument,
+			"there are currently more arrived processes than the new expected processes",
+			map[string]string{})
+	}
+
+	barrier.Description = request.Description
+	barrier.ExpectedProcesses = request.ExpectedProcesses
+	barrier.UpdatedAt = request.Now
+
+	err = c.barriers.Update(txn, barrier)
+	panicIfNotNil(err)
+
+	err = txn.Commit()
+	panicIfNotNil(err)
+
+	return &corepb.UpdateBarrierResponse{
+		Barrier: barrier,
+	}, nil
 }
 
 func (c *Core) ArriveAtBarrier(request *corepb.ArriveAtBarrierRequest) (*corepb.ArriveAtBarrierResponse, error) {
@@ -292,10 +329,6 @@ func (c *Core) ArriveAtBarrier(request *corepb.ArriveAtBarrierRequest) (*corepb.
 	panicIfNotNil(err)
 
 	return &corepb.ArriveAtBarrierResponse{}, nil
-}
-
-func (c *Core) WaitAtBarrier(request *corepb.WaitAtBarrierRequest) (*corepb.WaitAtBarrierResponse, error) {
-	return &corepb.WaitAtBarrierResponse{}, nil
 }
 
 func (c *Core) RunBarriersGarbageCollection(request *corepb.RunBarriersGarbageCollectionRequest) (*corepb.RunBarriersGarbageCollectionResponse, error) {

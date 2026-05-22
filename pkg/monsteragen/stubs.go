@@ -58,7 +58,6 @@ type GrackleMonsteraShardKeyCalculator interface {
 	DeleteBarrierShardKey(request *corepb.DeleteBarrierRequest) []byte
 	UpdateBarrierShardKey(request *corepb.UpdateBarrierRequest) []byte
 	ArriveAtBarrierShardKey(request *corepb.ArriveAtBarrierRequest) []byte
-	WaitAtBarrierShardKey(request *corepb.WaitAtBarrierRequest) []byte
 	BarriersDeleteNamespaceShardKey(request *corepb.BarriersDeleteNamespaceRequest) []byte
 }
 
@@ -1453,39 +1452,6 @@ func (s *GrackleCoreApiMonsteraStub) ArriveAtBarrier(ctx context.Context, reques
 	}
 }
 
-func (s *GrackleCoreApiMonsteraStub) WaitAtBarrier(ctx context.Context, request *corepb.WaitAtBarrierRequest) (*corepb.WaitAtBarrierResponse, error) {
-	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_WaitAtBarrierRequest{WaitAtBarrierRequest: request}}
-	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
-	if err != nil {
-		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
-	}
-
-	shardKey := s.shardKeyCalculator.WaitAtBarrierShardKey(request)
-
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleBarriers", shardKey, requestBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	wrappedResponse := &monsterax.Response{}
-	coreResponse := &corepb.GrackleUpdateResponse{}
-	err = wrappedResponse.UnmarshalVT(responseBytes)
-	if err != nil {
-		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
-	}
-	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
-	if err != nil {
-		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
-	}
-
-	response, ok := coreResponse.Response.(*corepb.GrackleUpdateResponse_WaitAtBarrierResponse)
-	if ok {
-		return response.WaitAtBarrierResponse, nilifyIfEmpty(wrappedResponse.Error)
-	} else {
-		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "invalid response type", map[string]string{"response": coreResponse.String()})
-	}
-}
-
 func (s *GrackleCoreApiMonsteraStub) RunBarriersGarbageCollection(ctx context.Context, request *corepb.RunBarriersGarbageCollectionRequest, shardId string) (*corepb.RunBarriersGarbageCollectionResponse, error) {
 	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_RunBarriersGarbageCollectionRequest{RunBarriersGarbageCollectionRequest: request}}
 	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
@@ -2251,21 +2217,6 @@ func (s *GrackleCoreApiNonclusteredStub) ArriveAtBarrier(ctx context.Context, re
 			defer adapter.mu.Unlock()
 
 			return adapter.core.ArriveAtBarrier(request)
-		}
-	}
-
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
-}
-
-func (s *GrackleCoreApiNonclusteredStub) WaitAtBarrier(ctx context.Context, request *corepb.WaitAtBarrierRequest) (*corepb.WaitAtBarrierResponse, error) {
-	shardKey := s.shardKeyCalculator.WaitAtBarrierShardKey(request)
-
-	for _, adapter := range s.grackleBarriersCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			return adapter.core.WaitAtBarrier(request)
 		}
 	}
 

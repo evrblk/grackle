@@ -45,7 +45,8 @@ func waitGroupJobToFront(job *corepb.WaitGroupJob) *gracklepb.WaitGroupJob {
 	}
 
 	return &gracklepb.WaitGroupJob{
-		// TODO
+		ProcessId:   job.Id.ProcessId,
+		CompletedAt: job.CompletedAt,
 	}
 }
 
@@ -180,6 +181,22 @@ func barriersToFront(barriers []*corepb.Barrier) []*gracklepb.Barrier {
 		frontBarriers[i] = barrierToFront(barrier)
 	}
 	return frontBarriers
+}
+
+func barrierParticipantToFront(participant *corepb.BarrierParticipant) *gracklepb.BarrierParticipant {
+	if participant == nil {
+		return nil
+	}
+
+	return &gracklepb.BarrierParticipant{}
+}
+
+func barrierParticipantsToFront(participants []*corepb.BarrierParticipant) []*gracklepb.BarrierParticipant {
+	frontParticipants := make([]*gracklepb.BarrierParticipant, len(participants))
+	for i, participant := range participants {
+		frontParticipants[i] = barrierParticipantToFront(participant)
+	}
+	return frontParticipants
 }
 
 func paginationTokenToFront(paginationToken *corepb.PaginationToken) (string, error) {

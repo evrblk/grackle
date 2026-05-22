@@ -392,6 +392,86 @@ func TestValidateDeleteWaitGroupRequest(t *testing.T) {
 	}))
 }
 
+func TestValidateWaitForWaitGroupRequest(t *testing.T) {
+	// empty request
+	assert.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{}))
+
+	// missing namespace name
+	assert.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
+		WaitGroupName:  "validname",
+		TimeoutSeconds: 10,
+	}))
+
+	// missing wait group name
+	assert.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
+		NamespaceName:  "validname",
+		TimeoutSeconds: 10,
+	}))
+
+	// namespace name too long
+	assert.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
+		NamespaceName:  string(make([]byte, 129)),
+		WaitGroupName:  "validname",
+		TimeoutSeconds: 10,
+	}))
+
+	// wait group name too long
+	assert.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
+		NamespaceName:  "validname",
+		WaitGroupName:  string(make([]byte, 129)),
+		TimeoutSeconds: 10,
+	}))
+
+	// invalid namespace name characters
+	assert.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
+		NamespaceName:  "invalid name",
+		WaitGroupName:  "validname",
+		TimeoutSeconds: 10,
+	}))
+
+	// invalid wait group name characters
+	assert.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
+		NamespaceName:  "validname",
+		WaitGroupName:  "invalid name",
+		TimeoutSeconds: 10,
+	}))
+
+	// timeout seconds zero
+	assert.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
+		NamespaceName:  "validname",
+		WaitGroupName:  "validname",
+		TimeoutSeconds: 0,
+	}))
+
+	// timeout seconds negative
+	assert.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
+		NamespaceName:  "validname",
+		WaitGroupName:  "validname",
+		TimeoutSeconds: -1,
+	}))
+
+	// timeout seconds too high
+	assert.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
+		NamespaceName:  "validname",
+		WaitGroupName:  "validname",
+		TimeoutSeconds: 301,
+	}))
+
+	// valid request
+	assert.NoError(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
+		NamespaceName:  "validname",
+		WaitGroupName:  "validname",
+		TimeoutSeconds: 10,
+	}))
+
+	// valid request with maximum timeout
+	assert.NoError(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
+		NamespaceName:  "validname",
+		WaitGroupName:  "validname",
+		TimeoutSeconds: 300,
+	}))
+}
+
 func TestValidateListWaitGroupsRequest(t *testing.T) {
 	// Test empty request - should fail due to missing namespace name
 	assert.Error(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{}))
@@ -1373,5 +1453,771 @@ func TestValidateAcquireSemaphoreRequest(t *testing.T) {
 		SemaphoreName: "validsemaphore",
 		ProcessId:     "proc1",
 		ExpiresAt:     time.Now().UnixNano(),
+	}))
+}
+
+func TestValidateListWaitGroupJobsRequest(t *testing.T) {
+	// Test empty request - should fail due to missing namespace name
+	assert.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{}))
+
+	// Test missing namespace name
+	assert.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
+		WaitGroupName: "validname",
+	}))
+
+	// Test missing wait group name
+	assert.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
+		NamespaceName: "validname",
+	}))
+
+	// Test invalid namespace name characters
+	assert.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
+		NamespaceName: "invalid name",
+		WaitGroupName: "validname",
+	}))
+
+	// Test invalid wait group name characters
+	assert.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
+		NamespaceName: "validname",
+		WaitGroupName: "invalid name",
+	}))
+
+	// Test namespace name too long
+	assert.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
+		NamespaceName: string(make([]byte, 129)),
+		WaitGroupName: "validname",
+	}))
+
+	// Test wait group name too long
+	assert.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
+		NamespaceName: "validname",
+		WaitGroupName: string(make([]byte, 129)),
+	}))
+
+	// Test invalid pagination token (not base64)
+	assert.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
+		NamespaceName:   "validname",
+		WaitGroupName:   "validname",
+		PaginationToken: "invalid-base64!@#",
+	}))
+
+	// Test pagination token too long
+	longToken := string(make([]byte, 1025))
+	assert.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
+		NamespaceName:   "validname",
+		WaitGroupName:   "validname",
+		PaginationToken: longToken,
+	}))
+
+	// Test limit too high
+	assert.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
+		NamespaceName: "validname",
+		WaitGroupName: "validname",
+		Limit:         101,
+	}))
+
+	// Test negative limit
+	assert.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
+		NamespaceName: "validname",
+		WaitGroupName: "validname",
+		Limit:         -1,
+	}))
+
+	// Test valid request
+	assert.NoError(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
+		NamespaceName: "validname",
+		WaitGroupName: "validname",
+	}))
+
+	// Test valid request with pagination
+	assert.NoError(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
+		NamespaceName:   "validname",
+		WaitGroupName:   "validname",
+		PaginationToken: "dGVzdA==",
+		Limit:           50,
+	}))
+}
+
+func TestValidateListSemaphoreHoldersRequest(t *testing.T) {
+	// Test empty request - should fail due to missing namespace name
+	assert.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{}))
+
+	// Test missing namespace name
+	assert.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
+		SemaphoreName: "validname",
+	}))
+
+	// Test missing semaphore name
+	assert.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
+		NamespaceName: "validname",
+	}))
+
+	// Test invalid namespace name characters
+	assert.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
+		NamespaceName: "invalid name",
+		SemaphoreName: "validname",
+	}))
+
+	// Test invalid semaphore name characters
+	assert.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
+		NamespaceName: "validname",
+		SemaphoreName: "invalid name",
+	}))
+
+	// Test namespace name too long
+	assert.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
+		NamespaceName: string(make([]byte, 129)),
+		SemaphoreName: "validname",
+	}))
+
+	// Test semaphore name too long
+	assert.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
+		NamespaceName: "validname",
+		SemaphoreName: string(make([]byte, 129)),
+	}))
+
+	// Test invalid pagination token (not base64)
+	assert.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
+		NamespaceName:   "validname",
+		SemaphoreName:   "validname",
+		PaginationToken: "invalid-base64!@#",
+	}))
+
+	// Test pagination token too long
+	longToken := string(make([]byte, 1025))
+	assert.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
+		NamespaceName:   "validname",
+		SemaphoreName:   "validname",
+		PaginationToken: longToken,
+	}))
+
+	// Test limit too high
+	assert.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
+		NamespaceName: "validname",
+		SemaphoreName: "validname",
+		Limit:         101,
+	}))
+
+	// Test negative limit
+	assert.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
+		NamespaceName: "validname",
+		SemaphoreName: "validname",
+		Limit:         -1,
+	}))
+
+	// Test valid request
+	assert.NoError(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
+		NamespaceName: "validname",
+		SemaphoreName: "validname",
+	}))
+
+	// Test valid request with pagination
+	assert.NoError(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
+		NamespaceName:   "validname",
+		SemaphoreName:   "validname",
+		PaginationToken: "dGVzdA==",
+		Limit:           50,
+	}))
+}
+
+func TestValidateCreateBarrierRequest(t *testing.T) {
+	// Test empty request
+	assert.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{}))
+
+	// Test missing namespace name
+	assert.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
+		BarrierName:       "validname",
+		ExpectedProcesses: 3,
+		ExpiresAt:         time.Now().UnixNano(),
+	}))
+
+	// Test missing barrier name
+	assert.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
+		NamespaceName:     "validname",
+		ExpectedProcesses: 3,
+		ExpiresAt:         time.Now().UnixNano(),
+	}))
+
+	// Test invalid namespace name characters
+	assert.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
+		NamespaceName:     "invalid name",
+		BarrierName:       "validname",
+		ExpectedProcesses: 3,
+		ExpiresAt:         time.Now().UnixNano(),
+	}))
+
+	// Test invalid barrier name characters
+	assert.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
+		NamespaceName:     "validname",
+		BarrierName:       "invalid name",
+		ExpectedProcesses: 3,
+		ExpiresAt:         time.Now().UnixNano(),
+	}))
+
+	// Test namespace name too long
+	assert.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
+		NamespaceName:     string(make([]byte, 129)),
+		BarrierName:       "validname",
+		ExpectedProcesses: 3,
+		ExpiresAt:         time.Now().UnixNano(),
+	}))
+
+	// Test barrier name too long
+	assert.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
+		NamespaceName:     "validname",
+		BarrierName:       string(make([]byte, 129)),
+		ExpectedProcesses: 3,
+		ExpiresAt:         time.Now().UnixNano(),
+	}))
+
+	// Test description too long
+	assert.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
+		NamespaceName:     "validname",
+		BarrierName:       "validname",
+		Description:       string(make([]byte, 1025)),
+		ExpectedProcesses: 3,
+		ExpiresAt:         time.Now().UnixNano(),
+	}))
+
+	// Test expected processes zero
+	assert.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
+		NamespaceName:     "validname",
+		BarrierName:       "validname",
+		ExpectedProcesses: 0,
+		ExpiresAt:         time.Now().UnixNano(),
+	}))
+
+	// Test expires at zero
+	assert.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
+		NamespaceName:     "validname",
+		BarrierName:       "validname",
+		ExpectedProcesses: 3,
+		ExpiresAt:         0,
+	}))
+
+	// Test expires at negative
+	assert.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
+		NamespaceName:     "validname",
+		BarrierName:       "validname",
+		ExpectedProcesses: 3,
+		ExpiresAt:         -1,
+	}))
+
+	// Test valid request
+	assert.NoError(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
+		NamespaceName:     "validname",
+		BarrierName:       "validname",
+		ExpectedProcesses: 3,
+		ExpiresAt:         time.Now().UnixNano(),
+	}))
+
+	// Test valid request with description
+	assert.NoError(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
+		NamespaceName:     "validname",
+		BarrierName:       "validname",
+		Description:       "Valid description",
+		ExpectedProcesses: 3,
+		ExpiresAt:         time.Now().UnixNano(),
+	}))
+}
+
+func TestValidateListBarriersRequest(t *testing.T) {
+	// Test empty request - should fail due to missing namespace name
+	assert.Error(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{}))
+
+	// Test missing namespace name
+	assert.Error(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
+		PaginationToken: "",
+		Limit:           0,
+	}))
+
+	// Test invalid namespace name characters
+	assert.Error(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
+		NamespaceName: "invalid name",
+	}))
+
+	// Test namespace name too long
+	assert.Error(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
+		NamespaceName: string(make([]byte, 129)),
+	}))
+
+	// Test invalid pagination token (not base64)
+	assert.Error(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
+		NamespaceName:   "validname",
+		PaginationToken: "invalid-base64!@#",
+	}))
+
+	// Test pagination token too long
+	longToken := string(make([]byte, 1025))
+	assert.Error(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
+		NamespaceName:   "validname",
+		PaginationToken: longToken,
+	}))
+
+	// Test limit too high
+	assert.Error(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
+		NamespaceName: "validname",
+		Limit:         101,
+	}))
+
+	// Test negative limit
+	assert.Error(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
+		NamespaceName: "validname",
+		Limit:         -1,
+	}))
+
+	// Test valid request
+	assert.NoError(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
+		NamespaceName: "validname",
+	}))
+
+	// Test valid request with pagination
+	assert.NoError(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
+		NamespaceName:   "validname",
+		PaginationToken: "dGVzdA==",
+		Limit:           50,
+	}))
+}
+
+func TestValidateGetBarrierRequest(t *testing.T) {
+	// Test empty request
+	assert.Error(t, ValidateGetBarrierRequest(&gracklepb.GetBarrierRequest{}))
+
+	// Test missing namespace name
+	assert.Error(t, ValidateGetBarrierRequest(&gracklepb.GetBarrierRequest{
+		BarrierName: "validname",
+	}))
+
+	// Test missing barrier name
+	assert.Error(t, ValidateGetBarrierRequest(&gracklepb.GetBarrierRequest{
+		NamespaceName: "validname",
+	}))
+
+	// Test invalid namespace name characters
+	assert.Error(t, ValidateGetBarrierRequest(&gracklepb.GetBarrierRequest{
+		NamespaceName: "invalid name",
+		BarrierName:   "validname",
+	}))
+
+	// Test invalid barrier name characters
+	assert.Error(t, ValidateGetBarrierRequest(&gracklepb.GetBarrierRequest{
+		NamespaceName: "validname",
+		BarrierName:   "invalid name",
+	}))
+
+	// Test namespace name too long
+	assert.Error(t, ValidateGetBarrierRequest(&gracklepb.GetBarrierRequest{
+		NamespaceName: string(make([]byte, 129)),
+		BarrierName:   "validname",
+	}))
+
+	// Test barrier name too long
+	assert.Error(t, ValidateGetBarrierRequest(&gracklepb.GetBarrierRequest{
+		NamespaceName: "validname",
+		BarrierName:   string(make([]byte, 129)),
+	}))
+
+	// Test valid request
+	assert.NoError(t, ValidateGetBarrierRequest(&gracklepb.GetBarrierRequest{
+		NamespaceName: "validname",
+		BarrierName:   "validname",
+	}))
+}
+
+func TestValidateDeleteBarrierRequest(t *testing.T) {
+	// Test empty request
+	assert.Error(t, ValidateDeleteBarrierRequest(&gracklepb.DeleteBarrierRequest{}))
+
+	// Test missing namespace name
+	assert.Error(t, ValidateDeleteBarrierRequest(&gracklepb.DeleteBarrierRequest{
+		BarrierName: "validname",
+	}))
+
+	// Test missing barrier name
+	assert.Error(t, ValidateDeleteBarrierRequest(&gracklepb.DeleteBarrierRequest{
+		NamespaceName: "validname",
+	}))
+
+	// Test invalid namespace name characters
+	assert.Error(t, ValidateDeleteBarrierRequest(&gracklepb.DeleteBarrierRequest{
+		NamespaceName: "invalid name",
+		BarrierName:   "validname",
+	}))
+
+	// Test invalid barrier name characters
+	assert.Error(t, ValidateDeleteBarrierRequest(&gracklepb.DeleteBarrierRequest{
+		NamespaceName: "validname",
+		BarrierName:   "invalid name",
+	}))
+
+	// Test namespace name too long
+	assert.Error(t, ValidateDeleteBarrierRequest(&gracklepb.DeleteBarrierRequest{
+		NamespaceName: string(make([]byte, 129)),
+		BarrierName:   "validname",
+	}))
+
+	// Test barrier name too long
+	assert.Error(t, ValidateDeleteBarrierRequest(&gracklepb.DeleteBarrierRequest{
+		NamespaceName: "validname",
+		BarrierName:   string(make([]byte, 129)),
+	}))
+
+	// Test valid request
+	assert.NoError(t, ValidateDeleteBarrierRequest(&gracklepb.DeleteBarrierRequest{
+		NamespaceName: "validname",
+		BarrierName:   "validname",
+	}))
+}
+
+func TestValidateUpdateBarrierRequest(t *testing.T) {
+	// Test empty request
+	assert.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{}))
+
+	// Test missing namespace name
+	assert.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
+		BarrierName:       "validname",
+		Description:       "desc",
+		ExpectedProcesses: 3,
+	}))
+
+	// Test missing barrier name
+	assert.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
+		NamespaceName:     "validname",
+		Description:       "desc",
+		ExpectedProcesses: 3,
+	}))
+
+	// Test invalid namespace name characters
+	assert.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
+		NamespaceName:     "invalid name",
+		BarrierName:       "validname",
+		Description:       "desc",
+		ExpectedProcesses: 3,
+	}))
+
+	// Test invalid barrier name characters
+	assert.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
+		NamespaceName:     "validname",
+		BarrierName:       "invalid name",
+		Description:       "desc",
+		ExpectedProcesses: 3,
+	}))
+
+	// Test namespace name too long
+	assert.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
+		NamespaceName:     string(make([]byte, 129)),
+		BarrierName:       "validname",
+		Description:       "desc",
+		ExpectedProcesses: 3,
+	}))
+
+	// Test barrier name too long
+	assert.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
+		NamespaceName:     "validname",
+		BarrierName:       string(make([]byte, 129)),
+		Description:       "desc",
+		ExpectedProcesses: 3,
+	}))
+
+	// Test description too long
+	assert.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
+		NamespaceName:     "validname",
+		BarrierName:       "validname",
+		Description:       string(make([]byte, 1025)),
+		ExpectedProcesses: 3,
+	}))
+
+	// Test expected_processes zero
+	assert.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
+		NamespaceName:     "validname",
+		BarrierName:       "validname",
+		Description:       "desc",
+		ExpectedProcesses: 0,
+	}))
+
+	// Test valid request
+	assert.NoError(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
+		NamespaceName:     "validname",
+		BarrierName:       "validname",
+		Description:       "Valid description",
+		ExpectedProcesses: 5,
+	}))
+}
+
+func TestValidateArriveAtBarrierRequest(t *testing.T) {
+	// Test empty request
+	assert.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{}))
+
+	// Test missing namespace name
+	assert.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
+		BarrierName:        "validname",
+		ProcessId:          "proc1",
+		ExpectedGeneration: 1,
+	}))
+
+	// Test missing barrier name
+	assert.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
+		NamespaceName:      "validname",
+		ProcessId:          "proc1",
+		ExpectedGeneration: 1,
+	}))
+
+	// Test missing process id
+	assert.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
+		NamespaceName:      "validname",
+		BarrierName:        "validname",
+		ExpectedGeneration: 1,
+	}))
+
+	// Test invalid namespace name characters
+	assert.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
+		NamespaceName:      "invalid name",
+		BarrierName:        "validname",
+		ProcessId:          "proc1",
+		ExpectedGeneration: 1,
+	}))
+
+	// Test invalid barrier name characters
+	assert.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
+		NamespaceName:      "validname",
+		BarrierName:        "invalid name",
+		ProcessId:          "proc1",
+		ExpectedGeneration: 1,
+	}))
+
+	// Test invalid process id characters
+	assert.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
+		NamespaceName:      "validname",
+		BarrierName:        "validname",
+		ProcessId:          "invalid process id",
+		ExpectedGeneration: 1,
+	}))
+
+	// Test namespace name too long
+	assert.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
+		NamespaceName:      string(make([]byte, 129)),
+		BarrierName:        "validname",
+		ProcessId:          "proc1",
+		ExpectedGeneration: 1,
+	}))
+
+	// Test barrier name too long
+	assert.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
+		NamespaceName:      "validname",
+		BarrierName:        string(make([]byte, 129)),
+		ProcessId:          "proc1",
+		ExpectedGeneration: 1,
+	}))
+
+	// Test process id too long
+	assert.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
+		NamespaceName:      "validname",
+		BarrierName:        "validname",
+		ProcessId:          string(make([]byte, 129)),
+		ExpectedGeneration: 1,
+	}))
+
+	// Test expected generation zero
+	assert.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
+		NamespaceName:      "validname",
+		BarrierName:        "validname",
+		ProcessId:          "proc1",
+		ExpectedGeneration: 0,
+	}))
+
+	// Test valid request
+	assert.NoError(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
+		NamespaceName:      "validname",
+		BarrierName:        "validname",
+		ProcessId:          "proc1",
+		ExpectedGeneration: 1,
+	}))
+}
+
+func TestValidateWaitAtBarrierRequest(t *testing.T) {
+	// Test empty request
+	assert.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{}))
+
+	// Test missing namespace name
+	assert.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
+		BarrierName:        "validname",
+		ExpectedGeneration: 1,
+		TimeoutSeconds:     10,
+	}))
+
+	// Test missing barrier name
+	assert.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
+		NamespaceName:      "validname",
+		ExpectedGeneration: 1,
+		TimeoutSeconds:     10,
+	}))
+
+	// Test invalid namespace name characters
+	assert.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
+		NamespaceName:      "invalid name",
+		BarrierName:        "validname",
+		ExpectedGeneration: 1,
+		TimeoutSeconds:     10,
+	}))
+
+	// Test invalid barrier name characters
+	assert.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
+		NamespaceName:      "validname",
+		BarrierName:        "invalid name",
+		ExpectedGeneration: 1,
+		TimeoutSeconds:     10,
+	}))
+
+	// Test namespace name too long
+	assert.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
+		NamespaceName:      string(make([]byte, 129)),
+		BarrierName:        "validname",
+		ExpectedGeneration: 1,
+		TimeoutSeconds:     10,
+	}))
+
+	// Test barrier name too long
+	assert.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
+		NamespaceName:      "validname",
+		BarrierName:        string(make([]byte, 129)),
+		ExpectedGeneration: 1,
+		TimeoutSeconds:     10,
+	}))
+
+	// Test expected generation zero
+	assert.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
+		NamespaceName:      "validname",
+		BarrierName:        "validname",
+		ExpectedGeneration: 0,
+		TimeoutSeconds:     10,
+	}))
+
+	// Test timeout seconds zero
+	assert.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
+		NamespaceName:      "validname",
+		BarrierName:        "validname",
+		ExpectedGeneration: 1,
+		TimeoutSeconds:     0,
+	}))
+
+	// Test timeout seconds negative
+	assert.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
+		NamespaceName:      "validname",
+		BarrierName:        "validname",
+		ExpectedGeneration: 1,
+		TimeoutSeconds:     -1,
+	}))
+
+	// Test timeout seconds too high
+	assert.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
+		NamespaceName:      "validname",
+		BarrierName:        "validname",
+		ExpectedGeneration: 1,
+		TimeoutSeconds:     301,
+	}))
+
+	// Test valid request
+	assert.NoError(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
+		NamespaceName:      "validname",
+		BarrierName:        "validname",
+		ExpectedGeneration: 1,
+		TimeoutSeconds:     10,
+	}))
+
+	// Test valid request with maximum timeout
+	assert.NoError(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
+		NamespaceName:      "validname",
+		BarrierName:        "validname",
+		ExpectedGeneration: 1,
+		TimeoutSeconds:     300,
+	}))
+}
+
+func TestValidateListBarrierParticipantsRequest(t *testing.T) {
+	// Test empty request - should fail due to missing namespace name
+	assert.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{}))
+
+	// Test missing namespace name
+	assert.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+		BarrierName: "validname",
+	}))
+
+	// Test missing barrier name
+	assert.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+		NamespaceName: "validname",
+	}))
+
+	// Test invalid namespace name characters
+	assert.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+		NamespaceName: "invalid name",
+		BarrierName:   "validname",
+	}))
+
+	// Test invalid barrier name characters
+	assert.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+		NamespaceName: "validname",
+		BarrierName:   "invalid name",
+	}))
+
+	// Test namespace name too long
+	assert.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+		NamespaceName: string(make([]byte, 129)),
+		BarrierName:   "validname",
+	}))
+
+	// Test barrier name too long
+	assert.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+		NamespaceName: "validname",
+		BarrierName:   string(make([]byte, 129)),
+	}))
+
+	// Test invalid pagination token (not base64)
+	assert.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+		NamespaceName:   "validname",
+		BarrierName:     "validname",
+		PaginationToken: "invalid-base64!@#",
+	}))
+
+	// Test pagination token too long
+	longToken := string(make([]byte, 1025))
+	assert.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+		NamespaceName:   "validname",
+		BarrierName:     "validname",
+		PaginationToken: longToken,
+	}))
+
+	// Test limit too high
+	assert.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+		NamespaceName: "validname",
+		BarrierName:   "validname",
+		Limit:         101,
+	}))
+
+	// Test negative limit
+	assert.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+		NamespaceName: "validname",
+		BarrierName:   "validname",
+		Limit:         -1,
+	}))
+
+	// Test valid request
+	assert.NoError(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+		NamespaceName: "validname",
+		BarrierName:   "validname",
+	}))
+
+	// Test valid request with pagination
+	assert.NoError(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+		NamespaceName:   "validname",
+		BarrierName:     "validname",
+		PaginationToken: "dGVzdA==",
+		Limit:           50,
+	}))
+
+	// Test valid request with generation
+	assert.NoError(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+		NamespaceName: "validname",
+		BarrierName:   "validname",
+		Generation:    1,
 	}))
 }

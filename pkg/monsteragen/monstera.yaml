@@ -121,8 +121,6 @@ cores:
         sharded: true
       - method: ArriveAtBarrier
         sharded: true
-      - method: WaitAtBarrier
-        sharded: true
       - method: RunBarriersGarbageCollection
         sharded: false
       - method: BarriersDeleteNamespace
