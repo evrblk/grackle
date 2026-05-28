@@ -9,6 +9,7 @@ import (
 	gracklepb "github.com/evrblk/evrblk-go/grackle/preview"
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
+	monsterax "github.com/evrblk/monstera/x"
 	"github.com/stretchr/testify/require"
 
 	"github.com/evrblk/grackle/pkg/barriers"
@@ -17,15 +18,21 @@ import (
 	"github.com/evrblk/grackle/pkg/namespaces"
 	"github.com/evrblk/grackle/pkg/semaphores"
 	"github.com/evrblk/grackle/pkg/sharding"
+	"github.com/evrblk/grackle/pkg/tables"
 	"github.com/evrblk/grackle/pkg/waitgroups"
 )
+
+func init() {
+	registry := monsterax.NewBaseTableRegistry(1)
+	tables.RegisterGracklePrefixes(registry)
+}
 
 func TestCreateNamespace(t *testing.T) {
 	t.Run("validation", func(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// valid request
+		// Valid request
 		resp, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name:        "namespace1",
 			Description: "Test namespace",
@@ -33,7 +40,7 @@ func TestCreateNamespace(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, resp.Namespace)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name:        "invalid@namespace",
 			Description: "Test namespace",
@@ -47,20 +54,20 @@ func TestGetNamespace(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		resp, err := server.GetNamespace(ctx, &gracklepb.GetNamespaceRequest{
 			NamespaceName: "namespace1",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp.Namespace)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.GetNamespace(ctx, &gracklepb.GetNamespaceRequest{
 			NamespaceName: "invalid@namespace",
 		})
@@ -73,13 +80,13 @@ func TestUpdateNamespace(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		resp, err := server.UpdateNamespace(ctx, &gracklepb.UpdateNamespaceRequest{
 			NamespaceName: "namespace1",
 			Description:   "Updated description",
@@ -87,7 +94,7 @@ func TestUpdateNamespace(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, resp.Namespace)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.UpdateNamespace(ctx, &gracklepb.UpdateNamespaceRequest{
 			NamespaceName: "invalid@namespace",
 			Description:   "Updated description",
@@ -101,19 +108,19 @@ func TestDeleteNamespace(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		_, err = server.DeleteNamespace(ctx, &gracklepb.DeleteNamespaceRequest{
 			NamespaceName: "namespace1",
 		})
 		require.NoError(t, err)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.DeleteNamespace(ctx, &gracklepb.DeleteNamespaceRequest{
 			NamespaceName: "invalid@namespace",
 		})
@@ -126,7 +133,7 @@ func TestListNamespaces(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// valid request
+		// Valid request
 		resp, err := server.ListNamespaces(ctx, &gracklepb.ListNamespacesRequest{})
 		require.NoError(t, err)
 		require.NotNil(t, resp.Namespaces)
@@ -255,13 +262,13 @@ func TestCreateWaitGroup(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		resp, err := server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
 			NamespaceName: "namespace1",
 			WaitGroupName: "waitgroup1",
@@ -270,7 +277,7 @@ func TestCreateWaitGroup(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, resp.WaitGroup)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
 			NamespaceName: "invalid@namespace",
 			WaitGroupName: "waitgroup1",
@@ -283,7 +290,7 @@ func TestCreateWaitGroup(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
@@ -315,12 +322,13 @@ func TestGetWaitGroup(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace and wait group first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
+		// Create wait group
 		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
 			NamespaceName: "namespace1",
 			WaitGroupName: "waitgroup1",
@@ -328,7 +336,7 @@ func TestGetWaitGroup(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		resp, err := server.GetWaitGroup(ctx, &gracklepb.GetWaitGroupRequest{
 			NamespaceName: "namespace1",
 			WaitGroupName: "waitgroup1",
@@ -336,7 +344,7 @@ func TestGetWaitGroup(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, resp.WaitGroup)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.GetWaitGroup(ctx, &gracklepb.GetWaitGroupRequest{
 			NamespaceName: "invalid@namespace",
 			WaitGroupName: "waitgroup1",
@@ -350,12 +358,13 @@ func TestAddJobsToWaitGroup(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace and wait group first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
+		// Create wait group
 		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
 			NamespaceName: "namespace1",
 			WaitGroupName: "waitgroup1",
@@ -363,7 +372,7 @@ func TestAddJobsToWaitGroup(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		resp, err := server.AddJobsToWaitGroup(ctx, &gracklepb.AddJobsToWaitGroupRequest{
 			NamespaceName: "namespace1",
 			WaitGroupName: "waitgroup1",
@@ -372,7 +381,7 @@ func TestAddJobsToWaitGroup(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, resp.WaitGroup)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.AddJobsToWaitGroup(ctx, &gracklepb.AddJobsToWaitGroupRequest{
 			NamespaceName: "invalid@namespace",
 			WaitGroupName: "waitgroup1",
@@ -387,12 +396,13 @@ func TestCompleteJobsFromWaitGroup(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace and wait group first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
+		// Create wait group
 		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
 			NamespaceName: "namespace1",
 			WaitGroupName: "waitgroup1",
@@ -400,7 +410,7 @@ func TestCompleteJobsFromWaitGroup(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		resp, err := server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
 			NamespaceName: "namespace1",
 			WaitGroupName: "waitgroup1",
@@ -409,7 +419,7 @@ func TestCompleteJobsFromWaitGroup(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, resp)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
 			NamespaceName: "invalid@namespace",
 			WaitGroupName: "waitgroup1",
@@ -424,12 +434,13 @@ func TestDeleteWaitGroup(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace and wait group first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
+		// Create wait group
 		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
 			NamespaceName: "namespace1",
 			WaitGroupName: "waitgroup1",
@@ -437,14 +448,14 @@ func TestDeleteWaitGroup(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		_, err = server.DeleteWaitGroup(ctx, &gracklepb.DeleteWaitGroupRequest{
 			NamespaceName: "namespace1",
 			WaitGroupName: "waitgroup1",
 		})
 		require.NoError(t, err)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.DeleteWaitGroup(ctx, &gracklepb.DeleteWaitGroupRequest{
 			NamespaceName: "invalid@namespace",
 			WaitGroupName: "waitgroup1",
@@ -458,20 +469,20 @@ func TestListWaitGroups(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		resp, err := server.ListWaitGroups(ctx, &gracklepb.ListWaitGroupsRequest{
 			NamespaceName: "namespace1",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp.WaitGroups)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.ListWaitGroups(ctx, &gracklepb.ListWaitGroupsRequest{
 			NamespaceName: "invalid@namespace",
 		})
@@ -567,7 +578,7 @@ func TestListWaitGroupJobs(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// Create a wait group
+		// Create wait group
 		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
 			NamespaceName: "namespace1",
 			WaitGroupName: "waitgroup1",
@@ -575,7 +586,7 @@ func TestListWaitGroupJobs(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		resp, err := server.ListWaitGroupJobs(ctx, &gracklepb.ListWaitGroupJobsRequest{
 			NamespaceName: "namespace1",
 			WaitGroupName: "waitgroup1",
@@ -583,7 +594,7 @@ func TestListWaitGroupJobs(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, resp.Jobs)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.ListWaitGroupJobs(ctx, &gracklepb.ListWaitGroupJobsRequest{
 			NamespaceName: "invalid@namespace",
 			WaitGroupName: "waitgroup1",
@@ -677,7 +688,7 @@ func TestWaitForWaitGroup(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		_, err = server.WaitForWaitGroup(ctx, &gracklepb.WaitForWaitGroupRequest{
 			NamespaceName:  "namespace1",
 			WaitGroupName:  "waitgroup1",
@@ -685,7 +696,7 @@ func TestWaitForWaitGroup(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.WaitForWaitGroup(ctx, &gracklepb.WaitForWaitGroupRequest{
 			NamespaceName:  "invalid@namespace",
 			WaitGroupName:  "waitgroup1",
@@ -693,7 +704,7 @@ func TestWaitForWaitGroup(t *testing.T) {
 		})
 		require.Error(t, err)
 
-		// invalid request - timeout too high
+		// Invalid request - timeout too high
 		_, err = server.WaitForWaitGroup(ctx, &gracklepb.WaitForWaitGroupRequest{
 			NamespaceName:  "namespace1",
 			WaitGroupName:  "waitgroup1",
@@ -798,21 +809,29 @@ func TestAcquireLock(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// create namespace first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
-		// valid request
-		_, err = server.AcquireLock(ctx, &gracklepb.AcquireLockRequest{
+		// Create lease
+		resp1, err := server.CreateLockLease(ctx, &gracklepb.CreateLockLeaseRequest{
 			NamespaceName: "namespace1",
-			LockName:      "lock1",
-			LeaseId:       "lease1",
+			TtlSeconds:    30,
+			ProcessId:     "process_1",
 		})
 		require.NoError(t, err)
 
-		// invalid request - missing lease id
+		// Valid request
+		_, err = server.AcquireLock(ctx, &gracklepb.AcquireLockRequest{
+			NamespaceName: "namespace1",
+			LockName:      "lock1",
+			LeaseId:       resp1.Lease.LeaseId,
+		})
+		require.NoError(t, err)
+
+		// Invalid request - missing lease id
 		_, err = server.AcquireLock(ctx, &gracklepb.AcquireLockRequest{
 			NamespaceName: "namespace1",
 			LockName:      "lock2",
@@ -826,21 +845,29 @@ func TestReleaseLock(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
-		// valid request
-		_, err = server.ReleaseLock(ctx, &gracklepb.ReleaseLockRequest{
+		// Create lease
+		resp1, err := server.CreateLockLease(ctx, &gracklepb.CreateLockLeaseRequest{
 			NamespaceName: "namespace1",
-			LockName:      "lock1",
-			LeaseId:       "lease1",
+			TtlSeconds:    30,
+			ProcessId:     "process_1",
 		})
 		require.NoError(t, err)
 
-		// invalid request - missing lease id
+		// Valid request
+		_, err = server.ReleaseLock(ctx, &gracklepb.ReleaseLockRequest{
+			NamespaceName: "namespace1",
+			LockName:      "lock1",
+			LeaseId:       resp1.Lease.LeaseId,
+		})
+		require.NoError(t, err)
+
+		// Invalid request - missing lease id
 		_, err = server.ReleaseLock(ctx, &gracklepb.ReleaseLockRequest{
 			NamespaceName: "namespace1",
 			LockName:      "lock1",
@@ -854,13 +881,13 @@ func TestGetLock(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		resp, err := server.GetLock(ctx, &gracklepb.GetLockRequest{
 			NamespaceName: "namespace1",
 			LockName:      "lock1",
@@ -868,7 +895,7 @@ func TestGetLock(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, resp.Lock)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.GetLock(ctx, &gracklepb.GetLockRequest{
 			NamespaceName: "invalid@namespace",
 			LockName:      "lock1",
@@ -882,20 +909,20 @@ func TestDeleteLock(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		_, err = server.DeleteLock(ctx, &gracklepb.DeleteLockRequest{
 			NamespaceName: "namespace1",
 			LockName:      "lock1",
 		})
 		require.NoError(t, err)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.DeleteLock(ctx, &gracklepb.DeleteLockRequest{
 			NamespaceName: "invalid@namespace",
 			LockName:      "lock1",
@@ -909,20 +936,20 @@ func TestListLocks(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		resp, err := server.ListLocks(ctx, &gracklepb.ListLocksRequest{
 			NamespaceName: "namespace1",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp.Locks)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.ListLocks(ctx, &gracklepb.ListLocksRequest{
 			NamespaceName: "invalid@namespace",
 		})
@@ -939,12 +966,20 @@ func TestListLocks(t *testing.T) {
 		})
 		require.NoError(t, err)
 
+		// Create lease
+		resp1, err := server.CreateLockLease(ctx, &gracklepb.CreateLockLeaseRequest{
+			NamespaceName: "test-namespace",
+			TtlSeconds:    30,
+			ProcessId:     "process_1",
+		})
+		require.NoError(t, err)
+
 		// Create 25 locks to test pagination (3 pages with limit 10)
 		for i := 0; i < 25; i++ {
 			_, err := server.AcquireLock(ctx, &gracklepb.AcquireLockRequest{
 				NamespaceName: "test-namespace",
 				LockName:      fmt.Sprintf("lock_%03d", i+1),
-				LeaseId:       fmt.Sprintf("lease_%03d", i+1),
+				LeaseId:       resp1.Lease.LeaseId,
 			})
 			require.NoError(t, err)
 		}
@@ -953,56 +988,56 @@ func TestListLocks(t *testing.T) {
 		var allLocks []*gracklepb.Lock
 
 		// Page 1: Get first 10 locks
-		resp1, err := server.ListLocks(ctx, &gracklepb.ListLocksRequest{
+		resp2, err := server.ListLocks(ctx, &gracklepb.ListLocksRequest{
 			NamespaceName: "test-namespace",
 			Limit:         10,
 		})
 		require.NoError(t, err)
-		require.Len(t, resp1.Locks, 10)
-		require.NotEmpty(t, resp1.NextPaginationToken)
-		require.Empty(t, resp1.PreviousPaginationToken)
-
-		allLocks = append(allLocks, resp1.Locks...)
-
-		// Page 2: Get next 10 locks
-		resp2, err := server.ListLocks(ctx, &gracklepb.ListLocksRequest{
-			NamespaceName:   "test-namespace",
-			PaginationToken: resp1.NextPaginationToken,
-			Limit:           10,
-		})
-		require.NoError(t, err)
 		require.Len(t, resp2.Locks, 10)
 		require.NotEmpty(t, resp2.NextPaginationToken)
-		require.NotEmpty(t, resp2.PreviousPaginationToken)
+		require.Empty(t, resp2.PreviousPaginationToken)
 
 		allLocks = append(allLocks, resp2.Locks...)
 
-		// Page 3: Get remaining 5 locks
+		// Page 2: Get next 10 locks
 		resp3, err := server.ListLocks(ctx, &gracklepb.ListLocksRequest{
 			NamespaceName:   "test-namespace",
 			PaginationToken: resp2.NextPaginationToken,
 			Limit:           10,
 		})
 		require.NoError(t, err)
-		require.Len(t, resp3.Locks, 5)
-		require.Empty(t, resp3.NextPaginationToken)
+		require.Len(t, resp3.Locks, 10)
+		require.NotEmpty(t, resp3.NextPaginationToken)
 		require.NotEmpty(t, resp3.PreviousPaginationToken)
 
 		allLocks = append(allLocks, resp3.Locks...)
+
+		// Page 3: Get remaining 5 locks
+		resp4, err := server.ListLocks(ctx, &gracklepb.ListLocksRequest{
+			NamespaceName:   "test-namespace",
+			PaginationToken: resp3.NextPaginationToken,
+			Limit:           10,
+		})
+		require.NoError(t, err)
+		require.Len(t, resp4.Locks, 5)
+		require.Empty(t, resp4.NextPaginationToken)
+		require.NotEmpty(t, resp4.PreviousPaginationToken)
+
+		allLocks = append(allLocks, resp4.Locks...)
 
 		// Verify we got all 25 locks
 		require.Len(t, allLocks, 25)
 
 		// Test backward pagination from the last page
-		resp4, err := server.ListLocks(ctx, &gracklepb.ListLocksRequest{
+		resp5, err := server.ListLocks(ctx, &gracklepb.ListLocksRequest{
 			NamespaceName:   "test-namespace",
-			PaginationToken: resp3.PreviousPaginationToken,
+			PaginationToken: resp4.PreviousPaginationToken,
 			Limit:           10,
 		})
 		require.NoError(t, err)
-		require.Len(t, resp4.Locks, 10)
-		require.NotEmpty(t, resp4.NextPaginationToken)
-		require.NotEmpty(t, resp4.PreviousPaginationToken)
+		require.Len(t, resp5.Locks, 10)
+		require.NotEmpty(t, resp5.NextPaginationToken)
+		require.NotEmpty(t, resp5.PreviousPaginationToken)
 	})
 }
 
@@ -1011,13 +1046,13 @@ func TestCreateSemaphore(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		resp, err := server.CreateSemaphore(ctx, &gracklepb.CreateSemaphoreRequest{
 			NamespaceName: "namespace1",
 			SemaphoreName: "semaphore1",
@@ -1026,7 +1061,7 @@ func TestCreateSemaphore(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, resp.Semaphore)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.CreateSemaphore(ctx, &gracklepb.CreateSemaphoreRequest{
 			NamespaceName: "invalid@namespace",
 			SemaphoreName: "semaphore1",
@@ -1039,7 +1074,7 @@ func TestCreateSemaphore(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
@@ -1071,12 +1106,13 @@ func TestGetSemaphore(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace and semaphore first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
+		// Create semaphore
 		_, err = server.CreateSemaphore(ctx, &gracklepb.CreateSemaphoreRequest{
 			NamespaceName: "namespace1",
 			SemaphoreName: "semaphore1",
@@ -1084,7 +1120,7 @@ func TestGetSemaphore(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		resp, err := server.GetSemaphore(ctx, &gracklepb.GetSemaphoreRequest{
 			NamespaceName: "namespace1",
 			SemaphoreName: "semaphore1",
@@ -1092,7 +1128,7 @@ func TestGetSemaphore(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, resp.Semaphore)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.GetSemaphore(ctx, &gracklepb.GetSemaphoreRequest{
 			NamespaceName: "invalid@namespace",
 			SemaphoreName: "semaphore1",
@@ -1106,12 +1142,13 @@ func TestAcquireSemaphore(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace and semaphore first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
+		// Create semaphore
 		_, err = server.CreateSemaphore(ctx, &gracklepb.CreateSemaphoreRequest{
 			NamespaceName: "namespace1",
 			SemaphoreName: "semaphore1",
@@ -1119,21 +1156,31 @@ func TestAcquireSemaphore(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// valid request
-		resp, err := server.AcquireSemaphore(ctx, &gracklepb.AcquireSemaphoreRequest{
+		// Create lease
+		resp1, err := server.CreateSemaphoreLease(ctx, &gracklepb.CreateSemaphoreLeaseRequest{
 			NamespaceName: "namespace1",
-			SemaphoreName: "semaphore1",
-			LeaseId:       "lease1",
-			Weight:        1,
+			TtlSeconds:    30,
+			ProcessId:     "process_1",
 		})
 		require.NoError(t, err)
-		require.NotNil(t, resp)
 
-		// invalid request - missing process id
+		// Valid request
+		resp2, err := server.AcquireSemaphore(ctx, &gracklepb.AcquireSemaphoreRequest{
+			NamespaceName:  "namespace1",
+			SemaphoreName:  "semaphore1",
+			LeaseId:        resp1.Lease.LeaseId,
+			Weight:         1,
+			TimeoutSeconds: 60,
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp2)
+
+		// Invalid request - missing lease id
 		_, err = server.AcquireSemaphore(ctx, &gracklepb.AcquireSemaphoreRequest{
-			NamespaceName: "namespace1",
-			SemaphoreName: "semaphore1",
-			Weight:        1,
+			NamespaceName:  "namespace1",
+			SemaphoreName:  "semaphore1",
+			Weight:         1,
+			TimeoutSeconds: 60,
 		})
 		require.Error(t, err)
 	})
@@ -1144,12 +1191,13 @@ func TestReleaseSemaphore(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace and semaphore first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
+		// Create semaphore
 		_, err = server.CreateSemaphore(ctx, &gracklepb.CreateSemaphoreRequest{
 			NamespaceName: "namespace1",
 			SemaphoreName: "semaphore1",
@@ -1157,16 +1205,24 @@ func TestReleaseSemaphore(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// valid request
-		resp, err := server.ReleaseSemaphore(ctx, &gracklepb.ReleaseSemaphoreRequest{
+		// Create lease
+		resp1, err := server.CreateSemaphoreLease(ctx, &gracklepb.CreateSemaphoreLeaseRequest{
 			NamespaceName: "namespace1",
-			SemaphoreName: "semaphore1",
-			LeaseId:       "lease1",
+			TtlSeconds:    30,
+			ProcessId:     "process_1",
 		})
 		require.NoError(t, err)
-		require.NotNil(t, resp)
 
-		// invalid request - missing process id
+		// Valid request
+		resp2, err := server.ReleaseSemaphore(ctx, &gracklepb.ReleaseSemaphoreRequest{
+			NamespaceName: "namespace1",
+			SemaphoreName: "semaphore1",
+			LeaseId:       resp1.Lease.LeaseId,
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp2)
+
+		// Invalid request - missing lease id
 		_, err = server.ReleaseSemaphore(ctx, &gracklepb.ReleaseSemaphoreRequest{
 			NamespaceName: "namespace1",
 			SemaphoreName: "semaphore1",
@@ -1180,12 +1236,13 @@ func TestUpdateSemaphore(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace and semaphore first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
+		// Create semaphore
 		_, err = server.CreateSemaphore(ctx, &gracklepb.CreateSemaphoreRequest{
 			NamespaceName: "namespace1",
 			SemaphoreName: "semaphore1",
@@ -1193,7 +1250,7 @@ func TestUpdateSemaphore(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		resp, err := server.UpdateSemaphore(ctx, &gracklepb.UpdateSemaphoreRequest{
 			NamespaceName: "namespace1",
 			SemaphoreName: "semaphore1",
@@ -1202,7 +1259,7 @@ func TestUpdateSemaphore(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, resp.Semaphore)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.UpdateSemaphore(ctx, &gracklepb.UpdateSemaphoreRequest{
 			NamespaceName: "invalid@namespace",
 			SemaphoreName: "semaphore1",
@@ -1215,13 +1272,13 @@ func TestUpdateSemaphore(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
-		// Create a semaphore with valid size
+		// Create semaphore
 		_, err = server.CreateSemaphore(ctx, &gracklepb.CreateSemaphoreRequest{
 			NamespaceName: "namespace1",
 			SemaphoreName: "semaphore1",
@@ -1255,12 +1312,13 @@ func TestDeleteSemaphore(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace and semaphore first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
+		// Create semaphore
 		_, err = server.CreateSemaphore(ctx, &gracklepb.CreateSemaphoreRequest{
 			NamespaceName: "namespace1",
 			SemaphoreName: "semaphore1",
@@ -1268,14 +1326,14 @@ func TestDeleteSemaphore(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		_, err = server.DeleteSemaphore(ctx, &gracklepb.DeleteSemaphoreRequest{
 			NamespaceName: "namespace1",
 			SemaphoreName: "semaphore1",
 		})
 		require.NoError(t, err)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.DeleteSemaphore(ctx, &gracklepb.DeleteSemaphoreRequest{
 			NamespaceName: "invalid@namespace",
 			SemaphoreName: "semaphore1",
@@ -1289,20 +1347,20 @@ func TestListSemaphores(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		resp, err := server.ListSemaphores(ctx, &gracklepb.ListSemaphoresRequest{
 			NamespaceName: "namespace1",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp.Semaphores)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.ListSemaphores(ctx, &gracklepb.ListSemaphoresRequest{
 			NamespaceName: "invalid@namespace",
 		})
@@ -1392,13 +1450,13 @@ func TestListSemaphoreHolders(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
-		// Create a semaphore
+		// Create semaphore
 		_, err = server.CreateSemaphore(ctx, &gracklepb.CreateSemaphoreRequest{
 			NamespaceName: "namespace1",
 			SemaphoreName: "semaphore1",
@@ -1406,7 +1464,7 @@ func TestListSemaphoreHolders(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		resp, err := server.ListSemaphoreHolders(ctx, &gracklepb.ListSemaphoreHoldersRequest{
 			NamespaceName: "namespace1",
 			SemaphoreName: "semaphore1",
@@ -1414,7 +1472,7 @@ func TestListSemaphoreHolders(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, resp.Holders)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.ListSemaphoreHolders(ctx, &gracklepb.ListSemaphoreHoldersRequest{
 			NamespaceName: "invalid@namespace",
 			SemaphoreName: "semaphore1",
@@ -1442,46 +1500,43 @@ func TestListSemaphoreHolders(t *testing.T) {
 
 		// Acquire 25 permits from different processes
 		for i := 0; i < 25; i++ {
-			_, err := server.AcquireSemaphore(ctx, &gracklepb.AcquireSemaphoreRequest{
+			// Create lease
+			resp1, err := server.CreateSemaphoreLease(ctx, &gracklepb.CreateSemaphoreLeaseRequest{
 				NamespaceName: "test-namespace",
-				SemaphoreName: "test-semaphore",
-				LeaseId:       fmt.Sprintf("lease_%03d", i+1),
-				Weight:        1,
+				TtlSeconds:    30,
+				ProcessId:     fmt.Sprintf("process_%03d", i+1),
 			})
 			require.NoError(t, err)
+
+			// Acquire semaphore
+			resp2, err := server.AcquireSemaphore(ctx, &gracklepb.AcquireSemaphoreRequest{
+				NamespaceName:  "test-namespace",
+				SemaphoreName:  "test-semaphore",
+				LeaseId:        resp1.Lease.LeaseId,
+				Weight:         1,
+				TimeoutSeconds: 60,
+			})
+			require.NoError(t, err)
+			require.True(t, resp2.Success)
 		}
 
 		// Test forward pagination through 3 pages
 		var allHolders []*gracklepb.SemaphoreHolder
 
 		// Page 1: Get first 10 holders
-		resp1, err := server.ListSemaphoreHolders(ctx, &gracklepb.ListSemaphoreHoldersRequest{
+		resp2, err := server.ListSemaphoreHolders(ctx, &gracklepb.ListSemaphoreHoldersRequest{
 			NamespaceName: "test-namespace",
 			SemaphoreName: "test-semaphore",
 			Limit:         10,
 		})
 		require.NoError(t, err)
-		require.Len(t, resp1.Holders, 10)
-		require.NotEmpty(t, resp1.NextPaginationToken)
-		require.Empty(t, resp1.PreviousPaginationToken)
-
-		allHolders = append(allHolders, resp1.Holders...)
-
-		// Page 2: Get next 10 holders
-		resp2, err := server.ListSemaphoreHolders(ctx, &gracklepb.ListSemaphoreHoldersRequest{
-			NamespaceName:   "test-namespace",
-			SemaphoreName:   "test-semaphore",
-			PaginationToken: resp1.NextPaginationToken,
-			Limit:           10,
-		})
-		require.NoError(t, err)
 		require.Len(t, resp2.Holders, 10)
 		require.NotEmpty(t, resp2.NextPaginationToken)
-		require.NotEmpty(t, resp2.PreviousPaginationToken)
+		require.Empty(t, resp2.PreviousPaginationToken)
 
 		allHolders = append(allHolders, resp2.Holders...)
 
-		// Page 3: Get remaining 5 holders
+		// Page 2: Get next 10 holders
 		resp3, err := server.ListSemaphoreHolders(ctx, &gracklepb.ListSemaphoreHoldersRequest{
 			NamespaceName:   "test-namespace",
 			SemaphoreName:   "test-semaphore",
@@ -1489,26 +1544,40 @@ func TestListSemaphoreHolders(t *testing.T) {
 			Limit:           10,
 		})
 		require.NoError(t, err)
-		require.Len(t, resp3.Holders, 5)
-		require.Empty(t, resp3.NextPaginationToken)
+		require.Len(t, resp3.Holders, 10)
+		require.NotEmpty(t, resp3.NextPaginationToken)
 		require.NotEmpty(t, resp3.PreviousPaginationToken)
 
 		allHolders = append(allHolders, resp3.Holders...)
+
+		// Page 3: Get remaining 5 holders
+		resp4, err := server.ListSemaphoreHolders(ctx, &gracklepb.ListSemaphoreHoldersRequest{
+			NamespaceName:   "test-namespace",
+			SemaphoreName:   "test-semaphore",
+			PaginationToken: resp3.NextPaginationToken,
+			Limit:           10,
+		})
+		require.NoError(t, err)
+		require.Len(t, resp4.Holders, 5)
+		require.Empty(t, resp4.NextPaginationToken)
+		require.NotEmpty(t, resp4.PreviousPaginationToken)
+
+		allHolders = append(allHolders, resp4.Holders...)
 
 		// Verify we got all 25 holders
 		require.Len(t, allHolders, 25)
 
 		// Test backward pagination from the last page
-		resp4, err := server.ListSemaphoreHolders(ctx, &gracklepb.ListSemaphoreHoldersRequest{
+		resp5, err := server.ListSemaphoreHolders(ctx, &gracklepb.ListSemaphoreHoldersRequest{
 			NamespaceName:   "test-namespace",
 			SemaphoreName:   "test-semaphore",
-			PaginationToken: resp3.PreviousPaginationToken,
+			PaginationToken: resp4.PreviousPaginationToken,
 			Limit:           10,
 		})
 		require.NoError(t, err)
-		require.Len(t, resp4.Holders, 10)
-		require.NotEmpty(t, resp4.NextPaginationToken)
-		require.NotEmpty(t, resp4.PreviousPaginationToken)
+		require.Len(t, resp5.Holders, 10)
+		require.NotEmpty(t, resp5.NextPaginationToken)
+		require.NotEmpty(t, resp5.PreviousPaginationToken)
 	})
 }
 
@@ -1517,20 +1586,20 @@ func TestListBarriers(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		resp, err := server.ListBarriers(ctx, &gracklepb.ListBarriersRequest{
 			NamespaceName: "namespace1",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp.Barriers)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.ListBarriers(ctx, &gracklepb.ListBarriersRequest{
 			NamespaceName: "invalid@namespace",
 		})
@@ -1620,20 +1689,20 @@ func TestDeleteBarrier(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		_, err = server.DeleteBarrier(ctx, &gracklepb.DeleteBarrierRequest{
 			NamespaceName: "namespace1",
 			BarrierName:   "barrier1",
 		})
 		require.NoError(t, err)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.DeleteBarrier(ctx, &gracklepb.DeleteBarrierRequest{
 			NamespaceName: "invalid@namespace",
 			BarrierName:   "barrier1",
@@ -1647,13 +1716,13 @@ func TestGetBarrier(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
-		// Create a barrier
+		// Create barrier
 		_, err = server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
 			NamespaceName:     "namespace1",
 			BarrierName:       "barrier1",
@@ -1662,7 +1731,7 @@ func TestGetBarrier(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		resp, err := server.GetBarrier(ctx, &gracklepb.GetBarrierRequest{
 			NamespaceName: "namespace1",
 			BarrierName:   "barrier1",
@@ -1671,7 +1740,7 @@ func TestGetBarrier(t *testing.T) {
 		require.NotNil(t, resp.Barrier)
 		require.Equal(t, "barrier1", resp.Barrier.Name)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.GetBarrier(ctx, &gracklepb.GetBarrierRequest{
 			NamespaceName: "invalid@namespace",
 			BarrierName:   "barrier1",
@@ -1685,13 +1754,13 @@ func TestCreateBarrier(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		resp, err := server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
 			NamespaceName:     "namespace1",
 			BarrierName:       "barrier1",
@@ -1702,7 +1771,7 @@ func TestCreateBarrier(t *testing.T) {
 		require.NotNil(t, resp.Barrier)
 		require.Equal(t, "barrier1", resp.Barrier.Name)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
 			NamespaceName:     "invalid@namespace",
 			BarrierName:       "barrier2",
@@ -1711,7 +1780,7 @@ func TestCreateBarrier(t *testing.T) {
 		})
 		require.Error(t, err)
 
-		// invalid request - expected processes zero
+		// Invalid request - expected processes zero
 		_, err = server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
 			NamespaceName:     "namespace1",
 			BarrierName:       "barrier3",
@@ -1727,13 +1796,13 @@ func TestUpdateBarrier(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
-		// Create a barrier
+		// Create barrier
 		createResp, err := server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
 			NamespaceName:     "namespace1",
 			BarrierName:       "barrier1",
@@ -1745,7 +1814,7 @@ func TestUpdateBarrier(t *testing.T) {
 		require.Equal(t, "Original description", createResp.Barrier.Description)
 		require.EqualValues(t, 3, createResp.Barrier.ExpectedProcesses)
 
-		// valid request - update barrier
+		// Valid request - update barrier
 		updateResp, err := server.UpdateBarrier(ctx, &gracklepb.UpdateBarrierRequest{
 			NamespaceName:     "namespace1",
 			BarrierName:       "barrier1",
@@ -1757,7 +1826,7 @@ func TestUpdateBarrier(t *testing.T) {
 		require.Equal(t, "Updated description", updateResp.Barrier.Description)
 		require.EqualValues(t, 5, updateResp.Barrier.ExpectedProcesses)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.UpdateBarrier(ctx, &gracklepb.UpdateBarrierRequest{
 			NamespaceName:     "invalid@namespace",
 			BarrierName:       "barrier1",
@@ -1766,7 +1835,7 @@ func TestUpdateBarrier(t *testing.T) {
 		})
 		require.Error(t, err)
 
-		// invalid request - expected processes zero
+		// Invalid request - expected processes zero
 		_, err = server.UpdateBarrier(ctx, &gracklepb.UpdateBarrierRequest{
 			NamespaceName:     "namespace1",
 			BarrierName:       "barrier1",
@@ -1786,7 +1855,7 @@ func TestUpdateBarrier(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// Create a barrier
+		// Create barrier
 		createResp, err := server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
 			NamespaceName:     "test-namespace",
 			BarrierName:       "test-barrier",
@@ -1834,7 +1903,7 @@ func TestUpdateBarrier(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// Create a barrier with expected_processes = 5
+		// Create barrier with expected_processes = 5
 		_, err = server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
 			NamespaceName:     "test-namespace",
 			BarrierName:       "test-barrier",
@@ -1928,7 +1997,7 @@ func TestArriveAtBarrier(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		_, err = server.ArriveAtBarrier(ctx, &gracklepb.ArriveAtBarrierRequest{
 			NamespaceName:      "namespace1",
 			BarrierName:        "barrier1",
@@ -1937,7 +2006,7 @@ func TestArriveAtBarrier(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.ArriveAtBarrier(ctx, &gracklepb.ArriveAtBarrierRequest{
 			NamespaceName:      "invalid@namespace",
 			BarrierName:        "barrier1",
@@ -1946,7 +2015,7 @@ func TestArriveAtBarrier(t *testing.T) {
 		})
 		require.Error(t, err)
 
-		// invalid request - expected generation zero
+		// Invalid request - expected generation zero
 		_, err = server.ArriveAtBarrier(ctx, &gracklepb.ArriveAtBarrierRequest{
 			NamespaceName:      "namespace1",
 			BarrierName:        "barrier1",
@@ -1968,7 +2037,7 @@ func TestListBarrierParticipants(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// Create a barrier
+		// Create barrier
 		_, err = server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
 			NamespaceName:     "namespace1",
 			BarrierName:       "barrier1",
@@ -1977,7 +2046,7 @@ func TestListBarrierParticipants(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		resp, err := server.ListBarrierParticipants(ctx, &gracklepb.ListBarrierParticipantsRequest{
 			NamespaceName: "namespace1",
 			BarrierName:   "barrier1",
@@ -1986,7 +2055,7 @@ func TestListBarrierParticipants(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, resp.Participants)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.ListBarrierParticipants(ctx, &gracklepb.ListBarrierParticipantsRequest{
 			NamespaceName: "invalid@namespace",
 			BarrierName:   "barrier1",
@@ -2005,7 +2074,7 @@ func TestListBarrierParticipants(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// Create a barrier expecting 25 processes
+		// Create barrier expecting 25 processes
 		_, err = server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
 			NamespaceName:     "test-namespace",
 			BarrierName:       "test-barrier",
@@ -2095,13 +2164,13 @@ func TestWaitAtBarrier(t *testing.T) {
 		server := setupGrackleApiServer(t)
 		ctx := context.Background()
 
-		// Create namespace first
+		// Create namespace
 		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 			Name: "namespace1",
 		})
 		require.NoError(t, err)
 
-		// Create a barrier
+		// Create barrier
 		_, err = server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
 			NamespaceName:     "namespace1",
 			BarrierName:       "barrier1",
@@ -2110,7 +2179,7 @@ func TestWaitAtBarrier(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// valid request
+		// Valid request
 		_, err = server.WaitAtBarrier(ctx, &gracklepb.WaitAtBarrierRequest{
 			NamespaceName:      "namespace1",
 			BarrierName:        "barrier1",
@@ -2119,7 +2188,7 @@ func TestWaitAtBarrier(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// invalid request - invalid namespace name
+		// Invalid request - invalid namespace name
 		_, err = server.WaitAtBarrier(ctx, &gracklepb.WaitAtBarrierRequest{
 			NamespaceName:      "invalid@namespace",
 			BarrierName:        "barrier1",
@@ -2128,7 +2197,7 @@ func TestWaitAtBarrier(t *testing.T) {
 		})
 		require.Error(t, err)
 
-		// invalid request - expected generation zero
+		// Invalid request - expected generation zero
 		_, err = server.WaitAtBarrier(ctx, &gracklepb.WaitAtBarrierRequest{
 			NamespaceName:      "namespace1",
 			BarrierName:        "barrier1",
@@ -2137,7 +2206,7 @@ func TestWaitAtBarrier(t *testing.T) {
 		})
 		require.Error(t, err)
 
-		// invalid request - timeout too high
+		// Invalid request - timeout too high
 		_, err = server.WaitAtBarrier(ctx, &gracklepb.WaitAtBarrierRequest{
 			NamespaceName:      "namespace1",
 			BarrierName:        "barrier1",

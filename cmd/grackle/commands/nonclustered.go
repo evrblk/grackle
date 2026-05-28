@@ -48,6 +48,7 @@ var nonclusteredCmd = &cobra.Command{
 		}
 
 		// Metrics
+		grackle_preview.RegisterMetrics()
 		metricsSrv := metrics.NewMetricsServer(nonclusteredCmdCfg.prometheusPort)
 		metricsSrv.Start()
 

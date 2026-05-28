@@ -214,6 +214,7 @@ func (c *Core) AcquireLock(request *corepb.AcquireLockRequest) (*corepb.AcquireL
 
 	// Check if lease has expired
 	if lease.ExpiresAt <= request.Now {
+		// On return, the transaction will be discarded, and the expired lease will be deleted later by the garbage collector.
 		return nil, monsterax.NewErrorWithContext(
 			monsterax.NotFound,
 			"lease not found",
@@ -332,6 +333,7 @@ func (c *Core) AcquireLock(request *corepb.AcquireLockRequest) (*corepb.AcquireL
 		panic("invalid lock state")
 	}
 
+	// Update lock
 	err = c.locks.Update(txn, updatedLock)
 	panicIfNotNil(err)
 

@@ -2,11 +2,11 @@ package preview
 
 import (
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"regexp"
 
 	gracklepb "github.com/evrblk/evrblk-go/grackle/preview"
+	"github.com/evrblk/grackle/pkg/ids"
 )
 
 const (
@@ -20,12 +20,12 @@ const (
 	maxCompleteJobBatchSize  = 50
 	maxPaginationTokenLength = 1024
 	maxPaginationLimit       = 100
-	maxTimeoutSeconds        = 300
+	maxTimeoutSeconds        = 300 // 5 minutes
 	maxLeaseIdLength         = 64
+	maxLeaseTtlSeconds       = 300 // 5 minutes
 
 	nameRegex     = "^[-_0-9a-zA-Z]*$"
 	lockNameRegex = "^[-_0-9a-zA-Z//]*$"
-	leaseIdRegex  = "^ls_[0-9a-zA-Z]+$"
 )
 
 func ValidateCreateNamespaceRequest(request *gracklepb.CreateNamespaceRequest) error {
@@ -117,12 +117,8 @@ func ValidateWaitForWaitGroupRequest(request *gracklepb.WaitForWaitGroupRequest)
 		return err
 	}
 
-	if request.TimeoutSeconds <= 0 {
-		return errors.New("WaitForWaitGroupRequest.TimeoutSeconds must be greater than 0")
-	}
-
-	if request.TimeoutSeconds > maxTimeoutSeconds {
-		return fmt.Errorf("WaitForWaitGroupRequest.TimeoutSeconds must be less than or equal to %d", maxTimeoutSeconds)
+	if err := validateTimeOutSeconds(request.TimeoutSeconds, "WaitForWaitGroupRequest.TimeoutSeconds"); err != nil {
+		return err
 	}
 
 	return nil
@@ -402,6 +398,14 @@ func ValidateAcquireSemaphoreRequest(request *gracklepb.AcquireSemaphoreRequest)
 		return err
 	}
 
+	if err := validateTimeOutSeconds(request.TimeoutSeconds, "AcquireSemaphoreRequest.TimeoutSeconds"); err != nil {
+		return err
+	}
+
+	if request.Weight <= 0 {
+		return invalid("AcquireSemaphoreRequest.Weight", "must be greater than 0")
+	}
+
 	return nil
 }
 
@@ -522,12 +526,8 @@ func ValidateWaitAtBarrierRequest(request *gracklepb.WaitAtBarrierRequest) error
 		return invalid("WaitAtBarrierRequest.ExpectedGeneration", "must be greater than 0")
 	}
 
-	if request.TimeoutSeconds <= 0 {
-		return errors.New("WaitAtBarrierRequest.TimeoutSeconds must be greater than 0")
-	}
-
-	if request.TimeoutSeconds > maxTimeoutSeconds {
-		return fmt.Errorf("WaitAtBarrierRequest.TimeoutSeconds must be less than or equal to %d", maxTimeoutSeconds)
+	if err := validateTimeOutSeconds(request.TimeoutSeconds, "WaitAtBarrierRequest.TimeoutSeconds"); err != nil {
+		return err
 	}
 
 	return nil
@@ -554,43 +554,147 @@ func ValidateListBarrierParticipantsRequest(request *gracklepb.ListBarrierPartic
 }
 
 func ValidateCreateSemaphoreLeaseRequest(request *gracklepb.CreateSemaphoreLeaseRequest) error {
+	if err := validateNamespaceName(request.NamespaceName, "CreateSemaphoreLeaseRequest.NamespaceName"); err != nil {
+		return err
+	}
 
+	if err := validateProcessId(request.ProcessId, "CreateSemaphoreLeaseRequest.ProcessId"); err != nil {
+		return err
+	}
+
+	if err := validateLeaseTtlSeconds(request.TtlSeconds, "CreateSemaphoreLeaseRequest.TtlSeconds"); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func ValidateRevokeSemaphoreLeaseRequest(request *gracklepb.RevokeSemaphoreLeaseRequest) error {
+	if err := validateNamespaceName(request.NamespaceName, "RevokeSemaphoreLeaseRequest.NamespaceName"); err != nil {
+		return err
+	}
 
+	if err := validateLeaseId(request.LeaseId, "RevokeSemaphoreLeaseRequest.LeaseId"); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func ValidateRefreshSemaphoreLeaseRequest(request *gracklepb.RefreshSemaphoreLeaseRequest) error {
+	if err := validateNamespaceName(request.NamespaceName, "RefreshSemaphoreLeaseRequest.NamespaceName"); err != nil {
+		return err
+	}
 
+	if err := validateLeaseId(request.LeaseId, "RefreshSemaphoreLeaseRequest.LeaseId"); err != nil {
+		return err
+	}
+
+	if err := validateLeaseTtlSeconds(request.TtlSeconds, "RefreshSemaphoreLeaseRequest.TtlSeconds"); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func ValidateListSemaphoreLeasesRequest(request *gracklepb.ListSemaphoreLeasesRequest) error {
+	if err := validateNamespaceName(request.NamespaceName, "ListSemaphoreLeasesRequest.NamespaceName"); err != nil {
+		return err
+	}
 
+	if err := validatePaginationToken(request.PaginationToken, "ListSemaphoreLeasesRequest.PaginationToken"); err != nil {
+		return err
+	}
+
+	if err := validateLimit(request.Limit, "ListSemaphoreLeasesRequest.Limit"); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func ValidateGetSemaphoreLeaseRequest(request *gracklepb.GetSemaphoreLeaseRequest) error {
+	if err := validateNamespaceName(request.NamespaceName, "GetSemaphoreLeaseRequest.NamespaceName"); err != nil {
+		return err
+	}
 
+	if err := validateLeaseId(request.LeaseId, "GetSemaphoreLeaseRequest.LeaseId"); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func ValidateCreateLockLeaseRequest(request *gracklepb.CreateLockLeaseRequest) error {
+	if err := validateNamespaceName(request.NamespaceName, "CreateLockLeaseRequest.NamespaceName"); err != nil {
+		return err
+	}
 
+	if err := validateProcessId(request.ProcessId, "CreateLockLeaseRequest.ProcessId"); err != nil {
+		return err
+	}
+
+	if err := validateLeaseTtlSeconds(request.TtlSeconds, "CreateLockLeaseRequest.TtlSeconds"); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func ValidateRevokeLockLeaseRequest(request *gracklepb.RevokeLockLeaseRequest) error {
+	if err := validateNamespaceName(request.NamespaceName, "RevokeLockLeaseRequest.NamespaceName"); err != nil {
+		return err
+	}
 
+	if err := validateLeaseId(request.LeaseId, "RevokeLockLeaseRequest.LeaseId"); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func ValidateRefreshLockLeaseRequest(request *gracklepb.RefreshLockLeaseRequest) error {
+	if err := validateNamespaceName(request.NamespaceName, "RefreshLockLeaseRequest.NamespaceName"); err != nil {
+		return err
+	}
 
+	if err := validateLeaseId(request.LeaseId, "RefreshLockLeaseRequest.LeaseId"); err != nil {
+		return err
+	}
+
+	if err := validateLeaseTtlSeconds(request.TtlSeconds, "RefreshLockLeaseRequest.TtlSeconds"); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func ValidateListLockLeasesRequest(request *gracklepb.ListLockLeasesRequest) error {
+	if err := validateNamespaceName(request.NamespaceName, "ListLockLeasesRequest.NamespaceName"); err != nil {
+		return err
+	}
 
+	if err := validatePaginationToken(request.PaginationToken, "ListLockLeasesRequest.PaginationToken"); err != nil {
+		return err
+	}
+
+	if err := validateLimit(request.Limit, "ListLockLeasesRequest.Limit"); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func ValidateGetLockLeaseRequest(request *gracklepb.GetLockLeaseRequest) error {
+	if err := validateNamespaceName(request.NamespaceName, "GetLockLeaseRequest.NamespaceName"); err != nil {
+		return err
+	}
 
+	if err := validateLeaseId(request.LeaseId, "GetLockLeaseRequest.LeaseId"); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func validateProcessId(value string, fieldName string) error {
@@ -618,7 +722,16 @@ func validateWaitGroupName(value string, fieldName string) error {
 }
 
 func validateLeaseId(value string, fieldName string) error {
-	return validateString(value, 1, maxLeaseIdLength, leaseIdRegex, fieldName)
+	if len(value) > maxLeaseIdLength || len(value) <= 0 {
+		return invalid(fieldName, fmt.Sprintf("length must be between %d and %d characters", 1, maxLeaseIdLength))
+	}
+
+	_, err := ids.DecodeLeaseId(value)
+	if err != nil {
+		return invalid(fieldName, "must be a valid lease ID")
+	}
+
+	return nil
 }
 
 func validateDescription(value string, fieldName string) error {
@@ -637,6 +750,22 @@ func validatePaginationToken(value string, fieldName string) error {
 	_, err := base64.StdEncoding.DecodeString(value)
 	if err != nil {
 		return invalid(fieldName, "must be a valid base64 string")
+	}
+
+	return nil
+}
+
+func validateLeaseTtlSeconds(value uint64, fieldName string) error {
+	if value <= 0 || value > maxLeaseTtlSeconds {
+		return invalid(fieldName, fmt.Sprintf("must be between 0 and %d", maxLeaseTtlSeconds))
+	}
+
+	return nil
+}
+
+func validateTimeOutSeconds(value int32, fieldName string) error {
+	if value <= 0 || value > maxTimeoutSeconds {
+		return invalid(fieldName, fmt.Sprintf("must be between 0 and %d", maxTimeoutSeconds))
 	}
 
 	return nil

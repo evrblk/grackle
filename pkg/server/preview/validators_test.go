@@ -5,2199 +5,3291 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	gracklepb "github.com/evrblk/evrblk-go/grackle/preview"
 )
 
 func TestValidateCreateNamespaceRequest(t *testing.T) {
-	// empty request
-	assert.Error(t, ValidateCreateNamespaceRequest(&gracklepb.CreateNamespaceRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateCreateNamespaceRequest(&gracklepb.CreateNamespaceRequest{}))
+	})
 
-	// empty name
-	assert.Error(t, ValidateCreateNamespaceRequest(&gracklepb.CreateNamespaceRequest{
-		Name: "",
-	}))
+	t.Run("empty name", func(t *testing.T) {
+		require.Error(t, ValidateCreateNamespaceRequest(&gracklepb.CreateNamespaceRequest{
+			Name: "",
+		}))
+	})
 
-	// name too long
-	assert.Error(t, ValidateCreateNamespaceRequest(&gracklepb.CreateNamespaceRequest{
-		Name: string(make([]byte, 129)),
-	}))
+	t.Run("name too long", func(t *testing.T) {
+		require.Error(t, ValidateCreateNamespaceRequest(&gracklepb.CreateNamespaceRequest{
+			Name: string(make([]byte, 129)),
+		}))
+	})
 
-	// invalid name characters
-	assert.Error(t, ValidateCreateNamespaceRequest(&gracklepb.CreateNamespaceRequest{
-		Name: "invalid name",
-	}))
+	t.Run("invalid name characters", func(t *testing.T) {
+		require.Error(t, ValidateCreateNamespaceRequest(&gracklepb.CreateNamespaceRequest{
+			Name: "invalid name",
+		}))
+	})
 
-	// description too long
-	assert.Error(t, ValidateCreateNamespaceRequest(&gracklepb.CreateNamespaceRequest{
-		Name:        "validname",
-		Description: string(make([]byte, 1025)),
-	}))
+	t.Run("description too long", func(t *testing.T) {
+		require.Error(t, ValidateCreateNamespaceRequest(&gracklepb.CreateNamespaceRequest{
+			Name:        "validname",
+			Description: string(make([]byte, 1025)),
+		}))
+	})
 
-	// valid request
-	assert.NoError(t, ValidateCreateNamespaceRequest(&gracklepb.CreateNamespaceRequest{
-		Name:        "validname",
-		Description: "Valid description",
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateCreateNamespaceRequest(&gracklepb.CreateNamespaceRequest{
+			Name:        "validname",
+			Description: "Valid description",
+		}))
+	})
 }
 
 func TestValidateGetNamespaceRequest(t *testing.T) {
-	// empty request
-	assert.Error(t, ValidateGetNamespaceRequest(&gracklepb.GetNamespaceRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateGetNamespaceRequest(&gracklepb.GetNamespaceRequest{}))
+	})
 
-	// empty namespace name
-	assert.Error(t, ValidateGetNamespaceRequest(&gracklepb.GetNamespaceRequest{
-		NamespaceName: "",
-	}))
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateGetNamespaceRequest(&gracklepb.GetNamespaceRequest{
+			NamespaceName: "",
+		}))
+	})
 
-	// namespace name too long
-	assert.Error(t, ValidateGetNamespaceRequest(&gracklepb.GetNamespaceRequest{
-		NamespaceName: string(make([]byte, 129)),
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateGetNamespaceRequest(&gracklepb.GetNamespaceRequest{
+			NamespaceName: string(make([]byte, 129)),
+		}))
+	})
 
-	// invalid namespace name characters
-	assert.Error(t, ValidateGetNamespaceRequest(&gracklepb.GetNamespaceRequest{
-		NamespaceName: "invalid name",
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateGetNamespaceRequest(&gracklepb.GetNamespaceRequest{
+			NamespaceName: "invalid name",
+		}))
+	})
 
-	// valid request
-	assert.NoError(t, ValidateGetNamespaceRequest(&gracklepb.GetNamespaceRequest{
-		NamespaceName: "validname",
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateGetNamespaceRequest(&gracklepb.GetNamespaceRequest{
+			NamespaceName: "validname",
+		}))
+	})
 }
 
 func TestValidateUpdateNamespaceRequest(t *testing.T) {
-	// empty request
-	assert.Error(t, ValidateUpdateNamespaceRequest(&gracklepb.UpdateNamespaceRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateUpdateNamespaceRequest(&gracklepb.UpdateNamespaceRequest{}))
+	})
 
-	// empty namespace name
-	assert.Error(t, ValidateUpdateNamespaceRequest(&gracklepb.UpdateNamespaceRequest{
-		NamespaceName: "",
-	}))
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateUpdateNamespaceRequest(&gracklepb.UpdateNamespaceRequest{
+			NamespaceName: "",
+		}))
+	})
 
-	// namespace name too long
-	assert.Error(t, ValidateUpdateNamespaceRequest(&gracklepb.UpdateNamespaceRequest{
-		NamespaceName: string(make([]byte, 129)),
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateUpdateNamespaceRequest(&gracklepb.UpdateNamespaceRequest{
+			NamespaceName: string(make([]byte, 129)),
+		}))
+	})
 
-	// invalid namespace name characters
-	assert.Error(t, ValidateUpdateNamespaceRequest(&gracklepb.UpdateNamespaceRequest{
-		NamespaceName: "invalid name",
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateUpdateNamespaceRequest(&gracklepb.UpdateNamespaceRequest{
+			NamespaceName: "invalid name",
+		}))
+	})
 
-	// description too long
-	assert.Error(t, ValidateUpdateNamespaceRequest(&gracklepb.UpdateNamespaceRequest{
-		NamespaceName: "validname",
-		Description:   string(make([]byte, 1025)),
-	}))
+	t.Run("description too long", func(t *testing.T) {
+		require.Error(t, ValidateUpdateNamespaceRequest(&gracklepb.UpdateNamespaceRequest{
+			NamespaceName: "validname",
+			Description:   string(make([]byte, 1025)),
+		}))
+	})
 
-	// valid request
-	assert.NoError(t, ValidateUpdateNamespaceRequest(&gracklepb.UpdateNamespaceRequest{
-		NamespaceName: "validname",
-		Description:   "Valid description",
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateUpdateNamespaceRequest(&gracklepb.UpdateNamespaceRequest{
+			NamespaceName: "validname",
+			Description:   "Valid description",
+		}))
+	})
 }
 
 func TestValidateDeleteNamespaceRequest(t *testing.T) {
-	// empty request
-	assert.Error(t, ValidateDeleteNamespaceRequest(&gracklepb.DeleteNamespaceRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateDeleteNamespaceRequest(&gracklepb.DeleteNamespaceRequest{}))
+	})
 
-	// empty namespace name
-	assert.Error(t, ValidateDeleteNamespaceRequest(&gracklepb.DeleteNamespaceRequest{
-		NamespaceName: "",
-	}))
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateDeleteNamespaceRequest(&gracklepb.DeleteNamespaceRequest{
+			NamespaceName: "",
+		}))
+	})
 
-	// namespace name too long
-	assert.Error(t, ValidateDeleteNamespaceRequest(&gracklepb.DeleteNamespaceRequest{
-		NamespaceName: string(make([]byte, 129)),
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateDeleteNamespaceRequest(&gracklepb.DeleteNamespaceRequest{
+			NamespaceName: string(make([]byte, 129)),
+		}))
+	})
 
-	// invalid namespace name characters
-	assert.Error(t, ValidateDeleteNamespaceRequest(&gracklepb.DeleteNamespaceRequest{
-		NamespaceName: "invalid name",
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateDeleteNamespaceRequest(&gracklepb.DeleteNamespaceRequest{
+			NamespaceName: "invalid name",
+		}))
+	})
 
-	// valid request
-	assert.NoError(t, ValidateDeleteNamespaceRequest(&gracklepb.DeleteNamespaceRequest{
-		NamespaceName: "validname",
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateDeleteNamespaceRequest(&gracklepb.DeleteNamespaceRequest{
+			NamespaceName: "validname",
+		}))
+	})
 }
 
 func TestValidateListNamespacesRequest(t *testing.T) {
-	// Test empty request - should pass as pagination fields are optional
-	assert.NoError(t, ValidateListNamespacesRequest(&gracklepb.ListNamespacesRequest{}))
+	t.Run("empty request - should pass as pagination fields are optional", func(t *testing.T) {
+		require.NoError(t, ValidateListNamespacesRequest(&gracklepb.ListNamespacesRequest{}))
+	})
 
-	// Test valid request with no pagination
-	assert.NoError(t, ValidateListNamespacesRequest(&gracklepb.ListNamespacesRequest{
-		PaginationToken: "",
-		Limit:           0,
-	}))
+	t.Run("valid request with no pagination", func(t *testing.T) {
+		require.NoError(t, ValidateListNamespacesRequest(&gracklepb.ListNamespacesRequest{
+			PaginationToken: "",
+			Limit:           0,
+		}))
+	})
 
-	// Test valid request with pagination token
-	assert.NoError(t, ValidateListNamespacesRequest(&gracklepb.ListNamespacesRequest{
-		PaginationToken: "dGVzdA==",
-		Limit:           0,
-	}))
+	t.Run("valid request with pagination token", func(t *testing.T) {
+		require.NoError(t, ValidateListNamespacesRequest(&gracklepb.ListNamespacesRequest{
+			PaginationToken: "dGVzdA==",
+			Limit:           0,
+		}))
+	})
 
-	// Test valid request with limit
-	assert.NoError(t, ValidateListNamespacesRequest(&gracklepb.ListNamespacesRequest{
-		PaginationToken: "",
-		Limit:           50,
-	}))
+	t.Run("valid request with limit", func(t *testing.T) {
+		require.NoError(t, ValidateListNamespacesRequest(&gracklepb.ListNamespacesRequest{
+			PaginationToken: "",
+			Limit:           50,
+		}))
+	})
 
-	// Test valid request with both pagination token and limit
-	assert.NoError(t, ValidateListNamespacesRequest(&gracklepb.ListNamespacesRequest{
-		PaginationToken: "dGVzdA==",
-		Limit:           100,
-	}))
+	t.Run("valid request with both pagination token and limit", func(t *testing.T) {
+		require.NoError(t, ValidateListNamespacesRequest(&gracklepb.ListNamespacesRequest{
+			PaginationToken: "dGVzdA==",
+			Limit:           100,
+		}))
+	})
 
-	// Test invalid pagination token (not base64)
-	assert.Error(t, ValidateListNamespacesRequest(&gracklepb.ListNamespacesRequest{
-		PaginationToken: "invalid-base64!@#",
-		Limit:           50,
-	}))
+	t.Run("invalid pagination token (not base64)", func(t *testing.T) {
+		require.Error(t, ValidateListNamespacesRequest(&gracklepb.ListNamespacesRequest{
+			PaginationToken: "invalid-base64!@#",
+			Limit:           50,
+		}))
+	})
 
-	// Test pagination token too long
-	longToken := string(make([]byte, 1025))
-	assert.Error(t, ValidateListNamespacesRequest(&gracklepb.ListNamespacesRequest{
-		PaginationToken: longToken,
-		Limit:           50,
-	}))
+	t.Run("pagination token too long", func(t *testing.T) {
+		longToken := string(make([]byte, 1025))
+		require.Error(t, ValidateListNamespacesRequest(&gracklepb.ListNamespacesRequest{
+			PaginationToken: longToken,
+			Limit:           50,
+		}))
+	})
 
-	// Test limit too high
-	assert.Error(t, ValidateListNamespacesRequest(&gracklepb.ListNamespacesRequest{
-		PaginationToken: "",
-		Limit:           101,
-	}))
+	t.Run("limit too high", func(t *testing.T) {
+		require.Error(t, ValidateListNamespacesRequest(&gracklepb.ListNamespacesRequest{
+			PaginationToken: "",
+			Limit:           101,
+		}))
+	})
 
-	// Test negative limit
-	assert.Error(t, ValidateListNamespacesRequest(&gracklepb.ListNamespacesRequest{
-		PaginationToken: "",
-		Limit:           -1,
-	}))
+	t.Run("negative limit", func(t *testing.T) {
+		require.Error(t, ValidateListNamespacesRequest(&gracklepb.ListNamespacesRequest{
+			PaginationToken: "",
+			Limit:           -1,
+		}))
+	})
 
-	// Test edge case: limit at maximum
-	assert.NoError(t, ValidateListNamespacesRequest(&gracklepb.ListNamespacesRequest{
-		PaginationToken: "",
-		Limit:           100,
-	}))
+	t.Run("edge case: limit at maximum", func(t *testing.T) {
+		require.NoError(t, ValidateListNamespacesRequest(&gracklepb.ListNamespacesRequest{
+			PaginationToken: "",
+			Limit:           100,
+		}))
+	})
 
-	// Test edge case: pagination token at maximum length
-	maxToken := string(make([]byte, 1024)) // maxPaginationTokenLength
-	assert.Error(t, ValidateListNamespacesRequest(&gracklepb.ListNamespacesRequest{
-		PaginationToken: maxToken, // This will fail base64 validation
-		Limit:           50,
-	}))
+	t.Run("edge case: pagination token at maximum length", func(t *testing.T) {
+		maxToken := string(make([]byte, 1024)) // maxPaginationTokenLength
+		require.Error(t, ValidateListNamespacesRequest(&gracklepb.ListNamespacesRequest{
+			PaginationToken: maxToken, // This will fail base64 validation
+			Limit:           50,
+		}))
+	})
 
-	// Test valid base64 token at maximum length
-	validMaxToken := base64.StdEncoding.EncodeToString(make([]byte, 768)) // 768 bytes = 1024 base64 chars
-	assert.NoError(t, ValidateListNamespacesRequest(&gracklepb.ListNamespacesRequest{
-		PaginationToken: validMaxToken,
-		Limit:           50,
-	}))
+	t.Run("valid base64 token at maximum length", func(t *testing.T) {
+		validMaxToken := base64.StdEncoding.EncodeToString(make([]byte, 768)) // 768 bytes = 1024 base64 chars
+		require.NoError(t, ValidateListNamespacesRequest(&gracklepb.ListNamespacesRequest{
+			PaginationToken: validMaxToken,
+			Limit:           50,
+		}))
+	})
 }
 
 func TestValidateCreateWaitGroupRequest(t *testing.T) {
-	// empty request
-	assert.Error(t, ValidateCreateWaitGroupRequest(&gracklepb.CreateWaitGroupRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateCreateWaitGroupRequest(&gracklepb.CreateWaitGroupRequest{}))
+	})
 
-	// empty namespace name
-	assert.Error(t, ValidateCreateWaitGroupRequest(&gracklepb.CreateWaitGroupRequest{
-		WaitGroupName: "validname",
-		Counter:       1,
-	}))
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateCreateWaitGroupRequest(&gracklepb.CreateWaitGroupRequest{
+			WaitGroupName: "validname",
+			Counter:       1,
+		}))
+	})
 
-	// empty wait group name
-	assert.Error(t, ValidateCreateWaitGroupRequest(&gracklepb.CreateWaitGroupRequest{
-		NamespaceName: "validname",
-		Counter:       1,
-	}))
+	t.Run("empty wait group name", func(t *testing.T) {
+		require.Error(t, ValidateCreateWaitGroupRequest(&gracklepb.CreateWaitGroupRequest{
+			NamespaceName: "validname",
+			Counter:       1,
+		}))
+	})
 
-	// namespace name too long
-	assert.Error(t, ValidateCreateWaitGroupRequest(&gracklepb.CreateWaitGroupRequest{
-		NamespaceName: string(make([]byte, 129)),
-		WaitGroupName: "validname",
-		Counter:       1,
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateCreateWaitGroupRequest(&gracklepb.CreateWaitGroupRequest{
+			NamespaceName: string(make([]byte, 129)),
+			WaitGroupName: "validname",
+			Counter:       1,
+		}))
+	})
 
-	// wait group name too long
-	assert.Error(t, ValidateCreateWaitGroupRequest(&gracklepb.CreateWaitGroupRequest{
-		NamespaceName: "validname",
-		WaitGroupName: string(make([]byte, 129)),
-		Counter:       1,
-	}))
+	t.Run("wait group name too long", func(t *testing.T) {
+		require.Error(t, ValidateCreateWaitGroupRequest(&gracklepb.CreateWaitGroupRequest{
+			NamespaceName: "validname",
+			WaitGroupName: string(make([]byte, 129)),
+			Counter:       1,
+		}))
+	})
 
-	// invalid namespace name characters
-	assert.Error(t, ValidateCreateWaitGroupRequest(&gracklepb.CreateWaitGroupRequest{
-		NamespaceName: "invalid name",
-		WaitGroupName: "validname",
-		Counter:       1,
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateCreateWaitGroupRequest(&gracklepb.CreateWaitGroupRequest{
+			NamespaceName: "invalid name",
+			WaitGroupName: "validname",
+			Counter:       1,
+		}))
+	})
 
-	// invalid wait group name characters
-	assert.Error(t, ValidateCreateWaitGroupRequest(&gracklepb.CreateWaitGroupRequest{
-		NamespaceName: "validname",
-		WaitGroupName: "invalid name",
-		Counter:       1,
-	}))
+	t.Run("invalid wait group name characters", func(t *testing.T) {
+		require.Error(t, ValidateCreateWaitGroupRequest(&gracklepb.CreateWaitGroupRequest{
+			NamespaceName: "validname",
+			WaitGroupName: "invalid name",
+			Counter:       1,
+		}))
+	})
 
-	// counter must be greater than 0
-	assert.Error(t, ValidateCreateWaitGroupRequest(&gracklepb.CreateWaitGroupRequest{
-		NamespaceName: "validname",
-		WaitGroupName: "validwaitgroup",
-		Counter:       0,
-	}))
+	t.Run("counter must be greater than 0", func(t *testing.T) {
+		require.Error(t, ValidateCreateWaitGroupRequest(&gracklepb.CreateWaitGroupRequest{
+			NamespaceName: "validname",
+			WaitGroupName: "validwaitgroup",
+			Counter:       0,
+		}))
+	})
 
-	// valid request
-	assert.NoError(t, ValidateCreateWaitGroupRequest(&gracklepb.CreateWaitGroupRequest{
-		NamespaceName: "validname",
-		WaitGroupName: "validwaitgroup",
-		Counter:       1,
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateCreateWaitGroupRequest(&gracklepb.CreateWaitGroupRequest{
+			NamespaceName: "validname",
+			WaitGroupName: "validwaitgroup",
+			Counter:       1,
+		}))
+	})
 }
 
 func TestValidateGetWaitGroupRequest(t *testing.T) {
-	// empty request
-	assert.Error(t, ValidateGetWaitGroupRequest(&gracklepb.GetWaitGroupRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateGetWaitGroupRequest(&gracklepb.GetWaitGroupRequest{}))
+	})
 
-	// empty namespace name
-	assert.Error(t, ValidateGetWaitGroupRequest(&gracklepb.GetWaitGroupRequest{
-		WaitGroupName: "validname",
-	}))
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateGetWaitGroupRequest(&gracklepb.GetWaitGroupRequest{
+			WaitGroupName: "validname",
+		}))
+	})
 
-	// empty wait group name
-	assert.Error(t, ValidateGetWaitGroupRequest(&gracklepb.GetWaitGroupRequest{
-		NamespaceName: "validname",
-	}))
+	t.Run("empty wait group name", func(t *testing.T) {
+		require.Error(t, ValidateGetWaitGroupRequest(&gracklepb.GetWaitGroupRequest{
+			NamespaceName: "validname",
+		}))
+	})
 
-	// namespace name too long
-	assert.Error(t, ValidateGetWaitGroupRequest(&gracklepb.GetWaitGroupRequest{
-		NamespaceName: string(make([]byte, 129)),
-		WaitGroupName: "validname",
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateGetWaitGroupRequest(&gracklepb.GetWaitGroupRequest{
+			NamespaceName: string(make([]byte, 129)),
+			WaitGroupName: "validname",
+		}))
+	})
 
-	// wait group name too long
-	assert.Error(t, ValidateGetWaitGroupRequest(&gracklepb.GetWaitGroupRequest{
-		NamespaceName: "validname",
-		WaitGroupName: string(make([]byte, 129)),
-	}))
+	t.Run("wait group name too long", func(t *testing.T) {
+		require.Error(t, ValidateGetWaitGroupRequest(&gracklepb.GetWaitGroupRequest{
+			NamespaceName: "validname",
+			WaitGroupName: string(make([]byte, 129)),
+		}))
+	})
 
-	// invalid namespace name characters
-	assert.Error(t, ValidateGetWaitGroupRequest(&gracklepb.GetWaitGroupRequest{
-		NamespaceName: "invalid name",
-		WaitGroupName: "validname",
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateGetWaitGroupRequest(&gracklepb.GetWaitGroupRequest{
+			NamespaceName: "invalid name",
+			WaitGroupName: "validname",
+		}))
+	})
 
-	// invalid wait group name characters
-	assert.Error(t, ValidateGetWaitGroupRequest(&gracklepb.GetWaitGroupRequest{
-		NamespaceName: "validname",
-		WaitGroupName: "invalid name",
-	}))
+	t.Run("invalid wait group name characters", func(t *testing.T) {
+		require.Error(t, ValidateGetWaitGroupRequest(&gracklepb.GetWaitGroupRequest{
+			NamespaceName: "validname",
+			WaitGroupName: "invalid name",
+		}))
+	})
 
-	// valid request
-	assert.NoError(t, ValidateGetWaitGroupRequest(&gracklepb.GetWaitGroupRequest{
-		NamespaceName: "validname",
-		WaitGroupName: "validwaitgroup",
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateGetWaitGroupRequest(&gracklepb.GetWaitGroupRequest{
+			NamespaceName: "validname",
+			WaitGroupName: "validwaitgroup",
+		}))
+	})
 }
 
 func TestValidateAddJobsToWaitGroupRequest(t *testing.T) {
-	// empty request
-	assert.Error(t, ValidateAddJobsToWaitGroupRequest(&gracklepb.AddJobsToWaitGroupRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateAddJobsToWaitGroupRequest(&gracklepb.AddJobsToWaitGroupRequest{}))
+	})
 
-	// empty namespace name
-	assert.Error(t, ValidateAddJobsToWaitGroupRequest(&gracklepb.AddJobsToWaitGroupRequest{
-		WaitGroupName: "validname",
-	}))
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateAddJobsToWaitGroupRequest(&gracklepb.AddJobsToWaitGroupRequest{
+			WaitGroupName: "validname",
+			Counter:       1,
+		}))
+	})
 
-	// empty wait group name
-	assert.Error(t, ValidateAddJobsToWaitGroupRequest(&gracklepb.AddJobsToWaitGroupRequest{
-		NamespaceName: "validname",
-	}))
+	t.Run("empty wait group name", func(t *testing.T) {
+		require.Error(t, ValidateAddJobsToWaitGroupRequest(&gracklepb.AddJobsToWaitGroupRequest{
+			NamespaceName: "validname",
+			Counter:       1,
+		}))
+	})
 
-	// namespace name too long
-	assert.Error(t, ValidateAddJobsToWaitGroupRequest(&gracklepb.AddJobsToWaitGroupRequest{
-		NamespaceName: string(make([]byte, 129)),
-		WaitGroupName: "validname",
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateAddJobsToWaitGroupRequest(&gracklepb.AddJobsToWaitGroupRequest{
+			NamespaceName: string(make([]byte, 129)),
+			WaitGroupName: "validname",
+			Counter:       1,
+		}))
+	})
 
-	// wait group name too long
-	assert.Error(t, ValidateAddJobsToWaitGroupRequest(&gracklepb.AddJobsToWaitGroupRequest{
-		NamespaceName: "validname",
-		WaitGroupName: string(make([]byte, 129)),
-	}))
+	t.Run("wait group name too long", func(t *testing.T) {
+		require.Error(t, ValidateAddJobsToWaitGroupRequest(&gracklepb.AddJobsToWaitGroupRequest{
+			NamespaceName: "validname",
+			WaitGroupName: string(make([]byte, 129)),
+			Counter:       1,
+		}))
+	})
 
-	// invalid namespace name characters
-	assert.Error(t, ValidateAddJobsToWaitGroupRequest(&gracklepb.AddJobsToWaitGroupRequest{
-		NamespaceName: "invalid name",
-		WaitGroupName: "validname",
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateAddJobsToWaitGroupRequest(&gracklepb.AddJobsToWaitGroupRequest{
+			NamespaceName: "invalid name",
+			WaitGroupName: "validname",
+			Counter:       1,
+		}))
+	})
 
-	// invalid wait group name characters
-	assert.Error(t, ValidateAddJobsToWaitGroupRequest(&gracklepb.AddJobsToWaitGroupRequest{
-		NamespaceName: "validname",
-		WaitGroupName: "invalid name",
-	}))
+	t.Run("invalid wait group name characters", func(t *testing.T) {
+		require.Error(t, ValidateAddJobsToWaitGroupRequest(&gracklepb.AddJobsToWaitGroupRequest{
+			NamespaceName: "validname",
+			WaitGroupName: "invalid name",
+			Counter:       1,
+		}))
+	})
 
-	// valid request
-	assert.NoError(t, ValidateAddJobsToWaitGroupRequest(&gracklepb.AddJobsToWaitGroupRequest{
-		NamespaceName: "validname",
-		WaitGroupName: "validwaitgroup",
-	}))
+	t.Run("invalid counter", func(t *testing.T) {
+		require.Error(t, ValidateAddJobsToWaitGroupRequest(&gracklepb.AddJobsToWaitGroupRequest{
+			NamespaceName: "validname",
+			WaitGroupName: "invalid name",
+			Counter:       0,
+		}))
+	})
+
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateAddJobsToWaitGroupRequest(&gracklepb.AddJobsToWaitGroupRequest{
+			NamespaceName: "validname",
+			WaitGroupName: "validwaitgroup",
+			Counter:       1,
+		}))
+	})
 }
 
 func TestValidateDeleteWaitGroupRequest(t *testing.T) {
-	// empty request
-	assert.Error(t, ValidateDeleteWaitGroupRequest(&gracklepb.DeleteWaitGroupRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateDeleteWaitGroupRequest(&gracklepb.DeleteWaitGroupRequest{}))
+	})
 
-	// empty namespace name
-	assert.Error(t, ValidateDeleteWaitGroupRequest(&gracklepb.DeleteWaitGroupRequest{
-		WaitGroupName: "validname",
-	}))
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateDeleteWaitGroupRequest(&gracklepb.DeleteWaitGroupRequest{
+			WaitGroupName: "validname",
+		}))
+	})
 
-	// empty wait group name
-	assert.Error(t, ValidateDeleteWaitGroupRequest(&gracklepb.DeleteWaitGroupRequest{
-		NamespaceName: "validname",
-	}))
+	t.Run("empty wait group name", func(t *testing.T) {
+		require.Error(t, ValidateDeleteWaitGroupRequest(&gracklepb.DeleteWaitGroupRequest{
+			NamespaceName: "validname",
+		}))
+	})
 
-	// namespace name too long
-	assert.Error(t, ValidateDeleteWaitGroupRequest(&gracklepb.DeleteWaitGroupRequest{
-		NamespaceName: string(make([]byte, 129)),
-		WaitGroupName: "validname",
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateDeleteWaitGroupRequest(&gracklepb.DeleteWaitGroupRequest{
+			NamespaceName: string(make([]byte, 129)),
+			WaitGroupName: "validname",
+		}))
+	})
 
-	// wait group name too long
-	assert.Error(t, ValidateDeleteWaitGroupRequest(&gracklepb.DeleteWaitGroupRequest{
-		NamespaceName: "validname",
-		WaitGroupName: string(make([]byte, 129)),
-	}))
+	t.Run("wait group name too long", func(t *testing.T) {
+		require.Error(t, ValidateDeleteWaitGroupRequest(&gracklepb.DeleteWaitGroupRequest{
+			NamespaceName: "validname",
+			WaitGroupName: string(make([]byte, 129)),
+		}))
+	})
 
-	// invalid namespace name characters
-	assert.Error(t, ValidateDeleteWaitGroupRequest(&gracklepb.DeleteWaitGroupRequest{
-		NamespaceName: "invalid name",
-		WaitGroupName: "validname",
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateDeleteWaitGroupRequest(&gracklepb.DeleteWaitGroupRequest{
+			NamespaceName: "invalid name",
+			WaitGroupName: "validname",
+		}))
+	})
 
-	// invalid wait group name characters
-	assert.Error(t, ValidateDeleteWaitGroupRequest(&gracklepb.DeleteWaitGroupRequest{
-		NamespaceName: "validname",
-		WaitGroupName: "invalid name",
-	}))
+	t.Run("invalid wait group name characters", func(t *testing.T) {
+		require.Error(t, ValidateDeleteWaitGroupRequest(&gracklepb.DeleteWaitGroupRequest{
+			NamespaceName: "validname",
+			WaitGroupName: "invalid name",
+		}))
+	})
 
-	// valid request
-	assert.NoError(t, ValidateDeleteWaitGroupRequest(&gracklepb.DeleteWaitGroupRequest{
-		NamespaceName: "validname",
-		WaitGroupName: "validwaitgroup",
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateDeleteWaitGroupRequest(&gracklepb.DeleteWaitGroupRequest{
+			NamespaceName: "validname",
+			WaitGroupName: "validwaitgroup",
+		}))
+	})
 }
 
 func TestValidateWaitForWaitGroupRequest(t *testing.T) {
-	// empty request
-	assert.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{}))
+	})
 
-	// missing namespace name
-	assert.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
-		WaitGroupName:  "validname",
-		TimeoutSeconds: 10,
-	}))
+	t.Run("missing namespace name", func(t *testing.T) {
+		require.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
+			WaitGroupName:  "validname",
+			TimeoutSeconds: 10,
+		}))
+	})
 
-	// missing wait group name
-	assert.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
-		NamespaceName:  "validname",
-		TimeoutSeconds: 10,
-	}))
+	t.Run("missing wait group name", func(t *testing.T) {
+		require.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
+			NamespaceName:  "validname",
+			TimeoutSeconds: 10,
+		}))
+	})
 
-	// namespace name too long
-	assert.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
-		NamespaceName:  string(make([]byte, 129)),
-		WaitGroupName:  "validname",
-		TimeoutSeconds: 10,
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
+			NamespaceName:  string(make([]byte, 129)),
+			WaitGroupName:  "validname",
+			TimeoutSeconds: 10,
+		}))
+	})
 
-	// wait group name too long
-	assert.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
-		NamespaceName:  "validname",
-		WaitGroupName:  string(make([]byte, 129)),
-		TimeoutSeconds: 10,
-	}))
+	t.Run("wait group name too long", func(t *testing.T) {
+		require.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
+			NamespaceName:  "validname",
+			WaitGroupName:  string(make([]byte, 129)),
+			TimeoutSeconds: 10,
+		}))
+	})
 
-	// invalid namespace name characters
-	assert.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
-		NamespaceName:  "invalid name",
-		WaitGroupName:  "validname",
-		TimeoutSeconds: 10,
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
+			NamespaceName:  "invalid name",
+			WaitGroupName:  "validname",
+			TimeoutSeconds: 10,
+		}))
+	})
 
-	// invalid wait group name characters
-	assert.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
-		NamespaceName:  "validname",
-		WaitGroupName:  "invalid name",
-		TimeoutSeconds: 10,
-	}))
+	t.Run("invalid wait group name characters", func(t *testing.T) {
+		require.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
+			NamespaceName:  "validname",
+			WaitGroupName:  "invalid name",
+			TimeoutSeconds: 10,
+		}))
+	})
 
-	// timeout seconds zero
-	assert.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
-		NamespaceName:  "validname",
-		WaitGroupName:  "validname",
-		TimeoutSeconds: 0,
-	}))
+	t.Run("timeout seconds zero", func(t *testing.T) {
+		require.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
+			NamespaceName:  "validname",
+			WaitGroupName:  "validname",
+			TimeoutSeconds: 0,
+		}))
+	})
 
-	// timeout seconds negative
-	assert.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
-		NamespaceName:  "validname",
-		WaitGroupName:  "validname",
-		TimeoutSeconds: -1,
-	}))
+	t.Run("timeout seconds negative", func(t *testing.T) {
+		require.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
+			NamespaceName:  "validname",
+			WaitGroupName:  "validname",
+			TimeoutSeconds: -1,
+		}))
+	})
 
-	// timeout seconds too high
-	assert.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
-		NamespaceName:  "validname",
-		WaitGroupName:  "validname",
-		TimeoutSeconds: 301,
-	}))
+	t.Run("timeout seconds too high", func(t *testing.T) {
+		require.Error(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
+			NamespaceName:  "validname",
+			WaitGroupName:  "validname",
+			TimeoutSeconds: 301,
+		}))
+	})
 
-	// valid request
-	assert.NoError(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
-		NamespaceName:  "validname",
-		WaitGroupName:  "validname",
-		TimeoutSeconds: 10,
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
+			NamespaceName:  "validname",
+			WaitGroupName:  "validname",
+			TimeoutSeconds: 10,
+		}))
+	})
 
-	// valid request with maximum timeout
-	assert.NoError(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
-		NamespaceName:  "validname",
-		WaitGroupName:  "validname",
-		TimeoutSeconds: 300,
-	}))
+	t.Run("valid request with maximum timeout", func(t *testing.T) {
+		require.NoError(t, ValidateWaitForWaitGroupRequest(&gracklepb.WaitForWaitGroupRequest{
+			NamespaceName:  "validname",
+			WaitGroupName:  "validname",
+			TimeoutSeconds: 300,
+		}))
+	})
 }
 
 func TestValidateListWaitGroupsRequest(t *testing.T) {
-	// Test empty request - should fail due to missing namespace name
-	assert.Error(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{}))
+	t.Run("empty request - should fail due to missing namespace name", func(t *testing.T) {
+		require.Error(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{}))
+	})
 
-	// Test empty namespace name
-	assert.Error(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
-		NamespaceName: "",
-	}))
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
+			NamespaceName: "",
+		}))
+	})
 
-	// Test namespace name too long
-	assert.Error(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
-		NamespaceName: string(make([]byte, 129)),
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
+			NamespaceName: string(make([]byte, 129)),
+		}))
+	})
 
-	// Test invalid namespace name characters
-	assert.Error(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
-		NamespaceName: "invalid name",
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
+			NamespaceName: "invalid name",
+		}))
+	})
 
-	// Test valid request with no pagination
-	assert.NoError(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "",
-		Limit:           0,
-	}))
+	t.Run("valid request with no pagination", func(t *testing.T) {
+		require.NoError(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "",
+			Limit:           0,
+		}))
+	})
 
-	// Test valid request with pagination token
-	assert.NoError(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "dGVzdA==",
-		Limit:           0,
-	}))
+	t.Run("valid request with pagination token", func(t *testing.T) {
+		require.NoError(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "dGVzdA==",
+			Limit:           0,
+		}))
+	})
 
-	// Test valid request with limit
-	assert.NoError(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "",
-		Limit:           50,
-	}))
+	t.Run("valid request with limit", func(t *testing.T) {
+		require.NoError(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "",
+			Limit:           50,
+		}))
+	})
 
-	// Test valid request with both pagination token and limit
-	assert.NoError(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "dGVzdA==",
-		Limit:           100,
-	}))
+	t.Run("valid request with both pagination token and limit", func(t *testing.T) {
+		require.NoError(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "dGVzdA==",
+			Limit:           100,
+		}))
+	})
 
-	// Test invalid pagination token (not base64)
-	assert.Error(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "invalid-base64!@#",
-		Limit:           50,
-	}))
+	t.Run("invalid pagination token (not base64)", func(t *testing.T) {
+		require.Error(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "invalid-base64!@#",
+			Limit:           50,
+		}))
+	})
 
-	// Test pagination token too long
-	longToken := string(make([]byte, 1025))
-	assert.Error(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
-		NamespaceName:   "validname",
-		PaginationToken: longToken,
-		Limit:           50,
-	}))
+	t.Run("pagination token too long", func(t *testing.T) {
+		longToken := string(make([]byte, 1025))
+		require.Error(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
+			NamespaceName:   "validname",
+			PaginationToken: longToken,
+			Limit:           50,
+		}))
+	})
 
-	// Test limit too high
-	assert.Error(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "",
-		Limit:           101,
-	}))
+	t.Run("limit too high", func(t *testing.T) {
+		require.Error(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "",
+			Limit:           101,
+		}))
+	})
 
-	// Test negative limit
-	assert.Error(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "",
-		Limit:           -1,
-	}))
+	t.Run("negative limit", func(t *testing.T) {
+		require.Error(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "",
+			Limit:           -1,
+		}))
+	})
 
-	// Test edge case: limit at maximum
-	assert.NoError(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "",
-		Limit:           100,
-	}))
+	t.Run("edge case: limit at maximum", func(t *testing.T) {
+		require.NoError(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "",
+			Limit:           100,
+		}))
+	})
 
-	// Test valid base64 token at maximum length
-	validMaxToken := base64.StdEncoding.EncodeToString(make([]byte, 768)) // 768 bytes = 1024 base64 chars
-	assert.NoError(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
-		NamespaceName:   "validname",
-		PaginationToken: validMaxToken,
-		Limit:           50,
-	}))
+	t.Run("valid base64 token at maximum length", func(t *testing.T) {
+		validMaxToken := base64.StdEncoding.EncodeToString(make([]byte, 768)) // 768 bytes = 1024 base64 chars
+		require.NoError(t, ValidateListWaitGroupsRequest(&gracklepb.ListWaitGroupsRequest{
+			NamespaceName:   "validname",
+			PaginationToken: validMaxToken,
+			Limit:           50,
+		}))
+	})
 }
 
 func TestValidateCompleteJobsFromWaitGroupRequest(t *testing.T) {
-	// empty request
-	assert.Error(t, ValidateCompleteJobsFromWaitGroupRequest(&gracklepb.CompleteJobsFromWaitGroupRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateCompleteJobsFromWaitGroupRequest(&gracklepb.CompleteJobsFromWaitGroupRequest{}))
+	})
 
-	// empty namespace name
-	assert.Error(t, ValidateCompleteJobsFromWaitGroupRequest(&gracklepb.CompleteJobsFromWaitGroupRequest{
-		WaitGroupName: "validname",
-		ProcessIds:    []string{"proc1"},
-	}))
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateCompleteJobsFromWaitGroupRequest(&gracklepb.CompleteJobsFromWaitGroupRequest{
+			WaitGroupName: "validname",
+			ProcessIds:    []string{"proc1"},
+		}))
+	})
 
-	// empty wait group name
-	assert.Error(t, ValidateCompleteJobsFromWaitGroupRequest(&gracklepb.CompleteJobsFromWaitGroupRequest{
-		NamespaceName: "validname",
-		ProcessIds:    []string{"proc1"},
-	}))
+	t.Run("empty wait group name", func(t *testing.T) {
+		require.Error(t, ValidateCompleteJobsFromWaitGroupRequest(&gracklepb.CompleteJobsFromWaitGroupRequest{
+			NamespaceName: "validname",
+			ProcessIds:    []string{"proc1"},
+		}))
+	})
 
-	// namespace name too long
-	assert.Error(t, ValidateCompleteJobsFromWaitGroupRequest(&gracklepb.CompleteJobsFromWaitGroupRequest{
-		NamespaceName: string(make([]byte, 129)),
-		WaitGroupName: "validname",
-		ProcessIds:    []string{"proc1"},
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateCompleteJobsFromWaitGroupRequest(&gracklepb.CompleteJobsFromWaitGroupRequest{
+			NamespaceName: string(make([]byte, 129)),
+			WaitGroupName: "validname",
+			ProcessIds:    []string{"proc1"},
+		}))
+	})
 
-	// wait group name too long
-	assert.Error(t, ValidateCompleteJobsFromWaitGroupRequest(&gracklepb.CompleteJobsFromWaitGroupRequest{
-		NamespaceName: "validname",
-		WaitGroupName: string(make([]byte, 129)),
-		ProcessIds:    []string{"proc1"},
-	}))
+	t.Run("wait group name too long", func(t *testing.T) {
+		require.Error(t, ValidateCompleteJobsFromWaitGroupRequest(&gracklepb.CompleteJobsFromWaitGroupRequest{
+			NamespaceName: "validname",
+			WaitGroupName: string(make([]byte, 129)),
+			ProcessIds:    []string{"proc1"},
+		}))
+	})
 
-	// invalid namespace name characters
-	assert.Error(t, ValidateCompleteJobsFromWaitGroupRequest(&gracklepb.CompleteJobsFromWaitGroupRequest{
-		NamespaceName: "invalid name",
-		WaitGroupName: "validname",
-		ProcessIds:    []string{"proc1"},
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateCompleteJobsFromWaitGroupRequest(&gracklepb.CompleteJobsFromWaitGroupRequest{
+			NamespaceName: "invalid name",
+			WaitGroupName: "validname",
+			ProcessIds:    []string{"proc1"},
+		}))
+	})
 
-	// invalid wait group name characters
-	assert.Error(t, ValidateCompleteJobsFromWaitGroupRequest(&gracklepb.CompleteJobsFromWaitGroupRequest{
-		NamespaceName: "validname",
-		WaitGroupName: "invalid name",
-		ProcessIds:    []string{"proc1"},
-	}))
+	t.Run("invalid wait group name characters", func(t *testing.T) {
+		require.Error(t, ValidateCompleteJobsFromWaitGroupRequest(&gracklepb.CompleteJobsFromWaitGroupRequest{
+			NamespaceName: "validname",
+			WaitGroupName: "invalid name",
+			ProcessIds:    []string{"proc1"},
+		}))
+	})
 
-	// too many process ids
-	processIds := make([]string, 51)
-	for i := 0; i < 51; i++ {
-		processIds[i] = "proc1"
-	}
-	assert.Error(t, ValidateCompleteJobsFromWaitGroupRequest(&gracklepb.CompleteJobsFromWaitGroupRequest{
-		NamespaceName: "validname",
-		WaitGroupName: "validwaitgroup",
-		ProcessIds:    processIds,
-	}))
+	t.Run("too many process ids", func(t *testing.T) {
+		processIds := make([]string, 51)
+		for i := 0; i < 51; i++ {
+			processIds[i] = "proc1"
+		}
+		require.Error(t, ValidateCompleteJobsFromWaitGroupRequest(&gracklepb.CompleteJobsFromWaitGroupRequest{
+			NamespaceName: "validname",
+			WaitGroupName: "validwaitgroup",
+			ProcessIds:    processIds,
+		}))
+	})
 
-	// invalid process id
-	assert.Error(t, ValidateCompleteJobsFromWaitGroupRequest(&gracklepb.CompleteJobsFromWaitGroupRequest{
-		NamespaceName: "validname",
-		WaitGroupName: "validwaitgroup",
-		ProcessIds:    []string{"invalid process id"},
-	}))
+	t.Run("invalid process id", func(t *testing.T) {
+		require.Error(t, ValidateCompleteJobsFromWaitGroupRequest(&gracklepb.CompleteJobsFromWaitGroupRequest{
+			NamespaceName: "validname",
+			WaitGroupName: "validwaitgroup",
+			ProcessIds:    []string{"invalid process id"},
+		}))
+	})
 
-	// valid request
-	assert.NoError(t, ValidateCompleteJobsFromWaitGroupRequest(&gracklepb.CompleteJobsFromWaitGroupRequest{
-		NamespaceName: "validname",
-		WaitGroupName: "validwaitgroup",
-		ProcessIds:    []string{"proc1", "proc2"},
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateCompleteJobsFromWaitGroupRequest(&gracklepb.CompleteJobsFromWaitGroupRequest{
+			NamespaceName: "validname",
+			WaitGroupName: "validwaitgroup",
+			ProcessIds:    []string{"proc1", "proc2"},
+		}))
+	})
 }
 
 func TestValidateDeleteLockRequest(t *testing.T) {
-	// empty request
-	assert.Error(t, ValidateDeleteLockRequest(&gracklepb.DeleteLockRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateDeleteLockRequest(&gracklepb.DeleteLockRequest{}))
+	})
 
-	// empty namespace name
-	assert.Error(t, ValidateDeleteLockRequest(&gracklepb.DeleteLockRequest{
-		LockName: "validname",
-	}))
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateDeleteLockRequest(&gracklepb.DeleteLockRequest{
+			LockName: "validname",
+		}))
+	})
 
-	// empty lock name
-	assert.Error(t, ValidateDeleteLockRequest(&gracklepb.DeleteLockRequest{
-		NamespaceName: "validname",
-	}))
+	t.Run("empty lock name", func(t *testing.T) {
+		require.Error(t, ValidateDeleteLockRequest(&gracklepb.DeleteLockRequest{
+			NamespaceName: "validname",
+		}))
+	})
 
-	// namespace name too long
-	assert.Error(t, ValidateDeleteLockRequest(&gracklepb.DeleteLockRequest{
-		NamespaceName: string(make([]byte, 129)),
-		LockName:      "validname",
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateDeleteLockRequest(&gracklepb.DeleteLockRequest{
+			NamespaceName: string(make([]byte, 129)),
+			LockName:      "validname",
+		}))
+	})
 
-	// lock name too long
-	assert.Error(t, ValidateDeleteLockRequest(&gracklepb.DeleteLockRequest{
-		NamespaceName: "validname",
-		LockName:      string(make([]byte, 129)),
-	}))
+	t.Run("lock name too long", func(t *testing.T) {
+		require.Error(t, ValidateDeleteLockRequest(&gracklepb.DeleteLockRequest{
+			NamespaceName: "validname",
+			LockName:      string(make([]byte, 129)),
+		}))
+	})
 
-	// invalid namespace name characters
-	assert.Error(t, ValidateDeleteLockRequest(&gracklepb.DeleteLockRequest{
-		NamespaceName: "invalid name",
-		LockName:      "validname",
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateDeleteLockRequest(&gracklepb.DeleteLockRequest{
+			NamespaceName: "invalid name",
+			LockName:      "validname",
+		}))
+	})
 
-	// invalid lock name characters
-	assert.Error(t, ValidateDeleteLockRequest(&gracklepb.DeleteLockRequest{
-		NamespaceName: "validname",
-		LockName:      "invalid name",
-	}))
+	t.Run("invalid lock name characters", func(t *testing.T) {
+		require.Error(t, ValidateDeleteLockRequest(&gracklepb.DeleteLockRequest{
+			NamespaceName: "validname",
+			LockName:      "invalid name",
+		}))
+	})
 
-	// valid request
-	assert.NoError(t, ValidateDeleteLockRequest(&gracklepb.DeleteLockRequest{
-		NamespaceName: "validname",
-		LockName:      "validlock",
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateDeleteLockRequest(&gracklepb.DeleteLockRequest{
+			NamespaceName: "validname",
+			LockName:      "validlock",
+		}))
+	})
 }
 
 func TestValidateGetLockRequest(t *testing.T) {
-	// empty request
-	assert.Error(t, ValidateGetLockRequest(&gracklepb.GetLockRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateGetLockRequest(&gracklepb.GetLockRequest{}))
+	})
 
-	// empty namespace name
-	assert.Error(t, ValidateGetLockRequest(&gracklepb.GetLockRequest{
-		LockName: "validname",
-	}))
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateGetLockRequest(&gracklepb.GetLockRequest{
+			LockName: "validname",
+		}))
+	})
 
-	// empty lock name
-	assert.Error(t, ValidateGetLockRequest(&gracklepb.GetLockRequest{
-		NamespaceName: "validname",
-	}))
+	t.Run("empty lock name", func(t *testing.T) {
+		require.Error(t, ValidateGetLockRequest(&gracklepb.GetLockRequest{
+			NamespaceName: "validname",
+		}))
+	})
 
-	// namespace name too long
-	assert.Error(t, ValidateGetLockRequest(&gracklepb.GetLockRequest{
-		NamespaceName: string(make([]byte, 129)),
-		LockName:      "validname",
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateGetLockRequest(&gracklepb.GetLockRequest{
+			NamespaceName: string(make([]byte, 129)),
+			LockName:      "validname",
+		}))
+	})
 
-	// lock name too long
-	assert.Error(t, ValidateGetLockRequest(&gracklepb.GetLockRequest{
-		NamespaceName: "validname",
-		LockName:      string(make([]byte, 129)),
-	}))
+	t.Run("lock name too long", func(t *testing.T) {
+		require.Error(t, ValidateGetLockRequest(&gracklepb.GetLockRequest{
+			NamespaceName: "validname",
+			LockName:      string(make([]byte, 129)),
+		}))
+	})
 
-	// invalid namespace name characters
-	assert.Error(t, ValidateGetLockRequest(&gracklepb.GetLockRequest{
-		NamespaceName: "invalid name",
-		LockName:      "validname",
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateGetLockRequest(&gracklepb.GetLockRequest{
+			NamespaceName: "invalid name",
+			LockName:      "validname",
+		}))
+	})
 
-	// invalid lock name characters
-	assert.Error(t, ValidateGetLockRequest(&gracklepb.GetLockRequest{
-		NamespaceName: "validname",
-		LockName:      "invalid name",
-	}))
+	t.Run("invalid lock name characters", func(t *testing.T) {
+		require.Error(t, ValidateGetLockRequest(&gracklepb.GetLockRequest{
+			NamespaceName: "validname",
+			LockName:      "invalid name",
+		}))
+	})
 
-	// valid request
-	assert.NoError(t, ValidateGetLockRequest(&gracklepb.GetLockRequest{
-		NamespaceName: "validname",
-		LockName:      "validlock",
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateGetLockRequest(&gracklepb.GetLockRequest{
+			NamespaceName: "validname",
+			LockName:      "validlock",
+		}))
+	})
 }
 
 func TestValidateReleaseLockRequest(t *testing.T) {
-	// empty request
-	assert.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{}))
+	})
 
-	// empty namespace name
-	assert.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
-		LockName: "validname",
-		LeaseId:  "lease1",
-	}))
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
+			LockName: "validname",
+			LeaseId:  "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
 
-	// empty lock name
-	assert.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
-		NamespaceName: "validname",
-		LeaseId:       "lease1",
-	}))
+	t.Run("empty lock name", func(t *testing.T) {
+		require.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
+			NamespaceName: "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
 
-	// empty lease id
-	assert.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
-		NamespaceName: "validname",
-		LockName:      "validname",
-	}))
+	t.Run("empty lease id", func(t *testing.T) {
+		require.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
+			NamespaceName: "validname",
+			LockName:      "validname",
+		}))
+	})
 
-	// namespace name too long
-	assert.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
-		NamespaceName: string(make([]byte, 129)),
-		LockName:      "validname",
-		LeaseId:       "lease1",
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
+			NamespaceName: string(make([]byte, 129)),
+			LockName:      "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
 
-	// lock name too long
-	assert.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
-		NamespaceName: "validname",
-		LockName:      string(make([]byte, 129)),
-		LeaseId:       "lease1",
-	}))
+	t.Run("lock name too long", func(t *testing.T) {
+		require.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
+			NamespaceName: "validname",
+			LockName:      string(make([]byte, 129)),
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
 
-	// lease id too long (not validated - strings can be any length)
-	// assert.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
-	// 	NamespaceName: "validname",
-	// 	LockName:      "validname",
-	// 	LeaseId:       string(make([]byte, 129)),
-	// }))
+	t.Run("lease id too long", func(t *testing.T) {
+		require.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
+			NamespaceName: "validname",
+			LockName:      "validname",
+			LeaseId:       string(make([]byte, 65)),
+		}))
+	})
 
-	// invalid namespace name characters
-	assert.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
-		NamespaceName: "invalid name",
-		LockName:      "validname",
-		LeaseId:       "lease1",
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
+			NamespaceName: "invalid name",
+			LockName:      "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
 
-	// invalid lock name characters
-	assert.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
-		NamespaceName: "validname",
-		LockName:      "invalid name",
-		LeaseId:       "lease1",
-	}))
+	t.Run("invalid lock name characters", func(t *testing.T) {
+		require.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
+			NamespaceName: "validname",
+			LockName:      "invalid name",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
 
-	// lease id can have any characters - no validation on lease_id format
-	// assert.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
-	// 	NamespaceName: "validname",
-	// 	LockName:      "validname",
-	// 	LeaseId:       "invalid lease id",
-	// }))
+	t.Run("invalid lease id", func(t *testing.T) {
+		require.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
+			NamespaceName: "validname",
+			LockName:      "validname",
+			LeaseId:       "invalid lease id",
+		}))
+	})
 
-	// valid request
-	assert.NoError(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
-		NamespaceName: "validname",
-		LockName:      "validlock",
-		LeaseId:       "lease1",
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
+			NamespaceName: "validname",
+			LockName:      "validlock",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
 }
 
 func TestValidateAcquireLockRequest(t *testing.T) {
-	// empty request
-	assert.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{}))
+	})
 
-	// empty namespace name
-	assert.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
-		LockName: "validname",
-		LeaseId:  "lease1",
-	}))
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
+			LockName: "validname",
+			LeaseId:  "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
 
-	// empty lock name
-	assert.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
-		NamespaceName: "validname",
-		LeaseId:       "lease1",
-	}))
+	t.Run("empty lock name", func(t *testing.T) {
+		require.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
+			NamespaceName: "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
 
-	// empty lease id
-	assert.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
-		NamespaceName: "validname",
-		LockName:      "validname",
-	}))
+	t.Run("empty lease id", func(t *testing.T) {
+		require.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
+			NamespaceName: "validname",
+			LockName:      "validname",
+		}))
+	})
 
-	// namespace name too long
-	assert.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
-		NamespaceName: string(make([]byte, 129)),
-		LockName:      "validname",
-		LeaseId:       "lease1",
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
+			NamespaceName: string(make([]byte, 129)),
+			LockName:      "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
 
-	// lock name too long
-	assert.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
-		NamespaceName: "validname",
-		LockName:      string(make([]byte, 129)),
-		LeaseId:       "lease1",
-	}))
+	t.Run("lock name too long", func(t *testing.T) {
+		require.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
+			NamespaceName: "validname",
+			LockName:      string(make([]byte, 129)),
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
 
-	// lease id too long (not validated - strings can be any length)
-	// assert.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
-	// 	NamespaceName: "validname",
-	// 	LockName:      "validname",
-	// 	LeaseId:       string(make([]byte, 129)),
-	// }))
+	t.Run("lease id too long", func(t *testing.T) {
+		require.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
+			NamespaceName: "validname",
+			LockName:      "validname",
+			LeaseId:       string(make([]byte, 65)),
+		}))
+	})
 
-	// invalid namespace name characters
-	assert.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
-		NamespaceName: "invalid name",
-		LockName:      "validname",
-		LeaseId:       "lease1",
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
+			NamespaceName: "invalid name",
+			LockName:      "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
 
-	// invalid lock name characters
-	assert.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
-		NamespaceName: "validname",
-		LockName:      "invalid name",
-		LeaseId:       "lease1",
-	}))
+	t.Run("invalid lock name characters", func(t *testing.T) {
+		require.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
+			NamespaceName: "validname",
+			LockName:      "invalid name",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
 
-	// lease id can have any characters - no validation on lease_id format
-	// assert.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
-	// 	NamespaceName: "validname",
-	// 	LockName:      "validname",
-	// 	LeaseId:       "invalid lease id",
-	// }))
+	t.Run("invalid lease id", func(t *testing.T) {
+		require.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
+			NamespaceName: "validname",
+			LockName:      "validname",
+			LeaseId:       "invalid lease id",
+		}))
+	})
 
-	// expires_at no longer exists in the API
-	// assert.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
-	// 	NamespaceName: "validname",
-	// 	LockName:      "validlock",
-	// 	LeaseId:       "lease1",
-	// 	ExpiresAt:     0,
-	// }))
-
-	// valid request
-	assert.NoError(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
-		NamespaceName: "validname",
-		LockName:      "validlock",
-		LeaseId:       "lease1",
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
+			NamespaceName: "validname",
+			LockName:      "validlock",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
 }
 
 func TestValidateCreateSemaphoreRequest(t *testing.T) {
-	// empty request
-	assert.Error(t, ValidateCreateSemaphoreRequest(&gracklepb.CreateSemaphoreRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateCreateSemaphoreRequest(&gracklepb.CreateSemaphoreRequest{}))
+	})
 
-	// empty namespace name
-	assert.Error(t, ValidateCreateSemaphoreRequest(&gracklepb.CreateSemaphoreRequest{
-		SemaphoreName: "validname",
-		Description:   "validdescription",
-		Permits:       1,
-	}))
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateCreateSemaphoreRequest(&gracklepb.CreateSemaphoreRequest{
+			SemaphoreName: "validname",
+			Description:   "validdescription",
+			Permits:       1,
+		}))
+	})
 
-	// empty semaphore name
-	assert.Error(t, ValidateCreateSemaphoreRequest(&gracklepb.CreateSemaphoreRequest{
-		NamespaceName: "validname",
-		Description:   "validdescription",
-		Permits:       1,
-	}))
+	t.Run("empty semaphore name", func(t *testing.T) {
+		require.Error(t, ValidateCreateSemaphoreRequest(&gracklepb.CreateSemaphoreRequest{
+			NamespaceName: "validname",
+			Description:   "validdescription",
+			Permits:       1,
+		}))
+	})
 
-	// namespace name too long
-	assert.Error(t, ValidateCreateSemaphoreRequest(&gracklepb.CreateSemaphoreRequest{
-		NamespaceName: string(make([]byte, 129)),
-		SemaphoreName: "validname",
-		Description:   "validdescription",
-		Permits:       1,
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateCreateSemaphoreRequest(&gracklepb.CreateSemaphoreRequest{
+			NamespaceName: string(make([]byte, 129)),
+			SemaphoreName: "validname",
+			Description:   "validdescription",
+			Permits:       1,
+		}))
+	})
 
-	// semaphore name too long
-	assert.Error(t, ValidateCreateSemaphoreRequest(&gracklepb.CreateSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: string(make([]byte, 129)),
-		Description:   "validdescription",
-		Permits:       1,
-	}))
+	t.Run("semaphore name too long", func(t *testing.T) {
+		require.Error(t, ValidateCreateSemaphoreRequest(&gracklepb.CreateSemaphoreRequest{
+			NamespaceName: "validname",
+			SemaphoreName: string(make([]byte, 129)),
+			Description:   "validdescription",
+			Permits:       1,
+		}))
+	})
 
-	// invalid namespace name characters
-	assert.Error(t, ValidateCreateSemaphoreRequest(&gracklepb.CreateSemaphoreRequest{
-		NamespaceName: "invalid name",
-		SemaphoreName: "validname",
-		Description:   "validdescription",
-		Permits:       1,
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateCreateSemaphoreRequest(&gracklepb.CreateSemaphoreRequest{
+			NamespaceName: "invalid name",
+			SemaphoreName: "validname",
+			Description:   "validdescription",
+			Permits:       1,
+		}))
+	})
 
-	// invalid semaphore name characters
-	assert.Error(t, ValidateCreateSemaphoreRequest(&gracklepb.CreateSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "invalid name",
-		Description:   "validdescription",
-		Permits:       1,
-	}))
+	t.Run("invalid semaphore name characters", func(t *testing.T) {
+		require.Error(t, ValidateCreateSemaphoreRequest(&gracklepb.CreateSemaphoreRequest{
+			NamespaceName: "validname",
+			SemaphoreName: "invalid name",
+			Description:   "validdescription",
+			Permits:       1,
+		}))
+	})
 
-	// permits must be greater than 0
-	assert.Error(t, ValidateCreateSemaphoreRequest(&gracklepb.CreateSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "validsemaphore",
-		Description:   "validdescription",
-		Permits:       0,
-	}))
+	t.Run("permits must be greater than 0", func(t *testing.T) {
+		require.Error(t, ValidateCreateSemaphoreRequest(&gracklepb.CreateSemaphoreRequest{
+			NamespaceName: "validname",
+			SemaphoreName: "validsemaphore",
+			Description:   "validdescription",
+			Permits:       0,
+		}))
+	})
 
-	// valid request
-	assert.NoError(t, ValidateCreateSemaphoreRequest(&gracklepb.CreateSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "validsemaphore",
-		Description:   "validdescription",
-		Permits:       1,
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateCreateSemaphoreRequest(&gracklepb.CreateSemaphoreRequest{
+			NamespaceName: "validname",
+			SemaphoreName: "validsemaphore",
+			Description:   "validdescription",
+			Permits:       1,
+		}))
+	})
 }
 
 func TestValidateGetSemaphoreRequest(t *testing.T) {
-	// empty request
-	assert.Error(t, ValidateGetSemaphoreRequest(&gracklepb.GetSemaphoreRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateGetSemaphoreRequest(&gracklepb.GetSemaphoreRequest{}))
+	})
 
-	// empty namespace name
-	assert.Error(t, ValidateGetSemaphoreRequest(&gracklepb.GetSemaphoreRequest{
-		SemaphoreName: "validname",
-	}))
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateGetSemaphoreRequest(&gracklepb.GetSemaphoreRequest{
+			SemaphoreName: "validname",
+		}))
+	})
 
-	// empty semaphore name
-	assert.Error(t, ValidateGetSemaphoreRequest(&gracklepb.GetSemaphoreRequest{
-		NamespaceName: "validname",
-	}))
+	t.Run("empty semaphore name", func(t *testing.T) {
+		require.Error(t, ValidateGetSemaphoreRequest(&gracklepb.GetSemaphoreRequest{
+			NamespaceName: "validname",
+		}))
+	})
 
-	// namespace name too long
-	assert.Error(t, ValidateGetSemaphoreRequest(&gracklepb.GetSemaphoreRequest{
-		NamespaceName: string(make([]byte, 129)),
-		SemaphoreName: "validname",
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateGetSemaphoreRequest(&gracklepb.GetSemaphoreRequest{
+			NamespaceName: string(make([]byte, 129)),
+			SemaphoreName: "validname",
+		}))
+	})
 
-	// semaphore name too long
-	assert.Error(t, ValidateGetSemaphoreRequest(&gracklepb.GetSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: string(make([]byte, 129)),
-	}))
+	t.Run("semaphore name too long", func(t *testing.T) {
+		require.Error(t, ValidateGetSemaphoreRequest(&gracklepb.GetSemaphoreRequest{
+			NamespaceName: "validname",
+			SemaphoreName: string(make([]byte, 129)),
+		}))
+	})
 
-	// invalid namespace name characters
-	assert.Error(t, ValidateGetSemaphoreRequest(&gracklepb.GetSemaphoreRequest{
-		NamespaceName: "invalid name",
-		SemaphoreName: "validname",
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateGetSemaphoreRequest(&gracklepb.GetSemaphoreRequest{
+			NamespaceName: "invalid name",
+			SemaphoreName: "validname",
+		}))
+	})
 
-	// invalid semaphore name characters
-	assert.Error(t, ValidateGetSemaphoreRequest(&gracklepb.GetSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "invalid name",
-	}))
+	t.Run("invalid semaphore name characters", func(t *testing.T) {
+		require.Error(t, ValidateGetSemaphoreRequest(&gracklepb.GetSemaphoreRequest{
+			NamespaceName: "validname",
+			SemaphoreName: "invalid name",
+		}))
+	})
 
-	// valid request
-	assert.NoError(t, ValidateGetSemaphoreRequest(&gracklepb.GetSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "validsemaphore",
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateGetSemaphoreRequest(&gracklepb.GetSemaphoreRequest{
+			NamespaceName: "validname",
+			SemaphoreName: "validsemaphore",
+		}))
+	})
 }
 
 func TestValidateReleaseSemaphoreRequest(t *testing.T) {
-	// empty request
-	assert.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{}))
+	})
 
-	// empty namespace name
-	assert.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
-		SemaphoreName: "validname",
-		LeaseId:       "lease1",
-	}))
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
+			SemaphoreName: "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
 
-	// empty semaphore name
-	assert.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
-		NamespaceName: "validname",
-		LeaseId:       "lease1",
-	}))
+	t.Run("empty semaphore name", func(t *testing.T) {
+		require.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
+			NamespaceName: "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
 
-	// empty process id
-	assert.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "validname",
-	}))
+	t.Run("empty process id", func(t *testing.T) {
+		require.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
+			NamespaceName: "validname",
+			SemaphoreName: "validname",
+		}))
+	})
 
-	// namespace name too long
-	assert.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
-		NamespaceName: string(make([]byte, 129)),
-		SemaphoreName: "validname",
-		LeaseId:       "lease1",
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
+			NamespaceName: string(make([]byte, 129)),
+			SemaphoreName: "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
 
-	// semaphore name too long
-	assert.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: string(make([]byte, 129)),
-		LeaseId:       "lease1",
-	}))
+	t.Run("semaphore name too long", func(t *testing.T) {
+		require.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
+			NamespaceName: "validname",
+			SemaphoreName: string(make([]byte, 129)),
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
 
-	// lease id too long (not validated - strings can be any length)
-	// assert.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
-	// 	NamespaceName: "validname",
-	// 	SemaphoreName: "validname",
-	// 	LeaseId:       string(make([]byte, 129)),
-	// }))
+	t.Run("lease id too long", func(t *testing.T) {
+		require.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
+			NamespaceName: "validname",
+			SemaphoreName: "validname",
+			LeaseId:       string(make([]byte, 65)),
+		}))
+	})
 
-	// invalid namespace name characters
-	assert.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
-		NamespaceName: "invalid name",
-		SemaphoreName: "validname",
-		LeaseId:       "lease1",
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
+			NamespaceName: "invalid name",
+			SemaphoreName: "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
 
-	// invalid semaphore name characters
-	assert.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "invalid name",
-		LeaseId:       "lease1",
-	}))
+	t.Run("invalid semaphore name characters", func(t *testing.T) {
+		require.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
+			NamespaceName: "validname",
+			SemaphoreName: "invalid name",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
 
-	// lease id can have any characters - no validation on lease_id format
-	// assert.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
-	// 	NamespaceName: "validname",
-	// 	SemaphoreName: "validname",
-	// 	LeaseId:       "invalid lease id",
-	// }))
+	t.Run("invalid lease id", func(t *testing.T) {
+		require.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
+			NamespaceName: "validname",
+			SemaphoreName: "validname",
+			LeaseId:       "invalid lease id",
+		}))
+	})
 
-	// valid request
-	assert.NoError(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "validsemaphore",
-		LeaseId:       "lease1",
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
+			NamespaceName: "validname",
+			SemaphoreName: "validsemaphore",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
 }
 
 func TestValidateUpdateSemaphoreRequest(t *testing.T) {
-	// empty request
-	assert.Error(t, ValidateUpdateSemaphoreRequest(&gracklepb.UpdateSemaphoreRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateUpdateSemaphoreRequest(&gracklepb.UpdateSemaphoreRequest{}))
+	})
 
-	// empty namespace name
-	assert.Error(t, ValidateUpdateSemaphoreRequest(&gracklepb.UpdateSemaphoreRequest{
-		SemaphoreName: "validname",
-		Description:   "validdescription",
-		Permits:       1,
-	}))
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateUpdateSemaphoreRequest(&gracklepb.UpdateSemaphoreRequest{
+			SemaphoreName: "validname",
+			Description:   "validdescription",
+			Permits:       1,
+		}))
+	})
 
-	// empty semaphore name
-	assert.Error(t, ValidateUpdateSemaphoreRequest(&gracklepb.UpdateSemaphoreRequest{
-		NamespaceName: "validname",
-		Description:   "validdescription",
-		Permits:       1,
-	}))
+	t.Run("empty semaphore name", func(t *testing.T) {
+		require.Error(t, ValidateUpdateSemaphoreRequest(&gracklepb.UpdateSemaphoreRequest{
+			NamespaceName: "validname",
+			Description:   "validdescription",
+			Permits:       1,
+		}))
+	})
 
-	// namespace name too long
-	assert.Error(t, ValidateUpdateSemaphoreRequest(&gracklepb.UpdateSemaphoreRequest{
-		NamespaceName: string(make([]byte, 129)),
-		SemaphoreName: "validname",
-		Description:   "validdescription",
-		Permits:       1,
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateUpdateSemaphoreRequest(&gracklepb.UpdateSemaphoreRequest{
+			NamespaceName: string(make([]byte, 129)),
+			SemaphoreName: "validname",
+			Description:   "validdescription",
+			Permits:       1,
+		}))
+	})
 
-	// semaphore name too long
-	assert.Error(t, ValidateUpdateSemaphoreRequest(&gracklepb.UpdateSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: string(make([]byte, 129)),
-		Description:   "validdescription",
-		Permits:       1,
-	}))
+	t.Run("semaphore name too long", func(t *testing.T) {
+		require.Error(t, ValidateUpdateSemaphoreRequest(&gracklepb.UpdateSemaphoreRequest{
+			NamespaceName: "validname",
+			SemaphoreName: string(make([]byte, 129)),
+			Description:   "validdescription",
+			Permits:       1,
+		}))
+	})
 
-	// invalid namespace name characters
-	assert.Error(t, ValidateUpdateSemaphoreRequest(&gracklepb.UpdateSemaphoreRequest{
-		NamespaceName: "invalid name",
-		SemaphoreName: "validname",
-		Description:   "validdescription",
-		Permits:       1,
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateUpdateSemaphoreRequest(&gracklepb.UpdateSemaphoreRequest{
+			NamespaceName: "invalid name",
+			SemaphoreName: "validname",
+			Description:   "validdescription",
+			Permits:       1,
+		}))
+	})
 
-	// invalid semaphore name characters
-	assert.Error(t, ValidateUpdateSemaphoreRequest(&gracklepb.UpdateSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "invalid name",
-		Description:   "validdescription",
-		Permits:       1,
-	}))
+	t.Run("invalid semaphore name characters", func(t *testing.T) {
+		require.Error(t, ValidateUpdateSemaphoreRequest(&gracklepb.UpdateSemaphoreRequest{
+			NamespaceName: "validname",
+			SemaphoreName: "invalid name",
+			Description:   "validdescription",
+			Permits:       1,
+		}))
+	})
 
-	// permits must be greater than 0
-	assert.Error(t, ValidateUpdateSemaphoreRequest(&gracklepb.UpdateSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "validsemaphore",
-		Description:   "validdescription",
-		Permits:       0,
-	}))
+	t.Run("permits must be greater than 0", func(t *testing.T) {
+		require.Error(t, ValidateUpdateSemaphoreRequest(&gracklepb.UpdateSemaphoreRequest{
+			NamespaceName: "validname",
+			SemaphoreName: "validsemaphore",
+			Description:   "validdescription",
+			Permits:       0,
+		}))
+	})
 
-	// valid request
-	assert.NoError(t, ValidateUpdateSemaphoreRequest(&gracklepb.UpdateSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "validsemaphore",
-		Description:   "validdescription",
-		Permits:       1,
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateUpdateSemaphoreRequest(&gracklepb.UpdateSemaphoreRequest{
+			NamespaceName: "validname",
+			SemaphoreName: "validsemaphore",
+			Description:   "validdescription",
+			Permits:       1,
+		}))
+	})
 }
 
 func TestValidateDeleteSemaphoreRequest(t *testing.T) {
-	// empty request
-	assert.Error(t, ValidateDeleteSemaphoreRequest(&gracklepb.DeleteSemaphoreRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateDeleteSemaphoreRequest(&gracklepb.DeleteSemaphoreRequest{}))
+	})
 
-	// empty namespace name
-	assert.Error(t, ValidateDeleteSemaphoreRequest(&gracklepb.DeleteSemaphoreRequest{
-		SemaphoreName: "validname",
-	}))
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateDeleteSemaphoreRequest(&gracklepb.DeleteSemaphoreRequest{
+			SemaphoreName: "validname",
+		}))
+	})
 
-	// empty semaphore name
-	assert.Error(t, ValidateDeleteSemaphoreRequest(&gracklepb.DeleteSemaphoreRequest{
-		NamespaceName: "validname",
-	}))
+	t.Run("empty semaphore name", func(t *testing.T) {
+		require.Error(t, ValidateDeleteSemaphoreRequest(&gracklepb.DeleteSemaphoreRequest{
+			NamespaceName: "validname",
+		}))
+	})
 
-	// namespace name too long
-	assert.Error(t, ValidateDeleteSemaphoreRequest(&gracklepb.DeleteSemaphoreRequest{
-		NamespaceName: string(make([]byte, 129)),
-		SemaphoreName: "validname",
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateDeleteSemaphoreRequest(&gracklepb.DeleteSemaphoreRequest{
+			NamespaceName: string(make([]byte, 129)),
+			SemaphoreName: "validname",
+		}))
+	})
 
-	// semaphore name too long
-	assert.Error(t, ValidateDeleteSemaphoreRequest(&gracklepb.DeleteSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: string(make([]byte, 129)),
-	}))
+	t.Run("semaphore name too long", func(t *testing.T) {
+		require.Error(t, ValidateDeleteSemaphoreRequest(&gracklepb.DeleteSemaphoreRequest{
+			NamespaceName: "validname",
+			SemaphoreName: string(make([]byte, 129)),
+		}))
+	})
 
-	// invalid namespace name characters
-	assert.Error(t, ValidateDeleteSemaphoreRequest(&gracklepb.DeleteSemaphoreRequest{
-		NamespaceName: "invalid name",
-		SemaphoreName: "validname",
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateDeleteSemaphoreRequest(&gracklepb.DeleteSemaphoreRequest{
+			NamespaceName: "invalid name",
+			SemaphoreName: "validname",
+		}))
+	})
 
-	// invalid semaphore name characters
-	assert.Error(t, ValidateDeleteSemaphoreRequest(&gracklepb.DeleteSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "invalid name",
-	}))
+	t.Run("invalid semaphore name characters", func(t *testing.T) {
+		require.Error(t, ValidateDeleteSemaphoreRequest(&gracklepb.DeleteSemaphoreRequest{
+			NamespaceName: "validname",
+			SemaphoreName: "invalid name",
+		}))
+	})
 
-	// valid request
-	assert.NoError(t, ValidateDeleteSemaphoreRequest(&gracklepb.DeleteSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "validsemaphore",
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateDeleteSemaphoreRequest(&gracklepb.DeleteSemaphoreRequest{
+			NamespaceName: "validname",
+			SemaphoreName: "validsemaphore",
+		}))
+	})
 }
 
 func TestValidateListLocksRequest(t *testing.T) {
-	// Test empty request - should fail due to missing namespace name
-	assert.Error(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{}))
+	t.Run("empty request - should fail due to missing namespace name", func(t *testing.T) {
+		require.Error(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{}))
+	})
 
-	// Test empty namespace name
-	assert.Error(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
-		NamespaceName: "",
-	}))
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
+			NamespaceName: "",
+		}))
+	})
 
-	// Test namespace name too long
-	assert.Error(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
-		NamespaceName: string(make([]byte, 129)),
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
+			NamespaceName: string(make([]byte, 129)),
+		}))
+	})
 
-	// Test invalid namespace name characters
-	assert.Error(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
-		NamespaceName: "invalid name",
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
+			NamespaceName: "invalid name",
+		}))
+	})
 
-	// Test valid request with no pagination
-	assert.NoError(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "",
-		Limit:           0,
-	}))
+	t.Run("valid request with no pagination", func(t *testing.T) {
+		require.NoError(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "",
+			Limit:           0,
+		}))
+	})
 
-	// Test valid request with pagination token
-	assert.NoError(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "dGVzdA==",
-		Limit:           0,
-	}))
+	t.Run("valid request with pagination token", func(t *testing.T) {
+		require.NoError(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "dGVzdA==",
+			Limit:           0,
+		}))
+	})
 
-	// Test valid request with limit
-	assert.NoError(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "",
-		Limit:           50,
-	}))
+	t.Run("valid request with limit", func(t *testing.T) {
+		require.NoError(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "",
+			Limit:           50,
+		}))
+	})
 
-	// Test valid request with both pagination token and limit
-	assert.NoError(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "dGVzdA==",
-		Limit:           100,
-	}))
+	t.Run("valid request with both pagination token and limit", func(t *testing.T) {
+		require.NoError(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "dGVzdA==",
+			Limit:           100,
+		}))
+	})
 
-	// Test invalid pagination token (not base64)
-	assert.Error(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "invalid-base64!@#",
-		Limit:           50,
-	}))
+	t.Run("invalid pagination token (not base64)", func(t *testing.T) {
+		require.Error(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "invalid-base64!@#",
+			Limit:           50,
+		}))
+	})
 
-	// Test pagination token too long
-	longToken := string(make([]byte, 1025))
-	assert.Error(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
-		NamespaceName:   "validname",
-		PaginationToken: longToken,
-		Limit:           50,
-	}))
+	t.Run("pagination token too long", func(t *testing.T) {
+		longToken := string(make([]byte, 1025))
+		require.Error(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
+			NamespaceName:   "validname",
+			PaginationToken: longToken,
+			Limit:           50,
+		}))
+	})
 
-	// Test limit too high
-	assert.Error(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "",
-		Limit:           101,
-	}))
+	t.Run("limit too high", func(t *testing.T) {
+		require.Error(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "",
+			Limit:           101,
+		}))
+	})
 
-	// Test negative limit
-	assert.Error(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "",
-		Limit:           -1,
-	}))
+	t.Run("negative limit", func(t *testing.T) {
+		require.Error(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "",
+			Limit:           -1,
+		}))
+	})
 
-	// Test edge case: limit at maximum
-	assert.NoError(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "",
-		Limit:           100,
-	}))
+	t.Run("edge case: limit at maximum", func(t *testing.T) {
+		require.NoError(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "",
+			Limit:           100,
+		}))
+	})
 
-	// Test valid base64 token at maximum length
-	validMaxToken := base64.StdEncoding.EncodeToString(make([]byte, 768)) // 768 bytes = 1024 base64 chars
-	assert.NoError(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
-		NamespaceName:   "validname",
-		PaginationToken: validMaxToken,
-		Limit:           50,
-	}))
+	t.Run("valid base64 token at maximum length", func(t *testing.T) {
+		validMaxToken := base64.StdEncoding.EncodeToString(make([]byte, 768)) // 768 bytes = 1024 base64 chars
+		require.NoError(t, ValidateListLocksRequest(&gracklepb.ListLocksRequest{
+			NamespaceName:   "validname",
+			PaginationToken: validMaxToken,
+			Limit:           50,
+		}))
+	})
 }
 
 func TestValidateListSemaphoresRequest(t *testing.T) {
-	// Test empty request - should fail due to missing namespace name
-	assert.Error(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{}))
+	t.Run("empty request - should fail due to missing namespace name", func(t *testing.T) {
+		require.Error(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{}))
+	})
 
-	// Test empty namespace name
-	assert.Error(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
-		NamespaceName: "",
-	}))
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
+			NamespaceName: "",
+		}))
+	})
 
-	// Test namespace name too long
-	assert.Error(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
-		NamespaceName: string(make([]byte, 129)),
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
+			NamespaceName: string(make([]byte, 129)),
+		}))
+	})
 
-	// Test invalid namespace name characters
-	assert.Error(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
-		NamespaceName: "invalid name",
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
+			NamespaceName: "invalid name",
+		}))
+	})
 
-	// Test valid request with no pagination
-	assert.NoError(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "",
-		Limit:           0,
-	}))
+	t.Run("valid request with no pagination", func(t *testing.T) {
+		require.NoError(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "",
+			Limit:           0,
+		}))
+	})
 
-	// Test valid request with pagination token
-	assert.NoError(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "dGVzdA==",
-		Limit:           0,
-	}))
+	t.Run("valid request with pagination token", func(t *testing.T) {
+		require.NoError(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "dGVzdA==",
+			Limit:           0,
+		}))
+	})
 
-	// Test valid request with limit
-	assert.NoError(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "",
-		Limit:           50,
-	}))
+	t.Run("valid request with limit", func(t *testing.T) {
+		require.NoError(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "",
+			Limit:           50,
+		}))
+	})
 
-	// Test valid request with both pagination token and limit
-	assert.NoError(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "dGVzdA==",
-		Limit:           100,
-	}))
+	t.Run("valid request with both pagination token and limit", func(t *testing.T) {
+		require.NoError(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "dGVzdA==",
+			Limit:           100,
+		}))
+	})
 
-	// Test invalid pagination token (not base64)
-	assert.Error(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "invalid-base64!@#",
-		Limit:           50,
-	}))
+	t.Run("invalid pagination token (not base64)", func(t *testing.T) {
+		require.Error(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "invalid-base64!@#",
+			Limit:           50,
+		}))
+	})
 
-	// Test pagination token too long
-	longToken := string(make([]byte, 1025))
-	assert.Error(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
-		NamespaceName:   "validname",
-		PaginationToken: longToken,
-		Limit:           50,
-	}))
+	t.Run("pagination token too long", func(t *testing.T) {
+		longToken := string(make([]byte, 1025))
+		require.Error(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
+			NamespaceName:   "validname",
+			PaginationToken: longToken,
+			Limit:           50,
+		}))
+	})
 
-	// Test limit too high
-	assert.Error(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "",
-		Limit:           101,
-	}))
+	t.Run("limit too high", func(t *testing.T) {
+		require.Error(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "",
+			Limit:           101,
+		}))
+	})
 
-	// Test negative limit
-	assert.Error(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "",
-		Limit:           -1,
-	}))
+	t.Run("negative limit", func(t *testing.T) {
+		require.Error(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "",
+			Limit:           -1,
+		}))
+	})
 
-	// Test edge case: limit at maximum
-	assert.NoError(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "",
-		Limit:           100,
-	}))
+	t.Run("edge case: limit at maximum", func(t *testing.T) {
+		require.NoError(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "",
+			Limit:           100,
+		}))
+	})
 
-	// Test valid base64 token at maximum length
-	validMaxToken := base64.StdEncoding.EncodeToString(make([]byte, 768)) // 768 bytes = 1024 base64 chars
-	assert.NoError(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
-		NamespaceName:   "validname",
-		PaginationToken: validMaxToken,
-		Limit:           50,
-	}))
+	t.Run("valid base64 token at maximum length", func(t *testing.T) {
+		validMaxToken := base64.StdEncoding.EncodeToString(make([]byte, 768)) // 768 bytes = 1024 base64 chars
+		require.NoError(t, ValidateListSemaphoresRequest(&gracklepb.ListSemaphoresRequest{
+			NamespaceName:   "validname",
+			PaginationToken: validMaxToken,
+			Limit:           50,
+		}))
+	})
 }
 
 func TestValidateAcquireSemaphoreRequest(t *testing.T) {
-	// empty request
-	assert.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{}))
+	})
 
-	// empty namespace name
-	assert.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
-		SemaphoreName: "validname",
-		LeaseId:       "lease1",
-	}))
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
+			SemaphoreName:  "validname",
+			LeaseId:        "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TimeoutSeconds: 10,
+			Weight:         1,
+		}))
+	})
 
-	// empty semaphore name
-	assert.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
-		NamespaceName: "validname",
-		LeaseId:       "lease1",
-	}))
+	t.Run("empty semaphore name", func(t *testing.T) {
+		require.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
+			NamespaceName:  "validname",
+			LeaseId:        "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TimeoutSeconds: 10,
+			Weight:         1,
+		}))
+	})
 
-	// empty process id
-	assert.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "validname",
-	}))
+	t.Run("empty process id", func(t *testing.T) {
+		require.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
+			NamespaceName:  "validname",
+			SemaphoreName:  "validname",
+			TimeoutSeconds: 10,
+			Weight:         1,
+		}))
+	})
 
-	// namespace name too long
-	assert.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
-		NamespaceName: string(make([]byte, 129)),
-		SemaphoreName: "validname",
-		LeaseId:       "lease1",
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
+			NamespaceName:  string(make([]byte, 129)),
+			SemaphoreName:  "validname",
+			LeaseId:        "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TimeoutSeconds: 10,
+			Weight:         1,
+		}))
+	})
 
-	// semaphore name too long
-	assert.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: string(make([]byte, 129)),
-		LeaseId:       "lease1",
-	}))
+	t.Run("semaphore name too long", func(t *testing.T) {
+		require.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
+			NamespaceName:  "validname",
+			SemaphoreName:  string(make([]byte, 129)),
+			LeaseId:        "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TimeoutSeconds: 10,
+			Weight:         1,
+		}))
+	})
 
-	// lease id too long (not validated - strings can be any length)
-	// assert.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
-	// 	NamespaceName: "validname",
-	// 	SemaphoreName: "validname",
-	// 	LeaseId:       string(make([]byte, 129)),
-	// }))
+	t.Run("lease id too long", func(t *testing.T) {
+		require.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
+			NamespaceName:  "validname",
+			SemaphoreName:  "validname",
+			LeaseId:        string(make([]byte, 65)),
+			TimeoutSeconds: 10,
+			Weight:         1,
+		}))
+	})
 
-	// invalid namespace name characters
-	assert.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
-		NamespaceName: "invalid name",
-		SemaphoreName: "validname",
-		LeaseId:       "lease1",
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
+			NamespaceName:  "invalid name",
+			SemaphoreName:  "validname",
+			LeaseId:        "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TimeoutSeconds: 10,
+			Weight:         1,
+		}))
+	})
 
-	// invalid semaphore name characters
-	assert.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "invalid name",
-		LeaseId:       "lease1",
-	}))
+	t.Run("invalid semaphore name characters", func(t *testing.T) {
+		require.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
+			NamespaceName:  "validname",
+			SemaphoreName:  "invalid name",
+			LeaseId:        "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TimeoutSeconds: 10,
+			Weight:         1,
+		}))
+	})
 
-	// lease id can have any characters - no validation on lease_id format
-	// assert.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
-	// 	NamespaceName: "validname",
-	// 	SemaphoreName: "validname",
-	// 	LeaseId:       "invalid lease id",
-	// }))
+	t.Run("invalid lease id", func(t *testing.T) {
+		require.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
+			NamespaceName:  "validname",
+			SemaphoreName:  "validname",
+			LeaseId:        "invalid lease id",
+			TimeoutSeconds: 10,
+			Weight:         1,
+		}))
+	})
 
-	// expires_at no longer exists in the API
-	// assert.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
-	// 	NamespaceName: "validname",
-	// 	SemaphoreName: "validsemaphore",
-	// 	LeaseId:       "lease1",
-	// 	ExpiresAt:     0,
-	// }))
+	t.Run("timeout seconds zero", func(t *testing.T) {
+		require.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
+			NamespaceName:  "validname",
+			SemaphoreName:  "validname",
+			LeaseId:        "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TimeoutSeconds: 0,
+			Weight:         1,
+		}))
+	})
 
-	// valid request
-	assert.NoError(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "validsemaphore",
-		LeaseId:       "lease1",
-	}))
+	t.Run("timeout seconds negative", func(t *testing.T) {
+		require.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
+			NamespaceName:  "validname",
+			SemaphoreName:  "validname",
+			LeaseId:        "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TimeoutSeconds: -1,
+			Weight:         1,
+		}))
+	})
+
+	t.Run("timeout seconds too high", func(t *testing.T) {
+		require.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
+			NamespaceName:  "validname",
+			SemaphoreName:  "validname",
+			LeaseId:        "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TimeoutSeconds: 301,
+			Weight:         1,
+		}))
+	})
+
+	t.Run("zero weight", func(t *testing.T) {
+		require.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
+			NamespaceName:  "validname",
+			SemaphoreName:  "validname",
+			LeaseId:        "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TimeoutSeconds: 10,
+			Weight:         0,
+		}))
+	})
+
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
+			NamespaceName:  "validname",
+			SemaphoreName:  "validname",
+			LeaseId:        "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TimeoutSeconds: 10,
+			Weight:         1,
+		}))
+	})
+
+	t.Run("valid request with maximum timeout", func(t *testing.T) {
+		require.NoError(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
+			NamespaceName:  "validname",
+			SemaphoreName:  "validname",
+			LeaseId:        "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TimeoutSeconds: 300,
+			Weight:         1,
+		}))
+	})
 }
 
 func TestValidateListWaitGroupJobsRequest(t *testing.T) {
-	// Test empty request - should fail due to missing namespace name
-	assert.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{}))
+	t.Run("empty request - should fail due to missing namespace name", func(t *testing.T) {
+		require.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{}))
+	})
 
-	// Test missing namespace name
-	assert.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
-		WaitGroupName: "validname",
-	}))
+	t.Run("missing namespace name", func(t *testing.T) {
+		require.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
+			WaitGroupName: "validname",
+		}))
+	})
 
-	// Test missing wait group name
-	assert.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
-		NamespaceName: "validname",
-	}))
+	t.Run("missing wait group name", func(t *testing.T) {
+		require.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
+			NamespaceName: "validname",
+		}))
+	})
 
-	// Test invalid namespace name characters
-	assert.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
-		NamespaceName: "invalid name",
-		WaitGroupName: "validname",
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
+			NamespaceName: "invalid name",
+			WaitGroupName: "validname",
+		}))
+	})
 
-	// Test invalid wait group name characters
-	assert.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
-		NamespaceName: "validname",
-		WaitGroupName: "invalid name",
-	}))
+	t.Run("invalid wait group name characters", func(t *testing.T) {
+		require.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
+			NamespaceName: "validname",
+			WaitGroupName: "invalid name",
+		}))
+	})
 
-	// Test namespace name too long
-	assert.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
-		NamespaceName: string(make([]byte, 129)),
-		WaitGroupName: "validname",
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
+			NamespaceName: string(make([]byte, 129)),
+			WaitGroupName: "validname",
+		}))
+	})
 
-	// Test wait group name too long
-	assert.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
-		NamespaceName: "validname",
-		WaitGroupName: string(make([]byte, 129)),
-	}))
+	t.Run("wait group name too long", func(t *testing.T) {
+		require.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
+			NamespaceName: "validname",
+			WaitGroupName: string(make([]byte, 129)),
+		}))
+	})
 
-	// Test invalid pagination token (not base64)
-	assert.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
-		NamespaceName:   "validname",
-		WaitGroupName:   "validname",
-		PaginationToken: "invalid-base64!@#",
-	}))
+	t.Run("invalid pagination token (not base64)", func(t *testing.T) {
+		require.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
+			NamespaceName:   "validname",
+			WaitGroupName:   "validname",
+			PaginationToken: "invalid-base64!@#",
+		}))
+	})
 
-	// Test pagination token too long
-	longToken := string(make([]byte, 1025))
-	assert.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
-		NamespaceName:   "validname",
-		WaitGroupName:   "validname",
-		PaginationToken: longToken,
-	}))
+	t.Run("pagination token too long", func(t *testing.T) {
+		longToken := string(make([]byte, 1025))
+		require.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
+			NamespaceName:   "validname",
+			WaitGroupName:   "validname",
+			PaginationToken: longToken,
+		}))
+	})
 
-	// Test limit too high
-	assert.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
-		NamespaceName: "validname",
-		WaitGroupName: "validname",
-		Limit:         101,
-	}))
+	t.Run("limit too high", func(t *testing.T) {
+		require.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
+			NamespaceName: "validname",
+			WaitGroupName: "validname",
+			Limit:         101,
+		}))
+	})
 
-	// Test negative limit
-	assert.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
-		NamespaceName: "validname",
-		WaitGroupName: "validname",
-		Limit:         -1,
-	}))
+	t.Run("negative limit", func(t *testing.T) {
+		require.Error(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
+			NamespaceName: "validname",
+			WaitGroupName: "validname",
+			Limit:         -1,
+		}))
+	})
 
-	// Test valid request
-	assert.NoError(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
-		NamespaceName: "validname",
-		WaitGroupName: "validname",
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
+			NamespaceName: "validname",
+			WaitGroupName: "validname",
+		}))
+	})
 
-	// Test valid request with pagination
-	assert.NoError(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
-		NamespaceName:   "validname",
-		WaitGroupName:   "validname",
-		PaginationToken: "dGVzdA==",
-		Limit:           50,
-	}))
+	t.Run("valid request with pagination", func(t *testing.T) {
+		require.NoError(t, ValidateListWaitGroupJobsRequest(&gracklepb.ListWaitGroupJobsRequest{
+			NamespaceName:   "validname",
+			WaitGroupName:   "validname",
+			PaginationToken: "dGVzdA==",
+			Limit:           50,
+		}))
+	})
 }
 
 func TestValidateListSemaphoreHoldersRequest(t *testing.T) {
-	// Test empty request - should fail due to missing namespace name
-	assert.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{}))
+	t.Run("empty request - should fail due to missing namespace name", func(t *testing.T) {
+		require.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{}))
+	})
 
-	// Test missing namespace name
-	assert.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
-		SemaphoreName: "validname",
-	}))
+	t.Run("missing namespace name", func(t *testing.T) {
+		require.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
+			SemaphoreName: "validname",
+		}))
+	})
 
-	// Test missing semaphore name
-	assert.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
-		NamespaceName: "validname",
-	}))
+	t.Run("missing semaphore name", func(t *testing.T) {
+		require.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
+			NamespaceName: "validname",
+		}))
+	})
 
-	// Test invalid namespace name characters
-	assert.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
-		NamespaceName: "invalid name",
-		SemaphoreName: "validname",
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
+			NamespaceName: "invalid name",
+			SemaphoreName: "validname",
+		}))
+	})
 
-	// Test invalid semaphore name characters
-	assert.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "invalid name",
-	}))
+	t.Run("invalid semaphore name characters", func(t *testing.T) {
+		require.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
+			NamespaceName: "validname",
+			SemaphoreName: "invalid name",
+		}))
+	})
 
-	// Test namespace name too long
-	assert.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
-		NamespaceName: string(make([]byte, 129)),
-		SemaphoreName: "validname",
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
+			NamespaceName: string(make([]byte, 129)),
+			SemaphoreName: "validname",
+		}))
+	})
 
-	// Test semaphore name too long
-	assert.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
-		NamespaceName: "validname",
-		SemaphoreName: string(make([]byte, 129)),
-	}))
+	t.Run("semaphore name too long", func(t *testing.T) {
+		require.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
+			NamespaceName: "validname",
+			SemaphoreName: string(make([]byte, 129)),
+		}))
+	})
 
-	// Test invalid pagination token (not base64)
-	assert.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
-		NamespaceName:   "validname",
-		SemaphoreName:   "validname",
-		PaginationToken: "invalid-base64!@#",
-	}))
+	t.Run("invalid pagination token (not base64)", func(t *testing.T) {
+		require.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
+			NamespaceName:   "validname",
+			SemaphoreName:   "validname",
+			PaginationToken: "invalid-base64!@#",
+		}))
+	})
 
-	// Test pagination token too long
-	longToken := string(make([]byte, 1025))
-	assert.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
-		NamespaceName:   "validname",
-		SemaphoreName:   "validname",
-		PaginationToken: longToken,
-	}))
+	t.Run("pagination token too long", func(t *testing.T) {
+		longToken := string(make([]byte, 1025))
+		require.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
+			NamespaceName:   "validname",
+			SemaphoreName:   "validname",
+			PaginationToken: longToken,
+		}))
+	})
 
-	// Test limit too high
-	assert.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "validname",
-		Limit:         101,
-	}))
+	t.Run("limit too high", func(t *testing.T) {
+		require.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
+			NamespaceName: "validname",
+			SemaphoreName: "validname",
+			Limit:         101,
+		}))
+	})
 
-	// Test negative limit
-	assert.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "validname",
-		Limit:         -1,
-	}))
+	t.Run("negative limit", func(t *testing.T) {
+		require.Error(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
+			NamespaceName: "validname",
+			SemaphoreName: "validname",
+			Limit:         -1,
+		}))
+	})
 
-	// Test valid request
-	assert.NoError(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "validname",
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
+			NamespaceName: "validname",
+			SemaphoreName: "validname",
+		}))
+	})
 
-	// Test valid request with pagination
-	assert.NoError(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
-		NamespaceName:   "validname",
-		SemaphoreName:   "validname",
-		PaginationToken: "dGVzdA==",
-		Limit:           50,
-	}))
+	t.Run("valid request with pagination", func(t *testing.T) {
+		require.NoError(t, ValidateListSemaphoreHoldersRequest(&gracklepb.ListSemaphoreHoldersRequest{
+			NamespaceName:   "validname",
+			SemaphoreName:   "validname",
+			PaginationToken: "dGVzdA==",
+			Limit:           50,
+		}))
+	})
 }
 
 func TestValidateCreateBarrierRequest(t *testing.T) {
-	// Test empty request
-	assert.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{}))
+	})
 
-	// Test missing namespace name
-	assert.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
-		BarrierName:       "validname",
-		ExpectedProcesses: 3,
-		ExpiresAt:         time.Now().UnixNano(),
-	}))
+	t.Run("missing namespace name", func(t *testing.T) {
+		require.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
+			BarrierName:       "validname",
+			ExpectedProcesses: 3,
+			ExpiresAt:         time.Now().UnixNano(),
+		}))
+	})
 
-	// Test missing barrier name
-	assert.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
-		NamespaceName:     "validname",
-		ExpectedProcesses: 3,
-		ExpiresAt:         time.Now().UnixNano(),
-	}))
+	t.Run("missing barrier name", func(t *testing.T) {
+		require.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
+			NamespaceName:     "validname",
+			ExpectedProcesses: 3,
+			ExpiresAt:         time.Now().UnixNano(),
+		}))
+	})
 
-	// Test invalid namespace name characters
-	assert.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
-		NamespaceName:     "invalid name",
-		BarrierName:       "validname",
-		ExpectedProcesses: 3,
-		ExpiresAt:         time.Now().UnixNano(),
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
+			NamespaceName:     "invalid name",
+			BarrierName:       "validname",
+			ExpectedProcesses: 3,
+			ExpiresAt:         time.Now().UnixNano(),
+		}))
+	})
 
-	// Test invalid barrier name characters
-	assert.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
-		NamespaceName:     "validname",
-		BarrierName:       "invalid name",
-		ExpectedProcesses: 3,
-		ExpiresAt:         time.Now().UnixNano(),
-	}))
+	t.Run("invalid barrier name characters", func(t *testing.T) {
+		require.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
+			NamespaceName:     "validname",
+			BarrierName:       "invalid name",
+			ExpectedProcesses: 3,
+			ExpiresAt:         time.Now().UnixNano(),
+		}))
+	})
 
-	// Test namespace name too long
-	assert.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
-		NamespaceName:     string(make([]byte, 129)),
-		BarrierName:       "validname",
-		ExpectedProcesses: 3,
-		ExpiresAt:         time.Now().UnixNano(),
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
+			NamespaceName:     string(make([]byte, 129)),
+			BarrierName:       "validname",
+			ExpectedProcesses: 3,
+			ExpiresAt:         time.Now().UnixNano(),
+		}))
+	})
 
-	// Test barrier name too long
-	assert.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
-		NamespaceName:     "validname",
-		BarrierName:       string(make([]byte, 129)),
-		ExpectedProcesses: 3,
-		ExpiresAt:         time.Now().UnixNano(),
-	}))
+	t.Run("barrier name too long", func(t *testing.T) {
+		require.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
+			NamespaceName:     "validname",
+			BarrierName:       string(make([]byte, 129)),
+			ExpectedProcesses: 3,
+			ExpiresAt:         time.Now().UnixNano(),
+		}))
+	})
 
-	// Test description too long
-	assert.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
-		NamespaceName:     "validname",
-		BarrierName:       "validname",
-		Description:       string(make([]byte, 1025)),
-		ExpectedProcesses: 3,
-		ExpiresAt:         time.Now().UnixNano(),
-	}))
+	t.Run("description too long", func(t *testing.T) {
+		require.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
+			NamespaceName:     "validname",
+			BarrierName:       "validname",
+			Description:       string(make([]byte, 1025)),
+			ExpectedProcesses: 3,
+			ExpiresAt:         time.Now().UnixNano(),
+		}))
+	})
 
-	// Test expected processes zero
-	assert.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
-		NamespaceName:     "validname",
-		BarrierName:       "validname",
-		ExpectedProcesses: 0,
-		ExpiresAt:         time.Now().UnixNano(),
-	}))
+	t.Run("expected processes zero", func(t *testing.T) {
+		require.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
+			NamespaceName:     "validname",
+			BarrierName:       "validname",
+			ExpectedProcesses: 0,
+			ExpiresAt:         time.Now().UnixNano(),
+		}))
+	})
 
-	// Test expires at zero
-	assert.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
-		NamespaceName:     "validname",
-		BarrierName:       "validname",
-		ExpectedProcesses: 3,
-		ExpiresAt:         0,
-	}))
+	t.Run("expires at zero", func(t *testing.T) {
+		require.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
+			NamespaceName:     "validname",
+			BarrierName:       "validname",
+			ExpectedProcesses: 3,
+			ExpiresAt:         0,
+		}))
+	})
 
-	// Test expires at negative
-	assert.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
-		NamespaceName:     "validname",
-		BarrierName:       "validname",
-		ExpectedProcesses: 3,
-		ExpiresAt:         -1,
-	}))
+	t.Run("expires at negative", func(t *testing.T) {
+		require.Error(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
+			NamespaceName:     "validname",
+			BarrierName:       "validname",
+			ExpectedProcesses: 3,
+			ExpiresAt:         -1,
+		}))
+	})
 
-	// Test valid request
-	assert.NoError(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
-		NamespaceName:     "validname",
-		BarrierName:       "validname",
-		ExpectedProcesses: 3,
-		ExpiresAt:         time.Now().UnixNano(),
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
+			NamespaceName:     "validname",
+			BarrierName:       "validname",
+			ExpectedProcesses: 3,
+			ExpiresAt:         time.Now().UnixNano(),
+		}))
+	})
 
-	// Test valid request with description
-	assert.NoError(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
-		NamespaceName:     "validname",
-		BarrierName:       "validname",
-		Description:       "Valid description",
-		ExpectedProcesses: 3,
-		ExpiresAt:         time.Now().UnixNano(),
-	}))
+	t.Run("valid request with description", func(t *testing.T) {
+		require.NoError(t, ValidateCreateBarrierRequest(&gracklepb.CreateBarrierRequest{
+			NamespaceName:     "validname",
+			BarrierName:       "validname",
+			Description:       "Valid description",
+			ExpectedProcesses: 3,
+			ExpiresAt:         time.Now().UnixNano(),
+		}))
+	})
 }
 
 func TestValidateListBarriersRequest(t *testing.T) {
-	// Test empty request - should fail due to missing namespace name
-	assert.Error(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{}))
+	t.Run("empty request - should fail due to missing namespace name", func(t *testing.T) {
+		require.Error(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{}))
+	})
 
-	// Test missing namespace name
-	assert.Error(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
-		PaginationToken: "",
-		Limit:           0,
-	}))
+	t.Run("missing namespace name", func(t *testing.T) {
+		require.Error(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
+			PaginationToken: "",
+			Limit:           0,
+		}))
+	})
 
-	// Test invalid namespace name characters
-	assert.Error(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
-		NamespaceName: "invalid name",
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
+			NamespaceName: "invalid name",
+		}))
+	})
 
-	// Test namespace name too long
-	assert.Error(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
-		NamespaceName: string(make([]byte, 129)),
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
+			NamespaceName: string(make([]byte, 129)),
+		}))
+	})
 
-	// Test invalid pagination token (not base64)
-	assert.Error(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "invalid-base64!@#",
-	}))
+	t.Run("invalid pagination token (not base64)", func(t *testing.T) {
+		require.Error(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "invalid-base64!@#",
+		}))
+	})
 
-	// Test pagination token too long
-	longToken := string(make([]byte, 1025))
-	assert.Error(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
-		NamespaceName:   "validname",
-		PaginationToken: longToken,
-	}))
+	t.Run("pagination token too long", func(t *testing.T) {
+		longToken := string(make([]byte, 1025))
+		require.Error(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
+			NamespaceName:   "validname",
+			PaginationToken: longToken,
+		}))
+	})
 
-	// Test limit too high
-	assert.Error(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
-		NamespaceName: "validname",
-		Limit:         101,
-	}))
+	t.Run("limit too high", func(t *testing.T) {
+		require.Error(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
+			NamespaceName: "validname",
+			Limit:         101,
+		}))
+	})
 
-	// Test negative limit
-	assert.Error(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
-		NamespaceName: "validname",
-		Limit:         -1,
-	}))
+	t.Run("negative limit", func(t *testing.T) {
+		require.Error(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
+			NamespaceName: "validname",
+			Limit:         -1,
+		}))
+	})
 
-	// Test valid request
-	assert.NoError(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
-		NamespaceName: "validname",
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
+			NamespaceName: "validname",
+		}))
+	})
 
-	// Test valid request with pagination
-	assert.NoError(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
-		NamespaceName:   "validname",
-		PaginationToken: "dGVzdA==",
-		Limit:           50,
-	}))
+	t.Run("valid request with pagination", func(t *testing.T) {
+		require.NoError(t, ValidateListBarriersRequest(&gracklepb.ListBarriersRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "dGVzdA==",
+			Limit:           50,
+		}))
+	})
 }
 
 func TestValidateGetBarrierRequest(t *testing.T) {
-	// Test empty request
-	assert.Error(t, ValidateGetBarrierRequest(&gracklepb.GetBarrierRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateGetBarrierRequest(&gracklepb.GetBarrierRequest{}))
+	})
 
-	// Test missing namespace name
-	assert.Error(t, ValidateGetBarrierRequest(&gracklepb.GetBarrierRequest{
-		BarrierName: "validname",
-	}))
+	t.Run("missing namespace name", func(t *testing.T) {
+		require.Error(t, ValidateGetBarrierRequest(&gracklepb.GetBarrierRequest{
+			BarrierName: "validname",
+		}))
+	})
 
-	// Test missing barrier name
-	assert.Error(t, ValidateGetBarrierRequest(&gracklepb.GetBarrierRequest{
-		NamespaceName: "validname",
-	}))
+	t.Run("missing barrier name", func(t *testing.T) {
+		require.Error(t, ValidateGetBarrierRequest(&gracklepb.GetBarrierRequest{
+			NamespaceName: "validname",
+		}))
+	})
 
-	// Test invalid namespace name characters
-	assert.Error(t, ValidateGetBarrierRequest(&gracklepb.GetBarrierRequest{
-		NamespaceName: "invalid name",
-		BarrierName:   "validname",
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateGetBarrierRequest(&gracklepb.GetBarrierRequest{
+			NamespaceName: "invalid name",
+			BarrierName:   "validname",
+		}))
+	})
 
-	// Test invalid barrier name characters
-	assert.Error(t, ValidateGetBarrierRequest(&gracklepb.GetBarrierRequest{
-		NamespaceName: "validname",
-		BarrierName:   "invalid name",
-	}))
+	t.Run("invalid barrier name characters", func(t *testing.T) {
+		require.Error(t, ValidateGetBarrierRequest(&gracklepb.GetBarrierRequest{
+			NamespaceName: "validname",
+			BarrierName:   "invalid name",
+		}))
+	})
 
-	// Test namespace name too long
-	assert.Error(t, ValidateGetBarrierRequest(&gracklepb.GetBarrierRequest{
-		NamespaceName: string(make([]byte, 129)),
-		BarrierName:   "validname",
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateGetBarrierRequest(&gracklepb.GetBarrierRequest{
+			NamespaceName: string(make([]byte, 129)),
+			BarrierName:   "validname",
+		}))
+	})
 
-	// Test barrier name too long
-	assert.Error(t, ValidateGetBarrierRequest(&gracklepb.GetBarrierRequest{
-		NamespaceName: "validname",
-		BarrierName:   string(make([]byte, 129)),
-	}))
+	t.Run("barrier name too long", func(t *testing.T) {
+		require.Error(t, ValidateGetBarrierRequest(&gracklepb.GetBarrierRequest{
+			NamespaceName: "validname",
+			BarrierName:   string(make([]byte, 129)),
+		}))
+	})
 
-	// Test valid request
-	assert.NoError(t, ValidateGetBarrierRequest(&gracklepb.GetBarrierRequest{
-		NamespaceName: "validname",
-		BarrierName:   "validname",
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateGetBarrierRequest(&gracklepb.GetBarrierRequest{
+			NamespaceName: "validname",
+			BarrierName:   "validname",
+		}))
+	})
 }
 
 func TestValidateDeleteBarrierRequest(t *testing.T) {
-	// Test empty request
-	assert.Error(t, ValidateDeleteBarrierRequest(&gracklepb.DeleteBarrierRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateDeleteBarrierRequest(&gracklepb.DeleteBarrierRequest{}))
+	})
 
-	// Test missing namespace name
-	assert.Error(t, ValidateDeleteBarrierRequest(&gracklepb.DeleteBarrierRequest{
-		BarrierName: "validname",
-	}))
+	t.Run("missing namespace name", func(t *testing.T) {
+		require.Error(t, ValidateDeleteBarrierRequest(&gracklepb.DeleteBarrierRequest{
+			BarrierName: "validname",
+		}))
+	})
 
-	// Test missing barrier name
-	assert.Error(t, ValidateDeleteBarrierRequest(&gracklepb.DeleteBarrierRequest{
-		NamespaceName: "validname",
-	}))
+	t.Run("missing barrier name", func(t *testing.T) {
+		require.Error(t, ValidateDeleteBarrierRequest(&gracklepb.DeleteBarrierRequest{
+			NamespaceName: "validname",
+		}))
+	})
 
-	// Test invalid namespace name characters
-	assert.Error(t, ValidateDeleteBarrierRequest(&gracklepb.DeleteBarrierRequest{
-		NamespaceName: "invalid name",
-		BarrierName:   "validname",
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateDeleteBarrierRequest(&gracklepb.DeleteBarrierRequest{
+			NamespaceName: "invalid name",
+			BarrierName:   "validname",
+		}))
+	})
 
-	// Test invalid barrier name characters
-	assert.Error(t, ValidateDeleteBarrierRequest(&gracklepb.DeleteBarrierRequest{
-		NamespaceName: "validname",
-		BarrierName:   "invalid name",
-	}))
+	t.Run("invalid barrier name characters", func(t *testing.T) {
+		require.Error(t, ValidateDeleteBarrierRequest(&gracklepb.DeleteBarrierRequest{
+			NamespaceName: "validname",
+			BarrierName:   "invalid name",
+		}))
+	})
 
-	// Test namespace name too long
-	assert.Error(t, ValidateDeleteBarrierRequest(&gracklepb.DeleteBarrierRequest{
-		NamespaceName: string(make([]byte, 129)),
-		BarrierName:   "validname",
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateDeleteBarrierRequest(&gracklepb.DeleteBarrierRequest{
+			NamespaceName: string(make([]byte, 129)),
+			BarrierName:   "validname",
+		}))
+	})
 
-	// Test barrier name too long
-	assert.Error(t, ValidateDeleteBarrierRequest(&gracklepb.DeleteBarrierRequest{
-		NamespaceName: "validname",
-		BarrierName:   string(make([]byte, 129)),
-	}))
+	t.Run("barrier name too long", func(t *testing.T) {
+		require.Error(t, ValidateDeleteBarrierRequest(&gracklepb.DeleteBarrierRequest{
+			NamespaceName: "validname",
+			BarrierName:   string(make([]byte, 129)),
+		}))
+	})
 
-	// Test valid request
-	assert.NoError(t, ValidateDeleteBarrierRequest(&gracklepb.DeleteBarrierRequest{
-		NamespaceName: "validname",
-		BarrierName:   "validname",
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateDeleteBarrierRequest(&gracklepb.DeleteBarrierRequest{
+			NamespaceName: "validname",
+			BarrierName:   "validname",
+		}))
+	})
 }
 
 func TestValidateUpdateBarrierRequest(t *testing.T) {
-	// Test empty request
-	assert.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{}))
+	})
 
-	// Test missing namespace name
-	assert.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
-		BarrierName:       "validname",
-		Description:       "desc",
-		ExpectedProcesses: 3,
-	}))
+	t.Run("missing namespace name", func(t *testing.T) {
+		require.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
+			BarrierName:       "validname",
+			Description:       "desc",
+			ExpectedProcesses: 3,
+		}))
+	})
 
-	// Test missing barrier name
-	assert.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
-		NamespaceName:     "validname",
-		Description:       "desc",
-		ExpectedProcesses: 3,
-	}))
+	t.Run("missing barrier name", func(t *testing.T) {
+		require.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
+			NamespaceName:     "validname",
+			Description:       "desc",
+			ExpectedProcesses: 3,
+		}))
+	})
 
-	// Test invalid namespace name characters
-	assert.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
-		NamespaceName:     "invalid name",
-		BarrierName:       "validname",
-		Description:       "desc",
-		ExpectedProcesses: 3,
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
+			NamespaceName:     "invalid name",
+			BarrierName:       "validname",
+			Description:       "desc",
+			ExpectedProcesses: 3,
+		}))
+	})
 
-	// Test invalid barrier name characters
-	assert.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
-		NamespaceName:     "validname",
-		BarrierName:       "invalid name",
-		Description:       "desc",
-		ExpectedProcesses: 3,
-	}))
+	t.Run("invalid barrier name characters", func(t *testing.T) {
+		require.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
+			NamespaceName:     "validname",
+			BarrierName:       "invalid name",
+			Description:       "desc",
+			ExpectedProcesses: 3,
+		}))
+	})
 
-	// Test namespace name too long
-	assert.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
-		NamespaceName:     string(make([]byte, 129)),
-		BarrierName:       "validname",
-		Description:       "desc",
-		ExpectedProcesses: 3,
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
+			NamespaceName:     string(make([]byte, 129)),
+			BarrierName:       "validname",
+			Description:       "desc",
+			ExpectedProcesses: 3,
+		}))
+	})
 
-	// Test barrier name too long
-	assert.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
-		NamespaceName:     "validname",
-		BarrierName:       string(make([]byte, 129)),
-		Description:       "desc",
-		ExpectedProcesses: 3,
-	}))
+	t.Run("barrier name too long", func(t *testing.T) {
+		require.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
+			NamespaceName:     "validname",
+			BarrierName:       string(make([]byte, 129)),
+			Description:       "desc",
+			ExpectedProcesses: 3,
+		}))
+	})
 
-	// Test description too long
-	assert.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
-		NamespaceName:     "validname",
-		BarrierName:       "validname",
-		Description:       string(make([]byte, 1025)),
-		ExpectedProcesses: 3,
-	}))
+	t.Run("description too long", func(t *testing.T) {
+		require.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
+			NamespaceName:     "validname",
+			BarrierName:       "validname",
+			Description:       string(make([]byte, 1025)),
+			ExpectedProcesses: 3,
+		}))
+	})
 
-	// Test expected_processes zero
-	assert.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
-		NamespaceName:     "validname",
-		BarrierName:       "validname",
-		Description:       "desc",
-		ExpectedProcesses: 0,
-	}))
+	t.Run("expected_processes zero", func(t *testing.T) {
+		require.Error(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
+			NamespaceName:     "validname",
+			BarrierName:       "validname",
+			Description:       "desc",
+			ExpectedProcesses: 0,
+		}))
+	})
 
-	// Test valid request
-	assert.NoError(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
-		NamespaceName:     "validname",
-		BarrierName:       "validname",
-		Description:       "Valid description",
-		ExpectedProcesses: 5,
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateUpdateBarrierRequest(&gracklepb.UpdateBarrierRequest{
+			NamespaceName:     "validname",
+			BarrierName:       "validname",
+			Description:       "Valid description",
+			ExpectedProcesses: 5,
+		}))
+	})
 }
 
 func TestValidateArriveAtBarrierRequest(t *testing.T) {
-	// Test empty request
-	assert.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{}))
+	})
 
-	// Test missing namespace name
-	assert.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
-		BarrierName:        "validname",
-		ProcessId:          "proc1",
-		ExpectedGeneration: 1,
-	}))
+	t.Run("missing namespace name", func(t *testing.T) {
+		require.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
+			BarrierName:        "validname",
+			ProcessId:          "proc1",
+			ExpectedGeneration: 1,
+		}))
+	})
 
-	// Test missing barrier name
-	assert.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
-		NamespaceName:      "validname",
-		ProcessId:          "proc1",
-		ExpectedGeneration: 1,
-	}))
+	t.Run("missing barrier name", func(t *testing.T) {
+		require.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
+			NamespaceName:      "validname",
+			ProcessId:          "proc1",
+			ExpectedGeneration: 1,
+		}))
+	})
 
-	// Test missing process id
-	assert.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
-		NamespaceName:      "validname",
-		BarrierName:        "validname",
-		ExpectedGeneration: 1,
-	}))
+	t.Run("missing process id", func(t *testing.T) {
+		require.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
+			NamespaceName:      "validname",
+			BarrierName:        "validname",
+			ExpectedGeneration: 1,
+		}))
+	})
 
-	// Test invalid namespace name characters
-	assert.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
-		NamespaceName:      "invalid name",
-		BarrierName:        "validname",
-		ProcessId:          "proc1",
-		ExpectedGeneration: 1,
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
+			NamespaceName:      "invalid name",
+			BarrierName:        "validname",
+			ProcessId:          "proc1",
+			ExpectedGeneration: 1,
+		}))
+	})
 
-	// Test invalid barrier name characters
-	assert.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
-		NamespaceName:      "validname",
-		BarrierName:        "invalid name",
-		ProcessId:          "proc1",
-		ExpectedGeneration: 1,
-	}))
+	t.Run("invalid barrier name characters", func(t *testing.T) {
+		require.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
+			NamespaceName:      "validname",
+			BarrierName:        "invalid name",
+			ProcessId:          "proc1",
+			ExpectedGeneration: 1,
+		}))
+	})
 
-	// Test invalid process id characters
-	assert.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
-		NamespaceName:      "validname",
-		BarrierName:        "validname",
-		ProcessId:          "invalid process id",
-		ExpectedGeneration: 1,
-	}))
+	t.Run("invalid process id characters", func(t *testing.T) {
+		require.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
+			NamespaceName:      "validname",
+			BarrierName:        "validname",
+			ProcessId:          "invalid process id",
+			ExpectedGeneration: 1,
+		}))
+	})
 
-	// Test namespace name too long
-	assert.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
-		NamespaceName:      string(make([]byte, 129)),
-		BarrierName:        "validname",
-		ProcessId:          "proc1",
-		ExpectedGeneration: 1,
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
+			NamespaceName:      string(make([]byte, 129)),
+			BarrierName:        "validname",
+			ProcessId:          "proc1",
+			ExpectedGeneration: 1,
+		}))
+	})
 
-	// Test barrier name too long
-	assert.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
-		NamespaceName:      "validname",
-		BarrierName:        string(make([]byte, 129)),
-		ProcessId:          "proc1",
-		ExpectedGeneration: 1,
-	}))
+	t.Run("barrier name too long", func(t *testing.T) {
+		require.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
+			NamespaceName:      "validname",
+			BarrierName:        string(make([]byte, 129)),
+			ProcessId:          "proc1",
+			ExpectedGeneration: 1,
+		}))
+	})
 
-	// Test process id too long
-	assert.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
-		NamespaceName:      "validname",
-		BarrierName:        "validname",
-		ProcessId:          string(make([]byte, 129)),
-		ExpectedGeneration: 1,
-	}))
+	t.Run("process id too long", func(t *testing.T) {
+		require.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
+			NamespaceName:      "validname",
+			BarrierName:        "validname",
+			ProcessId:          string(make([]byte, 129)),
+			ExpectedGeneration: 1,
+		}))
+	})
 
-	// Test expected generation zero
-	assert.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
-		NamespaceName:      "validname",
-		BarrierName:        "validname",
-		ProcessId:          "proc1",
-		ExpectedGeneration: 0,
-	}))
+	t.Run("expected generation zero", func(t *testing.T) {
+		require.Error(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
+			NamespaceName:      "validname",
+			BarrierName:        "validname",
+			ProcessId:          "proc1",
+			ExpectedGeneration: 0,
+		}))
+	})
 
-	// Test valid request
-	assert.NoError(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
-		NamespaceName:      "validname",
-		BarrierName:        "validname",
-		ProcessId:          "proc1",
-		ExpectedGeneration: 1,
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateArriveAtBarrierRequest(&gracklepb.ArriveAtBarrierRequest{
+			NamespaceName:      "validname",
+			BarrierName:        "validname",
+			ProcessId:          "proc1",
+			ExpectedGeneration: 1,
+		}))
+	})
 }
 
 func TestValidateWaitAtBarrierRequest(t *testing.T) {
-	// Test empty request
-	assert.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{}))
+	t.Run("empty request", func(t *testing.T) {
+		require.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{}))
+	})
 
-	// Test missing namespace name
-	assert.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
-		BarrierName:        "validname",
-		ExpectedGeneration: 1,
-		TimeoutSeconds:     10,
-	}))
+	t.Run("missing namespace name", func(t *testing.T) {
+		require.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
+			BarrierName:        "validname",
+			ExpectedGeneration: 1,
+			TimeoutSeconds:     10,
+		}))
+	})
 
-	// Test missing barrier name
-	assert.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
-		NamespaceName:      "validname",
-		ExpectedGeneration: 1,
-		TimeoutSeconds:     10,
-	}))
+	t.Run("missing barrier name", func(t *testing.T) {
+		require.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
+			NamespaceName:      "validname",
+			ExpectedGeneration: 1,
+			TimeoutSeconds:     10,
+		}))
+	})
 
-	// Test invalid namespace name characters
-	assert.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
-		NamespaceName:      "invalid name",
-		BarrierName:        "validname",
-		ExpectedGeneration: 1,
-		TimeoutSeconds:     10,
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
+			NamespaceName:      "invalid name",
+			BarrierName:        "validname",
+			ExpectedGeneration: 1,
+			TimeoutSeconds:     10,
+		}))
+	})
 
-	// Test invalid barrier name characters
-	assert.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
-		NamespaceName:      "validname",
-		BarrierName:        "invalid name",
-		ExpectedGeneration: 1,
-		TimeoutSeconds:     10,
-	}))
+	t.Run("invalid barrier name characters", func(t *testing.T) {
+		require.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
+			NamespaceName:      "validname",
+			BarrierName:        "invalid name",
+			ExpectedGeneration: 1,
+			TimeoutSeconds:     10,
+		}))
+	})
 
-	// Test namespace name too long
-	assert.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
-		NamespaceName:      string(make([]byte, 129)),
-		BarrierName:        "validname",
-		ExpectedGeneration: 1,
-		TimeoutSeconds:     10,
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
+			NamespaceName:      string(make([]byte, 129)),
+			BarrierName:        "validname",
+			ExpectedGeneration: 1,
+			TimeoutSeconds:     10,
+		}))
+	})
 
-	// Test barrier name too long
-	assert.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
-		NamespaceName:      "validname",
-		BarrierName:        string(make([]byte, 129)),
-		ExpectedGeneration: 1,
-		TimeoutSeconds:     10,
-	}))
+	t.Run("barrier name too long", func(t *testing.T) {
+		require.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
+			NamespaceName:      "validname",
+			BarrierName:        string(make([]byte, 129)),
+			ExpectedGeneration: 1,
+			TimeoutSeconds:     10,
+		}))
+	})
 
-	// Test expected generation zero
-	assert.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
-		NamespaceName:      "validname",
-		BarrierName:        "validname",
-		ExpectedGeneration: 0,
-		TimeoutSeconds:     10,
-	}))
+	t.Run("expected generation zero", func(t *testing.T) {
+		require.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
+			NamespaceName:      "validname",
+			BarrierName:        "validname",
+			ExpectedGeneration: 0,
+			TimeoutSeconds:     10,
+		}))
+	})
 
-	// Test timeout seconds zero
-	assert.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
-		NamespaceName:      "validname",
-		BarrierName:        "validname",
-		ExpectedGeneration: 1,
-		TimeoutSeconds:     0,
-	}))
+	t.Run("timeout seconds zero", func(t *testing.T) {
+		require.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
+			NamespaceName:      "validname",
+			BarrierName:        "validname",
+			ExpectedGeneration: 1,
+			TimeoutSeconds:     0,
+		}))
+	})
 
-	// Test timeout seconds negative
-	assert.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
-		NamespaceName:      "validname",
-		BarrierName:        "validname",
-		ExpectedGeneration: 1,
-		TimeoutSeconds:     -1,
-	}))
+	t.Run("timeout seconds negative", func(t *testing.T) {
+		require.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
+			NamespaceName:      "validname",
+			BarrierName:        "validname",
+			ExpectedGeneration: 1,
+			TimeoutSeconds:     -1,
+		}))
+	})
 
-	// Test timeout seconds too high
-	assert.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
-		NamespaceName:      "validname",
-		BarrierName:        "validname",
-		ExpectedGeneration: 1,
-		TimeoutSeconds:     301,
-	}))
+	t.Run("timeout seconds too high", func(t *testing.T) {
+		require.Error(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
+			NamespaceName:      "validname",
+			BarrierName:        "validname",
+			ExpectedGeneration: 1,
+			TimeoutSeconds:     301,
+		}))
+	})
 
-	// Test valid request
-	assert.NoError(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
-		NamespaceName:      "validname",
-		BarrierName:        "validname",
-		ExpectedGeneration: 1,
-		TimeoutSeconds:     10,
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
+			NamespaceName:      "validname",
+			BarrierName:        "validname",
+			ExpectedGeneration: 1,
+			TimeoutSeconds:     10,
+		}))
+	})
 
-	// Test valid request with maximum timeout
-	assert.NoError(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
-		NamespaceName:      "validname",
-		BarrierName:        "validname",
-		ExpectedGeneration: 1,
-		TimeoutSeconds:     300,
-	}))
+	t.Run("valid request with maximum timeout", func(t *testing.T) {
+		require.NoError(t, ValidateWaitAtBarrierRequest(&gracklepb.WaitAtBarrierRequest{
+			NamespaceName:      "validname",
+			BarrierName:        "validname",
+			ExpectedGeneration: 1,
+			TimeoutSeconds:     300,
+		}))
+	})
 }
 
 func TestValidateListBarrierParticipantsRequest(t *testing.T) {
-	// Test empty request - should fail due to missing namespace name
-	assert.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{}))
+	t.Run("empty request - should fail due to missing namespace name", func(t *testing.T) {
+		require.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{}))
+	})
 
-	// Test missing namespace name
-	assert.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
-		BarrierName: "validname",
-	}))
+	t.Run("missing namespace name", func(t *testing.T) {
+		require.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+			BarrierName: "validname",
+		}))
+	})
 
-	// Test missing barrier name
-	assert.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
-		NamespaceName: "validname",
-	}))
+	t.Run("missing barrier name", func(t *testing.T) {
+		require.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+			NamespaceName: "validname",
+		}))
+	})
 
-	// Test invalid namespace name characters
-	assert.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
-		NamespaceName: "invalid name",
-		BarrierName:   "validname",
-	}))
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+			NamespaceName: "invalid name",
+			BarrierName:   "validname",
+		}))
+	})
 
-	// Test invalid barrier name characters
-	assert.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
-		NamespaceName: "validname",
-		BarrierName:   "invalid name",
-	}))
+	t.Run("invalid barrier name characters", func(t *testing.T) {
+		require.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+			NamespaceName: "validname",
+			BarrierName:   "invalid name",
+		}))
+	})
 
-	// Test namespace name too long
-	assert.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
-		NamespaceName: string(make([]byte, 129)),
-		BarrierName:   "validname",
-	}))
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+			NamespaceName: string(make([]byte, 129)),
+			BarrierName:   "validname",
+		}))
+	})
 
-	// Test barrier name too long
-	assert.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
-		NamespaceName: "validname",
-		BarrierName:   string(make([]byte, 129)),
-	}))
+	t.Run("barrier name too long", func(t *testing.T) {
+		require.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+			NamespaceName: "validname",
+			BarrierName:   string(make([]byte, 129)),
+		}))
+	})
 
-	// Test invalid pagination token (not base64)
-	assert.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
-		NamespaceName:   "validname",
-		BarrierName:     "validname",
-		PaginationToken: "invalid-base64!@#",
-	}))
+	t.Run("invalid pagination token (not base64)", func(t *testing.T) {
+		require.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+			NamespaceName:   "validname",
+			BarrierName:     "validname",
+			PaginationToken: "invalid-base64!@#",
+		}))
+	})
 
-	// Test pagination token too long
-	longToken := string(make([]byte, 1025))
-	assert.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
-		NamespaceName:   "validname",
-		BarrierName:     "validname",
-		PaginationToken: longToken,
-	}))
+	t.Run("pagination token too long", func(t *testing.T) {
+		longToken := string(make([]byte, 1025))
+		require.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+			NamespaceName:   "validname",
+			BarrierName:     "validname",
+			PaginationToken: longToken,
+		}))
+	})
 
-	// Test limit too high
-	assert.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
-		NamespaceName: "validname",
-		BarrierName:   "validname",
-		Limit:         101,
-	}))
+	t.Run("limit too high", func(t *testing.T) {
+		require.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+			NamespaceName: "validname",
+			BarrierName:   "validname",
+			Limit:         101,
+		}))
+	})
 
-	// Test negative limit
-	assert.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
-		NamespaceName: "validname",
-		BarrierName:   "validname",
-		Limit:         -1,
-	}))
+	t.Run("negative limit", func(t *testing.T) {
+		require.Error(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+			NamespaceName: "validname",
+			BarrierName:   "validname",
+			Limit:         -1,
+		}))
+	})
 
-	// Test valid request
-	assert.NoError(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
-		NamespaceName: "validname",
-		BarrierName:   "validname",
-	}))
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+			NamespaceName: "validname",
+			BarrierName:   "validname",
+		}))
+	})
 
-	// Test valid request with pagination
-	assert.NoError(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
-		NamespaceName:   "validname",
-		BarrierName:     "validname",
-		PaginationToken: "dGVzdA==",
-		Limit:           50,
-	}))
+	t.Run("valid request with pagination", func(t *testing.T) {
+		require.NoError(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+			NamespaceName:   "validname",
+			BarrierName:     "validname",
+			PaginationToken: "dGVzdA==",
+			Limit:           50,
+		}))
+	})
 
-	// Test valid request with generation
-	assert.NoError(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
-		NamespaceName: "validname",
-		BarrierName:   "validname",
-		Generation:    1,
-	}))
+	t.Run("valid request with generation", func(t *testing.T) {
+		require.NoError(t, ValidateListBarrierParticipantsRequest(&gracklepb.ListBarrierParticipantsRequest{
+			NamespaceName: "validname",
+			BarrierName:   "validname",
+			Generation:    1,
+		}))
+	})
+}
+
+func TestValidateCreateSemaphoreLeaseRequest(t *testing.T) {
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateCreateSemaphoreLeaseRequest(&gracklepb.CreateSemaphoreLeaseRequest{
+			NamespaceName: "",
+			ProcessId:     "process1",
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateCreateSemaphoreLeaseRequest(&gracklepb.CreateSemaphoreLeaseRequest{
+			NamespaceName: "invalid name",
+			ProcessId:     "process1",
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateCreateSemaphoreLeaseRequest(&gracklepb.CreateSemaphoreLeaseRequest{
+			NamespaceName: string(make([]byte, 129)),
+			ProcessId:     "process1",
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("empty process id", func(t *testing.T) {
+		require.Error(t, ValidateCreateSemaphoreLeaseRequest(&gracklepb.CreateSemaphoreLeaseRequest{
+			NamespaceName: "validname",
+			ProcessId:     "",
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("invalid process id characters", func(t *testing.T) {
+		require.Error(t, ValidateCreateSemaphoreLeaseRequest(&gracklepb.CreateSemaphoreLeaseRequest{
+			NamespaceName: "validname",
+			ProcessId:     "invalid process id",
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("process id too long", func(t *testing.T) {
+		require.Error(t, ValidateCreateSemaphoreLeaseRequest(&gracklepb.CreateSemaphoreLeaseRequest{
+			NamespaceName: "validname",
+			ProcessId:     string(make([]byte, 129)),
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("ttl seconds zero", func(t *testing.T) {
+		require.Error(t, ValidateCreateSemaphoreLeaseRequest(&gracklepb.CreateSemaphoreLeaseRequest{
+			NamespaceName: "validname",
+			ProcessId:     "process1",
+			TtlSeconds:    0,
+		}))
+	})
+
+	t.Run("ttl seconds too large", func(t *testing.T) {
+		require.Error(t, ValidateCreateSemaphoreLeaseRequest(&gracklepb.CreateSemaphoreLeaseRequest{
+			NamespaceName: "validname",
+			ProcessId:     "process1",
+			TtlSeconds:    301,
+		}))
+	})
+
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateCreateSemaphoreLeaseRequest(&gracklepb.CreateSemaphoreLeaseRequest{
+			NamespaceName: "validname",
+			ProcessId:     "process1",
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("valid request with max ttl", func(t *testing.T) {
+		require.NoError(t, ValidateCreateSemaphoreLeaseRequest(&gracklepb.CreateSemaphoreLeaseRequest{
+			NamespaceName: "validname",
+			ProcessId:     "process1",
+			TtlSeconds:    300,
+		}))
+	})
+}
+
+func TestValidateRevokeSemaphoreLeaseRequest(t *testing.T) {
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateRevokeSemaphoreLeaseRequest(&gracklepb.RevokeSemaphoreLeaseRequest{
+			NamespaceName: "",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
+
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateRevokeSemaphoreLeaseRequest(&gracklepb.RevokeSemaphoreLeaseRequest{
+			NamespaceName: "invalid name",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
+
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateRevokeSemaphoreLeaseRequest(&gracklepb.RevokeSemaphoreLeaseRequest{
+			NamespaceName: string(make([]byte, 129)),
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
+
+	t.Run("empty lease id", func(t *testing.T) {
+		require.Error(t, ValidateRevokeSemaphoreLeaseRequest(&gracklepb.RevokeSemaphoreLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "",
+		}))
+	})
+
+	t.Run("invalid lease id format (wrong prefix)", func(t *testing.T) {
+		require.Error(t, ValidateRevokeSemaphoreLeaseRequest(&gracklepb.RevokeSemaphoreLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "err_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
+
+	t.Run("invalid lease id format (too long)", func(t *testing.T) {
+		require.Error(t, ValidateRevokeSemaphoreLeaseRequest(&gracklepb.RevokeSemaphoreLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRBsd",
+		}))
+	})
+
+	t.Run("invalid lease id format (invalid base62)", func(t *testing.T) {
+		require.Error(t, ValidateRevokeSemaphoreLeaseRequest(&gracklepb.RevokeSemaphoreLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGr+WWgDJRB",
+		}))
+	})
+
+	t.Run("lease id too long", func(t *testing.T) {
+		require.Error(t, ValidateRevokeSemaphoreLeaseRequest(&gracklepb.RevokeSemaphoreLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       string(make([]byte, 65)),
+		}))
+	})
+
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateRevokeSemaphoreLeaseRequest(&gracklepb.RevokeSemaphoreLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
+}
+
+func TestValidateRefreshSemaphoreLeaseRequest(t *testing.T) {
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateRefreshSemaphoreLeaseRequest(&gracklepb.RefreshSemaphoreLeaseRequest{
+			NamespaceName: "",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateRefreshSemaphoreLeaseRequest(&gracklepb.RefreshSemaphoreLeaseRequest{
+			NamespaceName: "invalid name",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateRefreshSemaphoreLeaseRequest(&gracklepb.RefreshSemaphoreLeaseRequest{
+			NamespaceName: string(make([]byte, 129)),
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("empty lease id", func(t *testing.T) {
+		require.Error(t, ValidateRefreshSemaphoreLeaseRequest(&gracklepb.RefreshSemaphoreLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "",
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("invalid lease id format", func(t *testing.T) {
+		require.Error(t, ValidateRefreshSemaphoreLeaseRequest(&gracklepb.RefreshSemaphoreLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "err_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("lease id too long", func(t *testing.T) {
+		require.Error(t, ValidateRefreshSemaphoreLeaseRequest(&gracklepb.RefreshSemaphoreLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       string(make([]byte, 65)),
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("ttl seconds zero", func(t *testing.T) {
+		require.Error(t, ValidateRefreshSemaphoreLeaseRequest(&gracklepb.RefreshSemaphoreLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TtlSeconds:    0,
+		}))
+	})
+
+	t.Run("ttl seconds too large", func(t *testing.T) {
+		require.Error(t, ValidateRefreshSemaphoreLeaseRequest(&gracklepb.RefreshSemaphoreLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TtlSeconds:    301,
+		}))
+	})
+
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateRefreshSemaphoreLeaseRequest(&gracklepb.RefreshSemaphoreLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("valid request with max ttl", func(t *testing.T) {
+		require.NoError(t, ValidateRefreshSemaphoreLeaseRequest(&gracklepb.RefreshSemaphoreLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TtlSeconds:    300,
+		}))
+	})
+}
+
+func TestValidateListSemaphoreLeasesRequest(t *testing.T) {
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateListSemaphoreLeasesRequest(&gracklepb.ListSemaphoreLeasesRequest{
+			NamespaceName: "",
+		}))
+	})
+
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateListSemaphoreLeasesRequest(&gracklepb.ListSemaphoreLeasesRequest{
+			NamespaceName: "invalid name",
+		}))
+	})
+
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateListSemaphoreLeasesRequest(&gracklepb.ListSemaphoreLeasesRequest{
+			NamespaceName: string(make([]byte, 129)),
+		}))
+	})
+
+	t.Run("invalid pagination token (not base64)", func(t *testing.T) {
+		require.Error(t, ValidateListSemaphoreLeasesRequest(&gracklepb.ListSemaphoreLeasesRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "invalid-base64!@#",
+		}))
+	})
+
+	t.Run("pagination token too long", func(t *testing.T) {
+		require.Error(t, ValidateListSemaphoreLeasesRequest(&gracklepb.ListSemaphoreLeasesRequest{
+			NamespaceName:   "validname",
+			PaginationToken: string(make([]byte, 1025)),
+		}))
+	})
+
+	t.Run("limit too high", func(t *testing.T) {
+		require.Error(t, ValidateListSemaphoreLeasesRequest(&gracklepb.ListSemaphoreLeasesRequest{
+			NamespaceName: "validname",
+			Limit:         101,
+		}))
+	})
+
+	t.Run("negative limit", func(t *testing.T) {
+		require.Error(t, ValidateListSemaphoreLeasesRequest(&gracklepb.ListSemaphoreLeasesRequest{
+			NamespaceName: "validname",
+			Limit:         -1,
+		}))
+	})
+
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateListSemaphoreLeasesRequest(&gracklepb.ListSemaphoreLeasesRequest{
+			NamespaceName: "validname",
+		}))
+	})
+
+	t.Run("valid request with pagination", func(t *testing.T) {
+		require.NoError(t, ValidateListSemaphoreLeasesRequest(&gracklepb.ListSemaphoreLeasesRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "dGVzdA==",
+			Limit:           50,
+		}))
+	})
+}
+
+func TestValidateGetSemaphoreLeaseRequest(t *testing.T) {
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateGetSemaphoreLeaseRequest(&gracklepb.GetSemaphoreLeaseRequest{
+			NamespaceName: "",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
+
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateGetSemaphoreLeaseRequest(&gracklepb.GetSemaphoreLeaseRequest{
+			NamespaceName: "invalid name",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
+
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateGetSemaphoreLeaseRequest(&gracklepb.GetSemaphoreLeaseRequest{
+			NamespaceName: string(make([]byte, 129)),
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
+
+	t.Run("empty lease id", func(t *testing.T) {
+		require.Error(t, ValidateGetSemaphoreLeaseRequest(&gracklepb.GetSemaphoreLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "",
+		}))
+	})
+
+	t.Run("invalid lease id format", func(t *testing.T) {
+		require.Error(t, ValidateGetSemaphoreLeaseRequest(&gracklepb.GetSemaphoreLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "err_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
+
+	t.Run("lease id too long", func(t *testing.T) {
+		require.Error(t, ValidateGetSemaphoreLeaseRequest(&gracklepb.GetSemaphoreLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       string(make([]byte, 65)),
+		}))
+	})
+
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateGetSemaphoreLeaseRequest(&gracklepb.GetSemaphoreLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
+}
+
+func TestValidateCreateLockLeaseRequest(t *testing.T) {
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateCreateLockLeaseRequest(&gracklepb.CreateLockLeaseRequest{
+			NamespaceName: "",
+			ProcessId:     "process1",
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateCreateLockLeaseRequest(&gracklepb.CreateLockLeaseRequest{
+			NamespaceName: "invalid name",
+			ProcessId:     "process1",
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateCreateLockLeaseRequest(&gracklepb.CreateLockLeaseRequest{
+			NamespaceName: string(make([]byte, 129)),
+			ProcessId:     "process1",
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("empty process id", func(t *testing.T) {
+		require.Error(t, ValidateCreateLockLeaseRequest(&gracklepb.CreateLockLeaseRequest{
+			NamespaceName: "validname",
+			ProcessId:     "",
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("invalid process id characters", func(t *testing.T) {
+		require.Error(t, ValidateCreateLockLeaseRequest(&gracklepb.CreateLockLeaseRequest{
+			NamespaceName: "validname",
+			ProcessId:     "invalid process id",
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("process id too long", func(t *testing.T) {
+		require.Error(t, ValidateCreateLockLeaseRequest(&gracklepb.CreateLockLeaseRequest{
+			NamespaceName: "validname",
+			ProcessId:     string(make([]byte, 129)),
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("ttl seconds zero", func(t *testing.T) {
+		require.Error(t, ValidateCreateLockLeaseRequest(&gracklepb.CreateLockLeaseRequest{
+			NamespaceName: "validname",
+			ProcessId:     "process1",
+			TtlSeconds:    0,
+		}))
+	})
+
+	t.Run("ttl seconds too large", func(t *testing.T) {
+		require.Error(t, ValidateCreateLockLeaseRequest(&gracklepb.CreateLockLeaseRequest{
+			NamespaceName: "validname",
+			ProcessId:     "process1",
+			TtlSeconds:    301,
+		}))
+	})
+
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateCreateLockLeaseRequest(&gracklepb.CreateLockLeaseRequest{
+			NamespaceName: "validname",
+			ProcessId:     "process1",
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("valid request with max ttl", func(t *testing.T) {
+		require.NoError(t, ValidateCreateLockLeaseRequest(&gracklepb.CreateLockLeaseRequest{
+			NamespaceName: "validname",
+			ProcessId:     "process1",
+			TtlSeconds:    300,
+		}))
+	})
+}
+
+func TestValidateRevokeLockLeaseRequest(t *testing.T) {
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateRevokeLockLeaseRequest(&gracklepb.RevokeLockLeaseRequest{
+			NamespaceName: "",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
+
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateRevokeLockLeaseRequest(&gracklepb.RevokeLockLeaseRequest{
+			NamespaceName: "invalid name",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
+
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateRevokeLockLeaseRequest(&gracklepb.RevokeLockLeaseRequest{
+			NamespaceName: string(make([]byte, 129)),
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
+
+	t.Run("empty lease id", func(t *testing.T) {
+		require.Error(t, ValidateRevokeLockLeaseRequest(&gracklepb.RevokeLockLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "",
+		}))
+	})
+
+	t.Run("invalid lease id format (wrong prefix)", func(t *testing.T) {
+		require.Error(t, ValidateRevokeLockLeaseRequest(&gracklepb.RevokeLockLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "err_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
+
+	t.Run("invalid lease id format (too long)", func(t *testing.T) {
+		require.Error(t, ValidateRevokeLockLeaseRequest(&gracklepb.RevokeLockLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRBsd",
+		}))
+	})
+
+	t.Run("invalid lease id format (invalid base62)", func(t *testing.T) {
+		require.Error(t, ValidateRevokeLockLeaseRequest(&gracklepb.RevokeLockLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGr+WWgDJRB",
+		}))
+	})
+
+	t.Run("lease id too long", func(t *testing.T) {
+		require.Error(t, ValidateRevokeLockLeaseRequest(&gracklepb.RevokeLockLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       string(make([]byte, 65)),
+		}))
+	})
+
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateRevokeLockLeaseRequest(&gracklepb.RevokeLockLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
+}
+
+func TestValidateRefreshLockLeaseRequest(t *testing.T) {
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateRefreshLockLeaseRequest(&gracklepb.RefreshLockLeaseRequest{
+			NamespaceName: "",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateRefreshLockLeaseRequest(&gracklepb.RefreshLockLeaseRequest{
+			NamespaceName: "invalid name",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateRefreshLockLeaseRequest(&gracklepb.RefreshLockLeaseRequest{
+			NamespaceName: string(make([]byte, 129)),
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("empty lease id", func(t *testing.T) {
+		require.Error(t, ValidateRefreshLockLeaseRequest(&gracklepb.RefreshLockLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "",
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("invalid lease id format", func(t *testing.T) {
+		require.Error(t, ValidateRefreshLockLeaseRequest(&gracklepb.RefreshLockLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "err_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("lease id too long", func(t *testing.T) {
+		require.Error(t, ValidateRefreshLockLeaseRequest(&gracklepb.RefreshLockLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       string(make([]byte, 65)),
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("ttl seconds zero", func(t *testing.T) {
+		require.Error(t, ValidateRefreshLockLeaseRequest(&gracklepb.RefreshLockLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TtlSeconds:    0,
+		}))
+	})
+
+	t.Run("ttl seconds too large", func(t *testing.T) {
+		require.Error(t, ValidateRefreshLockLeaseRequest(&gracklepb.RefreshLockLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TtlSeconds:    301,
+		}))
+	})
+
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateRefreshLockLeaseRequest(&gracklepb.RefreshLockLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TtlSeconds:    60,
+		}))
+	})
+
+	t.Run("valid request with max ttl", func(t *testing.T) {
+		require.NoError(t, ValidateRefreshLockLeaseRequest(&gracklepb.RefreshLockLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			TtlSeconds:    300,
+		}))
+	})
+}
+
+func TestValidateListLockLeasesRequest(t *testing.T) {
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateListLockLeasesRequest(&gracklepb.ListLockLeasesRequest{
+			NamespaceName: "",
+		}))
+	})
+
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateListLockLeasesRequest(&gracklepb.ListLockLeasesRequest{
+			NamespaceName: "invalid name",
+		}))
+	})
+
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateListLockLeasesRequest(&gracklepb.ListLockLeasesRequest{
+			NamespaceName: string(make([]byte, 129)),
+		}))
+	})
+
+	t.Run("invalid pagination token (not base64)", func(t *testing.T) {
+		require.Error(t, ValidateListLockLeasesRequest(&gracklepb.ListLockLeasesRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "invalid-base64!@#",
+		}))
+	})
+
+	t.Run("pagination token too long", func(t *testing.T) {
+		require.Error(t, ValidateListLockLeasesRequest(&gracklepb.ListLockLeasesRequest{
+			NamespaceName:   "validname",
+			PaginationToken: string(make([]byte, 1025)),
+		}))
+	})
+
+	t.Run("limit too high", func(t *testing.T) {
+		require.Error(t, ValidateListLockLeasesRequest(&gracklepb.ListLockLeasesRequest{
+			NamespaceName: "validname",
+			Limit:         101,
+		}))
+	})
+
+	t.Run("negative limit", func(t *testing.T) {
+		require.Error(t, ValidateListLockLeasesRequest(&gracklepb.ListLockLeasesRequest{
+			NamespaceName: "validname",
+			Limit:         -1,
+		}))
+	})
+
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateListLockLeasesRequest(&gracklepb.ListLockLeasesRequest{
+			NamespaceName: "validname",
+		}))
+	})
+
+	t.Run("valid request with pagination", func(t *testing.T) {
+		require.NoError(t, ValidateListLockLeasesRequest(&gracklepb.ListLockLeasesRequest{
+			NamespaceName:   "validname",
+			PaginationToken: "dGVzdA==",
+			Limit:           50,
+		}))
+	})
+}
+
+func TestValidateGetLockLeaseRequest(t *testing.T) {
+	t.Run("empty namespace name", func(t *testing.T) {
+		require.Error(t, ValidateGetLockLeaseRequest(&gracklepb.GetLockLeaseRequest{
+			NamespaceName: "",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
+
+	t.Run("invalid namespace name characters", func(t *testing.T) {
+		require.Error(t, ValidateGetLockLeaseRequest(&gracklepb.GetLockLeaseRequest{
+			NamespaceName: "invalid name",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
+
+	t.Run("namespace name too long", func(t *testing.T) {
+		require.Error(t, ValidateGetLockLeaseRequest(&gracklepb.GetLockLeaseRequest{
+			NamespaceName: string(make([]byte, 129)),
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
+
+	t.Run("empty lease id", func(t *testing.T) {
+		require.Error(t, ValidateGetLockLeaseRequest(&gracklepb.GetLockLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "",
+		}))
+	})
+
+	t.Run("invalid lease id format", func(t *testing.T) {
+		require.Error(t, ValidateGetLockLeaseRequest(&gracklepb.GetLockLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "err_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
+
+	t.Run("lease id too long", func(t *testing.T) {
+		require.Error(t, ValidateGetLockLeaseRequest(&gracklepb.GetLockLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       string(make([]byte, 65)),
+		}))
+	})
+
+	t.Run("valid request", func(t *testing.T) {
+		require.NoError(t, ValidateGetLockLeaseRequest(&gracklepb.GetLockLeaseRequest{
+			NamespaceName: "validname",
+			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+		}))
+	})
 }

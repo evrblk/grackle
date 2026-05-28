@@ -237,3 +237,24 @@ func paginationTokenFromFront(paginationTokenBase64 string) (*corepb.PaginationT
 
 	return paginationToken, nil
 }
+
+func leaseToFront(lease *corepb.Lease) *gracklepb.Lease {
+	if lease == nil {
+		return nil
+	}
+
+	return &gracklepb.Lease{
+		LeaseId:   ids.EncodeLeaseId(lease.Id),
+		ProcessId: lease.ProcessId,
+		CreatedAt: lease.CreatedAt,
+		ExpiresAt: lease.ExpiresAt,
+	}
+}
+
+func leasesToFront(leases []*corepb.Lease) []*gracklepb.Lease {
+	frontLeases := make([]*gracklepb.Lease, len(leases))
+	for i, lease := range leases {
+		frontLeases[i] = leaseToFront(lease)
+	}
+	return frontLeases
+}
