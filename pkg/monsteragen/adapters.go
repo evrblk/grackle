@@ -118,6 +118,24 @@ func (a *GrackleLocksCoreAdapter) Update(request []byte) monstera.UpdateResponse
 		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "LocksDeleteNamespace", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_LocksDeleteNamespaceResponse{LocksDeleteNamespaceResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
+	case *corepb.GrackleUpdateRequest_CreateLockLeaseRequest:
+		r, err := a.grackleLocksCore.CreateLockLease(req.CreateLockLeaseRequest)
+		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "CreateLockLease", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "CreateLockLease", a.shardId, a.replicaId).Inc()
+		coreResponse.Response = &corepb.GrackleUpdateResponse_CreateLockLeaseResponse{CreateLockLeaseResponse: r}
+		wrappedResponse.Error = monsterax.WrapError(err)
+	case *corepb.GrackleUpdateRequest_RefreshLockLeaseRequest:
+		r, err := a.grackleLocksCore.RefreshLockLease(req.RefreshLockLeaseRequest)
+		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "RefreshLockLease", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "RefreshLockLease", a.shardId, a.replicaId).Inc()
+		coreResponse.Response = &corepb.GrackleUpdateResponse_RefreshLockLeaseResponse{RefreshLockLeaseResponse: r}
+		wrappedResponse.Error = monsterax.WrapError(err)
+	case *corepb.GrackleUpdateRequest_RevokeLockLeaseRequest:
+		r, err := a.grackleLocksCore.RevokeLockLease(req.RevokeLockLeaseRequest)
+		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "RevokeLockLease", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "RevokeLockLease", a.shardId, a.replicaId).Inc()
+		coreResponse.Response = &corepb.GrackleUpdateResponse_RevokeLockLeaseResponse{RevokeLockLeaseResponse: r}
+		wrappedResponse.Error = monsterax.WrapError(err)
 	default:
 		panic("no matching handlers")
 	}
@@ -154,6 +172,30 @@ func (a *GrackleLocksCoreAdapter) Read(request []byte) monstera.ReadResponse {
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "ListLocks", a.shardId, a.replicaId), t1)
 		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "ListLocks", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleReadResponse_ListLocksResponse{ListLocksResponse: r}
+		wrappedResponse.Error = monsterax.WrapError(err)
+	case *corepb.GrackleReadRequest_ListLocksByLeaseIdRequest:
+		r, err := a.grackleLocksCore.ListLocksByLeaseId(req.ListLocksByLeaseIdRequest)
+		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "ListLocksByLeaseId", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "ListLocksByLeaseId", a.shardId, a.replicaId).Inc()
+		coreResponse.Response = &corepb.GrackleReadResponse_ListLocksByLeaseIdResponse{ListLocksByLeaseIdResponse: r}
+		wrappedResponse.Error = monsterax.WrapError(err)
+	case *corepb.GrackleReadRequest_ListLockLeasesRequest:
+		r, err := a.grackleLocksCore.ListLockLeases(req.ListLockLeasesRequest)
+		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "ListLockLeases", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "ListLockLeases", a.shardId, a.replicaId).Inc()
+		coreResponse.Response = &corepb.GrackleReadResponse_ListLockLeasesResponse{ListLockLeasesResponse: r}
+		wrappedResponse.Error = monsterax.WrapError(err)
+	case *corepb.GrackleReadRequest_ListLockLeasesByProcessIdRequest:
+		r, err := a.grackleLocksCore.ListLockLeasesByProcessId(req.ListLockLeasesByProcessIdRequest)
+		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "ListLockLeasesByProcessId", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "ListLockLeasesByProcessId", a.shardId, a.replicaId).Inc()
+		coreResponse.Response = &corepb.GrackleReadResponse_ListLockLeasesByProcessIdResponse{ListLockLeasesByProcessIdResponse: r}
+		wrappedResponse.Error = monsterax.WrapError(err)
+	case *corepb.GrackleReadRequest_GetLockLeaseRequest:
+		r, err := a.grackleLocksCore.GetLockLease(req.GetLockLeaseRequest)
+		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "GetLockLease", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "GetLockLease", a.shardId, a.replicaId).Inc()
+		coreResponse.Response = &corepb.GrackleReadResponse_GetLockLeaseResponse{GetLockLeaseResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	default:
 		panic("no matching handlers")
@@ -272,6 +314,24 @@ func (a *GrackleSemaphoresCoreAdapter) Update(request []byte) monstera.UpdateRes
 		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "SemaphoresDeleteNamespace", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleUpdateResponse_SemaphoresDeleteNamespaceResponse{SemaphoresDeleteNamespaceResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
+	case *corepb.GrackleUpdateRequest_CreateSemaphoreLeaseRequest:
+		r, err := a.grackleSemaphoresCore.CreateSemaphoreLease(req.CreateSemaphoreLeaseRequest)
+		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "CreateSemaphoreLease", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "CreateSemaphoreLease", a.shardId, a.replicaId).Inc()
+		coreResponse.Response = &corepb.GrackleUpdateResponse_CreateSemaphoreLeaseResponse{CreateSemaphoreLeaseResponse: r}
+		wrappedResponse.Error = monsterax.WrapError(err)
+	case *corepb.GrackleUpdateRequest_RevokeSemaphoreLeaseRequest:
+		r, err := a.grackleSemaphoresCore.RevokeSemaphoreLease(req.RevokeSemaphoreLeaseRequest)
+		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "RevokeSemaphoreLease", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "RevokeSemaphoreLease", a.shardId, a.replicaId).Inc()
+		coreResponse.Response = &corepb.GrackleUpdateResponse_RevokeSemaphoreLeaseResponse{RevokeSemaphoreLeaseResponse: r}
+		wrappedResponse.Error = monsterax.WrapError(err)
+	case *corepb.GrackleUpdateRequest_RefreshSemaphoreLeaseRequest:
+		r, err := a.grackleSemaphoresCore.RefreshSemaphoreLease(req.RefreshSemaphoreLeaseRequest)
+		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "RefreshSemaphoreLease", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "RefreshSemaphoreLease", a.shardId, a.replicaId).Inc()
+		coreResponse.Response = &corepb.GrackleUpdateResponse_RefreshSemaphoreLeaseResponse{RefreshSemaphoreLeaseResponse: r}
+		wrappedResponse.Error = monsterax.WrapError(err)
 	default:
 		panic("no matching handlers")
 	}
@@ -321,11 +381,35 @@ func (a *GrackleSemaphoresCoreAdapter) Read(request []byte) monstera.ReadRespons
 		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "ListSemaphores", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleReadResponse_ListSemaphoresResponse{ListSemaphoresResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
+	case *corepb.GrackleReadRequest_ListSemaphoresByLeaseIdRequest:
+		r, err := a.grackleSemaphoresCore.ListSemaphoresByLeaseId(req.ListSemaphoresByLeaseIdRequest)
+		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "ListSemaphoresByLeaseId", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "ListSemaphoresByLeaseId", a.shardId, a.replicaId).Inc()
+		coreResponse.Response = &corepb.GrackleReadResponse_ListSemaphoresByLeaseIdResponse{ListSemaphoresByLeaseIdResponse: r}
+		wrappedResponse.Error = monsterax.WrapError(err)
 	case *corepb.GrackleReadRequest_ListSemaphoreHoldersRequest:
 		r, err := a.grackleSemaphoresCore.ListSemaphoreHolders(req.ListSemaphoreHoldersRequest)
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "ListSemaphoreHolders", a.shardId, a.replicaId), t1)
 		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "ListSemaphoreHolders", a.shardId, a.replicaId).Inc()
 		coreResponse.Response = &corepb.GrackleReadResponse_ListSemaphoreHoldersResponse{ListSemaphoreHoldersResponse: r}
+		wrappedResponse.Error = monsterax.WrapError(err)
+	case *corepb.GrackleReadRequest_ListSemaphoreLeasesRequest:
+		r, err := a.grackleSemaphoresCore.ListSemaphoreLeases(req.ListSemaphoreLeasesRequest)
+		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "ListSemaphoreLeases", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "ListSemaphoreLeases", a.shardId, a.replicaId).Inc()
+		coreResponse.Response = &corepb.GrackleReadResponse_ListSemaphoreLeasesResponse{ListSemaphoreLeasesResponse: r}
+		wrappedResponse.Error = monsterax.WrapError(err)
+	case *corepb.GrackleReadRequest_ListSemaphoreLeasesByProcessIdRequest:
+		r, err := a.grackleSemaphoresCore.ListSemaphoreLeasesByProcessId(req.ListSemaphoreLeasesByProcessIdRequest)
+		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "ListSemaphoreLeasesByProcessId", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "ListSemaphoreLeasesByProcessId", a.shardId, a.replicaId).Inc()
+		coreResponse.Response = &corepb.GrackleReadResponse_ListSemaphoreLeasesByProcessIdResponse{ListSemaphoreLeasesByProcessIdResponse: r}
+		wrappedResponse.Error = monsterax.WrapError(err)
+	case *corepb.GrackleReadRequest_GetSemaphoreLeaseRequest:
+		r, err := a.grackleSemaphoresCore.GetSemaphoreLease(req.GetSemaphoreLeaseRequest)
+		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "GetSemaphoreLease", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "GetSemaphoreLease", a.shardId, a.replicaId).Inc()
+		coreResponse.Response = &corepb.GrackleReadResponse_GetSemaphoreLeaseResponse{GetSemaphoreLeaseResponse: r}
 		wrappedResponse.Error = monsterax.WrapError(err)
 	default:
 		panic("no matching handlers")

@@ -9,10 +9,9 @@ option go_package = "github.com/evrblk/grackle/pkg/corepb";
 
 message AcquireLockRequest {
   LockId lock_id = 1;
-  string process_id = 2;
+  uint64 lease_id = 2;
   bool exclusive = 3;
   int64 now = 4;
-  int64 expires_at = 5;
   int64 max_number_of_locks_per_namespace = 6;
 }
 
@@ -23,7 +22,7 @@ message AcquireLockResponse {
 
 message ReleaseLockRequest {
   LockId lock_id = 1;
-  string process_id = 2;
+  uint64 lease_id = 2;
   int64 now = 3;
 }
 
@@ -60,6 +59,19 @@ message ListLocksResponse {
   PaginationToken previous_pagination_token = 3;
 }
 
+message ListLocksByLeaseIdRequest {
+  LeaseId lease_id = 1;
+  int64 now = 2;
+  PaginationToken pagination_token = 3;
+  int32 limit = 4;
+}
+
+message ListLocksByLeaseIdResponse {
+  repeated Lock locks = 1;
+  PaginationToken next_pagination_token = 2;
+  PaginationToken previous_pagination_token = 3;
+}
+
 message RunLocksGarbageCollectionRequest {
   int64 now = 1;
   int64 gc_records_page_size = 2;
@@ -77,6 +89,68 @@ message LocksDeleteNamespaceRequest {
 
 message LocksDeleteNamespaceResponse {}
 
+message CreateLockLeaseRequest {
+  LeaseId lease_id = 1;
+  string process_id = 2;
+  uint64 ttl_seconds = 3;
+  int64 now = 4;
+  int64 max_number_of_lock_leases = 5;
+}
+
+message CreateLockLeaseResponse {
+  Lease lease = 1;
+}
+
+message RevokeLockLeaseRequest {
+  LeaseId lease_id = 1;
+  int64 now = 2;
+}
+
+message RevokeLockLeaseResponse {}
+
+message RefreshLockLeaseRequest {
+  LeaseId lease_id = 1;
+  uint64 ttl_seconds = 2;
+  int64 now = 3;
+}
+
+message RefreshLockLeaseResponse {}
+
+message GetLockLeaseRequest {
+  LeaseId lease_id = 1;
+}
+
+message GetLockLeaseResponse {
+  Lease lease = 1;
+}
+
+message ListLockLeasesRequest {
+  NamespaceId namespace_id = 1;
+  int64 now = 2;
+  PaginationToken pagination_token = 3;
+  int32 limit = 4;
+}
+
+message ListLockLeasesResponse {
+  repeated Lease leases = 1;
+  PaginationToken next_pagination_token = 2;
+  PaginationToken previous_pagination_token = 3;
+}
+
+message ListLockLeasesByProcessIdRequest {
+  NamespaceId namespace_id = 1;
+  string process_id = 2;
+  int64 now = 3;
+  PaginationToken pagination_token = 4;
+  int32 limit = 5;
+}
+
+message ListLockLeasesByProcessIdResponse {
+  repeated Lease leases = 1;
+  PaginationToken next_pagination_token = 2;
+  PaginationToken previous_pagination_token = 3;
+}
+
 message Lock {
   LockId id = 1;
   LockState state = 2;
@@ -85,9 +159,8 @@ message Lock {
 }
 
 message LockHolder {
-  string process_id = 1;
+  uint64 lease_id = 1;
   int64 locked_at = 2;
-  int64 expires_at = 3;
 }
 
 enum LockState {
@@ -105,16 +178,12 @@ message LockId {
 message LocksCounter {
   NamespaceId namespace_id = 1;
   int64 number_of_locks = 2;
+  int64 number_of_leases = 3;
 }
 
 message LocksGarbageCollectionRecord {
   uint64 id = 1;
   NamespaceId namespace_id = 2;
-}
-
-message LocksExpirationRecord {
-  LockId lock_id = 1;
-  int64 expires_at = 2;
 }
 
 message LockAncestor {

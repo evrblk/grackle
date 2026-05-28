@@ -269,6 +269,126 @@ func (x *ListSemaphoresResponse) GetPreviousPaginationToken() *PaginationToken {
 	return nil
 }
 
+type ListSemaphoresByLeaseIdRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	LeaseId         *LeaseId               `protobuf:"bytes,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
+	PaginationToken *PaginationToken       `protobuf:"bytes,2,opt,name=pagination_token,json=paginationToken,proto3" json:"pagination_token,omitempty"`
+	Limit           int32                  `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *ListSemaphoresByLeaseIdRequest) Reset() {
+	*x = ListSemaphoresByLeaseIdRequest{}
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListSemaphoresByLeaseIdRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListSemaphoresByLeaseIdRequest) ProtoMessage() {}
+
+func (x *ListSemaphoresByLeaseIdRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListSemaphoresByLeaseIdRequest.ProtoReflect.Descriptor instead.
+func (*ListSemaphoresByLeaseIdRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *ListSemaphoresByLeaseIdRequest) GetLeaseId() *LeaseId {
+	if x != nil {
+		return x.LeaseId
+	}
+	return nil
+}
+
+func (x *ListSemaphoresByLeaseIdRequest) GetPaginationToken() *PaginationToken {
+	if x != nil {
+		return x.PaginationToken
+	}
+	return nil
+}
+
+func (x *ListSemaphoresByLeaseIdRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type ListSemaphoresByLeaseIdResponse struct {
+	state                   protoimpl.MessageState `protogen:"open.v1"`
+	Semaphores              []*Semaphore           `protobuf:"bytes,1,rep,name=semaphores,proto3" json:"semaphores,omitempty"`
+	NextPaginationToken     *PaginationToken       `protobuf:"bytes,2,opt,name=next_pagination_token,json=nextPaginationToken,proto3" json:"next_pagination_token,omitempty"`
+	PreviousPaginationToken *PaginationToken       `protobuf:"bytes,3,opt,name=previous_pagination_token,json=previousPaginationToken,proto3" json:"previous_pagination_token,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
+}
+
+func (x *ListSemaphoresByLeaseIdResponse) Reset() {
+	*x = ListSemaphoresByLeaseIdResponse{}
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListSemaphoresByLeaseIdResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListSemaphoresByLeaseIdResponse) ProtoMessage() {}
+
+func (x *ListSemaphoresByLeaseIdResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListSemaphoresByLeaseIdResponse.ProtoReflect.Descriptor instead.
+func (*ListSemaphoresByLeaseIdResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ListSemaphoresByLeaseIdResponse) GetSemaphores() []*Semaphore {
+	if x != nil {
+		return x.Semaphores
+	}
+	return nil
+}
+
+func (x *ListSemaphoresByLeaseIdResponse) GetNextPaginationToken() *PaginationToken {
+	if x != nil {
+		return x.NextPaginationToken
+	}
+	return nil
+}
+
+func (x *ListSemaphoresByLeaseIdResponse) GetPreviousPaginationToken() *PaginationToken {
+	if x != nil {
+		return x.PreviousPaginationToken
+	}
+	return nil
+}
+
 type GetSemaphoreRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	SemaphoreId   *SemaphoreId           `protobuf:"bytes,1,opt,name=semaphore_id,json=semaphoreId,proto3" json:"semaphore_id,omitempty"`
@@ -279,7 +399,7 @@ type GetSemaphoreRequest struct {
 
 func (x *GetSemaphoreRequest) Reset() {
 	*x = GetSemaphoreRequest{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[4]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -291,7 +411,7 @@ func (x *GetSemaphoreRequest) String() string {
 func (*GetSemaphoreRequest) ProtoMessage() {}
 
 func (x *GetSemaphoreRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[4]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -304,7 +424,7 @@ func (x *GetSemaphoreRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSemaphoreRequest.ProtoReflect.Descriptor instead.
 func (*GetSemaphoreRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{4}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetSemaphoreRequest) GetSemaphoreId() *SemaphoreId {
@@ -330,7 +450,7 @@ type GetSemaphoreResponse struct {
 
 func (x *GetSemaphoreResponse) Reset() {
 	*x = GetSemaphoreResponse{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[5]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -342,7 +462,7 @@ func (x *GetSemaphoreResponse) String() string {
 func (*GetSemaphoreResponse) ProtoMessage() {}
 
 func (x *GetSemaphoreResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[5]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -355,7 +475,7 @@ func (x *GetSemaphoreResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSemaphoreResponse.ProtoReflect.Descriptor instead.
 func (*GetSemaphoreResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{5}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GetSemaphoreResponse) GetSemaphore() *Semaphore {
@@ -376,7 +496,7 @@ type GetSemaphoreByNameRequest struct {
 
 func (x *GetSemaphoreByNameRequest) Reset() {
 	*x = GetSemaphoreByNameRequest{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[6]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -388,7 +508,7 @@ func (x *GetSemaphoreByNameRequest) String() string {
 func (*GetSemaphoreByNameRequest) ProtoMessage() {}
 
 func (x *GetSemaphoreByNameRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[6]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -401,7 +521,7 @@ func (x *GetSemaphoreByNameRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSemaphoreByNameRequest.ProtoReflect.Descriptor instead.
 func (*GetSemaphoreByNameRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{6}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetSemaphoreByNameRequest) GetNamespaceId() *NamespaceId {
@@ -434,7 +554,7 @@ type GetSemaphoreByNameResponse struct {
 
 func (x *GetSemaphoreByNameResponse) Reset() {
 	*x = GetSemaphoreByNameResponse{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[7]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -446,7 +566,7 @@ func (x *GetSemaphoreByNameResponse) String() string {
 func (*GetSemaphoreByNameResponse) ProtoMessage() {}
 
 func (x *GetSemaphoreByNameResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[7]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -459,7 +579,7 @@ func (x *GetSemaphoreByNameResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSemaphoreByNameResponse.ProtoReflect.Descriptor instead.
 func (*GetSemaphoreByNameResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{7}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetSemaphoreByNameResponse) GetSemaphore() *Semaphore {
@@ -473,17 +593,16 @@ type AcquireSemaphoreRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	SemaphoreName string                 `protobuf:"bytes,2,opt,name=semaphore_name,json=semaphoreName,proto3" json:"semaphore_name,omitempty"`
-	ProcessId     string                 `protobuf:"bytes,3,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
+	LeaseId       uint64                 `protobuf:"varint,3,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
 	Weight        uint64                 `protobuf:"varint,4,opt,name=weight,proto3" json:"weight,omitempty"`
-	ExpiresAt     int64                  `protobuf:"varint,5,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	Now           int64                  `protobuf:"varint,6,opt,name=now,proto3" json:"now,omitempty"`
+	Now           int64                  `protobuf:"varint,5,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *AcquireSemaphoreRequest) Reset() {
 	*x = AcquireSemaphoreRequest{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[8]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -495,7 +614,7 @@ func (x *AcquireSemaphoreRequest) String() string {
 func (*AcquireSemaphoreRequest) ProtoMessage() {}
 
 func (x *AcquireSemaphoreRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[8]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -508,7 +627,7 @@ func (x *AcquireSemaphoreRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AcquireSemaphoreRequest.ProtoReflect.Descriptor instead.
 func (*AcquireSemaphoreRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{8}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *AcquireSemaphoreRequest) GetNamespaceId() *NamespaceId {
@@ -525,23 +644,16 @@ func (x *AcquireSemaphoreRequest) GetSemaphoreName() string {
 	return ""
 }
 
-func (x *AcquireSemaphoreRequest) GetProcessId() string {
+func (x *AcquireSemaphoreRequest) GetLeaseId() uint64 {
 	if x != nil {
-		return x.ProcessId
+		return x.LeaseId
 	}
-	return ""
+	return 0
 }
 
 func (x *AcquireSemaphoreRequest) GetWeight() uint64 {
 	if x != nil {
 		return x.Weight
-	}
-	return 0
-}
-
-func (x *AcquireSemaphoreRequest) GetExpiresAt() int64 {
-	if x != nil {
-		return x.ExpiresAt
 	}
 	return 0
 }
@@ -563,7 +675,7 @@ type AcquireSemaphoreResponse struct {
 
 func (x *AcquireSemaphoreResponse) Reset() {
 	*x = AcquireSemaphoreResponse{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[9]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -575,7 +687,7 @@ func (x *AcquireSemaphoreResponse) String() string {
 func (*AcquireSemaphoreResponse) ProtoMessage() {}
 
 func (x *AcquireSemaphoreResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[9]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -588,7 +700,7 @@ func (x *AcquireSemaphoreResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AcquireSemaphoreResponse.ProtoReflect.Descriptor instead.
 func (*AcquireSemaphoreResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{9}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *AcquireSemaphoreResponse) GetSemaphore() *Semaphore {
@@ -609,7 +721,7 @@ type ReleaseSemaphoreRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	SemaphoreName string                 `protobuf:"bytes,2,opt,name=semaphore_name,json=semaphoreName,proto3" json:"semaphore_name,omitempty"`
-	ProcessId     string                 `protobuf:"bytes,3,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
+	LeaseId       uint64                 `protobuf:"varint,3,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
 	Now           int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -617,7 +729,7 @@ type ReleaseSemaphoreRequest struct {
 
 func (x *ReleaseSemaphoreRequest) Reset() {
 	*x = ReleaseSemaphoreRequest{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[10]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -629,7 +741,7 @@ func (x *ReleaseSemaphoreRequest) String() string {
 func (*ReleaseSemaphoreRequest) ProtoMessage() {}
 
 func (x *ReleaseSemaphoreRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[10]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -642,7 +754,7 @@ func (x *ReleaseSemaphoreRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReleaseSemaphoreRequest.ProtoReflect.Descriptor instead.
 func (*ReleaseSemaphoreRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{10}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *ReleaseSemaphoreRequest) GetNamespaceId() *NamespaceId {
@@ -659,11 +771,11 @@ func (x *ReleaseSemaphoreRequest) GetSemaphoreName() string {
 	return ""
 }
 
-func (x *ReleaseSemaphoreRequest) GetProcessId() string {
+func (x *ReleaseSemaphoreRequest) GetLeaseId() uint64 {
 	if x != nil {
-		return x.ProcessId
+		return x.LeaseId
 	}
-	return ""
+	return 0
 }
 
 func (x *ReleaseSemaphoreRequest) GetNow() int64 {
@@ -682,7 +794,7 @@ type ReleaseSemaphoreResponse struct {
 
 func (x *ReleaseSemaphoreResponse) Reset() {
 	*x = ReleaseSemaphoreResponse{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[11]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -694,7 +806,7 @@ func (x *ReleaseSemaphoreResponse) String() string {
 func (*ReleaseSemaphoreResponse) ProtoMessage() {}
 
 func (x *ReleaseSemaphoreResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[11]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -707,7 +819,7 @@ func (x *ReleaseSemaphoreResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReleaseSemaphoreResponse.ProtoReflect.Descriptor instead.
 func (*ReleaseSemaphoreResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{11}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *ReleaseSemaphoreResponse) GetSemaphore() *Semaphore {
@@ -730,7 +842,7 @@ type UpdateSemaphoreRequest struct {
 
 func (x *UpdateSemaphoreRequest) Reset() {
 	*x = UpdateSemaphoreRequest{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[12]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -742,7 +854,7 @@ func (x *UpdateSemaphoreRequest) String() string {
 func (*UpdateSemaphoreRequest) ProtoMessage() {}
 
 func (x *UpdateSemaphoreRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[12]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -755,7 +867,7 @@ func (x *UpdateSemaphoreRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateSemaphoreRequest.ProtoReflect.Descriptor instead.
 func (*UpdateSemaphoreRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{12}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *UpdateSemaphoreRequest) GetNamespaceId() *NamespaceId {
@@ -802,7 +914,7 @@ type UpdateSemaphoreResponse struct {
 
 func (x *UpdateSemaphoreResponse) Reset() {
 	*x = UpdateSemaphoreResponse{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[13]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -814,7 +926,7 @@ func (x *UpdateSemaphoreResponse) String() string {
 func (*UpdateSemaphoreResponse) ProtoMessage() {}
 
 func (x *UpdateSemaphoreResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[13]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -827,7 +939,7 @@ func (x *UpdateSemaphoreResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateSemaphoreResponse.ProtoReflect.Descriptor instead.
 func (*UpdateSemaphoreResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{13}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *UpdateSemaphoreResponse) GetSemaphore() *Semaphore {
@@ -847,7 +959,7 @@ type DeleteSemaphoreRequest struct {
 
 func (x *DeleteSemaphoreRequest) Reset() {
 	*x = DeleteSemaphoreRequest{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[14]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -859,7 +971,7 @@ func (x *DeleteSemaphoreRequest) String() string {
 func (*DeleteSemaphoreRequest) ProtoMessage() {}
 
 func (x *DeleteSemaphoreRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[14]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -872,7 +984,7 @@ func (x *DeleteSemaphoreRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteSemaphoreRequest.ProtoReflect.Descriptor instead.
 func (*DeleteSemaphoreRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{14}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *DeleteSemaphoreRequest) GetNamespaceId() *NamespaceId {
@@ -897,7 +1009,7 @@ type DeleteSemaphoreResponse struct {
 
 func (x *DeleteSemaphoreResponse) Reset() {
 	*x = DeleteSemaphoreResponse{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[15]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -909,7 +1021,7 @@ func (x *DeleteSemaphoreResponse) String() string {
 func (*DeleteSemaphoreResponse) ProtoMessage() {}
 
 func (x *DeleteSemaphoreResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[15]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -922,7 +1034,7 @@ func (x *DeleteSemaphoreResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteSemaphoreResponse.ProtoReflect.Descriptor instead.
 func (*DeleteSemaphoreResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{15}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{17}
 }
 
 type ListSemaphoreHoldersRequest struct {
@@ -937,7 +1049,7 @@ type ListSemaphoreHoldersRequest struct {
 
 func (x *ListSemaphoreHoldersRequest) Reset() {
 	*x = ListSemaphoreHoldersRequest{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[16]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -949,7 +1061,7 @@ func (x *ListSemaphoreHoldersRequest) String() string {
 func (*ListSemaphoreHoldersRequest) ProtoMessage() {}
 
 func (x *ListSemaphoreHoldersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[16]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -962,7 +1074,7 @@ func (x *ListSemaphoreHoldersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListSemaphoreHoldersRequest.ProtoReflect.Descriptor instead.
 func (*ListSemaphoreHoldersRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{16}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *ListSemaphoreHoldersRequest) GetNamespaceId() *NamespaceId {
@@ -1004,7 +1116,7 @@ type ListSemaphoreHoldersResponse struct {
 
 func (x *ListSemaphoreHoldersResponse) Reset() {
 	*x = ListSemaphoreHoldersResponse{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[17]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1016,7 +1128,7 @@ func (x *ListSemaphoreHoldersResponse) String() string {
 func (*ListSemaphoreHoldersResponse) ProtoMessage() {}
 
 func (x *ListSemaphoreHoldersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[17]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1029,7 +1141,7 @@ func (x *ListSemaphoreHoldersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListSemaphoreHoldersResponse.ProtoReflect.Descriptor instead.
 func (*ListSemaphoreHoldersResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{17}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *ListSemaphoreHoldersResponse) GetHolders() []*SemaphoreHolder {
@@ -1053,6 +1165,646 @@ func (x *ListSemaphoreHoldersResponse) GetPreviousPaginationToken() *PaginationT
 	return nil
 }
 
+type ListSemaphoreLeasesRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	NamespaceId     *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
+	PaginationToken *PaginationToken       `protobuf:"bytes,2,opt,name=pagination_token,json=paginationToken,proto3" json:"pagination_token,omitempty"`
+	Limit           int32                  `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *ListSemaphoreLeasesRequest) Reset() {
+	*x = ListSemaphoreLeasesRequest{}
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListSemaphoreLeasesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListSemaphoreLeasesRequest) ProtoMessage() {}
+
+func (x *ListSemaphoreLeasesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListSemaphoreLeasesRequest.ProtoReflect.Descriptor instead.
+func (*ListSemaphoreLeasesRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *ListSemaphoreLeasesRequest) GetNamespaceId() *NamespaceId {
+	if x != nil {
+		return x.NamespaceId
+	}
+	return nil
+}
+
+func (x *ListSemaphoreLeasesRequest) GetPaginationToken() *PaginationToken {
+	if x != nil {
+		return x.PaginationToken
+	}
+	return nil
+}
+
+func (x *ListSemaphoreLeasesRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type ListSemaphoreLeasesResponse struct {
+	state                   protoimpl.MessageState `protogen:"open.v1"`
+	Leases                  []*Lease               `protobuf:"bytes,1,rep,name=leases,proto3" json:"leases,omitempty"`
+	NextPaginationToken     *PaginationToken       `protobuf:"bytes,2,opt,name=next_pagination_token,json=nextPaginationToken,proto3" json:"next_pagination_token,omitempty"`
+	PreviousPaginationToken *PaginationToken       `protobuf:"bytes,3,opt,name=previous_pagination_token,json=previousPaginationToken,proto3" json:"previous_pagination_token,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
+}
+
+func (x *ListSemaphoreLeasesResponse) Reset() {
+	*x = ListSemaphoreLeasesResponse{}
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListSemaphoreLeasesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListSemaphoreLeasesResponse) ProtoMessage() {}
+
+func (x *ListSemaphoreLeasesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListSemaphoreLeasesResponse.ProtoReflect.Descriptor instead.
+func (*ListSemaphoreLeasesResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *ListSemaphoreLeasesResponse) GetLeases() []*Lease {
+	if x != nil {
+		return x.Leases
+	}
+	return nil
+}
+
+func (x *ListSemaphoreLeasesResponse) GetNextPaginationToken() *PaginationToken {
+	if x != nil {
+		return x.NextPaginationToken
+	}
+	return nil
+}
+
+func (x *ListSemaphoreLeasesResponse) GetPreviousPaginationToken() *PaginationToken {
+	if x != nil {
+		return x.PreviousPaginationToken
+	}
+	return nil
+}
+
+type ListSemaphoreLeasesByProcessIdRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	NamespaceId     *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
+	ProcessId       string                 `protobuf:"bytes,2,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
+	PaginationToken *PaginationToken       `protobuf:"bytes,3,opt,name=pagination_token,json=paginationToken,proto3" json:"pagination_token,omitempty"`
+	Limit           int32                  `protobuf:"varint,4,opt,name=limit,proto3" json:"limit,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *ListSemaphoreLeasesByProcessIdRequest) Reset() {
+	*x = ListSemaphoreLeasesByProcessIdRequest{}
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListSemaphoreLeasesByProcessIdRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListSemaphoreLeasesByProcessIdRequest) ProtoMessage() {}
+
+func (x *ListSemaphoreLeasesByProcessIdRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListSemaphoreLeasesByProcessIdRequest.ProtoReflect.Descriptor instead.
+func (*ListSemaphoreLeasesByProcessIdRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *ListSemaphoreLeasesByProcessIdRequest) GetNamespaceId() *NamespaceId {
+	if x != nil {
+		return x.NamespaceId
+	}
+	return nil
+}
+
+func (x *ListSemaphoreLeasesByProcessIdRequest) GetProcessId() string {
+	if x != nil {
+		return x.ProcessId
+	}
+	return ""
+}
+
+func (x *ListSemaphoreLeasesByProcessIdRequest) GetPaginationToken() *PaginationToken {
+	if x != nil {
+		return x.PaginationToken
+	}
+	return nil
+}
+
+func (x *ListSemaphoreLeasesByProcessIdRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type ListSemaphoreLeasesByProcessIdResponse struct {
+	state                   protoimpl.MessageState `protogen:"open.v1"`
+	Leases                  []*Lease               `protobuf:"bytes,1,rep,name=leases,proto3" json:"leases,omitempty"`
+	NextPaginationToken     *PaginationToken       `protobuf:"bytes,2,opt,name=next_pagination_token,json=nextPaginationToken,proto3" json:"next_pagination_token,omitempty"`
+	PreviousPaginationToken *PaginationToken       `protobuf:"bytes,3,opt,name=previous_pagination_token,json=previousPaginationToken,proto3" json:"previous_pagination_token,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
+}
+
+func (x *ListSemaphoreLeasesByProcessIdResponse) Reset() {
+	*x = ListSemaphoreLeasesByProcessIdResponse{}
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListSemaphoreLeasesByProcessIdResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListSemaphoreLeasesByProcessIdResponse) ProtoMessage() {}
+
+func (x *ListSemaphoreLeasesByProcessIdResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListSemaphoreLeasesByProcessIdResponse.ProtoReflect.Descriptor instead.
+func (*ListSemaphoreLeasesByProcessIdResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *ListSemaphoreLeasesByProcessIdResponse) GetLeases() []*Lease {
+	if x != nil {
+		return x.Leases
+	}
+	return nil
+}
+
+func (x *ListSemaphoreLeasesByProcessIdResponse) GetNextPaginationToken() *PaginationToken {
+	if x != nil {
+		return x.NextPaginationToken
+	}
+	return nil
+}
+
+func (x *ListSemaphoreLeasesByProcessIdResponse) GetPreviousPaginationToken() *PaginationToken {
+	if x != nil {
+		return x.PreviousPaginationToken
+	}
+	return nil
+}
+
+type GetSemaphoreLeaseRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	LeaseId       *LeaseId               `protobuf:"bytes,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetSemaphoreLeaseRequest) Reset() {
+	*x = GetSemaphoreLeaseRequest{}
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetSemaphoreLeaseRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetSemaphoreLeaseRequest) ProtoMessage() {}
+
+func (x *GetSemaphoreLeaseRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetSemaphoreLeaseRequest.ProtoReflect.Descriptor instead.
+func (*GetSemaphoreLeaseRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *GetSemaphoreLeaseRequest) GetLeaseId() *LeaseId {
+	if x != nil {
+		return x.LeaseId
+	}
+	return nil
+}
+
+type GetSemaphoreLeaseResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Lease         *Lease                 `protobuf:"bytes,1,opt,name=lease,proto3" json:"lease,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetSemaphoreLeaseResponse) Reset() {
+	*x = GetSemaphoreLeaseResponse{}
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetSemaphoreLeaseResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetSemaphoreLeaseResponse) ProtoMessage() {}
+
+func (x *GetSemaphoreLeaseResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetSemaphoreLeaseResponse.ProtoReflect.Descriptor instead.
+func (*GetSemaphoreLeaseResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *GetSemaphoreLeaseResponse) GetLease() *Lease {
+	if x != nil {
+		return x.Lease
+	}
+	return nil
+}
+
+type CreateSemaphoreLeaseRequest struct {
+	state                      protoimpl.MessageState `protogen:"open.v1"`
+	LeaseId                    *LeaseId               `protobuf:"bytes,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
+	ProcessId                  string                 `protobuf:"bytes,2,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
+	TtlSeconds                 uint64                 `protobuf:"varint,3,opt,name=ttl_seconds,json=ttlSeconds,proto3" json:"ttl_seconds,omitempty"`
+	Now                        int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
+	MaxNumberOfSemaphoreLeases int64                  `protobuf:"varint,5,opt,name=max_number_of_semaphore_leases,json=maxNumberOfSemaphoreLeases,proto3" json:"max_number_of_semaphore_leases,omitempty"`
+	unknownFields              protoimpl.UnknownFields
+	sizeCache                  protoimpl.SizeCache
+}
+
+func (x *CreateSemaphoreLeaseRequest) Reset() {
+	*x = CreateSemaphoreLeaseRequest{}
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateSemaphoreLeaseRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateSemaphoreLeaseRequest) ProtoMessage() {}
+
+func (x *CreateSemaphoreLeaseRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateSemaphoreLeaseRequest.ProtoReflect.Descriptor instead.
+func (*CreateSemaphoreLeaseRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *CreateSemaphoreLeaseRequest) GetLeaseId() *LeaseId {
+	if x != nil {
+		return x.LeaseId
+	}
+	return nil
+}
+
+func (x *CreateSemaphoreLeaseRequest) GetProcessId() string {
+	if x != nil {
+		return x.ProcessId
+	}
+	return ""
+}
+
+func (x *CreateSemaphoreLeaseRequest) GetTtlSeconds() uint64 {
+	if x != nil {
+		return x.TtlSeconds
+	}
+	return 0
+}
+
+func (x *CreateSemaphoreLeaseRequest) GetNow() int64 {
+	if x != nil {
+		return x.Now
+	}
+	return 0
+}
+
+func (x *CreateSemaphoreLeaseRequest) GetMaxNumberOfSemaphoreLeases() int64 {
+	if x != nil {
+		return x.MaxNumberOfSemaphoreLeases
+	}
+	return 0
+}
+
+type CreateSemaphoreLeaseResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Lease         *Lease                 `protobuf:"bytes,1,opt,name=lease,proto3" json:"lease,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateSemaphoreLeaseResponse) Reset() {
+	*x = CreateSemaphoreLeaseResponse{}
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateSemaphoreLeaseResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateSemaphoreLeaseResponse) ProtoMessage() {}
+
+func (x *CreateSemaphoreLeaseResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateSemaphoreLeaseResponse.ProtoReflect.Descriptor instead.
+func (*CreateSemaphoreLeaseResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *CreateSemaphoreLeaseResponse) GetLease() *Lease {
+	if x != nil {
+		return x.Lease
+	}
+	return nil
+}
+
+type RevokeSemaphoreLeaseRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	LeaseId       *LeaseId               `protobuf:"bytes,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
+	Now           int64                  `protobuf:"varint,2,opt,name=now,proto3" json:"now,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RevokeSemaphoreLeaseRequest) Reset() {
+	*x = RevokeSemaphoreLeaseRequest{}
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RevokeSemaphoreLeaseRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RevokeSemaphoreLeaseRequest) ProtoMessage() {}
+
+func (x *RevokeSemaphoreLeaseRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RevokeSemaphoreLeaseRequest.ProtoReflect.Descriptor instead.
+func (*RevokeSemaphoreLeaseRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *RevokeSemaphoreLeaseRequest) GetLeaseId() *LeaseId {
+	if x != nil {
+		return x.LeaseId
+	}
+	return nil
+}
+
+func (x *RevokeSemaphoreLeaseRequest) GetNow() int64 {
+	if x != nil {
+		return x.Now
+	}
+	return 0
+}
+
+type RevokeSemaphoreLeaseResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RevokeSemaphoreLeaseResponse) Reset() {
+	*x = RevokeSemaphoreLeaseResponse{}
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RevokeSemaphoreLeaseResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RevokeSemaphoreLeaseResponse) ProtoMessage() {}
+
+func (x *RevokeSemaphoreLeaseResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RevokeSemaphoreLeaseResponse.ProtoReflect.Descriptor instead.
+func (*RevokeSemaphoreLeaseResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{29}
+}
+
+type RefreshSemaphoreLeaseRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	LeaseId       *LeaseId               `protobuf:"bytes,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
+	TtlSeconds    uint64                 `protobuf:"varint,2,opt,name=ttl_seconds,json=ttlSeconds,proto3" json:"ttl_seconds,omitempty"`
+	Now           int64                  `protobuf:"varint,3,opt,name=now,proto3" json:"now,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefreshSemaphoreLeaseRequest) Reset() {
+	*x = RefreshSemaphoreLeaseRequest{}
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshSemaphoreLeaseRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshSemaphoreLeaseRequest) ProtoMessage() {}
+
+func (x *RefreshSemaphoreLeaseRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshSemaphoreLeaseRequest.ProtoReflect.Descriptor instead.
+func (*RefreshSemaphoreLeaseRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *RefreshSemaphoreLeaseRequest) GetLeaseId() *LeaseId {
+	if x != nil {
+		return x.LeaseId
+	}
+	return nil
+}
+
+func (x *RefreshSemaphoreLeaseRequest) GetTtlSeconds() uint64 {
+	if x != nil {
+		return x.TtlSeconds
+	}
+	return 0
+}
+
+func (x *RefreshSemaphoreLeaseRequest) GetNow() int64 {
+	if x != nil {
+		return x.Now
+	}
+	return 0
+}
+
+type RefreshSemaphoreLeaseResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefreshSemaphoreLeaseResponse) Reset() {
+	*x = RefreshSemaphoreLeaseResponse{}
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshSemaphoreLeaseResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshSemaphoreLeaseResponse) ProtoMessage() {}
+
+func (x *RefreshSemaphoreLeaseResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshSemaphoreLeaseResponse.ProtoReflect.Descriptor instead.
+func (*RefreshSemaphoreLeaseResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{31}
+}
+
 type SemaphoresDeleteNamespaceRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	RecordId      uint64                 `protobuf:"varint,1,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
@@ -1064,7 +1816,7 @@ type SemaphoresDeleteNamespaceRequest struct {
 
 func (x *SemaphoresDeleteNamespaceRequest) Reset() {
 	*x = SemaphoresDeleteNamespaceRequest{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[18]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1076,7 +1828,7 @@ func (x *SemaphoresDeleteNamespaceRequest) String() string {
 func (*SemaphoresDeleteNamespaceRequest) ProtoMessage() {}
 
 func (x *SemaphoresDeleteNamespaceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[18]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1089,7 +1841,7 @@ func (x *SemaphoresDeleteNamespaceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SemaphoresDeleteNamespaceRequest.ProtoReflect.Descriptor instead.
 func (*SemaphoresDeleteNamespaceRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{18}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *SemaphoresDeleteNamespaceRequest) GetRecordId() uint64 {
@@ -1121,7 +1873,7 @@ type SemaphoresDeleteNamespaceResponse struct {
 
 func (x *SemaphoresDeleteNamespaceResponse) Reset() {
 	*x = SemaphoresDeleteNamespaceResponse{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[19]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1133,7 +1885,7 @@ func (x *SemaphoresDeleteNamespaceResponse) String() string {
 func (*SemaphoresDeleteNamespaceResponse) ProtoMessage() {}
 
 func (x *SemaphoresDeleteNamespaceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[19]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1146,7 +1898,7 @@ func (x *SemaphoresDeleteNamespaceResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use SemaphoresDeleteNamespaceResponse.ProtoReflect.Descriptor instead.
 func (*SemaphoresDeleteNamespaceResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{19}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{33}
 }
 
 type RunSemaphoresGarbageCollectionRequest struct {
@@ -1161,7 +1913,7 @@ type RunSemaphoresGarbageCollectionRequest struct {
 
 func (x *RunSemaphoresGarbageCollectionRequest) Reset() {
 	*x = RunSemaphoresGarbageCollectionRequest{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[20]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1173,7 +1925,7 @@ func (x *RunSemaphoresGarbageCollectionRequest) String() string {
 func (*RunSemaphoresGarbageCollectionRequest) ProtoMessage() {}
 
 func (x *RunSemaphoresGarbageCollectionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[20]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1186,7 +1938,7 @@ func (x *RunSemaphoresGarbageCollectionRequest) ProtoReflect() protoreflect.Mess
 
 // Deprecated: Use RunSemaphoresGarbageCollectionRequest.ProtoReflect.Descriptor instead.
 func (*RunSemaphoresGarbageCollectionRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{20}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *RunSemaphoresGarbageCollectionRequest) GetNow() int64 {
@@ -1225,7 +1977,7 @@ type RunSemaphoresGarbageCollectionResponse struct {
 
 func (x *RunSemaphoresGarbageCollectionResponse) Reset() {
 	*x = RunSemaphoresGarbageCollectionResponse{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[21]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1237,7 +1989,7 @@ func (x *RunSemaphoresGarbageCollectionResponse) String() string {
 func (*RunSemaphoresGarbageCollectionResponse) ProtoMessage() {}
 
 func (x *RunSemaphoresGarbageCollectionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[21]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1250,7 +2002,7 @@ func (x *RunSemaphoresGarbageCollectionResponse) ProtoReflect() protoreflect.Mes
 
 // Deprecated: Use RunSemaphoresGarbageCollectionResponse.ProtoReflect.Descriptor instead.
 func (*RunSemaphoresGarbageCollectionResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{21}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{35}
 }
 
 type Semaphore struct {
@@ -1270,7 +2022,7 @@ type Semaphore struct {
 
 func (x *Semaphore) Reset() {
 	*x = Semaphore{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[22]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1282,7 +2034,7 @@ func (x *Semaphore) String() string {
 func (*Semaphore) ProtoMessage() {}
 
 func (x *Semaphore) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[22]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1295,7 +2047,7 @@ func (x *Semaphore) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Semaphore.ProtoReflect.Descriptor instead.
 func (*Semaphore) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{22}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *Semaphore) GetId() *SemaphoreId {
@@ -1373,7 +2125,7 @@ type SemaphoreHolder struct {
 
 func (x *SemaphoreHolder) Reset() {
 	*x = SemaphoreHolder{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[23]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1385,7 +2137,7 @@ func (x *SemaphoreHolder) String() string {
 func (*SemaphoreHolder) ProtoMessage() {}
 
 func (x *SemaphoreHolder) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[23]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1398,7 +2150,7 @@ func (x *SemaphoreHolder) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SemaphoreHolder.ProtoReflect.Descriptor instead.
 func (*SemaphoreHolder) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{23}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *SemaphoreHolder) GetId() *SemaphoreHolderId {
@@ -1434,14 +2186,14 @@ type SemaphoreHolderId struct {
 	AccountId     uint64                 `protobuf:"varint,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
 	NamespaceId   uint32                 `protobuf:"varint,2,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	SemaphoreId   uint64                 `protobuf:"varint,3,opt,name=semaphore_id,json=semaphoreId,proto3" json:"semaphore_id,omitempty"`
-	ProcessId     string                 `protobuf:"bytes,4,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
+	LeaseId       uint64                 `protobuf:"varint,4,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *SemaphoreHolderId) Reset() {
 	*x = SemaphoreHolderId{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[24]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1453,7 +2205,7 @@ func (x *SemaphoreHolderId) String() string {
 func (*SemaphoreHolderId) ProtoMessage() {}
 
 func (x *SemaphoreHolderId) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[24]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1466,7 +2218,7 @@ func (x *SemaphoreHolderId) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SemaphoreHolderId.ProtoReflect.Descriptor instead.
 func (*SemaphoreHolderId) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{24}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *SemaphoreHolderId) GetAccountId() uint64 {
@@ -1490,11 +2242,11 @@ func (x *SemaphoreHolderId) GetSemaphoreId() uint64 {
 	return 0
 }
 
-func (x *SemaphoreHolderId) GetProcessId() string {
+func (x *SemaphoreHolderId) GetLeaseId() uint64 {
 	if x != nil {
-		return x.ProcessId
+		return x.LeaseId
 	}
-	return ""
+	return 0
 }
 
 type SemaphoreId struct {
@@ -1508,7 +2260,7 @@ type SemaphoreId struct {
 
 func (x *SemaphoreId) Reset() {
 	*x = SemaphoreId{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[25]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1520,7 +2272,7 @@ func (x *SemaphoreId) String() string {
 func (*SemaphoreId) ProtoMessage() {}
 
 func (x *SemaphoreId) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[25]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1533,7 +2285,7 @@ func (x *SemaphoreId) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SemaphoreId.ProtoReflect.Descriptor instead.
 func (*SemaphoreId) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{25}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *SemaphoreId) GetAccountId() uint64 {
@@ -1571,7 +2323,7 @@ type SemaphoresGarbageCollectionRecord struct {
 
 func (x *SemaphoresGarbageCollectionRecord) Reset() {
 	*x = SemaphoresGarbageCollectionRecord{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[26]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1583,7 +2335,7 @@ func (x *SemaphoresGarbageCollectionRecord) String() string {
 func (*SemaphoresGarbageCollectionRecord) ProtoMessage() {}
 
 func (x *SemaphoresGarbageCollectionRecord) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[26]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1596,7 +2348,7 @@ func (x *SemaphoresGarbageCollectionRecord) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use SemaphoresGarbageCollectionRecord.ProtoReflect.Descriptor instead.
 func (*SemaphoresGarbageCollectionRecord) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{26}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *SemaphoresGarbageCollectionRecord) GetId() uint64 {
@@ -1651,13 +2403,14 @@ type SemaphoresCounter struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
 	NamespaceId        *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	NumberOfSemaphores int64                  `protobuf:"varint,2,opt,name=number_of_semaphores,json=numberOfSemaphores,proto3" json:"number_of_semaphores,omitempty"`
+	NumberOfLeases     int64                  `protobuf:"varint,3,opt,name=number_of_leases,json=numberOfLeases,proto3" json:"number_of_leases,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
 
 func (x *SemaphoresCounter) Reset() {
 	*x = SemaphoresCounter{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[27]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1669,7 +2422,7 @@ func (x *SemaphoresCounter) String() string {
 func (*SemaphoresCounter) ProtoMessage() {}
 
 func (x *SemaphoresCounter) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[27]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1682,7 +2435,7 @@ func (x *SemaphoresCounter) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SemaphoresCounter.ProtoReflect.Descriptor instead.
 func (*SemaphoresCounter) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{27}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *SemaphoresCounter) GetNamespaceId() *NamespaceId {
@@ -1699,6 +2452,13 @@ func (x *SemaphoresCounter) GetNumberOfSemaphores() int64 {
 	return 0
 }
 
+func (x *SemaphoresCounter) GetNumberOfLeases() int64 {
+	if x != nil {
+		return x.NumberOfLeases
+	}
+	return 0
+}
+
 type SemaphoresExpirationRecord struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	SemaphoreId   *SemaphoreId           `protobuf:"bytes,1,opt,name=semaphore_id,json=semaphoreId,proto3" json:"semaphore_id,omitempty"`
@@ -1709,7 +2469,7 @@ type SemaphoresExpirationRecord struct {
 
 func (x *SemaphoresExpirationRecord) Reset() {
 	*x = SemaphoresExpirationRecord{}
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[28]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1721,7 +2481,7 @@ func (x *SemaphoresExpirationRecord) String() string {
 func (*SemaphoresExpirationRecord) ProtoMessage() {}
 
 func (x *SemaphoresExpirationRecord) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_semaphores_proto_msgTypes[28]
+	mi := &file_pkg_corepb_semaphores_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1734,7 +2494,7 @@ func (x *SemaphoresExpirationRecord) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SemaphoresExpirationRecord.ProtoReflect.Descriptor instead.
 func (*SemaphoresExpirationRecord) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{28}
+	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *SemaphoresExpirationRecord) GetSemaphoreId() *SemaphoreId {
@@ -1774,6 +2534,16 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"semaphores\x18\x01 \x03(\v2$.com.evrblk.grackle.corepb.SemaphoreR\n" +
 	"semaphores\x12^\n" +
 	"\x15next_pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x13nextPaginationToken\x12f\n" +
+	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"\xcc\x01\n" +
+	"\x1eListSemaphoresByLeaseIdRequest\x12=\n" +
+	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\x12U\n" +
+	"\x10pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x0fpaginationToken\x12\x14\n" +
+	"\x05limit\x18\x03 \x01(\x05R\x05limit\"\xaf\x02\n" +
+	"\x1fListSemaphoresByLeaseIdResponse\x12D\n" +
+	"\n" +
+	"semaphores\x18\x01 \x03(\v2$.com.evrblk.grackle.corepb.SemaphoreR\n" +
+	"semaphores\x12^\n" +
+	"\x15next_pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x13nextPaginationToken\x12f\n" +
 	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"r\n" +
 	"\x13GetSemaphoreRequest\x12I\n" +
 	"\fsemaphore_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.SemaphoreIdR\vsemaphoreId\x12\x10\n" +
@@ -1785,24 +2555,20 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\x0esemaphore_name\x18\x02 \x01(\tR\rsemaphoreName\x12\x10\n" +
 	"\x03now\x18\x03 \x01(\x03R\x03now\"`\n" +
 	"\x1aGetSemaphoreByNameResponse\x12B\n" +
-	"\tsemaphore\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.SemaphoreR\tsemaphore\"\xf3\x01\n" +
+	"\tsemaphore\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.SemaphoreR\tsemaphore\"\xd0\x01\n" +
 	"\x17AcquireSemaphoreRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12%\n" +
-	"\x0esemaphore_name\x18\x02 \x01(\tR\rsemaphoreName\x12\x1d\n" +
-	"\n" +
-	"process_id\x18\x03 \x01(\tR\tprocessId\x12\x16\n" +
-	"\x06weight\x18\x04 \x01(\x04R\x06weight\x12\x1d\n" +
-	"\n" +
-	"expires_at\x18\x05 \x01(\x03R\texpiresAt\x12\x10\n" +
-	"\x03now\x18\x06 \x01(\x03R\x03now\"x\n" +
+	"\x0esemaphore_name\x18\x02 \x01(\tR\rsemaphoreName\x12\x19\n" +
+	"\blease_id\x18\x03 \x01(\x04R\aleaseId\x12\x16\n" +
+	"\x06weight\x18\x04 \x01(\x04R\x06weight\x12\x10\n" +
+	"\x03now\x18\x05 \x01(\x03R\x03now\"x\n" +
 	"\x18AcquireSemaphoreResponse\x12B\n" +
 	"\tsemaphore\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.SemaphoreR\tsemaphore\x12\x18\n" +
-	"\asuccess\x18\x02 \x01(\bR\asuccess\"\xbc\x01\n" +
+	"\asuccess\x18\x02 \x01(\bR\asuccess\"\xb8\x01\n" +
 	"\x17ReleaseSemaphoreRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12%\n" +
-	"\x0esemaphore_name\x18\x02 \x01(\tR\rsemaphoreName\x12\x1d\n" +
-	"\n" +
-	"process_id\x18\x03 \x01(\tR\tprocessId\x12\x10\n" +
+	"\x0esemaphore_name\x18\x02 \x01(\tR\rsemaphoreName\x12\x19\n" +
+	"\blease_id\x18\x03 \x01(\x04R\aleaseId\x12\x10\n" +
 	"\x03now\x18\x04 \x01(\x03R\x03now\"^\n" +
 	"\x18ReleaseSemaphoreResponse\x12B\n" +
 	"\tsemaphore\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.SemaphoreR\tsemaphore\"\xd8\x01\n" +
@@ -1826,7 +2592,49 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\x1cListSemaphoreHoldersResponse\x12D\n" +
 	"\aholders\x18\x01 \x03(\v2*.com.evrblk.grackle.corepb.SemaphoreHolderR\aholders\x12^\n" +
 	"\x15next_pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x13nextPaginationToken\x12f\n" +
-	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"\x9c\x01\n" +
+	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"\xd4\x01\n" +
+	"\x1aListSemaphoreLeasesRequest\x12I\n" +
+	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12U\n" +
+	"\x10pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x0fpaginationToken\x12\x14\n" +
+	"\x05limit\x18\x03 \x01(\x05R\x05limit\"\x9f\x02\n" +
+	"\x1bListSemaphoreLeasesResponse\x128\n" +
+	"\x06leases\x18\x01 \x03(\v2 .com.evrblk.grackle.corepb.LeaseR\x06leases\x12^\n" +
+	"\x15next_pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x13nextPaginationToken\x12f\n" +
+	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"\xfe\x01\n" +
+	"%ListSemaphoreLeasesByProcessIdRequest\x12I\n" +
+	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x1d\n" +
+	"\n" +
+	"process_id\x18\x02 \x01(\tR\tprocessId\x12U\n" +
+	"\x10pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x0fpaginationToken\x12\x14\n" +
+	"\x05limit\x18\x04 \x01(\x05R\x05limit\"\xaa\x02\n" +
+	"&ListSemaphoreLeasesByProcessIdResponse\x128\n" +
+	"\x06leases\x18\x01 \x03(\v2 .com.evrblk.grackle.corepb.LeaseR\x06leases\x12^\n" +
+	"\x15next_pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x13nextPaginationToken\x12f\n" +
+	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"Y\n" +
+	"\x18GetSemaphoreLeaseRequest\x12=\n" +
+	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\"S\n" +
+	"\x19GetSemaphoreLeaseResponse\x126\n" +
+	"\x05lease\x18\x01 \x01(\v2 .com.evrblk.grackle.corepb.LeaseR\x05lease\"\xf2\x01\n" +
+	"\x1bCreateSemaphoreLeaseRequest\x12=\n" +
+	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\x12\x1d\n" +
+	"\n" +
+	"process_id\x18\x02 \x01(\tR\tprocessId\x12\x1f\n" +
+	"\vttl_seconds\x18\x03 \x01(\x04R\n" +
+	"ttlSeconds\x12\x10\n" +
+	"\x03now\x18\x04 \x01(\x03R\x03now\x12B\n" +
+	"\x1emax_number_of_semaphore_leases\x18\x05 \x01(\x03R\x1amaxNumberOfSemaphoreLeases\"V\n" +
+	"\x1cCreateSemaphoreLeaseResponse\x126\n" +
+	"\x05lease\x18\x01 \x01(\v2 .com.evrblk.grackle.corepb.LeaseR\x05lease\"n\n" +
+	"\x1bRevokeSemaphoreLeaseRequest\x12=\n" +
+	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\x12\x10\n" +
+	"\x03now\x18\x02 \x01(\x03R\x03now\"\x1e\n" +
+	"\x1cRevokeSemaphoreLeaseResponse\"\x90\x01\n" +
+	"\x1cRefreshSemaphoreLeaseRequest\x12=\n" +
+	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\x12\x1f\n" +
+	"\vttl_seconds\x18\x02 \x01(\x04R\n" +
+	"ttlSeconds\x12\x10\n" +
+	"\x03now\x18\x03 \x01(\x03R\x03now\"\x1f\n" +
+	"\x1dRefreshSemaphoreLeaseResponse\"\x9c\x01\n" +
 	" SemaphoresDeleteNamespaceRequest\x12\x1b\n" +
 	"\trecord_id\x18\x01 \x01(\x04R\brecordId\x12I\n" +
 	"\fnamespace_id\x18\x02 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x10\n" +
@@ -1855,14 +2663,13 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\tlocked_at\x18\x02 \x01(\x03R\blockedAt\x12\x1d\n" +
 	"\n" +
 	"expires_at\x18\x03 \x01(\x03R\texpiresAt\x12\x16\n" +
-	"\x06weight\x18\x04 \x01(\x04R\x06weight\"\x97\x01\n" +
+	"\x06weight\x18\x04 \x01(\x04R\x06weight\"\x93\x01\n" +
 	"\x11SemaphoreHolderId\x12\x1d\n" +
 	"\n" +
 	"account_id\x18\x01 \x01(\x04R\taccountId\x12!\n" +
 	"\fnamespace_id\x18\x02 \x01(\rR\vnamespaceId\x12!\n" +
-	"\fsemaphore_id\x18\x03 \x01(\x04R\vsemaphoreId\x12\x1d\n" +
-	"\n" +
-	"process_id\x18\x04 \x01(\tR\tprocessId\"r\n" +
+	"\fsemaphore_id\x18\x03 \x01(\x04R\vsemaphoreId\x12\x19\n" +
+	"\blease_id\x18\x04 \x01(\x04R\aleaseId\"r\n" +
 	"\vSemaphoreId\x12\x1d\n" +
 	"\n" +
 	"account_id\x18\x01 \x01(\x04R\taccountId\x12!\n" +
@@ -1872,10 +2679,11 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12K\n" +
 	"\fnamespace_id\x18\x02 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdH\x00R\vnamespaceId\x12K\n" +
 	"\fsemaphore_id\x18\x03 \x01(\v2&.com.evrblk.grackle.corepb.SemaphoreIdH\x00R\vsemaphoreIdB\b\n" +
-	"\x06record\"\x90\x01\n" +
+	"\x06record\"\xba\x01\n" +
 	"\x11SemaphoresCounter\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x120\n" +
-	"\x14number_of_semaphores\x18\x02 \x01(\x03R\x12numberOfSemaphores\"\x86\x01\n" +
+	"\x14number_of_semaphores\x18\x02 \x01(\x03R\x12numberOfSemaphores\x12(\n" +
+	"\x10number_of_leases\x18\x03 \x01(\x03R\x0enumberOfLeases\"\x86\x01\n" +
 	"\x1aSemaphoresExpirationRecord\x12I\n" +
 	"\fsemaphore_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.SemaphoreIdR\vsemaphoreId\x12\x1d\n" +
 	"\n" +
@@ -1893,76 +2701,113 @@ func file_pkg_corepb_semaphores_proto_rawDescGZIP() []byte {
 	return file_pkg_corepb_semaphores_proto_rawDescData
 }
 
-var file_pkg_corepb_semaphores_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
+var file_pkg_corepb_semaphores_proto_msgTypes = make([]protoimpl.MessageInfo, 43)
 var file_pkg_corepb_semaphores_proto_goTypes = []any{
 	(*CreateSemaphoreRequest)(nil),                 // 0: com.evrblk.grackle.corepb.CreateSemaphoreRequest
 	(*CreateSemaphoreResponse)(nil),                // 1: com.evrblk.grackle.corepb.CreateSemaphoreResponse
 	(*ListSemaphoresRequest)(nil),                  // 2: com.evrblk.grackle.corepb.ListSemaphoresRequest
 	(*ListSemaphoresResponse)(nil),                 // 3: com.evrblk.grackle.corepb.ListSemaphoresResponse
-	(*GetSemaphoreRequest)(nil),                    // 4: com.evrblk.grackle.corepb.GetSemaphoreRequest
-	(*GetSemaphoreResponse)(nil),                   // 5: com.evrblk.grackle.corepb.GetSemaphoreResponse
-	(*GetSemaphoreByNameRequest)(nil),              // 6: com.evrblk.grackle.corepb.GetSemaphoreByNameRequest
-	(*GetSemaphoreByNameResponse)(nil),             // 7: com.evrblk.grackle.corepb.GetSemaphoreByNameResponse
-	(*AcquireSemaphoreRequest)(nil),                // 8: com.evrblk.grackle.corepb.AcquireSemaphoreRequest
-	(*AcquireSemaphoreResponse)(nil),               // 9: com.evrblk.grackle.corepb.AcquireSemaphoreResponse
-	(*ReleaseSemaphoreRequest)(nil),                // 10: com.evrblk.grackle.corepb.ReleaseSemaphoreRequest
-	(*ReleaseSemaphoreResponse)(nil),               // 11: com.evrblk.grackle.corepb.ReleaseSemaphoreResponse
-	(*UpdateSemaphoreRequest)(nil),                 // 12: com.evrblk.grackle.corepb.UpdateSemaphoreRequest
-	(*UpdateSemaphoreResponse)(nil),                // 13: com.evrblk.grackle.corepb.UpdateSemaphoreResponse
-	(*DeleteSemaphoreRequest)(nil),                 // 14: com.evrblk.grackle.corepb.DeleteSemaphoreRequest
-	(*DeleteSemaphoreResponse)(nil),                // 15: com.evrblk.grackle.corepb.DeleteSemaphoreResponse
-	(*ListSemaphoreHoldersRequest)(nil),            // 16: com.evrblk.grackle.corepb.ListSemaphoreHoldersRequest
-	(*ListSemaphoreHoldersResponse)(nil),           // 17: com.evrblk.grackle.corepb.ListSemaphoreHoldersResponse
-	(*SemaphoresDeleteNamespaceRequest)(nil),       // 18: com.evrblk.grackle.corepb.SemaphoresDeleteNamespaceRequest
-	(*SemaphoresDeleteNamespaceResponse)(nil),      // 19: com.evrblk.grackle.corepb.SemaphoresDeleteNamespaceResponse
-	(*RunSemaphoresGarbageCollectionRequest)(nil),  // 20: com.evrblk.grackle.corepb.RunSemaphoresGarbageCollectionRequest
-	(*RunSemaphoresGarbageCollectionResponse)(nil), // 21: com.evrblk.grackle.corepb.RunSemaphoresGarbageCollectionResponse
-	(*Semaphore)(nil),                              // 22: com.evrblk.grackle.corepb.Semaphore
-	(*SemaphoreHolder)(nil),                        // 23: com.evrblk.grackle.corepb.SemaphoreHolder
-	(*SemaphoreHolderId)(nil),                      // 24: com.evrblk.grackle.corepb.SemaphoreHolderId
-	(*SemaphoreId)(nil),                            // 25: com.evrblk.grackle.corepb.SemaphoreId
-	(*SemaphoresGarbageCollectionRecord)(nil),      // 26: com.evrblk.grackle.corepb.SemaphoresGarbageCollectionRecord
-	(*SemaphoresCounter)(nil),                      // 27: com.evrblk.grackle.corepb.SemaphoresCounter
-	(*SemaphoresExpirationRecord)(nil),             // 28: com.evrblk.grackle.corepb.SemaphoresExpirationRecord
-	(*NamespaceId)(nil),                            // 29: com.evrblk.grackle.corepb.NamespaceId
-	(*PaginationToken)(nil),                        // 30: com.evrblk.grackle.corepb.PaginationToken
+	(*ListSemaphoresByLeaseIdRequest)(nil),         // 4: com.evrblk.grackle.corepb.ListSemaphoresByLeaseIdRequest
+	(*ListSemaphoresByLeaseIdResponse)(nil),        // 5: com.evrblk.grackle.corepb.ListSemaphoresByLeaseIdResponse
+	(*GetSemaphoreRequest)(nil),                    // 6: com.evrblk.grackle.corepb.GetSemaphoreRequest
+	(*GetSemaphoreResponse)(nil),                   // 7: com.evrblk.grackle.corepb.GetSemaphoreResponse
+	(*GetSemaphoreByNameRequest)(nil),              // 8: com.evrblk.grackle.corepb.GetSemaphoreByNameRequest
+	(*GetSemaphoreByNameResponse)(nil),             // 9: com.evrblk.grackle.corepb.GetSemaphoreByNameResponse
+	(*AcquireSemaphoreRequest)(nil),                // 10: com.evrblk.grackle.corepb.AcquireSemaphoreRequest
+	(*AcquireSemaphoreResponse)(nil),               // 11: com.evrblk.grackle.corepb.AcquireSemaphoreResponse
+	(*ReleaseSemaphoreRequest)(nil),                // 12: com.evrblk.grackle.corepb.ReleaseSemaphoreRequest
+	(*ReleaseSemaphoreResponse)(nil),               // 13: com.evrblk.grackle.corepb.ReleaseSemaphoreResponse
+	(*UpdateSemaphoreRequest)(nil),                 // 14: com.evrblk.grackle.corepb.UpdateSemaphoreRequest
+	(*UpdateSemaphoreResponse)(nil),                // 15: com.evrblk.grackle.corepb.UpdateSemaphoreResponse
+	(*DeleteSemaphoreRequest)(nil),                 // 16: com.evrblk.grackle.corepb.DeleteSemaphoreRequest
+	(*DeleteSemaphoreResponse)(nil),                // 17: com.evrblk.grackle.corepb.DeleteSemaphoreResponse
+	(*ListSemaphoreHoldersRequest)(nil),            // 18: com.evrblk.grackle.corepb.ListSemaphoreHoldersRequest
+	(*ListSemaphoreHoldersResponse)(nil),           // 19: com.evrblk.grackle.corepb.ListSemaphoreHoldersResponse
+	(*ListSemaphoreLeasesRequest)(nil),             // 20: com.evrblk.grackle.corepb.ListSemaphoreLeasesRequest
+	(*ListSemaphoreLeasesResponse)(nil),            // 21: com.evrblk.grackle.corepb.ListSemaphoreLeasesResponse
+	(*ListSemaphoreLeasesByProcessIdRequest)(nil),  // 22: com.evrblk.grackle.corepb.ListSemaphoreLeasesByProcessIdRequest
+	(*ListSemaphoreLeasesByProcessIdResponse)(nil), // 23: com.evrblk.grackle.corepb.ListSemaphoreLeasesByProcessIdResponse
+	(*GetSemaphoreLeaseRequest)(nil),               // 24: com.evrblk.grackle.corepb.GetSemaphoreLeaseRequest
+	(*GetSemaphoreLeaseResponse)(nil),              // 25: com.evrblk.grackle.corepb.GetSemaphoreLeaseResponse
+	(*CreateSemaphoreLeaseRequest)(nil),            // 26: com.evrblk.grackle.corepb.CreateSemaphoreLeaseRequest
+	(*CreateSemaphoreLeaseResponse)(nil),           // 27: com.evrblk.grackle.corepb.CreateSemaphoreLeaseResponse
+	(*RevokeSemaphoreLeaseRequest)(nil),            // 28: com.evrblk.grackle.corepb.RevokeSemaphoreLeaseRequest
+	(*RevokeSemaphoreLeaseResponse)(nil),           // 29: com.evrblk.grackle.corepb.RevokeSemaphoreLeaseResponse
+	(*RefreshSemaphoreLeaseRequest)(nil),           // 30: com.evrblk.grackle.corepb.RefreshSemaphoreLeaseRequest
+	(*RefreshSemaphoreLeaseResponse)(nil),          // 31: com.evrblk.grackle.corepb.RefreshSemaphoreLeaseResponse
+	(*SemaphoresDeleteNamespaceRequest)(nil),       // 32: com.evrblk.grackle.corepb.SemaphoresDeleteNamespaceRequest
+	(*SemaphoresDeleteNamespaceResponse)(nil),      // 33: com.evrblk.grackle.corepb.SemaphoresDeleteNamespaceResponse
+	(*RunSemaphoresGarbageCollectionRequest)(nil),  // 34: com.evrblk.grackle.corepb.RunSemaphoresGarbageCollectionRequest
+	(*RunSemaphoresGarbageCollectionResponse)(nil), // 35: com.evrblk.grackle.corepb.RunSemaphoresGarbageCollectionResponse
+	(*Semaphore)(nil),                              // 36: com.evrblk.grackle.corepb.Semaphore
+	(*SemaphoreHolder)(nil),                        // 37: com.evrblk.grackle.corepb.SemaphoreHolder
+	(*SemaphoreHolderId)(nil),                      // 38: com.evrblk.grackle.corepb.SemaphoreHolderId
+	(*SemaphoreId)(nil),                            // 39: com.evrblk.grackle.corepb.SemaphoreId
+	(*SemaphoresGarbageCollectionRecord)(nil),      // 40: com.evrblk.grackle.corepb.SemaphoresGarbageCollectionRecord
+	(*SemaphoresCounter)(nil),                      // 41: com.evrblk.grackle.corepb.SemaphoresCounter
+	(*SemaphoresExpirationRecord)(nil),             // 42: com.evrblk.grackle.corepb.SemaphoresExpirationRecord
+	(*NamespaceId)(nil),                            // 43: com.evrblk.grackle.corepb.NamespaceId
+	(*PaginationToken)(nil),                        // 44: com.evrblk.grackle.corepb.PaginationToken
+	(*LeaseId)(nil),                                // 45: com.evrblk.grackle.corepb.LeaseId
+	(*Lease)(nil),                                  // 46: com.evrblk.grackle.corepb.Lease
 }
 var file_pkg_corepb_semaphores_proto_depIdxs = []int32{
-	25, // 0: com.evrblk.grackle.corepb.CreateSemaphoreRequest.semaphore_id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
-	22, // 1: com.evrblk.grackle.corepb.CreateSemaphoreResponse.semaphore:type_name -> com.evrblk.grackle.corepb.Semaphore
-	29, // 2: com.evrblk.grackle.corepb.ListSemaphoresRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	30, // 3: com.evrblk.grackle.corepb.ListSemaphoresRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	22, // 4: com.evrblk.grackle.corepb.ListSemaphoresResponse.semaphores:type_name -> com.evrblk.grackle.corepb.Semaphore
-	30, // 5: com.evrblk.grackle.corepb.ListSemaphoresResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	30, // 6: com.evrblk.grackle.corepb.ListSemaphoresResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	25, // 7: com.evrblk.grackle.corepb.GetSemaphoreRequest.semaphore_id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
-	22, // 8: com.evrblk.grackle.corepb.GetSemaphoreResponse.semaphore:type_name -> com.evrblk.grackle.corepb.Semaphore
-	29, // 9: com.evrblk.grackle.corepb.GetSemaphoreByNameRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	22, // 10: com.evrblk.grackle.corepb.GetSemaphoreByNameResponse.semaphore:type_name -> com.evrblk.grackle.corepb.Semaphore
-	29, // 11: com.evrblk.grackle.corepb.AcquireSemaphoreRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	22, // 12: com.evrblk.grackle.corepb.AcquireSemaphoreResponse.semaphore:type_name -> com.evrblk.grackle.corepb.Semaphore
-	29, // 13: com.evrblk.grackle.corepb.ReleaseSemaphoreRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	22, // 14: com.evrblk.grackle.corepb.ReleaseSemaphoreResponse.semaphore:type_name -> com.evrblk.grackle.corepb.Semaphore
-	29, // 15: com.evrblk.grackle.corepb.UpdateSemaphoreRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	22, // 16: com.evrblk.grackle.corepb.UpdateSemaphoreResponse.semaphore:type_name -> com.evrblk.grackle.corepb.Semaphore
-	29, // 17: com.evrblk.grackle.corepb.DeleteSemaphoreRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	29, // 18: com.evrblk.grackle.corepb.ListSemaphoreHoldersRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	30, // 19: com.evrblk.grackle.corepb.ListSemaphoreHoldersRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	23, // 20: com.evrblk.grackle.corepb.ListSemaphoreHoldersResponse.holders:type_name -> com.evrblk.grackle.corepb.SemaphoreHolder
-	30, // 21: com.evrblk.grackle.corepb.ListSemaphoreHoldersResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	30, // 22: com.evrblk.grackle.corepb.ListSemaphoreHoldersResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	29, // 23: com.evrblk.grackle.corepb.SemaphoresDeleteNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	25, // 24: com.evrblk.grackle.corepb.Semaphore.id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
-	24, // 25: com.evrblk.grackle.corepb.SemaphoreHolder.id:type_name -> com.evrblk.grackle.corepb.SemaphoreHolderId
-	29, // 26: com.evrblk.grackle.corepb.SemaphoresGarbageCollectionRecord.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	25, // 27: com.evrblk.grackle.corepb.SemaphoresGarbageCollectionRecord.semaphore_id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
-	29, // 28: com.evrblk.grackle.corepb.SemaphoresCounter.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	25, // 29: com.evrblk.grackle.corepb.SemaphoresExpirationRecord.semaphore_id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
-	30, // [30:30] is the sub-list for method output_type
-	30, // [30:30] is the sub-list for method input_type
-	30, // [30:30] is the sub-list for extension type_name
-	30, // [30:30] is the sub-list for extension extendee
-	0,  // [0:30] is the sub-list for field type_name
+	39, // 0: com.evrblk.grackle.corepb.CreateSemaphoreRequest.semaphore_id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
+	36, // 1: com.evrblk.grackle.corepb.CreateSemaphoreResponse.semaphore:type_name -> com.evrblk.grackle.corepb.Semaphore
+	43, // 2: com.evrblk.grackle.corepb.ListSemaphoresRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	44, // 3: com.evrblk.grackle.corepb.ListSemaphoresRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	36, // 4: com.evrblk.grackle.corepb.ListSemaphoresResponse.semaphores:type_name -> com.evrblk.grackle.corepb.Semaphore
+	44, // 5: com.evrblk.grackle.corepb.ListSemaphoresResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	44, // 6: com.evrblk.grackle.corepb.ListSemaphoresResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	45, // 7: com.evrblk.grackle.corepb.ListSemaphoresByLeaseIdRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
+	44, // 8: com.evrblk.grackle.corepb.ListSemaphoresByLeaseIdRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	36, // 9: com.evrblk.grackle.corepb.ListSemaphoresByLeaseIdResponse.semaphores:type_name -> com.evrblk.grackle.corepb.Semaphore
+	44, // 10: com.evrblk.grackle.corepb.ListSemaphoresByLeaseIdResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	44, // 11: com.evrblk.grackle.corepb.ListSemaphoresByLeaseIdResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	39, // 12: com.evrblk.grackle.corepb.GetSemaphoreRequest.semaphore_id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
+	36, // 13: com.evrblk.grackle.corepb.GetSemaphoreResponse.semaphore:type_name -> com.evrblk.grackle.corepb.Semaphore
+	43, // 14: com.evrblk.grackle.corepb.GetSemaphoreByNameRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	36, // 15: com.evrblk.grackle.corepb.GetSemaphoreByNameResponse.semaphore:type_name -> com.evrblk.grackle.corepb.Semaphore
+	43, // 16: com.evrblk.grackle.corepb.AcquireSemaphoreRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	36, // 17: com.evrblk.grackle.corepb.AcquireSemaphoreResponse.semaphore:type_name -> com.evrblk.grackle.corepb.Semaphore
+	43, // 18: com.evrblk.grackle.corepb.ReleaseSemaphoreRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	36, // 19: com.evrblk.grackle.corepb.ReleaseSemaphoreResponse.semaphore:type_name -> com.evrblk.grackle.corepb.Semaphore
+	43, // 20: com.evrblk.grackle.corepb.UpdateSemaphoreRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	36, // 21: com.evrblk.grackle.corepb.UpdateSemaphoreResponse.semaphore:type_name -> com.evrblk.grackle.corepb.Semaphore
+	43, // 22: com.evrblk.grackle.corepb.DeleteSemaphoreRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	43, // 23: com.evrblk.grackle.corepb.ListSemaphoreHoldersRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	44, // 24: com.evrblk.grackle.corepb.ListSemaphoreHoldersRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	37, // 25: com.evrblk.grackle.corepb.ListSemaphoreHoldersResponse.holders:type_name -> com.evrblk.grackle.corepb.SemaphoreHolder
+	44, // 26: com.evrblk.grackle.corepb.ListSemaphoreHoldersResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	44, // 27: com.evrblk.grackle.corepb.ListSemaphoreHoldersResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	43, // 28: com.evrblk.grackle.corepb.ListSemaphoreLeasesRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	44, // 29: com.evrblk.grackle.corepb.ListSemaphoreLeasesRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	46, // 30: com.evrblk.grackle.corepb.ListSemaphoreLeasesResponse.leases:type_name -> com.evrblk.grackle.corepb.Lease
+	44, // 31: com.evrblk.grackle.corepb.ListSemaphoreLeasesResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	44, // 32: com.evrblk.grackle.corepb.ListSemaphoreLeasesResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	43, // 33: com.evrblk.grackle.corepb.ListSemaphoreLeasesByProcessIdRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	44, // 34: com.evrblk.grackle.corepb.ListSemaphoreLeasesByProcessIdRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	46, // 35: com.evrblk.grackle.corepb.ListSemaphoreLeasesByProcessIdResponse.leases:type_name -> com.evrblk.grackle.corepb.Lease
+	44, // 36: com.evrblk.grackle.corepb.ListSemaphoreLeasesByProcessIdResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	44, // 37: com.evrblk.grackle.corepb.ListSemaphoreLeasesByProcessIdResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	45, // 38: com.evrblk.grackle.corepb.GetSemaphoreLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
+	46, // 39: com.evrblk.grackle.corepb.GetSemaphoreLeaseResponse.lease:type_name -> com.evrblk.grackle.corepb.Lease
+	45, // 40: com.evrblk.grackle.corepb.CreateSemaphoreLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
+	46, // 41: com.evrblk.grackle.corepb.CreateSemaphoreLeaseResponse.lease:type_name -> com.evrblk.grackle.corepb.Lease
+	45, // 42: com.evrblk.grackle.corepb.RevokeSemaphoreLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
+	45, // 43: com.evrblk.grackle.corepb.RefreshSemaphoreLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
+	43, // 44: com.evrblk.grackle.corepb.SemaphoresDeleteNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	39, // 45: com.evrblk.grackle.corepb.Semaphore.id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
+	38, // 46: com.evrblk.grackle.corepb.SemaphoreHolder.id:type_name -> com.evrblk.grackle.corepb.SemaphoreHolderId
+	43, // 47: com.evrblk.grackle.corepb.SemaphoresGarbageCollectionRecord.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	39, // 48: com.evrblk.grackle.corepb.SemaphoresGarbageCollectionRecord.semaphore_id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
+	43, // 49: com.evrblk.grackle.corepb.SemaphoresCounter.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	39, // 50: com.evrblk.grackle.corepb.SemaphoresExpirationRecord.semaphore_id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
+	51, // [51:51] is the sub-list for method output_type
+	51, // [51:51] is the sub-list for method input_type
+	51, // [51:51] is the sub-list for extension type_name
+	51, // [51:51] is the sub-list for extension extendee
+	0,  // [0:51] is the sub-list for field type_name
 }
 
 func init() { file_pkg_corepb_semaphores_proto_init() }
@@ -1972,7 +2817,7 @@ func file_pkg_corepb_semaphores_proto_init() {
 	}
 	file_pkg_corepb_common_proto_init()
 	file_pkg_corepb_namespaces_proto_init()
-	file_pkg_corepb_semaphores_proto_msgTypes[26].OneofWrappers = []any{
+	file_pkg_corepb_semaphores_proto_msgTypes[40].OneofWrappers = []any{
 		(*SemaphoresGarbageCollectionRecord_NamespaceId)(nil),
 		(*SemaphoresGarbageCollectionRecord_SemaphoreId)(nil),
 	}
@@ -1982,7 +2827,7 @@ func file_pkg_corepb_semaphores_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_corepb_semaphores_proto_rawDesc), len(file_pkg_corepb_semaphores_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   29,
+			NumMessages:   43,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

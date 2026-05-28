@@ -10,8 +10,15 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/evrblk/grackle/pkg/corepb"
+	"github.com/evrblk/grackle/pkg/tables"
 	"github.com/evrblk/monstera/store"
+	monsterax "github.com/evrblk/monstera/x"
 )
+
+func init() {
+	registry := monsterax.NewBaseTableRegistry(1)
+	tables.RegisterGracklePrefixes(registry)
+}
 
 func TestCore_CreateNamespace(t *testing.T) {
 	t.Run("create a namespace", func(t *testing.T) {

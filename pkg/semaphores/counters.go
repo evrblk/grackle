@@ -25,7 +25,7 @@ type countersTable struct {
 func newCountersTable(shardLowerBound []byte, shardUpperBound []byte) *countersTable {
 	return &countersTable{
 		table: monsterax.NewBinaryTable[*corepb.SemaphoresCounter, corepb.SemaphoresCounter](
-			tables.GrackleSemaphoresCountersTableId,
+			tables.Grackle["Grackle.SemaphoresCore.Counters.Table"].Bytes(),
 			shardLowerBound,
 			shardUpperBound,
 		),
@@ -46,6 +46,7 @@ func (t *countersTable) Get(txn *store.Txn, accountId uint64, namespaceId uint32
 					NamespaceId: namespaceId,
 				},
 				NumberOfSemaphores: 0,
+				NumberOfLeases:     0,
 			}, nil
 		}
 		return nil, err

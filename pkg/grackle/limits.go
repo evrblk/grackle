@@ -7,7 +7,9 @@ type GrackleServiceLimits struct {
 	MaxNumberOfSemaphoresPerNamespace int64
 	MaxNumberOfBarriersPerNamespace   int64
 	MaxNumberOfSharedLockHolders      int64
+	MaxNumberOfLockLeases             int64
 	MaxNumberOfSemaphoreHolders       int64
+	MaxNumberOfSemaphoreLeases        int64
 	MaxWaitGroupSize                  int64
 	MaxNumberOfBarrierParticipants    int64
 	ControlPlaneReadRequestRate       int64

@@ -9,10 +9,17 @@ import (
 	"time"
 
 	"github.com/evrblk/monstera/store"
+	monsterax "github.com/evrblk/monstera/x"
 	"github.com/stretchr/testify/require"
 
 	"github.com/evrblk/grackle/pkg/corepb"
+	"github.com/evrblk/grackle/pkg/tables"
 )
+
+func init() {
+	registry := monsterax.NewBaseTableRegistry(1)
+	tables.RegisterGracklePrefixes(registry)
+}
 
 func TestCore_Create(t *testing.T) {
 	t.Run("create wait group", func(t *testing.T) {

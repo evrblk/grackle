@@ -73,10 +73,9 @@ func (LockState) EnumDescriptor() ([]byte, []int) {
 type AcquireLockRequest struct {
 	state                        protoimpl.MessageState `protogen:"open.v1"`
 	LockId                       *LockId                `protobuf:"bytes,1,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty"`
-	ProcessId                    string                 `protobuf:"bytes,2,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
+	LeaseId                      uint64                 `protobuf:"varint,2,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
 	Exclusive                    bool                   `protobuf:"varint,3,opt,name=exclusive,proto3" json:"exclusive,omitempty"`
 	Now                          int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
-	ExpiresAt                    int64                  `protobuf:"varint,5,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	MaxNumberOfLocksPerNamespace int64                  `protobuf:"varint,6,opt,name=max_number_of_locks_per_namespace,json=maxNumberOfLocksPerNamespace,proto3" json:"max_number_of_locks_per_namespace,omitempty"`
 	unknownFields                protoimpl.UnknownFields
 	sizeCache                    protoimpl.SizeCache
@@ -119,11 +118,11 @@ func (x *AcquireLockRequest) GetLockId() *LockId {
 	return nil
 }
 
-func (x *AcquireLockRequest) GetProcessId() string {
+func (x *AcquireLockRequest) GetLeaseId() uint64 {
 	if x != nil {
-		return x.ProcessId
+		return x.LeaseId
 	}
-	return ""
+	return 0
 }
 
 func (x *AcquireLockRequest) GetExclusive() bool {
@@ -136,13 +135,6 @@ func (x *AcquireLockRequest) GetExclusive() bool {
 func (x *AcquireLockRequest) GetNow() int64 {
 	if x != nil {
 		return x.Now
-	}
-	return 0
-}
-
-func (x *AcquireLockRequest) GetExpiresAt() int64 {
-	if x != nil {
-		return x.ExpiresAt
 	}
 	return 0
 }
@@ -209,7 +201,7 @@ func (x *AcquireLockResponse) GetSuccess() bool {
 type ReleaseLockRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	LockId        *LockId                `protobuf:"bytes,1,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty"`
-	ProcessId     string                 `protobuf:"bytes,2,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
+	LeaseId       uint64                 `protobuf:"varint,2,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
 	Now           int64                  `protobuf:"varint,3,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -252,11 +244,11 @@ func (x *ReleaseLockRequest) GetLockId() *LockId {
 	return nil
 }
 
-func (x *ReleaseLockRequest) GetProcessId() string {
+func (x *ReleaseLockRequest) GetLeaseId() uint64 {
 	if x != nil {
-		return x.ProcessId
+		return x.LeaseId
 	}
-	return ""
+	return 0
 }
 
 func (x *ReleaseLockRequest) GetNow() int64 {
@@ -622,6 +614,134 @@ func (x *ListLocksResponse) GetPreviousPaginationToken() *PaginationToken {
 	return nil
 }
 
+type ListLocksByLeaseIdRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	LeaseId         *LeaseId               `protobuf:"bytes,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
+	Now             int64                  `protobuf:"varint,2,opt,name=now,proto3" json:"now,omitempty"`
+	PaginationToken *PaginationToken       `protobuf:"bytes,3,opt,name=pagination_token,json=paginationToken,proto3" json:"pagination_token,omitempty"`
+	Limit           int32                  `protobuf:"varint,4,opt,name=limit,proto3" json:"limit,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *ListLocksByLeaseIdRequest) Reset() {
+	*x = ListLocksByLeaseIdRequest{}
+	mi := &file_pkg_corepb_locks_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListLocksByLeaseIdRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListLocksByLeaseIdRequest) ProtoMessage() {}
+
+func (x *ListLocksByLeaseIdRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_locks_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListLocksByLeaseIdRequest.ProtoReflect.Descriptor instead.
+func (*ListLocksByLeaseIdRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *ListLocksByLeaseIdRequest) GetLeaseId() *LeaseId {
+	if x != nil {
+		return x.LeaseId
+	}
+	return nil
+}
+
+func (x *ListLocksByLeaseIdRequest) GetNow() int64 {
+	if x != nil {
+		return x.Now
+	}
+	return 0
+}
+
+func (x *ListLocksByLeaseIdRequest) GetPaginationToken() *PaginationToken {
+	if x != nil {
+		return x.PaginationToken
+	}
+	return nil
+}
+
+func (x *ListLocksByLeaseIdRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type ListLocksByLeaseIdResponse struct {
+	state                   protoimpl.MessageState `protogen:"open.v1"`
+	Locks                   []*Lock                `protobuf:"bytes,1,rep,name=locks,proto3" json:"locks,omitempty"`
+	NextPaginationToken     *PaginationToken       `protobuf:"bytes,2,opt,name=next_pagination_token,json=nextPaginationToken,proto3" json:"next_pagination_token,omitempty"`
+	PreviousPaginationToken *PaginationToken       `protobuf:"bytes,3,opt,name=previous_pagination_token,json=previousPaginationToken,proto3" json:"previous_pagination_token,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
+}
+
+func (x *ListLocksByLeaseIdResponse) Reset() {
+	*x = ListLocksByLeaseIdResponse{}
+	mi := &file_pkg_corepb_locks_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListLocksByLeaseIdResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListLocksByLeaseIdResponse) ProtoMessage() {}
+
+func (x *ListLocksByLeaseIdResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_locks_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListLocksByLeaseIdResponse.ProtoReflect.Descriptor instead.
+func (*ListLocksByLeaseIdResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *ListLocksByLeaseIdResponse) GetLocks() []*Lock {
+	if x != nil {
+		return x.Locks
+	}
+	return nil
+}
+
+func (x *ListLocksByLeaseIdResponse) GetNextPaginationToken() *PaginationToken {
+	if x != nil {
+		return x.NextPaginationToken
+	}
+	return nil
+}
+
+func (x *ListLocksByLeaseIdResponse) GetPreviousPaginationToken() *PaginationToken {
+	if x != nil {
+		return x.PreviousPaginationToken
+	}
+	return nil
+}
+
 type RunLocksGarbageCollectionRequest struct {
 	state                 protoimpl.MessageState `protogen:"open.v1"`
 	Now                   int64                  `protobuf:"varint,1,opt,name=now,proto3" json:"now,omitempty"`
@@ -634,7 +754,7 @@ type RunLocksGarbageCollectionRequest struct {
 
 func (x *RunLocksGarbageCollectionRequest) Reset() {
 	*x = RunLocksGarbageCollectionRequest{}
-	mi := &file_pkg_corepb_locks_proto_msgTypes[10]
+	mi := &file_pkg_corepb_locks_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -646,7 +766,7 @@ func (x *RunLocksGarbageCollectionRequest) String() string {
 func (*RunLocksGarbageCollectionRequest) ProtoMessage() {}
 
 func (x *RunLocksGarbageCollectionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_locks_proto_msgTypes[10]
+	mi := &file_pkg_corepb_locks_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -659,7 +779,7 @@ func (x *RunLocksGarbageCollectionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RunLocksGarbageCollectionRequest.ProtoReflect.Descriptor instead.
 func (*RunLocksGarbageCollectionRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{10}
+	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *RunLocksGarbageCollectionRequest) GetNow() int64 {
@@ -698,7 +818,7 @@ type RunLocksGarbageCollectionResponse struct {
 
 func (x *RunLocksGarbageCollectionResponse) Reset() {
 	*x = RunLocksGarbageCollectionResponse{}
-	mi := &file_pkg_corepb_locks_proto_msgTypes[11]
+	mi := &file_pkg_corepb_locks_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -710,7 +830,7 @@ func (x *RunLocksGarbageCollectionResponse) String() string {
 func (*RunLocksGarbageCollectionResponse) ProtoMessage() {}
 
 func (x *RunLocksGarbageCollectionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_locks_proto_msgTypes[11]
+	mi := &file_pkg_corepb_locks_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -723,7 +843,7 @@ func (x *RunLocksGarbageCollectionResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use RunLocksGarbageCollectionResponse.ProtoReflect.Descriptor instead.
 func (*RunLocksGarbageCollectionResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{11}
+	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{13}
 }
 
 type LocksDeleteNamespaceRequest struct {
@@ -737,7 +857,7 @@ type LocksDeleteNamespaceRequest struct {
 
 func (x *LocksDeleteNamespaceRequest) Reset() {
 	*x = LocksDeleteNamespaceRequest{}
-	mi := &file_pkg_corepb_locks_proto_msgTypes[12]
+	mi := &file_pkg_corepb_locks_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -749,7 +869,7 @@ func (x *LocksDeleteNamespaceRequest) String() string {
 func (*LocksDeleteNamespaceRequest) ProtoMessage() {}
 
 func (x *LocksDeleteNamespaceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_locks_proto_msgTypes[12]
+	mi := &file_pkg_corepb_locks_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -762,7 +882,7 @@ func (x *LocksDeleteNamespaceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LocksDeleteNamespaceRequest.ProtoReflect.Descriptor instead.
 func (*LocksDeleteNamespaceRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{12}
+	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *LocksDeleteNamespaceRequest) GetNamespaceId() *NamespaceId {
@@ -794,7 +914,7 @@ type LocksDeleteNamespaceResponse struct {
 
 func (x *LocksDeleteNamespaceResponse) Reset() {
 	*x = LocksDeleteNamespaceResponse{}
-	mi := &file_pkg_corepb_locks_proto_msgTypes[13]
+	mi := &file_pkg_corepb_locks_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -806,7 +926,7 @@ func (x *LocksDeleteNamespaceResponse) String() string {
 func (*LocksDeleteNamespaceResponse) ProtoMessage() {}
 
 func (x *LocksDeleteNamespaceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_locks_proto_msgTypes[13]
+	mi := &file_pkg_corepb_locks_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -819,7 +939,663 @@ func (x *LocksDeleteNamespaceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LocksDeleteNamespaceResponse.ProtoReflect.Descriptor instead.
 func (*LocksDeleteNamespaceResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{13}
+	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{15}
+}
+
+type CreateLockLeaseRequest struct {
+	state                 protoimpl.MessageState `protogen:"open.v1"`
+	LeaseId               *LeaseId               `protobuf:"bytes,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
+	ProcessId             string                 `protobuf:"bytes,2,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
+	TtlSeconds            uint64                 `protobuf:"varint,3,opt,name=ttl_seconds,json=ttlSeconds,proto3" json:"ttl_seconds,omitempty"`
+	Now                   int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
+	MaxNumberOfLockLeases int64                  `protobuf:"varint,5,opt,name=max_number_of_lock_leases,json=maxNumberOfLockLeases,proto3" json:"max_number_of_lock_leases,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
+}
+
+func (x *CreateLockLeaseRequest) Reset() {
+	*x = CreateLockLeaseRequest{}
+	mi := &file_pkg_corepb_locks_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateLockLeaseRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateLockLeaseRequest) ProtoMessage() {}
+
+func (x *CreateLockLeaseRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_locks_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateLockLeaseRequest.ProtoReflect.Descriptor instead.
+func (*CreateLockLeaseRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *CreateLockLeaseRequest) GetLeaseId() *LeaseId {
+	if x != nil {
+		return x.LeaseId
+	}
+	return nil
+}
+
+func (x *CreateLockLeaseRequest) GetProcessId() string {
+	if x != nil {
+		return x.ProcessId
+	}
+	return ""
+}
+
+func (x *CreateLockLeaseRequest) GetTtlSeconds() uint64 {
+	if x != nil {
+		return x.TtlSeconds
+	}
+	return 0
+}
+
+func (x *CreateLockLeaseRequest) GetNow() int64 {
+	if x != nil {
+		return x.Now
+	}
+	return 0
+}
+
+func (x *CreateLockLeaseRequest) GetMaxNumberOfLockLeases() int64 {
+	if x != nil {
+		return x.MaxNumberOfLockLeases
+	}
+	return 0
+}
+
+type CreateLockLeaseResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Lease         *Lease                 `protobuf:"bytes,1,opt,name=lease,proto3" json:"lease,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateLockLeaseResponse) Reset() {
+	*x = CreateLockLeaseResponse{}
+	mi := &file_pkg_corepb_locks_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateLockLeaseResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateLockLeaseResponse) ProtoMessage() {}
+
+func (x *CreateLockLeaseResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_locks_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateLockLeaseResponse.ProtoReflect.Descriptor instead.
+func (*CreateLockLeaseResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *CreateLockLeaseResponse) GetLease() *Lease {
+	if x != nil {
+		return x.Lease
+	}
+	return nil
+}
+
+type RevokeLockLeaseRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	LeaseId       *LeaseId               `protobuf:"bytes,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
+	Now           int64                  `protobuf:"varint,2,opt,name=now,proto3" json:"now,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RevokeLockLeaseRequest) Reset() {
+	*x = RevokeLockLeaseRequest{}
+	mi := &file_pkg_corepb_locks_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RevokeLockLeaseRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RevokeLockLeaseRequest) ProtoMessage() {}
+
+func (x *RevokeLockLeaseRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_locks_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RevokeLockLeaseRequest.ProtoReflect.Descriptor instead.
+func (*RevokeLockLeaseRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *RevokeLockLeaseRequest) GetLeaseId() *LeaseId {
+	if x != nil {
+		return x.LeaseId
+	}
+	return nil
+}
+
+func (x *RevokeLockLeaseRequest) GetNow() int64 {
+	if x != nil {
+		return x.Now
+	}
+	return 0
+}
+
+type RevokeLockLeaseResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RevokeLockLeaseResponse) Reset() {
+	*x = RevokeLockLeaseResponse{}
+	mi := &file_pkg_corepb_locks_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RevokeLockLeaseResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RevokeLockLeaseResponse) ProtoMessage() {}
+
+func (x *RevokeLockLeaseResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_locks_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RevokeLockLeaseResponse.ProtoReflect.Descriptor instead.
+func (*RevokeLockLeaseResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{19}
+}
+
+type RefreshLockLeaseRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	LeaseId       *LeaseId               `protobuf:"bytes,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
+	TtlSeconds    uint64                 `protobuf:"varint,2,opt,name=ttl_seconds,json=ttlSeconds,proto3" json:"ttl_seconds,omitempty"`
+	Now           int64                  `protobuf:"varint,3,opt,name=now,proto3" json:"now,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefreshLockLeaseRequest) Reset() {
+	*x = RefreshLockLeaseRequest{}
+	mi := &file_pkg_corepb_locks_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshLockLeaseRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshLockLeaseRequest) ProtoMessage() {}
+
+func (x *RefreshLockLeaseRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_locks_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshLockLeaseRequest.ProtoReflect.Descriptor instead.
+func (*RefreshLockLeaseRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *RefreshLockLeaseRequest) GetLeaseId() *LeaseId {
+	if x != nil {
+		return x.LeaseId
+	}
+	return nil
+}
+
+func (x *RefreshLockLeaseRequest) GetTtlSeconds() uint64 {
+	if x != nil {
+		return x.TtlSeconds
+	}
+	return 0
+}
+
+func (x *RefreshLockLeaseRequest) GetNow() int64 {
+	if x != nil {
+		return x.Now
+	}
+	return 0
+}
+
+type RefreshLockLeaseResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefreshLockLeaseResponse) Reset() {
+	*x = RefreshLockLeaseResponse{}
+	mi := &file_pkg_corepb_locks_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshLockLeaseResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshLockLeaseResponse) ProtoMessage() {}
+
+func (x *RefreshLockLeaseResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_locks_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshLockLeaseResponse.ProtoReflect.Descriptor instead.
+func (*RefreshLockLeaseResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{21}
+}
+
+type GetLockLeaseRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	LeaseId       *LeaseId               `protobuf:"bytes,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetLockLeaseRequest) Reset() {
+	*x = GetLockLeaseRequest{}
+	mi := &file_pkg_corepb_locks_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetLockLeaseRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetLockLeaseRequest) ProtoMessage() {}
+
+func (x *GetLockLeaseRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_locks_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetLockLeaseRequest.ProtoReflect.Descriptor instead.
+func (*GetLockLeaseRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *GetLockLeaseRequest) GetLeaseId() *LeaseId {
+	if x != nil {
+		return x.LeaseId
+	}
+	return nil
+}
+
+type GetLockLeaseResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Lease         *Lease                 `protobuf:"bytes,1,opt,name=lease,proto3" json:"lease,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetLockLeaseResponse) Reset() {
+	*x = GetLockLeaseResponse{}
+	mi := &file_pkg_corepb_locks_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetLockLeaseResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetLockLeaseResponse) ProtoMessage() {}
+
+func (x *GetLockLeaseResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_locks_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetLockLeaseResponse.ProtoReflect.Descriptor instead.
+func (*GetLockLeaseResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *GetLockLeaseResponse) GetLease() *Lease {
+	if x != nil {
+		return x.Lease
+	}
+	return nil
+}
+
+type ListLockLeasesRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	NamespaceId     *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
+	Now             int64                  `protobuf:"varint,2,opt,name=now,proto3" json:"now,omitempty"`
+	PaginationToken *PaginationToken       `protobuf:"bytes,3,opt,name=pagination_token,json=paginationToken,proto3" json:"pagination_token,omitempty"`
+	Limit           int32                  `protobuf:"varint,4,opt,name=limit,proto3" json:"limit,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *ListLockLeasesRequest) Reset() {
+	*x = ListLockLeasesRequest{}
+	mi := &file_pkg_corepb_locks_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListLockLeasesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListLockLeasesRequest) ProtoMessage() {}
+
+func (x *ListLockLeasesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_locks_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListLockLeasesRequest.ProtoReflect.Descriptor instead.
+func (*ListLockLeasesRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *ListLockLeasesRequest) GetNamespaceId() *NamespaceId {
+	if x != nil {
+		return x.NamespaceId
+	}
+	return nil
+}
+
+func (x *ListLockLeasesRequest) GetNow() int64 {
+	if x != nil {
+		return x.Now
+	}
+	return 0
+}
+
+func (x *ListLockLeasesRequest) GetPaginationToken() *PaginationToken {
+	if x != nil {
+		return x.PaginationToken
+	}
+	return nil
+}
+
+func (x *ListLockLeasesRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type ListLockLeasesResponse struct {
+	state                   protoimpl.MessageState `protogen:"open.v1"`
+	Leases                  []*Lease               `protobuf:"bytes,1,rep,name=leases,proto3" json:"leases,omitempty"`
+	NextPaginationToken     *PaginationToken       `protobuf:"bytes,2,opt,name=next_pagination_token,json=nextPaginationToken,proto3" json:"next_pagination_token,omitempty"`
+	PreviousPaginationToken *PaginationToken       `protobuf:"bytes,3,opt,name=previous_pagination_token,json=previousPaginationToken,proto3" json:"previous_pagination_token,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
+}
+
+func (x *ListLockLeasesResponse) Reset() {
+	*x = ListLockLeasesResponse{}
+	mi := &file_pkg_corepb_locks_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListLockLeasesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListLockLeasesResponse) ProtoMessage() {}
+
+func (x *ListLockLeasesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_locks_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListLockLeasesResponse.ProtoReflect.Descriptor instead.
+func (*ListLockLeasesResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *ListLockLeasesResponse) GetLeases() []*Lease {
+	if x != nil {
+		return x.Leases
+	}
+	return nil
+}
+
+func (x *ListLockLeasesResponse) GetNextPaginationToken() *PaginationToken {
+	if x != nil {
+		return x.NextPaginationToken
+	}
+	return nil
+}
+
+func (x *ListLockLeasesResponse) GetPreviousPaginationToken() *PaginationToken {
+	if x != nil {
+		return x.PreviousPaginationToken
+	}
+	return nil
+}
+
+type ListLockLeasesByProcessIdRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	NamespaceId     *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
+	ProcessId       string                 `protobuf:"bytes,2,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
+	Now             int64                  `protobuf:"varint,3,opt,name=now,proto3" json:"now,omitempty"`
+	PaginationToken *PaginationToken       `protobuf:"bytes,4,opt,name=pagination_token,json=paginationToken,proto3" json:"pagination_token,omitempty"`
+	Limit           int32                  `protobuf:"varint,5,opt,name=limit,proto3" json:"limit,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *ListLockLeasesByProcessIdRequest) Reset() {
+	*x = ListLockLeasesByProcessIdRequest{}
+	mi := &file_pkg_corepb_locks_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListLockLeasesByProcessIdRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListLockLeasesByProcessIdRequest) ProtoMessage() {}
+
+func (x *ListLockLeasesByProcessIdRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_locks_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListLockLeasesByProcessIdRequest.ProtoReflect.Descriptor instead.
+func (*ListLockLeasesByProcessIdRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *ListLockLeasesByProcessIdRequest) GetNamespaceId() *NamespaceId {
+	if x != nil {
+		return x.NamespaceId
+	}
+	return nil
+}
+
+func (x *ListLockLeasesByProcessIdRequest) GetProcessId() string {
+	if x != nil {
+		return x.ProcessId
+	}
+	return ""
+}
+
+func (x *ListLockLeasesByProcessIdRequest) GetNow() int64 {
+	if x != nil {
+		return x.Now
+	}
+	return 0
+}
+
+func (x *ListLockLeasesByProcessIdRequest) GetPaginationToken() *PaginationToken {
+	if x != nil {
+		return x.PaginationToken
+	}
+	return nil
+}
+
+func (x *ListLockLeasesByProcessIdRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type ListLockLeasesByProcessIdResponse struct {
+	state                   protoimpl.MessageState `protogen:"open.v1"`
+	Leases                  []*Lease               `protobuf:"bytes,1,rep,name=leases,proto3" json:"leases,omitempty"`
+	NextPaginationToken     *PaginationToken       `protobuf:"bytes,2,opt,name=next_pagination_token,json=nextPaginationToken,proto3" json:"next_pagination_token,omitempty"`
+	PreviousPaginationToken *PaginationToken       `protobuf:"bytes,3,opt,name=previous_pagination_token,json=previousPaginationToken,proto3" json:"previous_pagination_token,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
+}
+
+func (x *ListLockLeasesByProcessIdResponse) Reset() {
+	*x = ListLockLeasesByProcessIdResponse{}
+	mi := &file_pkg_corepb_locks_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListLockLeasesByProcessIdResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListLockLeasesByProcessIdResponse) ProtoMessage() {}
+
+func (x *ListLockLeasesByProcessIdResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_locks_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListLockLeasesByProcessIdResponse.ProtoReflect.Descriptor instead.
+func (*ListLockLeasesByProcessIdResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *ListLockLeasesByProcessIdResponse) GetLeases() []*Lease {
+	if x != nil {
+		return x.Leases
+	}
+	return nil
+}
+
+func (x *ListLockLeasesByProcessIdResponse) GetNextPaginationToken() *PaginationToken {
+	if x != nil {
+		return x.NextPaginationToken
+	}
+	return nil
+}
+
+func (x *ListLockLeasesByProcessIdResponse) GetPreviousPaginationToken() *PaginationToken {
+	if x != nil {
+		return x.PreviousPaginationToken
+	}
+	return nil
 }
 
 type Lock struct {
@@ -834,7 +1610,7 @@ type Lock struct {
 
 func (x *Lock) Reset() {
 	*x = Lock{}
-	mi := &file_pkg_corepb_locks_proto_msgTypes[14]
+	mi := &file_pkg_corepb_locks_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -846,7 +1622,7 @@ func (x *Lock) String() string {
 func (*Lock) ProtoMessage() {}
 
 func (x *Lock) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_locks_proto_msgTypes[14]
+	mi := &file_pkg_corepb_locks_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -859,7 +1635,7 @@ func (x *Lock) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Lock.ProtoReflect.Descriptor instead.
 func (*Lock) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{14}
+	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *Lock) GetId() *LockId {
@@ -892,16 +1668,15 @@ func (x *Lock) GetLockHolders() []*LockHolder {
 
 type LockHolder struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ProcessId     string                 `protobuf:"bytes,1,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
+	LeaseId       uint64                 `protobuf:"varint,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
 	LockedAt      int64                  `protobuf:"varint,2,opt,name=locked_at,json=lockedAt,proto3" json:"locked_at,omitempty"`
-	ExpiresAt     int64                  `protobuf:"varint,3,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *LockHolder) Reset() {
 	*x = LockHolder{}
-	mi := &file_pkg_corepb_locks_proto_msgTypes[15]
+	mi := &file_pkg_corepb_locks_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -913,7 +1688,7 @@ func (x *LockHolder) String() string {
 func (*LockHolder) ProtoMessage() {}
 
 func (x *LockHolder) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_locks_proto_msgTypes[15]
+	mi := &file_pkg_corepb_locks_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -926,26 +1701,19 @@ func (x *LockHolder) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LockHolder.ProtoReflect.Descriptor instead.
 func (*LockHolder) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{15}
+	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{29}
 }
 
-func (x *LockHolder) GetProcessId() string {
+func (x *LockHolder) GetLeaseId() uint64 {
 	if x != nil {
-		return x.ProcessId
+		return x.LeaseId
 	}
-	return ""
+	return 0
 }
 
 func (x *LockHolder) GetLockedAt() int64 {
 	if x != nil {
 		return x.LockedAt
-	}
-	return 0
-}
-
-func (x *LockHolder) GetExpiresAt() int64 {
-	if x != nil {
-		return x.ExpiresAt
 	}
 	return 0
 }
@@ -961,7 +1729,7 @@ type LockId struct {
 
 func (x *LockId) Reset() {
 	*x = LockId{}
-	mi := &file_pkg_corepb_locks_proto_msgTypes[16]
+	mi := &file_pkg_corepb_locks_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -973,7 +1741,7 @@ func (x *LockId) String() string {
 func (*LockId) ProtoMessage() {}
 
 func (x *LockId) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_locks_proto_msgTypes[16]
+	mi := &file_pkg_corepb_locks_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -986,7 +1754,7 @@ func (x *LockId) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LockId.ProtoReflect.Descriptor instead.
 func (*LockId) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{16}
+	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *LockId) GetAccountId() uint64 {
@@ -1011,16 +1779,17 @@ func (x *LockId) GetLockName() string {
 }
 
 type LocksCounter struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	NumberOfLocks int64                  `protobuf:"varint,2,opt,name=number_of_locks,json=numberOfLocks,proto3" json:"number_of_locks,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	NamespaceId    *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
+	NumberOfLocks  int64                  `protobuf:"varint,2,opt,name=number_of_locks,json=numberOfLocks,proto3" json:"number_of_locks,omitempty"`
+	NumberOfLeases int64                  `protobuf:"varint,3,opt,name=number_of_leases,json=numberOfLeases,proto3" json:"number_of_leases,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *LocksCounter) Reset() {
 	*x = LocksCounter{}
-	mi := &file_pkg_corepb_locks_proto_msgTypes[17]
+	mi := &file_pkg_corepb_locks_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1032,7 +1801,7 @@ func (x *LocksCounter) String() string {
 func (*LocksCounter) ProtoMessage() {}
 
 func (x *LocksCounter) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_locks_proto_msgTypes[17]
+	mi := &file_pkg_corepb_locks_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1045,7 +1814,7 @@ func (x *LocksCounter) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LocksCounter.ProtoReflect.Descriptor instead.
 func (*LocksCounter) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{17}
+	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *LocksCounter) GetNamespaceId() *NamespaceId {
@@ -1062,6 +1831,13 @@ func (x *LocksCounter) GetNumberOfLocks() int64 {
 	return 0
 }
 
+func (x *LocksCounter) GetNumberOfLeases() int64 {
+	if x != nil {
+		return x.NumberOfLeases
+	}
+	return 0
+}
+
 type LocksGarbageCollectionRecord struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -1072,7 +1848,7 @@ type LocksGarbageCollectionRecord struct {
 
 func (x *LocksGarbageCollectionRecord) Reset() {
 	*x = LocksGarbageCollectionRecord{}
-	mi := &file_pkg_corepb_locks_proto_msgTypes[18]
+	mi := &file_pkg_corepb_locks_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1084,7 +1860,7 @@ func (x *LocksGarbageCollectionRecord) String() string {
 func (*LocksGarbageCollectionRecord) ProtoMessage() {}
 
 func (x *LocksGarbageCollectionRecord) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_locks_proto_msgTypes[18]
+	mi := &file_pkg_corepb_locks_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1097,7 +1873,7 @@ func (x *LocksGarbageCollectionRecord) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LocksGarbageCollectionRecord.ProtoReflect.Descriptor instead.
 func (*LocksGarbageCollectionRecord) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{18}
+	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *LocksGarbageCollectionRecord) GetId() uint64 {
@@ -1114,58 +1890,6 @@ func (x *LocksGarbageCollectionRecord) GetNamespaceId() *NamespaceId {
 	return nil
 }
 
-type LocksExpirationRecord struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	LockId        *LockId                `protobuf:"bytes,1,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty"`
-	ExpiresAt     int64                  `protobuf:"varint,2,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *LocksExpirationRecord) Reset() {
-	*x = LocksExpirationRecord{}
-	mi := &file_pkg_corepb_locks_proto_msgTypes[19]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *LocksExpirationRecord) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*LocksExpirationRecord) ProtoMessage() {}
-
-func (x *LocksExpirationRecord) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_locks_proto_msgTypes[19]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use LocksExpirationRecord.ProtoReflect.Descriptor instead.
-func (*LocksExpirationRecord) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{19}
-}
-
-func (x *LocksExpirationRecord) GetLockId() *LockId {
-	if x != nil {
-		return x.LockId
-	}
-	return nil
-}
-
-func (x *LocksExpirationRecord) GetExpiresAt() int64 {
-	if x != nil {
-		return x.ExpiresAt
-	}
-	return 0
-}
-
 type LockAncestor struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	Id             *LockId                `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -1177,7 +1901,7 @@ type LockAncestor struct {
 
 func (x *LockAncestor) Reset() {
 	*x = LockAncestor{}
-	mi := &file_pkg_corepb_locks_proto_msgTypes[20]
+	mi := &file_pkg_corepb_locks_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1189,7 +1913,7 @@ func (x *LockAncestor) String() string {
 func (*LockAncestor) ProtoMessage() {}
 
 func (x *LockAncestor) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_locks_proto_msgTypes[20]
+	mi := &file_pkg_corepb_locks_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1202,7 +1926,7 @@ func (x *LockAncestor) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LockAncestor.ProtoReflect.Descriptor instead.
 func (*LockAncestor) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{20}
+	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *LockAncestor) GetId() *LockId {
@@ -1230,23 +1954,19 @@ var File_pkg_corepb_locks_proto protoreflect.FileDescriptor
 
 const file_pkg_corepb_locks_proto_rawDesc = "" +
 	"\n" +
-	"\x16pkg/corepb/locks.proto\x12\x19com.evrblk.grackle.corepb\x1a\x17pkg/corepb/common.proto\x1a\x1bpkg/corepb/namespaces.proto\"\x87\x02\n" +
+	"\x16pkg/corepb/locks.proto\x12\x19com.evrblk.grackle.corepb\x1a\x17pkg/corepb/common.proto\x1a\x1bpkg/corepb/namespaces.proto\"\xe4\x01\n" +
 	"\x12AcquireLockRequest\x12:\n" +
-	"\alock_id\x18\x01 \x01(\v2!.com.evrblk.grackle.corepb.LockIdR\x06lockId\x12\x1d\n" +
-	"\n" +
-	"process_id\x18\x02 \x01(\tR\tprocessId\x12\x1c\n" +
+	"\alock_id\x18\x01 \x01(\v2!.com.evrblk.grackle.corepb.LockIdR\x06lockId\x12\x19\n" +
+	"\blease_id\x18\x02 \x01(\x04R\aleaseId\x12\x1c\n" +
 	"\texclusive\x18\x03 \x01(\bR\texclusive\x12\x10\n" +
-	"\x03now\x18\x04 \x01(\x03R\x03now\x12\x1d\n" +
-	"\n" +
-	"expires_at\x18\x05 \x01(\x03R\texpiresAt\x12G\n" +
+	"\x03now\x18\x04 \x01(\x03R\x03now\x12G\n" +
 	"!max_number_of_locks_per_namespace\x18\x06 \x01(\x03R\x1cmaxNumberOfLocksPerNamespace\"d\n" +
 	"\x13AcquireLockResponse\x123\n" +
 	"\x04lock\x18\x01 \x01(\v2\x1f.com.evrblk.grackle.corepb.LockR\x04lock\x12\x18\n" +
-	"\asuccess\x18\x02 \x01(\bR\asuccess\"\x81\x01\n" +
+	"\asuccess\x18\x02 \x01(\bR\asuccess\"}\n" +
 	"\x12ReleaseLockRequest\x12:\n" +
-	"\alock_id\x18\x01 \x01(\v2!.com.evrblk.grackle.corepb.LockIdR\x06lockId\x12\x1d\n" +
-	"\n" +
-	"process_id\x18\x02 \x01(\tR\tprocessId\x12\x10\n" +
+	"\alock_id\x18\x01 \x01(\v2!.com.evrblk.grackle.corepb.LockIdR\x06lockId\x12\x19\n" +
+	"\blease_id\x18\x02 \x01(\x04R\aleaseId\x12\x10\n" +
 	"\x03now\x18\x03 \x01(\x03R\x03now\"J\n" +
 	"\x13ReleaseLockResponse\x123\n" +
 	"\x04lock\x18\x01 \x01(\v2\x1f.com.evrblk.grackle.corepb.LockR\x04lock\"^\n" +
@@ -1267,6 +1987,15 @@ const file_pkg_corepb_locks_proto_rawDesc = "" +
 	"\x11ListLocksResponse\x125\n" +
 	"\x05locks\x18\x01 \x03(\v2\x1f.com.evrblk.grackle.corepb.LockR\x05locks\x12^\n" +
 	"\x15next_pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x13nextPaginationToken\x12f\n" +
+	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"\xd9\x01\n" +
+	"\x19ListLocksByLeaseIdRequest\x12=\n" +
+	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\x12\x10\n" +
+	"\x03now\x18\x02 \x01(\x03R\x03now\x12U\n" +
+	"\x10pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x0fpaginationToken\x12\x14\n" +
+	"\x05limit\x18\x04 \x01(\x05R\x05limit\"\x9b\x02\n" +
+	"\x1aListLocksByLeaseIdResponse\x125\n" +
+	"\x05locks\x18\x01 \x03(\v2\x1f.com.evrblk.grackle.corepb.LockR\x05locks\x12^\n" +
+	"\x15next_pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x13nextPaginationToken\x12f\n" +
 	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"\xcb\x01\n" +
 	" RunLocksGarbageCollectionRequest\x12\x10\n" +
 	"\x03now\x18\x01 \x01(\x03R\x03now\x12/\n" +
@@ -1278,34 +2007,72 @@ const file_pkg_corepb_locks_proto_rawDesc = "" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x1b\n" +
 	"\trecord_id\x18\x02 \x01(\x04R\brecordId\x12\x10\n" +
 	"\x03now\x18\x03 \x01(\x03R\x03now\"\x1e\n" +
-	"\x1cLocksDeleteNamespaceResponse\"\xdc\x01\n" +
+	"\x1cLocksDeleteNamespaceResponse\"\xe3\x01\n" +
+	"\x16CreateLockLeaseRequest\x12=\n" +
+	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\x12\x1d\n" +
+	"\n" +
+	"process_id\x18\x02 \x01(\tR\tprocessId\x12\x1f\n" +
+	"\vttl_seconds\x18\x03 \x01(\x04R\n" +
+	"ttlSeconds\x12\x10\n" +
+	"\x03now\x18\x04 \x01(\x03R\x03now\x128\n" +
+	"\x19max_number_of_lock_leases\x18\x05 \x01(\x03R\x15maxNumberOfLockLeases\"Q\n" +
+	"\x17CreateLockLeaseResponse\x126\n" +
+	"\x05lease\x18\x01 \x01(\v2 .com.evrblk.grackle.corepb.LeaseR\x05lease\"i\n" +
+	"\x16RevokeLockLeaseRequest\x12=\n" +
+	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\x12\x10\n" +
+	"\x03now\x18\x02 \x01(\x03R\x03now\"\x19\n" +
+	"\x17RevokeLockLeaseResponse\"\x8b\x01\n" +
+	"\x17RefreshLockLeaseRequest\x12=\n" +
+	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\x12\x1f\n" +
+	"\vttl_seconds\x18\x02 \x01(\x04R\n" +
+	"ttlSeconds\x12\x10\n" +
+	"\x03now\x18\x03 \x01(\x03R\x03now\"\x1a\n" +
+	"\x18RefreshLockLeaseResponse\"T\n" +
+	"\x13GetLockLeaseRequest\x12=\n" +
+	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\"N\n" +
+	"\x14GetLockLeaseResponse\x126\n" +
+	"\x05lease\x18\x01 \x01(\v2 .com.evrblk.grackle.corepb.LeaseR\x05lease\"\xe1\x01\n" +
+	"\x15ListLockLeasesRequest\x12I\n" +
+	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x10\n" +
+	"\x03now\x18\x02 \x01(\x03R\x03now\x12U\n" +
+	"\x10pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x0fpaginationToken\x12\x14\n" +
+	"\x05limit\x18\x04 \x01(\x05R\x05limit\"\x9a\x02\n" +
+	"\x16ListLockLeasesResponse\x128\n" +
+	"\x06leases\x18\x01 \x03(\v2 .com.evrblk.grackle.corepb.LeaseR\x06leases\x12^\n" +
+	"\x15next_pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x13nextPaginationToken\x12f\n" +
+	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"\x8b\x02\n" +
+	" ListLockLeasesByProcessIdRequest\x12I\n" +
+	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x1d\n" +
+	"\n" +
+	"process_id\x18\x02 \x01(\tR\tprocessId\x12\x10\n" +
+	"\x03now\x18\x03 \x01(\x03R\x03now\x12U\n" +
+	"\x10pagination_token\x18\x04 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x0fpaginationToken\x12\x14\n" +
+	"\x05limit\x18\x05 \x01(\x05R\x05limit\"\xa5\x02\n" +
+	"!ListLockLeasesByProcessIdResponse\x128\n" +
+	"\x06leases\x18\x01 \x03(\v2 .com.evrblk.grackle.corepb.LeaseR\x06leases\x12^\n" +
+	"\x15next_pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x13nextPaginationToken\x12f\n" +
+	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"\xdc\x01\n" +
 	"\x04Lock\x121\n" +
 	"\x02id\x18\x01 \x01(\v2!.com.evrblk.grackle.corepb.LockIdR\x02id\x12:\n" +
 	"\x05state\x18\x02 \x01(\x0e2$.com.evrblk.grackle.corepb.LockStateR\x05state\x12\x1b\n" +
 	"\tlocked_at\x18\x03 \x01(\x03R\blockedAt\x12H\n" +
-	"\flock_holders\x18\x04 \x03(\v2%.com.evrblk.grackle.corepb.LockHolderR\vlockHolders\"g\n" +
+	"\flock_holders\x18\x04 \x03(\v2%.com.evrblk.grackle.corepb.LockHolderR\vlockHolders\"D\n" +
 	"\n" +
-	"LockHolder\x12\x1d\n" +
-	"\n" +
-	"process_id\x18\x01 \x01(\tR\tprocessId\x12\x1b\n" +
-	"\tlocked_at\x18\x02 \x01(\x03R\blockedAt\x12\x1d\n" +
-	"\n" +
-	"expires_at\x18\x03 \x01(\x03R\texpiresAt\"g\n" +
+	"LockHolder\x12\x19\n" +
+	"\blease_id\x18\x01 \x01(\x04R\aleaseId\x12\x1b\n" +
+	"\tlocked_at\x18\x02 \x01(\x03R\blockedAt\"g\n" +
 	"\x06LockId\x12\x1d\n" +
 	"\n" +
 	"account_id\x18\x01 \x01(\x04R\taccountId\x12!\n" +
 	"\fnamespace_id\x18\x02 \x01(\rR\vnamespaceId\x12\x1b\n" +
-	"\tlock_name\x18\x03 \x01(\tR\blockName\"\x81\x01\n" +
+	"\tlock_name\x18\x03 \x01(\tR\blockName\"\xab\x01\n" +
 	"\fLocksCounter\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12&\n" +
-	"\x0fnumber_of_locks\x18\x02 \x01(\x03R\rnumberOfLocks\"y\n" +
+	"\x0fnumber_of_locks\x18\x02 \x01(\x03R\rnumberOfLocks\x12(\n" +
+	"\x10number_of_leases\x18\x03 \x01(\x03R\x0enumberOfLeases\"y\n" +
 	"\x1cLocksGarbageCollectionRecord\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12I\n" +
-	"\fnamespace_id\x18\x02 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\"r\n" +
-	"\x15LocksExpirationRecord\x12:\n" +
-	"\alock_id\x18\x01 \x01(\v2!.com.evrblk.grackle.corepb.LockIdR\x06lockId\x12\x1d\n" +
-	"\n" +
-	"expires_at\x18\x02 \x01(\x03R\texpiresAt\"\x8d\x01\n" +
+	"\fnamespace_id\x18\x02 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\"\x8d\x01\n" +
 	"\fLockAncestor\x121\n" +
 	"\x02id\x18\x01 \x01(\v2!.com.evrblk.grackle.corepb.LockIdR\x02id\x12'\n" +
 	"\x0fexclusive_count\x18\x02 \x01(\x03R\x0eexclusiveCount\x12!\n" +
@@ -1328,7 +2095,7 @@ func file_pkg_corepb_locks_proto_rawDescGZIP() []byte {
 }
 
 var file_pkg_corepb_locks_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_pkg_corepb_locks_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_pkg_corepb_locks_proto_msgTypes = make([]protoimpl.MessageInfo, 34)
 var file_pkg_corepb_locks_proto_goTypes = []any{
 	(LockState)(0),                            // 0: com.evrblk.grackle.corepb.LockState
 	(*AcquireLockRequest)(nil),                // 1: com.evrblk.grackle.corepb.AcquireLockRequest
@@ -1341,46 +2108,81 @@ var file_pkg_corepb_locks_proto_goTypes = []any{
 	(*DeleteLockResponse)(nil),                // 8: com.evrblk.grackle.corepb.DeleteLockResponse
 	(*ListLocksRequest)(nil),                  // 9: com.evrblk.grackle.corepb.ListLocksRequest
 	(*ListLocksResponse)(nil),                 // 10: com.evrblk.grackle.corepb.ListLocksResponse
-	(*RunLocksGarbageCollectionRequest)(nil),  // 11: com.evrblk.grackle.corepb.RunLocksGarbageCollectionRequest
-	(*RunLocksGarbageCollectionResponse)(nil), // 12: com.evrblk.grackle.corepb.RunLocksGarbageCollectionResponse
-	(*LocksDeleteNamespaceRequest)(nil),       // 13: com.evrblk.grackle.corepb.LocksDeleteNamespaceRequest
-	(*LocksDeleteNamespaceResponse)(nil),      // 14: com.evrblk.grackle.corepb.LocksDeleteNamespaceResponse
-	(*Lock)(nil),                              // 15: com.evrblk.grackle.corepb.Lock
-	(*LockHolder)(nil),                        // 16: com.evrblk.grackle.corepb.LockHolder
-	(*LockId)(nil),                            // 17: com.evrblk.grackle.corepb.LockId
-	(*LocksCounter)(nil),                      // 18: com.evrblk.grackle.corepb.LocksCounter
-	(*LocksGarbageCollectionRecord)(nil),      // 19: com.evrblk.grackle.corepb.LocksGarbageCollectionRecord
-	(*LocksExpirationRecord)(nil),             // 20: com.evrblk.grackle.corepb.LocksExpirationRecord
-	(*LockAncestor)(nil),                      // 21: com.evrblk.grackle.corepb.LockAncestor
-	(*NamespaceId)(nil),                       // 22: com.evrblk.grackle.corepb.NamespaceId
-	(*PaginationToken)(nil),                   // 23: com.evrblk.grackle.corepb.PaginationToken
+	(*ListLocksByLeaseIdRequest)(nil),         // 11: com.evrblk.grackle.corepb.ListLocksByLeaseIdRequest
+	(*ListLocksByLeaseIdResponse)(nil),        // 12: com.evrblk.grackle.corepb.ListLocksByLeaseIdResponse
+	(*RunLocksGarbageCollectionRequest)(nil),  // 13: com.evrblk.grackle.corepb.RunLocksGarbageCollectionRequest
+	(*RunLocksGarbageCollectionResponse)(nil), // 14: com.evrblk.grackle.corepb.RunLocksGarbageCollectionResponse
+	(*LocksDeleteNamespaceRequest)(nil),       // 15: com.evrblk.grackle.corepb.LocksDeleteNamespaceRequest
+	(*LocksDeleteNamespaceResponse)(nil),      // 16: com.evrblk.grackle.corepb.LocksDeleteNamespaceResponse
+	(*CreateLockLeaseRequest)(nil),            // 17: com.evrblk.grackle.corepb.CreateLockLeaseRequest
+	(*CreateLockLeaseResponse)(nil),           // 18: com.evrblk.grackle.corepb.CreateLockLeaseResponse
+	(*RevokeLockLeaseRequest)(nil),            // 19: com.evrblk.grackle.corepb.RevokeLockLeaseRequest
+	(*RevokeLockLeaseResponse)(nil),           // 20: com.evrblk.grackle.corepb.RevokeLockLeaseResponse
+	(*RefreshLockLeaseRequest)(nil),           // 21: com.evrblk.grackle.corepb.RefreshLockLeaseRequest
+	(*RefreshLockLeaseResponse)(nil),          // 22: com.evrblk.grackle.corepb.RefreshLockLeaseResponse
+	(*GetLockLeaseRequest)(nil),               // 23: com.evrblk.grackle.corepb.GetLockLeaseRequest
+	(*GetLockLeaseResponse)(nil),              // 24: com.evrblk.grackle.corepb.GetLockLeaseResponse
+	(*ListLockLeasesRequest)(nil),             // 25: com.evrblk.grackle.corepb.ListLockLeasesRequest
+	(*ListLockLeasesResponse)(nil),            // 26: com.evrblk.grackle.corepb.ListLockLeasesResponse
+	(*ListLockLeasesByProcessIdRequest)(nil),  // 27: com.evrblk.grackle.corepb.ListLockLeasesByProcessIdRequest
+	(*ListLockLeasesByProcessIdResponse)(nil), // 28: com.evrblk.grackle.corepb.ListLockLeasesByProcessIdResponse
+	(*Lock)(nil),                              // 29: com.evrblk.grackle.corepb.Lock
+	(*LockHolder)(nil),                        // 30: com.evrblk.grackle.corepb.LockHolder
+	(*LockId)(nil),                            // 31: com.evrblk.grackle.corepb.LockId
+	(*LocksCounter)(nil),                      // 32: com.evrblk.grackle.corepb.LocksCounter
+	(*LocksGarbageCollectionRecord)(nil),      // 33: com.evrblk.grackle.corepb.LocksGarbageCollectionRecord
+	(*LockAncestor)(nil),                      // 34: com.evrblk.grackle.corepb.LockAncestor
+	(*NamespaceId)(nil),                       // 35: com.evrblk.grackle.corepb.NamespaceId
+	(*PaginationToken)(nil),                   // 36: com.evrblk.grackle.corepb.PaginationToken
+	(*LeaseId)(nil),                           // 37: com.evrblk.grackle.corepb.LeaseId
+	(*Lease)(nil),                             // 38: com.evrblk.grackle.corepb.Lease
 }
 var file_pkg_corepb_locks_proto_depIdxs = []int32{
-	17, // 0: com.evrblk.grackle.corepb.AcquireLockRequest.lock_id:type_name -> com.evrblk.grackle.corepb.LockId
-	15, // 1: com.evrblk.grackle.corepb.AcquireLockResponse.lock:type_name -> com.evrblk.grackle.corepb.Lock
-	17, // 2: com.evrblk.grackle.corepb.ReleaseLockRequest.lock_id:type_name -> com.evrblk.grackle.corepb.LockId
-	15, // 3: com.evrblk.grackle.corepb.ReleaseLockResponse.lock:type_name -> com.evrblk.grackle.corepb.Lock
-	17, // 4: com.evrblk.grackle.corepb.GetLockRequest.lock_id:type_name -> com.evrblk.grackle.corepb.LockId
-	15, // 5: com.evrblk.grackle.corepb.GetLockResponse.lock:type_name -> com.evrblk.grackle.corepb.Lock
-	17, // 6: com.evrblk.grackle.corepb.DeleteLockRequest.lock_id:type_name -> com.evrblk.grackle.corepb.LockId
-	22, // 7: com.evrblk.grackle.corepb.ListLocksRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	23, // 8: com.evrblk.grackle.corepb.ListLocksRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	15, // 9: com.evrblk.grackle.corepb.ListLocksResponse.locks:type_name -> com.evrblk.grackle.corepb.Lock
-	23, // 10: com.evrblk.grackle.corepb.ListLocksResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	23, // 11: com.evrblk.grackle.corepb.ListLocksResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	22, // 12: com.evrblk.grackle.corepb.LocksDeleteNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	17, // 13: com.evrblk.grackle.corepb.Lock.id:type_name -> com.evrblk.grackle.corepb.LockId
-	0,  // 14: com.evrblk.grackle.corepb.Lock.state:type_name -> com.evrblk.grackle.corepb.LockState
-	16, // 15: com.evrblk.grackle.corepb.Lock.lock_holders:type_name -> com.evrblk.grackle.corepb.LockHolder
-	22, // 16: com.evrblk.grackle.corepb.LocksCounter.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	22, // 17: com.evrblk.grackle.corepb.LocksGarbageCollectionRecord.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	17, // 18: com.evrblk.grackle.corepb.LocksExpirationRecord.lock_id:type_name -> com.evrblk.grackle.corepb.LockId
-	17, // 19: com.evrblk.grackle.corepb.LockAncestor.id:type_name -> com.evrblk.grackle.corepb.LockId
-	20, // [20:20] is the sub-list for method output_type
-	20, // [20:20] is the sub-list for method input_type
-	20, // [20:20] is the sub-list for extension type_name
-	20, // [20:20] is the sub-list for extension extendee
-	0,  // [0:20] is the sub-list for field type_name
+	31, // 0: com.evrblk.grackle.corepb.AcquireLockRequest.lock_id:type_name -> com.evrblk.grackle.corepb.LockId
+	29, // 1: com.evrblk.grackle.corepb.AcquireLockResponse.lock:type_name -> com.evrblk.grackle.corepb.Lock
+	31, // 2: com.evrblk.grackle.corepb.ReleaseLockRequest.lock_id:type_name -> com.evrblk.grackle.corepb.LockId
+	29, // 3: com.evrblk.grackle.corepb.ReleaseLockResponse.lock:type_name -> com.evrblk.grackle.corepb.Lock
+	31, // 4: com.evrblk.grackle.corepb.GetLockRequest.lock_id:type_name -> com.evrblk.grackle.corepb.LockId
+	29, // 5: com.evrblk.grackle.corepb.GetLockResponse.lock:type_name -> com.evrblk.grackle.corepb.Lock
+	31, // 6: com.evrblk.grackle.corepb.DeleteLockRequest.lock_id:type_name -> com.evrblk.grackle.corepb.LockId
+	35, // 7: com.evrblk.grackle.corepb.ListLocksRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	36, // 8: com.evrblk.grackle.corepb.ListLocksRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	29, // 9: com.evrblk.grackle.corepb.ListLocksResponse.locks:type_name -> com.evrblk.grackle.corepb.Lock
+	36, // 10: com.evrblk.grackle.corepb.ListLocksResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	36, // 11: com.evrblk.grackle.corepb.ListLocksResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	37, // 12: com.evrblk.grackle.corepb.ListLocksByLeaseIdRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
+	36, // 13: com.evrblk.grackle.corepb.ListLocksByLeaseIdRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	29, // 14: com.evrblk.grackle.corepb.ListLocksByLeaseIdResponse.locks:type_name -> com.evrblk.grackle.corepb.Lock
+	36, // 15: com.evrblk.grackle.corepb.ListLocksByLeaseIdResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	36, // 16: com.evrblk.grackle.corepb.ListLocksByLeaseIdResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	35, // 17: com.evrblk.grackle.corepb.LocksDeleteNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	37, // 18: com.evrblk.grackle.corepb.CreateLockLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
+	38, // 19: com.evrblk.grackle.corepb.CreateLockLeaseResponse.lease:type_name -> com.evrblk.grackle.corepb.Lease
+	37, // 20: com.evrblk.grackle.corepb.RevokeLockLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
+	37, // 21: com.evrblk.grackle.corepb.RefreshLockLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
+	37, // 22: com.evrblk.grackle.corepb.GetLockLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
+	38, // 23: com.evrblk.grackle.corepb.GetLockLeaseResponse.lease:type_name -> com.evrblk.grackle.corepb.Lease
+	35, // 24: com.evrblk.grackle.corepb.ListLockLeasesRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	36, // 25: com.evrblk.grackle.corepb.ListLockLeasesRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	38, // 26: com.evrblk.grackle.corepb.ListLockLeasesResponse.leases:type_name -> com.evrblk.grackle.corepb.Lease
+	36, // 27: com.evrblk.grackle.corepb.ListLockLeasesResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	36, // 28: com.evrblk.grackle.corepb.ListLockLeasesResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	35, // 29: com.evrblk.grackle.corepb.ListLockLeasesByProcessIdRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	36, // 30: com.evrblk.grackle.corepb.ListLockLeasesByProcessIdRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	38, // 31: com.evrblk.grackle.corepb.ListLockLeasesByProcessIdResponse.leases:type_name -> com.evrblk.grackle.corepb.Lease
+	36, // 32: com.evrblk.grackle.corepb.ListLockLeasesByProcessIdResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	36, // 33: com.evrblk.grackle.corepb.ListLockLeasesByProcessIdResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	31, // 34: com.evrblk.grackle.corepb.Lock.id:type_name -> com.evrblk.grackle.corepb.LockId
+	0,  // 35: com.evrblk.grackle.corepb.Lock.state:type_name -> com.evrblk.grackle.corepb.LockState
+	30, // 36: com.evrblk.grackle.corepb.Lock.lock_holders:type_name -> com.evrblk.grackle.corepb.LockHolder
+	35, // 37: com.evrblk.grackle.corepb.LocksCounter.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	35, // 38: com.evrblk.grackle.corepb.LocksGarbageCollectionRecord.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	31, // 39: com.evrblk.grackle.corepb.LockAncestor.id:type_name -> com.evrblk.grackle.corepb.LockId
+	40, // [40:40] is the sub-list for method output_type
+	40, // [40:40] is the sub-list for method input_type
+	40, // [40:40] is the sub-list for extension type_name
+	40, // [40:40] is the sub-list for extension extendee
+	0,  // [0:40] is the sub-list for field type_name
 }
 
 func init() { file_pkg_corepb_locks_proto_init() }
@@ -1396,7 +2198,7 @@ func file_pkg_corepb_locks_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_corepb_locks_proto_rawDesc), len(file_pkg_corepb_locks_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   21,
+			NumMessages:   34,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

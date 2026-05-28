@@ -28,7 +28,7 @@ type jobsTable struct {
 func newJobsTable(shardLowerBound []byte, shardUpperBound []byte) *jobsTable {
 	return &jobsTable{
 		table: monsterax.NewBinaryTable[*corepb.WaitGroupJob, corepb.WaitGroupJob](
-			tables.GrackleWaitGroupsJobsTableId,
+			tables.Grackle["Grackle.WaitGroupsCore.Jobs.Table"].Bytes(),
 			shardLowerBound,
 			shardUpperBound,
 		),

@@ -16,22 +16,36 @@ import (
 
 type GrackleMonsteraShardKeyCalculator interface {
 	ListLocksShardKey(request *corepb.ListLocksRequest) []byte
+	ListLocksByLeaseIdShardKey(request *corepb.ListLocksByLeaseIdRequest) []byte
+	ListLockLeasesShardKey(request *corepb.ListLockLeasesRequest) []byte
+	ListLockLeasesByProcessIdShardKey(request *corepb.ListLockLeasesByProcessIdRequest) []byte
+	GetLockLeaseShardKey(request *corepb.GetLockLeaseRequest) []byte
 	AcquireLockShardKey(request *corepb.AcquireLockRequest) []byte
 	ReleaseLockShardKey(request *corepb.ReleaseLockRequest) []byte
 	DeleteLockShardKey(request *corepb.DeleteLockRequest) []byte
 	GetLockShardKey(request *corepb.GetLockRequest) []byte
 	LocksDeleteNamespaceShardKey(request *corepb.LocksDeleteNamespaceRequest) []byte
+	CreateLockLeaseShardKey(request *corepb.CreateLockLeaseRequest) []byte
+	RefreshLockLeaseShardKey(request *corepb.RefreshLockLeaseRequest) []byte
+	RevokeLockLeaseShardKey(request *corepb.RevokeLockLeaseRequest) []byte
 
 	GetSemaphoreShardKey(request *corepb.GetSemaphoreRequest) []byte
 	GetSemaphoreByNameShardKey(request *corepb.GetSemaphoreByNameRequest) []byte
 	ListSemaphoresShardKey(request *corepb.ListSemaphoresRequest) []byte
+	ListSemaphoresByLeaseIdShardKey(request *corepb.ListSemaphoresByLeaseIdRequest) []byte
 	ListSemaphoreHoldersShardKey(request *corepb.ListSemaphoreHoldersRequest) []byte
+	ListSemaphoreLeasesShardKey(request *corepb.ListSemaphoreLeasesRequest) []byte
+	ListSemaphoreLeasesByProcessIdShardKey(request *corepb.ListSemaphoreLeasesByProcessIdRequest) []byte
+	GetSemaphoreLeaseShardKey(request *corepb.GetSemaphoreLeaseRequest) []byte
 	AcquireSemaphoreShardKey(request *corepb.AcquireSemaphoreRequest) []byte
 	ReleaseSemaphoreShardKey(request *corepb.ReleaseSemaphoreRequest) []byte
 	CreateSemaphoreShardKey(request *corepb.CreateSemaphoreRequest) []byte
 	UpdateSemaphoreShardKey(request *corepb.UpdateSemaphoreRequest) []byte
 	DeleteSemaphoreShardKey(request *corepb.DeleteSemaphoreRequest) []byte
 	SemaphoresDeleteNamespaceShardKey(request *corepb.SemaphoresDeleteNamespaceRequest) []byte
+	CreateSemaphoreLeaseShardKey(request *corepb.CreateSemaphoreLeaseRequest) []byte
+	RevokeSemaphoreLeaseShardKey(request *corepb.RevokeSemaphoreLeaseRequest) []byte
+	RefreshSemaphoreLeaseShardKey(request *corepb.RefreshSemaphoreLeaseRequest) []byte
 
 	GetNamespaceShardKey(request *corepb.GetNamespaceRequest) []byte
 	GetNamespaceByNameShardKey(request *corepb.GetNamespaceByNameRequest) []byte
@@ -100,6 +114,138 @@ func (s *GrackleCoreApiMonsteraStub) ListLocks(ctx context.Context, request *cor
 	response, ok := coreResponse.Response.(*corepb.GrackleReadResponse_ListLocksResponse)
 	if ok {
 		return response.ListLocksResponse, nilifyIfEmpty(wrappedResponse.Error)
+	} else {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "invalid response type", map[string]string{"response": coreResponse.String()})
+	}
+}
+
+func (s *GrackleCoreApiMonsteraStub) ListLocksByLeaseId(ctx context.Context, request *corepb.ListLocksByLeaseIdRequest) (*corepb.ListLocksByLeaseIdResponse, error) {
+	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_ListLocksByLeaseIdRequest{ListLocksByLeaseIdRequest: request}}
+	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
+	}
+
+	shardKey := s.shardKeyCalculator.ListLocksByLeaseIdShardKey(request)
+
+	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleLocks", shardKey, false, requestBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	wrappedResponse := &monsterax.Response{}
+	coreResponse := &corepb.GrackleReadResponse{}
+	err = wrappedResponse.UnmarshalVT(responseBytes)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+	err = s.grackleReadResponseCodec.Decode(wrappedResponse.Data, coreResponse)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+
+	response, ok := coreResponse.Response.(*corepb.GrackleReadResponse_ListLocksByLeaseIdResponse)
+	if ok {
+		return response.ListLocksByLeaseIdResponse, nilifyIfEmpty(wrappedResponse.Error)
+	} else {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "invalid response type", map[string]string{"response": coreResponse.String()})
+	}
+}
+
+func (s *GrackleCoreApiMonsteraStub) ListLockLeases(ctx context.Context, request *corepb.ListLockLeasesRequest) (*corepb.ListLockLeasesResponse, error) {
+	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_ListLockLeasesRequest{ListLockLeasesRequest: request}}
+	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
+	}
+
+	shardKey := s.shardKeyCalculator.ListLockLeasesShardKey(request)
+
+	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleLocks", shardKey, false, requestBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	wrappedResponse := &monsterax.Response{}
+	coreResponse := &corepb.GrackleReadResponse{}
+	err = wrappedResponse.UnmarshalVT(responseBytes)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+	err = s.grackleReadResponseCodec.Decode(wrappedResponse.Data, coreResponse)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+
+	response, ok := coreResponse.Response.(*corepb.GrackleReadResponse_ListLockLeasesResponse)
+	if ok {
+		return response.ListLockLeasesResponse, nilifyIfEmpty(wrappedResponse.Error)
+	} else {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "invalid response type", map[string]string{"response": coreResponse.String()})
+	}
+}
+
+func (s *GrackleCoreApiMonsteraStub) ListLockLeasesByProcessId(ctx context.Context, request *corepb.ListLockLeasesByProcessIdRequest) (*corepb.ListLockLeasesByProcessIdResponse, error) {
+	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_ListLockLeasesByProcessIdRequest{ListLockLeasesByProcessIdRequest: request}}
+	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
+	}
+
+	shardKey := s.shardKeyCalculator.ListLockLeasesByProcessIdShardKey(request)
+
+	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleLocks", shardKey, false, requestBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	wrappedResponse := &monsterax.Response{}
+	coreResponse := &corepb.GrackleReadResponse{}
+	err = wrappedResponse.UnmarshalVT(responseBytes)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+	err = s.grackleReadResponseCodec.Decode(wrappedResponse.Data, coreResponse)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+
+	response, ok := coreResponse.Response.(*corepb.GrackleReadResponse_ListLockLeasesByProcessIdResponse)
+	if ok {
+		return response.ListLockLeasesByProcessIdResponse, nilifyIfEmpty(wrappedResponse.Error)
+	} else {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "invalid response type", map[string]string{"response": coreResponse.String()})
+	}
+}
+
+func (s *GrackleCoreApiMonsteraStub) GetLockLease(ctx context.Context, request *corepb.GetLockLeaseRequest) (*corepb.GetLockLeaseResponse, error) {
+	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_GetLockLeaseRequest{GetLockLeaseRequest: request}}
+	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
+	}
+
+	shardKey := s.shardKeyCalculator.GetLockLeaseShardKey(request)
+
+	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleLocks", shardKey, false, requestBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	wrappedResponse := &monsterax.Response{}
+	coreResponse := &corepb.GrackleReadResponse{}
+	err = wrappedResponse.UnmarshalVT(responseBytes)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+	err = s.grackleReadResponseCodec.Decode(wrappedResponse.Data, coreResponse)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+
+	response, ok := coreResponse.Response.(*corepb.GrackleReadResponse_GetLockLeaseResponse)
+	if ok {
+		return response.GetLockLeaseResponse, nilifyIfEmpty(wrappedResponse.Error)
 	} else {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "invalid response type", map[string]string{"response": coreResponse.String()})
 	}
@@ -301,6 +447,105 @@ func (s *GrackleCoreApiMonsteraStub) LocksDeleteNamespace(ctx context.Context, r
 	}
 }
 
+func (s *GrackleCoreApiMonsteraStub) CreateLockLease(ctx context.Context, request *corepb.CreateLockLeaseRequest) (*corepb.CreateLockLeaseResponse, error) {
+	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_CreateLockLeaseRequest{CreateLockLeaseRequest: request}}
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
+	}
+
+	shardKey := s.shardKeyCalculator.CreateLockLeaseShardKey(request)
+
+	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", shardKey, requestBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	wrappedResponse := &monsterax.Response{}
+	coreResponse := &corepb.GrackleUpdateResponse{}
+	err = wrappedResponse.UnmarshalVT(responseBytes)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+
+	response, ok := coreResponse.Response.(*corepb.GrackleUpdateResponse_CreateLockLeaseResponse)
+	if ok {
+		return response.CreateLockLeaseResponse, nilifyIfEmpty(wrappedResponse.Error)
+	} else {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "invalid response type", map[string]string{"response": coreResponse.String()})
+	}
+}
+
+func (s *GrackleCoreApiMonsteraStub) RefreshLockLease(ctx context.Context, request *corepb.RefreshLockLeaseRequest) (*corepb.RefreshLockLeaseResponse, error) {
+	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_RefreshLockLeaseRequest{RefreshLockLeaseRequest: request}}
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
+	}
+
+	shardKey := s.shardKeyCalculator.RefreshLockLeaseShardKey(request)
+
+	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", shardKey, requestBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	wrappedResponse := &monsterax.Response{}
+	coreResponse := &corepb.GrackleUpdateResponse{}
+	err = wrappedResponse.UnmarshalVT(responseBytes)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+
+	response, ok := coreResponse.Response.(*corepb.GrackleUpdateResponse_RefreshLockLeaseResponse)
+	if ok {
+		return response.RefreshLockLeaseResponse, nilifyIfEmpty(wrappedResponse.Error)
+	} else {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "invalid response type", map[string]string{"response": coreResponse.String()})
+	}
+}
+
+func (s *GrackleCoreApiMonsteraStub) RevokeLockLease(ctx context.Context, request *corepb.RevokeLockLeaseRequest) (*corepb.RevokeLockLeaseResponse, error) {
+	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_RevokeLockLeaseRequest{RevokeLockLeaseRequest: request}}
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
+	}
+
+	shardKey := s.shardKeyCalculator.RevokeLockLeaseShardKey(request)
+
+	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", shardKey, requestBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	wrappedResponse := &monsterax.Response{}
+	coreResponse := &corepb.GrackleUpdateResponse{}
+	err = wrappedResponse.UnmarshalVT(responseBytes)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+
+	response, ok := coreResponse.Response.(*corepb.GrackleUpdateResponse_RevokeLockLeaseResponse)
+	if ok {
+		return response.RevokeLockLeaseResponse, nilifyIfEmpty(wrappedResponse.Error)
+	} else {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "invalid response type", map[string]string{"response": coreResponse.String()})
+	}
+}
+
 func (s *GrackleCoreApiMonsteraStub) GetSemaphore(ctx context.Context, request *corepb.GetSemaphoreRequest) (*corepb.GetSemaphoreResponse, error) {
 	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_GetSemaphoreRequest{GetSemaphoreRequest: request}}
 	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
@@ -400,6 +645,39 @@ func (s *GrackleCoreApiMonsteraStub) ListSemaphores(ctx context.Context, request
 	}
 }
 
+func (s *GrackleCoreApiMonsteraStub) ListSemaphoresByLeaseId(ctx context.Context, request *corepb.ListSemaphoresByLeaseIdRequest) (*corepb.ListSemaphoresByLeaseIdResponse, error) {
+	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_ListSemaphoresByLeaseIdRequest{ListSemaphoresByLeaseIdRequest: request}}
+	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
+	}
+
+	shardKey := s.shardKeyCalculator.ListSemaphoresByLeaseIdShardKey(request)
+
+	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", shardKey, false, requestBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	wrappedResponse := &monsterax.Response{}
+	coreResponse := &corepb.GrackleReadResponse{}
+	err = wrappedResponse.UnmarshalVT(responseBytes)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+	err = s.grackleReadResponseCodec.Decode(wrappedResponse.Data, coreResponse)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+
+	response, ok := coreResponse.Response.(*corepb.GrackleReadResponse_ListSemaphoresByLeaseIdResponse)
+	if ok {
+		return response.ListSemaphoresByLeaseIdResponse, nilifyIfEmpty(wrappedResponse.Error)
+	} else {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "invalid response type", map[string]string{"response": coreResponse.String()})
+	}
+}
+
 func (s *GrackleCoreApiMonsteraStub) ListSemaphoreHolders(ctx context.Context, request *corepb.ListSemaphoreHoldersRequest) (*corepb.ListSemaphoreHoldersResponse, error) {
 	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_ListSemaphoreHoldersRequest{ListSemaphoreHoldersRequest: request}}
 	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
@@ -428,6 +706,105 @@ func (s *GrackleCoreApiMonsteraStub) ListSemaphoreHolders(ctx context.Context, r
 	response, ok := coreResponse.Response.(*corepb.GrackleReadResponse_ListSemaphoreHoldersResponse)
 	if ok {
 		return response.ListSemaphoreHoldersResponse, nilifyIfEmpty(wrappedResponse.Error)
+	} else {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "invalid response type", map[string]string{"response": coreResponse.String()})
+	}
+}
+
+func (s *GrackleCoreApiMonsteraStub) ListSemaphoreLeases(ctx context.Context, request *corepb.ListSemaphoreLeasesRequest) (*corepb.ListSemaphoreLeasesResponse, error) {
+	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_ListSemaphoreLeasesRequest{ListSemaphoreLeasesRequest: request}}
+	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
+	}
+
+	shardKey := s.shardKeyCalculator.ListSemaphoreLeasesShardKey(request)
+
+	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", shardKey, false, requestBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	wrappedResponse := &monsterax.Response{}
+	coreResponse := &corepb.GrackleReadResponse{}
+	err = wrappedResponse.UnmarshalVT(responseBytes)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+	err = s.grackleReadResponseCodec.Decode(wrappedResponse.Data, coreResponse)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+
+	response, ok := coreResponse.Response.(*corepb.GrackleReadResponse_ListSemaphoreLeasesResponse)
+	if ok {
+		return response.ListSemaphoreLeasesResponse, nilifyIfEmpty(wrappedResponse.Error)
+	} else {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "invalid response type", map[string]string{"response": coreResponse.String()})
+	}
+}
+
+func (s *GrackleCoreApiMonsteraStub) ListSemaphoreLeasesByProcessId(ctx context.Context, request *corepb.ListSemaphoreLeasesByProcessIdRequest) (*corepb.ListSemaphoreLeasesByProcessIdResponse, error) {
+	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_ListSemaphoreLeasesByProcessIdRequest{ListSemaphoreLeasesByProcessIdRequest: request}}
+	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
+	}
+
+	shardKey := s.shardKeyCalculator.ListSemaphoreLeasesByProcessIdShardKey(request)
+
+	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", shardKey, false, requestBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	wrappedResponse := &monsterax.Response{}
+	coreResponse := &corepb.GrackleReadResponse{}
+	err = wrappedResponse.UnmarshalVT(responseBytes)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+	err = s.grackleReadResponseCodec.Decode(wrappedResponse.Data, coreResponse)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+
+	response, ok := coreResponse.Response.(*corepb.GrackleReadResponse_ListSemaphoreLeasesByProcessIdResponse)
+	if ok {
+		return response.ListSemaphoreLeasesByProcessIdResponse, nilifyIfEmpty(wrappedResponse.Error)
+	} else {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "invalid response type", map[string]string{"response": coreResponse.String()})
+	}
+}
+
+func (s *GrackleCoreApiMonsteraStub) GetSemaphoreLease(ctx context.Context, request *corepb.GetSemaphoreLeaseRequest) (*corepb.GetSemaphoreLeaseResponse, error) {
+	coreRequest := &corepb.GrackleReadRequest{Request: &corepb.GrackleReadRequest_GetSemaphoreLeaseRequest{GetSemaphoreLeaseRequest: request}}
+	requestBytes, err := s.grackleReadRequestCodec.Encode(coreRequest)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
+	}
+
+	shardKey := s.shardKeyCalculator.GetSemaphoreLeaseShardKey(request)
+
+	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", shardKey, false, requestBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	wrappedResponse := &monsterax.Response{}
+	coreResponse := &corepb.GrackleReadResponse{}
+	err = wrappedResponse.UnmarshalVT(responseBytes)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+	err = s.grackleReadResponseCodec.Decode(wrappedResponse.Data, coreResponse)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+
+	response, ok := coreResponse.Response.(*corepb.GrackleReadResponse_GetSemaphoreLeaseResponse)
+	if ok {
+		return response.GetSemaphoreLeaseResponse, nilifyIfEmpty(wrappedResponse.Error)
 	} else {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "invalid response type", map[string]string{"response": coreResponse.String()})
 	}
@@ -657,6 +1034,105 @@ func (s *GrackleCoreApiMonsteraStub) SemaphoresDeleteNamespace(ctx context.Conte
 	response, ok := coreResponse.Response.(*corepb.GrackleUpdateResponse_SemaphoresDeleteNamespaceResponse)
 	if ok {
 		return response.SemaphoresDeleteNamespaceResponse, nilifyIfEmpty(wrappedResponse.Error)
+	} else {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "invalid response type", map[string]string{"response": coreResponse.String()})
+	}
+}
+
+func (s *GrackleCoreApiMonsteraStub) CreateSemaphoreLease(ctx context.Context, request *corepb.CreateSemaphoreLeaseRequest) (*corepb.CreateSemaphoreLeaseResponse, error) {
+	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_CreateSemaphoreLeaseRequest{CreateSemaphoreLeaseRequest: request}}
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
+	}
+
+	shardKey := s.shardKeyCalculator.CreateSemaphoreLeaseShardKey(request)
+
+	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", shardKey, requestBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	wrappedResponse := &monsterax.Response{}
+	coreResponse := &corepb.GrackleUpdateResponse{}
+	err = wrappedResponse.UnmarshalVT(responseBytes)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+
+	response, ok := coreResponse.Response.(*corepb.GrackleUpdateResponse_CreateSemaphoreLeaseResponse)
+	if ok {
+		return response.CreateSemaphoreLeaseResponse, nilifyIfEmpty(wrappedResponse.Error)
+	} else {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "invalid response type", map[string]string{"response": coreResponse.String()})
+	}
+}
+
+func (s *GrackleCoreApiMonsteraStub) RevokeSemaphoreLease(ctx context.Context, request *corepb.RevokeSemaphoreLeaseRequest) (*corepb.RevokeSemaphoreLeaseResponse, error) {
+	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_RevokeSemaphoreLeaseRequest{RevokeSemaphoreLeaseRequest: request}}
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
+	}
+
+	shardKey := s.shardKeyCalculator.RevokeSemaphoreLeaseShardKey(request)
+
+	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", shardKey, requestBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	wrappedResponse := &monsterax.Response{}
+	coreResponse := &corepb.GrackleUpdateResponse{}
+	err = wrappedResponse.UnmarshalVT(responseBytes)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+
+	response, ok := coreResponse.Response.(*corepb.GrackleUpdateResponse_RevokeSemaphoreLeaseResponse)
+	if ok {
+		return response.RevokeSemaphoreLeaseResponse, nilifyIfEmpty(wrappedResponse.Error)
+	} else {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "invalid response type", map[string]string{"response": coreResponse.String()})
+	}
+}
+
+func (s *GrackleCoreApiMonsteraStub) RefreshSemaphoreLease(ctx context.Context, request *corepb.RefreshSemaphoreLeaseRequest) (*corepb.RefreshSemaphoreLeaseResponse, error) {
+	coreRequest := &corepb.GrackleUpdateRequest{Request: &corepb.GrackleUpdateRequest_RefreshSemaphoreLeaseRequest{RefreshSemaphoreLeaseRequest: request}}
+	requestBytes, err := s.grackleUpdateRequestCodec.Encode(coreRequest)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to marshal request", map[string]string{"error": err.Error()})
+	}
+
+	shardKey := s.shardKeyCalculator.RefreshSemaphoreLeaseShardKey(request)
+
+	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", shardKey, requestBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	wrappedResponse := &monsterax.Response{}
+	coreResponse := &corepb.GrackleUpdateResponse{}
+	err = wrappedResponse.UnmarshalVT(responseBytes)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+	err = s.grackleUpdateResponseCodec.Decode(wrappedResponse.Data, coreResponse)
+	if err != nil {
+		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "failed to unmarshal response", map[string]string{"error": err.Error()})
+	}
+
+	response, ok := coreResponse.Response.(*corepb.GrackleUpdateResponse_RefreshSemaphoreLeaseResponse)
+	if ok {
+		return response.RefreshSemaphoreLeaseResponse, nilifyIfEmpty(wrappedResponse.Error)
 	} else {
 		return nil, monsterax.NewErrorWithContext(monsterax.Internal, "invalid response type", map[string]string{"response": coreResponse.String()})
 	}
@@ -1614,6 +2090,66 @@ func (s *GrackleCoreApiNonclusteredStub) ListLocks(ctx context.Context, request 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
+func (s *GrackleCoreApiNonclusteredStub) ListLocksByLeaseId(ctx context.Context, request *corepb.ListLocksByLeaseIdRequest) (*corepb.ListLocksByLeaseIdResponse, error) {
+	shardKey := s.shardKeyCalculator.ListLocksByLeaseIdShardKey(request)
+
+	for _, adapter := range s.grackleLocksCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.RLock()
+			defer adapter.mu.RUnlock()
+
+			return adapter.core.ListLocksByLeaseId(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+}
+
+func (s *GrackleCoreApiNonclusteredStub) ListLockLeases(ctx context.Context, request *corepb.ListLockLeasesRequest) (*corepb.ListLockLeasesResponse, error) {
+	shardKey := s.shardKeyCalculator.ListLockLeasesShardKey(request)
+
+	for _, adapter := range s.grackleLocksCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.RLock()
+			defer adapter.mu.RUnlock()
+
+			return adapter.core.ListLockLeases(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+}
+
+func (s *GrackleCoreApiNonclusteredStub) ListLockLeasesByProcessId(ctx context.Context, request *corepb.ListLockLeasesByProcessIdRequest) (*corepb.ListLockLeasesByProcessIdResponse, error) {
+	shardKey := s.shardKeyCalculator.ListLockLeasesByProcessIdShardKey(request)
+
+	for _, adapter := range s.grackleLocksCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.RLock()
+			defer adapter.mu.RUnlock()
+
+			return adapter.core.ListLockLeasesByProcessId(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+}
+
+func (s *GrackleCoreApiNonclusteredStub) GetLockLease(ctx context.Context, request *corepb.GetLockLeaseRequest) (*corepb.GetLockLeaseResponse, error) {
+	shardKey := s.shardKeyCalculator.GetLockLeaseShardKey(request)
+
+	for _, adapter := range s.grackleLocksCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.RLock()
+			defer adapter.mu.RUnlock()
+
+			return adapter.core.GetLockLease(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+}
+
 func (s *GrackleCoreApiNonclusteredStub) AcquireLock(ctx context.Context, request *corepb.AcquireLockRequest) (*corepb.AcquireLockResponse, error) {
 	shardKey := s.shardKeyCalculator.AcquireLockShardKey(request)
 
@@ -1702,6 +2238,51 @@ func (s *GrackleCoreApiNonclusteredStub) LocksDeleteNamespace(ctx context.Contex
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
+func (s *GrackleCoreApiNonclusteredStub) CreateLockLease(ctx context.Context, request *corepb.CreateLockLeaseRequest) (*corepb.CreateLockLeaseResponse, error) {
+	shardKey := s.shardKeyCalculator.CreateLockLeaseShardKey(request)
+
+	for _, adapter := range s.grackleLocksCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.CreateLockLease(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+}
+
+func (s *GrackleCoreApiNonclusteredStub) RefreshLockLease(ctx context.Context, request *corepb.RefreshLockLeaseRequest) (*corepb.RefreshLockLeaseResponse, error) {
+	shardKey := s.shardKeyCalculator.RefreshLockLeaseShardKey(request)
+
+	for _, adapter := range s.grackleLocksCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.RefreshLockLease(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+}
+
+func (s *GrackleCoreApiNonclusteredStub) RevokeLockLease(ctx context.Context, request *corepb.RevokeLockLeaseRequest) (*corepb.RevokeLockLeaseResponse, error) {
+	shardKey := s.shardKeyCalculator.RevokeLockLeaseShardKey(request)
+
+	for _, adapter := range s.grackleLocksCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.RevokeLockLease(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+}
+
 func (s *GrackleCoreApiNonclusteredStub) GetSemaphore(ctx context.Context, request *corepb.GetSemaphoreRequest) (*corepb.GetSemaphoreResponse, error) {
 	shardKey := s.shardKeyCalculator.GetSemaphoreShardKey(request)
 
@@ -1747,6 +2328,21 @@ func (s *GrackleCoreApiNonclusteredStub) ListSemaphores(ctx context.Context, req
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
+func (s *GrackleCoreApiNonclusteredStub) ListSemaphoresByLeaseId(ctx context.Context, request *corepb.ListSemaphoresByLeaseIdRequest) (*corepb.ListSemaphoresByLeaseIdResponse, error) {
+	shardKey := s.shardKeyCalculator.ListSemaphoresByLeaseIdShardKey(request)
+
+	for _, adapter := range s.grackleSemaphoresCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.RLock()
+			defer adapter.mu.RUnlock()
+
+			return adapter.core.ListSemaphoresByLeaseId(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+}
+
 func (s *GrackleCoreApiNonclusteredStub) ListSemaphoreHolders(ctx context.Context, request *corepb.ListSemaphoreHoldersRequest) (*corepb.ListSemaphoreHoldersResponse, error) {
 	shardKey := s.shardKeyCalculator.ListSemaphoreHoldersShardKey(request)
 
@@ -1756,6 +2352,51 @@ func (s *GrackleCoreApiNonclusteredStub) ListSemaphoreHolders(ctx context.Contex
 			defer adapter.mu.RUnlock()
 
 			return adapter.core.ListSemaphoreHolders(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+}
+
+func (s *GrackleCoreApiNonclusteredStub) ListSemaphoreLeases(ctx context.Context, request *corepb.ListSemaphoreLeasesRequest) (*corepb.ListSemaphoreLeasesResponse, error) {
+	shardKey := s.shardKeyCalculator.ListSemaphoreLeasesShardKey(request)
+
+	for _, adapter := range s.grackleSemaphoresCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.RLock()
+			defer adapter.mu.RUnlock()
+
+			return adapter.core.ListSemaphoreLeases(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+}
+
+func (s *GrackleCoreApiNonclusteredStub) ListSemaphoreLeasesByProcessId(ctx context.Context, request *corepb.ListSemaphoreLeasesByProcessIdRequest) (*corepb.ListSemaphoreLeasesByProcessIdResponse, error) {
+	shardKey := s.shardKeyCalculator.ListSemaphoreLeasesByProcessIdShardKey(request)
+
+	for _, adapter := range s.grackleSemaphoresCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.RLock()
+			defer adapter.mu.RUnlock()
+
+			return adapter.core.ListSemaphoreLeasesByProcessId(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+}
+
+func (s *GrackleCoreApiNonclusteredStub) GetSemaphoreLease(ctx context.Context, request *corepb.GetSemaphoreLeaseRequest) (*corepb.GetSemaphoreLeaseResponse, error) {
+	shardKey := s.shardKeyCalculator.GetSemaphoreLeaseShardKey(request)
+
+	for _, adapter := range s.grackleSemaphoresCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.RLock()
+			defer adapter.mu.RUnlock()
+
+			return adapter.core.GetSemaphoreLease(request)
 		}
 	}
 
@@ -1859,6 +2500,51 @@ func (s *GrackleCoreApiNonclusteredStub) SemaphoresDeleteNamespace(ctx context.C
 			defer adapter.mu.Unlock()
 
 			return adapter.core.SemaphoresDeleteNamespace(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+}
+
+func (s *GrackleCoreApiNonclusteredStub) CreateSemaphoreLease(ctx context.Context, request *corepb.CreateSemaphoreLeaseRequest) (*corepb.CreateSemaphoreLeaseResponse, error) {
+	shardKey := s.shardKeyCalculator.CreateSemaphoreLeaseShardKey(request)
+
+	for _, adapter := range s.grackleSemaphoresCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.CreateSemaphoreLease(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+}
+
+func (s *GrackleCoreApiNonclusteredStub) RevokeSemaphoreLease(ctx context.Context, request *corepb.RevokeSemaphoreLeaseRequest) (*corepb.RevokeSemaphoreLeaseResponse, error) {
+	shardKey := s.shardKeyCalculator.RevokeSemaphoreLeaseShardKey(request)
+
+	for _, adapter := range s.grackleSemaphoresCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.RevokeSemaphoreLease(request)
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+}
+
+func (s *GrackleCoreApiNonclusteredStub) RefreshSemaphoreLease(ctx context.Context, request *corepb.RefreshSemaphoreLeaseRequest) (*corepb.RefreshSemaphoreLeaseResponse, error) {
+	shardKey := s.shardKeyCalculator.RefreshSemaphoreLeaseShardKey(request)
+
+	for _, adapter := range s.grackleSemaphoresCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.Lock()
+			defer adapter.mu.Unlock()
+
+			return adapter.core.RefreshSemaphoreLease(request)
 		}
 	}
 

@@ -2,7 +2,6 @@ package locks
 
 import (
 	"errors"
-	"strings"
 
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
@@ -32,7 +31,7 @@ type lockAncestorsTable struct {
 func newLockAncestorsTable(shardLowerBound []byte, shardUpperBound []byte) *lockAncestorsTable {
 	return &lockAncestorsTable{
 		table: monsterax.NewBinaryTable[*corepb.LockAncestor, corepb.LockAncestor](
-			tables.GrackleLocksAncestorsTableId,
+			tables.Grackle["Grackle.LocksCore.Ancestors.Table"].Bytes(),
 			shardLowerBound,
 			shardUpperBound,
 		),
@@ -88,18 +87,4 @@ func (t *lockAncestorsTable) tableSK(ancestorName string) []byte {
 	return utils.ConcatBytes(
 		ancestorName,
 	)
-}
-
-// lockAncestorNames returns the ancestor path prefixes for a hierarchical lock name.
-// For "a/b/c" it returns ["a", "a/b"]. For a flat name it returns nil.
-func lockAncestorNames(lockName string) []string {
-	parts := strings.Split(lockName, "/")
-	if len(parts) <= 1 {
-		return nil
-	}
-	ancestors := make([]string, 0, len(parts)-1)
-	for i := 1; i < len(parts); i++ {
-		ancestors = append(ancestors, strings.Join(parts[:i], "/"))
-	}
-	return ancestors
 }

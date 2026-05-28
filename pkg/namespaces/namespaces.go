@@ -34,12 +34,12 @@ type namespacesTable struct {
 func newNamespacesTable(shardLowerBound []byte, shardUpperBound []byte) *namespacesTable {
 	return &namespacesTable{
 		table: monsterax.NewBinaryTable[*corepb.Namespace, corepb.Namespace](
-			tables.GrackleNamespacesTableId,
+			tables.Grackle["Grackle.NamespacesCore.Namespaces.Table"].Bytes(),
 			shardLowerBound,
 			shardUpperBound,
 		),
 		namesIndex: monsterax.NewUint32Table(
-			tables.GrackleNamespacesNamesIndexId,
+			tables.Grackle["Grackle.NamespacesCore.Namespaces.NamesIndex"].Bytes(),
 			shardLowerBound,
 			shardUpperBound,
 		),

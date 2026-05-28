@@ -32,6 +32,18 @@ message ListSemaphoresResponse {
   PaginationToken previous_pagination_token = 3;
 }
 
+message ListSemaphoresByLeaseIdRequest {
+  LeaseId lease_id = 1;
+  PaginationToken pagination_token = 2;
+  int32 limit = 3;
+}
+
+message ListSemaphoresByLeaseIdResponse {
+  repeated Semaphore semaphores = 1;
+  PaginationToken next_pagination_token = 2;
+  PaginationToken previous_pagination_token = 3;
+}
+
 message GetSemaphoreRequest {
   SemaphoreId semaphore_id = 1;
   int64 now = 2;
@@ -54,10 +66,9 @@ message GetSemaphoreByNameResponse {
 message AcquireSemaphoreRequest {
   NamespaceId namespace_id = 1;
   string semaphore_name = 2;
-  string process_id = 3;
+  uint64 lease_id = 3;
   uint64 weight = 4;
-  int64 expires_at = 5;
-  int64 now = 6;
+  int64 now = 5;
 }
 
 message AcquireSemaphoreResponse {
@@ -68,7 +79,7 @@ message AcquireSemaphoreResponse {
 message ReleaseSemaphoreRequest {
   NamespaceId namespace_id = 1;
   string semaphore_name = 2;
-  string process_id = 3;
+  uint64 lease_id = 3;
   int64 now = 4;
 }
 
@@ -107,6 +118,66 @@ message ListSemaphoreHoldersResponse {
   PaginationToken next_pagination_token = 2;
   PaginationToken previous_pagination_token = 3;
 }
+
+message ListSemaphoreLeasesRequest {
+  NamespaceId namespace_id = 1;
+  PaginationToken pagination_token = 2;
+  int32 limit = 3;
+}
+
+message ListSemaphoreLeasesResponse {
+  repeated Lease leases = 1;
+  PaginationToken next_pagination_token = 2;
+  PaginationToken previous_pagination_token = 3;
+}
+
+message ListSemaphoreLeasesByProcessIdRequest {
+  NamespaceId namespace_id = 1;
+  string process_id = 2;
+  PaginationToken pagination_token = 3;
+  int32 limit = 4;
+}
+
+message ListSemaphoreLeasesByProcessIdResponse {
+  repeated Lease leases = 1;
+  PaginationToken next_pagination_token = 2;
+  PaginationToken previous_pagination_token = 3;
+}
+
+message GetSemaphoreLeaseRequest {
+  LeaseId lease_id = 1;
+}
+
+message GetSemaphoreLeaseResponse {
+  Lease lease = 1;
+}
+
+message CreateSemaphoreLeaseRequest {
+  LeaseId lease_id = 1;
+  string process_id = 2;
+  uint64 ttl_seconds = 3;
+  int64 now = 4;
+  int64 max_number_of_semaphore_leases = 5;
+}
+
+message CreateSemaphoreLeaseResponse {
+  Lease lease = 1;
+}
+
+message RevokeSemaphoreLeaseRequest {
+  LeaseId lease_id = 1;
+  int64 now = 2;
+}
+
+message RevokeSemaphoreLeaseResponse {}
+
+message RefreshSemaphoreLeaseRequest {
+  LeaseId lease_id = 1;
+  uint64 ttl_seconds = 2;
+  int64 now = 3;
+}
+
+message RefreshSemaphoreLeaseResponse {}
 
 message SemaphoresDeleteNamespaceRequest {
   uint64 record_id = 1;
@@ -148,7 +219,7 @@ message SemaphoreHolderId {
   uint64 account_id = 1;
   uint32 namespace_id = 2;
   uint64 semaphore_id = 3;
-  string process_id = 4;
+  uint64 lease_id = 4;
 }
 
 message SemaphoreId {
@@ -168,6 +239,7 @@ message SemaphoresGarbageCollectionRecord {
 message SemaphoresCounter {
   NamespaceId namespace_id = 1;
   int64 number_of_semaphores = 2;
+  int64 number_of_leases = 3;
 }
 
 message SemaphoresExpirationRecord {

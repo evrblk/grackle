@@ -36,12 +36,12 @@ type semaphoresTable struct {
 func newSemaphoresTable(shardLowerBound []byte, shardUpperBound []byte) *semaphoresTable {
 	return &semaphoresTable{
 		table: monsterax.NewBinaryTable[*corepb.Semaphore, corepb.Semaphore](
-			tables.GrackleSemaphoresTableId,
+			tables.Grackle["Grackle.SemaphoresCore.Semaphores.Table"].Bytes(),
 			shardLowerBound,
 			shardUpperBound,
 		),
 		namesIndex: monsterax.NewUint64Table(
-			tables.GrackleSemaphoresNamesIndexId,
+			tables.Grackle["Grackle.SemaphoresCore.Semaphores.NamesIndex"].Bytes(),
 			shardLowerBound,
 			shardUpperBound,
 		),

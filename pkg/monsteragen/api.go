@@ -11,17 +11,28 @@ import (
 
 type GrackleCoreApi interface {
 	ListLocks(ctx context.Context, request *corepb.ListLocksRequest) (*corepb.ListLocksResponse, error)
+	ListLocksByLeaseId(ctx context.Context, request *corepb.ListLocksByLeaseIdRequest) (*corepb.ListLocksByLeaseIdResponse, error)
+	ListLockLeases(ctx context.Context, request *corepb.ListLockLeasesRequest) (*corepb.ListLockLeasesResponse, error)
+	ListLockLeasesByProcessId(ctx context.Context, request *corepb.ListLockLeasesByProcessIdRequest) (*corepb.ListLockLeasesByProcessIdResponse, error)
+	GetLockLease(ctx context.Context, request *corepb.GetLockLeaseRequest) (*corepb.GetLockLeaseResponse, error)
 	AcquireLock(ctx context.Context, request *corepb.AcquireLockRequest) (*corepb.AcquireLockResponse, error)
 	ReleaseLock(ctx context.Context, request *corepb.ReleaseLockRequest) (*corepb.ReleaseLockResponse, error)
 	DeleteLock(ctx context.Context, request *corepb.DeleteLockRequest) (*corepb.DeleteLockResponse, error)
 	GetLock(ctx context.Context, request *corepb.GetLockRequest) (*corepb.GetLockResponse, error)
 	RunLocksGarbageCollection(ctx context.Context, request *corepb.RunLocksGarbageCollectionRequest, shardId string) (*corepb.RunLocksGarbageCollectionResponse, error)
 	LocksDeleteNamespace(ctx context.Context, request *corepb.LocksDeleteNamespaceRequest) (*corepb.LocksDeleteNamespaceResponse, error)
+	CreateLockLease(ctx context.Context, request *corepb.CreateLockLeaseRequest) (*corepb.CreateLockLeaseResponse, error)
+	RefreshLockLease(ctx context.Context, request *corepb.RefreshLockLeaseRequest) (*corepb.RefreshLockLeaseResponse, error)
+	RevokeLockLease(ctx context.Context, request *corepb.RevokeLockLeaseRequest) (*corepb.RevokeLockLeaseResponse, error)
 
 	GetSemaphore(ctx context.Context, request *corepb.GetSemaphoreRequest) (*corepb.GetSemaphoreResponse, error)
 	GetSemaphoreByName(ctx context.Context, request *corepb.GetSemaphoreByNameRequest) (*corepb.GetSemaphoreByNameResponse, error)
 	ListSemaphores(ctx context.Context, request *corepb.ListSemaphoresRequest) (*corepb.ListSemaphoresResponse, error)
+	ListSemaphoresByLeaseId(ctx context.Context, request *corepb.ListSemaphoresByLeaseIdRequest) (*corepb.ListSemaphoresByLeaseIdResponse, error)
 	ListSemaphoreHolders(ctx context.Context, request *corepb.ListSemaphoreHoldersRequest) (*corepb.ListSemaphoreHoldersResponse, error)
+	ListSemaphoreLeases(ctx context.Context, request *corepb.ListSemaphoreLeasesRequest) (*corepb.ListSemaphoreLeasesResponse, error)
+	ListSemaphoreLeasesByProcessId(ctx context.Context, request *corepb.ListSemaphoreLeasesByProcessIdRequest) (*corepb.ListSemaphoreLeasesByProcessIdResponse, error)
+	GetSemaphoreLease(ctx context.Context, request *corepb.GetSemaphoreLeaseRequest) (*corepb.GetSemaphoreLeaseResponse, error)
 	AcquireSemaphore(ctx context.Context, request *corepb.AcquireSemaphoreRequest) (*corepb.AcquireSemaphoreResponse, error)
 	ReleaseSemaphore(ctx context.Context, request *corepb.ReleaseSemaphoreRequest) (*corepb.ReleaseSemaphoreResponse, error)
 	CreateSemaphore(ctx context.Context, request *corepb.CreateSemaphoreRequest) (*corepb.CreateSemaphoreResponse, error)
@@ -29,6 +40,9 @@ type GrackleCoreApi interface {
 	DeleteSemaphore(ctx context.Context, request *corepb.DeleteSemaphoreRequest) (*corepb.DeleteSemaphoreResponse, error)
 	RunSemaphoresGarbageCollection(ctx context.Context, request *corepb.RunSemaphoresGarbageCollectionRequest, shardId string) (*corepb.RunSemaphoresGarbageCollectionResponse, error)
 	SemaphoresDeleteNamespace(ctx context.Context, request *corepb.SemaphoresDeleteNamespaceRequest) (*corepb.SemaphoresDeleteNamespaceResponse, error)
+	CreateSemaphoreLease(ctx context.Context, request *corepb.CreateSemaphoreLeaseRequest) (*corepb.CreateSemaphoreLeaseResponse, error)
+	RevokeSemaphoreLease(ctx context.Context, request *corepb.RevokeSemaphoreLeaseRequest) (*corepb.RevokeSemaphoreLeaseResponse, error)
+	RefreshSemaphoreLease(ctx context.Context, request *corepb.RefreshSemaphoreLeaseRequest) (*corepb.RefreshSemaphoreLeaseResponse, error)
 
 	GetNamespace(ctx context.Context, request *corepb.GetNamespaceRequest) (*corepb.GetNamespaceResponse, error)
 	GetNamespaceByName(ctx context.Context, request *corepb.GetNamespaceByNameRequest) (*corepb.GetNamespaceByNameResponse, error)
@@ -70,6 +84,22 @@ func (a *UnimplementedGrackleCoreApi) ListLocks(ctx context.Context, request *co
 	panic("not implemented")
 }
 
+func (a *UnimplementedGrackleCoreApi) ListLocksByLeaseId(ctx context.Context, request *corepb.ListLocksByLeaseIdRequest) (*corepb.ListLocksByLeaseIdResponse, error) {
+	panic("not implemented")
+}
+
+func (a *UnimplementedGrackleCoreApi) ListLockLeases(ctx context.Context, request *corepb.ListLockLeasesRequest) (*corepb.ListLockLeasesResponse, error) {
+	panic("not implemented")
+}
+
+func (a *UnimplementedGrackleCoreApi) ListLockLeasesByProcessId(ctx context.Context, request *corepb.ListLockLeasesByProcessIdRequest) (*corepb.ListLockLeasesByProcessIdResponse, error) {
+	panic("not implemented")
+}
+
+func (a *UnimplementedGrackleCoreApi) GetLockLease(ctx context.Context, request *corepb.GetLockLeaseRequest) (*corepb.GetLockLeaseResponse, error) {
+	panic("not implemented")
+}
+
 func (a *UnimplementedGrackleCoreApi) AcquireLock(ctx context.Context, request *corepb.AcquireLockRequest) (*corepb.AcquireLockResponse, error) {
 	panic("not implemented")
 }
@@ -94,6 +124,18 @@ func (a *UnimplementedGrackleCoreApi) LocksDeleteNamespace(ctx context.Context, 
 	panic("not implemented")
 }
 
+func (a *UnimplementedGrackleCoreApi) CreateLockLease(ctx context.Context, request *corepb.CreateLockLeaseRequest) (*corepb.CreateLockLeaseResponse, error) {
+	panic("not implemented")
+}
+
+func (a *UnimplementedGrackleCoreApi) RefreshLockLease(ctx context.Context, request *corepb.RefreshLockLeaseRequest) (*corepb.RefreshLockLeaseResponse, error) {
+	panic("not implemented")
+}
+
+func (a *UnimplementedGrackleCoreApi) RevokeLockLease(ctx context.Context, request *corepb.RevokeLockLeaseRequest) (*corepb.RevokeLockLeaseResponse, error) {
+	panic("not implemented")
+}
+
 func (a *UnimplementedGrackleCoreApi) GetSemaphore(ctx context.Context, request *corepb.GetSemaphoreRequest) (*corepb.GetSemaphoreResponse, error) {
 	panic("not implemented")
 }
@@ -106,7 +148,23 @@ func (a *UnimplementedGrackleCoreApi) ListSemaphores(ctx context.Context, reques
 	panic("not implemented")
 }
 
+func (a *UnimplementedGrackleCoreApi) ListSemaphoresByLeaseId(ctx context.Context, request *corepb.ListSemaphoresByLeaseIdRequest) (*corepb.ListSemaphoresByLeaseIdResponse, error) {
+	panic("not implemented")
+}
+
 func (a *UnimplementedGrackleCoreApi) ListSemaphoreHolders(ctx context.Context, request *corepb.ListSemaphoreHoldersRequest) (*corepb.ListSemaphoreHoldersResponse, error) {
+	panic("not implemented")
+}
+
+func (a *UnimplementedGrackleCoreApi) ListSemaphoreLeases(ctx context.Context, request *corepb.ListSemaphoreLeasesRequest) (*corepb.ListSemaphoreLeasesResponse, error) {
+	panic("not implemented")
+}
+
+func (a *UnimplementedGrackleCoreApi) ListSemaphoreLeasesByProcessId(ctx context.Context, request *corepb.ListSemaphoreLeasesByProcessIdRequest) (*corepb.ListSemaphoreLeasesByProcessIdResponse, error) {
+	panic("not implemented")
+}
+
+func (a *UnimplementedGrackleCoreApi) GetSemaphoreLease(ctx context.Context, request *corepb.GetSemaphoreLeaseRequest) (*corepb.GetSemaphoreLeaseResponse, error) {
 	panic("not implemented")
 }
 
@@ -135,6 +193,18 @@ func (a *UnimplementedGrackleCoreApi) RunSemaphoresGarbageCollection(ctx context
 }
 
 func (a *UnimplementedGrackleCoreApi) SemaphoresDeleteNamespace(ctx context.Context, request *corepb.SemaphoresDeleteNamespaceRequest) (*corepb.SemaphoresDeleteNamespaceResponse, error) {
+	panic("not implemented")
+}
+
+func (a *UnimplementedGrackleCoreApi) CreateSemaphoreLease(ctx context.Context, request *corepb.CreateSemaphoreLeaseRequest) (*corepb.CreateSemaphoreLeaseResponse, error) {
+	panic("not implemented")
+}
+
+func (a *UnimplementedGrackleCoreApi) RevokeSemaphoreLease(ctx context.Context, request *corepb.RevokeSemaphoreLeaseRequest) (*corepb.RevokeSemaphoreLeaseResponse, error) {
+	panic("not implemented")
+}
+
+func (a *UnimplementedGrackleCoreApi) RefreshSemaphoreLease(ctx context.Context, request *corepb.RefreshSemaphoreLeaseRequest) (*corepb.RefreshSemaphoreLeaseResponse, error) {
 	panic("not implemented")
 }
 
@@ -251,12 +321,19 @@ type GrackleLocksCoreApi interface {
 	Restore(reader io.ReadCloser) error
 	Close()
 	ListLocks(request *corepb.ListLocksRequest) (*corepb.ListLocksResponse, error)
+	ListLocksByLeaseId(request *corepb.ListLocksByLeaseIdRequest) (*corepb.ListLocksByLeaseIdResponse, error)
+	ListLockLeases(request *corepb.ListLockLeasesRequest) (*corepb.ListLockLeasesResponse, error)
+	ListLockLeasesByProcessId(request *corepb.ListLockLeasesByProcessIdRequest) (*corepb.ListLockLeasesByProcessIdResponse, error)
+	GetLockLease(request *corepb.GetLockLeaseRequest) (*corepb.GetLockLeaseResponse, error)
 	AcquireLock(request *corepb.AcquireLockRequest) (*corepb.AcquireLockResponse, error)
 	ReleaseLock(request *corepb.ReleaseLockRequest) (*corepb.ReleaseLockResponse, error)
 	DeleteLock(request *corepb.DeleteLockRequest) (*corepb.DeleteLockResponse, error)
 	GetLock(request *corepb.GetLockRequest) (*corepb.GetLockResponse, error)
 	RunLocksGarbageCollection(request *corepb.RunLocksGarbageCollectionRequest) (*corepb.RunLocksGarbageCollectionResponse, error)
 	LocksDeleteNamespace(request *corepb.LocksDeleteNamespaceRequest) (*corepb.LocksDeleteNamespaceResponse, error)
+	CreateLockLease(request *corepb.CreateLockLeaseRequest) (*corepb.CreateLockLeaseResponse, error)
+	RefreshLockLease(request *corepb.RefreshLockLeaseRequest) (*corepb.RefreshLockLeaseResponse, error)
+	RevokeLockLease(request *corepb.RevokeLockLeaseRequest) (*corepb.RevokeLockLeaseResponse, error)
 }
 
 type GrackleSemaphoresCoreApi interface {
@@ -266,7 +343,11 @@ type GrackleSemaphoresCoreApi interface {
 	GetSemaphore(request *corepb.GetSemaphoreRequest) (*corepb.GetSemaphoreResponse, error)
 	GetSemaphoreByName(request *corepb.GetSemaphoreByNameRequest) (*corepb.GetSemaphoreByNameResponse, error)
 	ListSemaphores(request *corepb.ListSemaphoresRequest) (*corepb.ListSemaphoresResponse, error)
+	ListSemaphoresByLeaseId(request *corepb.ListSemaphoresByLeaseIdRequest) (*corepb.ListSemaphoresByLeaseIdResponse, error)
 	ListSemaphoreHolders(request *corepb.ListSemaphoreHoldersRequest) (*corepb.ListSemaphoreHoldersResponse, error)
+	ListSemaphoreLeases(request *corepb.ListSemaphoreLeasesRequest) (*corepb.ListSemaphoreLeasesResponse, error)
+	ListSemaphoreLeasesByProcessId(request *corepb.ListSemaphoreLeasesByProcessIdRequest) (*corepb.ListSemaphoreLeasesByProcessIdResponse, error)
+	GetSemaphoreLease(request *corepb.GetSemaphoreLeaseRequest) (*corepb.GetSemaphoreLeaseResponse, error)
 	AcquireSemaphore(request *corepb.AcquireSemaphoreRequest) (*corepb.AcquireSemaphoreResponse, error)
 	ReleaseSemaphore(request *corepb.ReleaseSemaphoreRequest) (*corepb.ReleaseSemaphoreResponse, error)
 	CreateSemaphore(request *corepb.CreateSemaphoreRequest) (*corepb.CreateSemaphoreResponse, error)
@@ -274,6 +355,9 @@ type GrackleSemaphoresCoreApi interface {
 	DeleteSemaphore(request *corepb.DeleteSemaphoreRequest) (*corepb.DeleteSemaphoreResponse, error)
 	RunSemaphoresGarbageCollection(request *corepb.RunSemaphoresGarbageCollectionRequest) (*corepb.RunSemaphoresGarbageCollectionResponse, error)
 	SemaphoresDeleteNamespace(request *corepb.SemaphoresDeleteNamespaceRequest) (*corepb.SemaphoresDeleteNamespaceResponse, error)
+	CreateSemaphoreLease(request *corepb.CreateSemaphoreLeaseRequest) (*corepb.CreateSemaphoreLeaseResponse, error)
+	RevokeSemaphoreLease(request *corepb.RevokeSemaphoreLeaseRequest) (*corepb.RevokeSemaphoreLeaseResponse, error)
+	RefreshSemaphoreLease(request *corepb.RefreshSemaphoreLeaseRequest) (*corepb.RefreshSemaphoreLeaseResponse, error)
 }
 
 type GrackleNamespacesCoreApi interface {

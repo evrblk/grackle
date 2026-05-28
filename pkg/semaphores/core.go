@@ -11,10 +11,12 @@ import (
 	monsterax "github.com/evrblk/monstera/x"
 	"google.golang.org/protobuf/proto"
 
+	"github.com/evrblk/grackle/pkg/common"
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/ids"
 	"github.com/evrblk/grackle/pkg/monsteragen"
 	"github.com/evrblk/grackle/pkg/pagination"
+	"github.com/evrblk/grackle/pkg/tables"
 )
 
 type Core struct {
@@ -25,6 +27,7 @@ type Core struct {
 	counters          *countersTable
 	gcRecords         *gcRecordsTable
 	expirationRecords *expirationRecordsTable
+	leases            *common.LeasesTable
 }
 
 var _ monsteragen.GrackleSemaphoresCoreApi = &Core{}
@@ -38,6 +41,14 @@ func NewCore(badgerStore *store.BadgerStore, shardGlobalIndexPrefix []byte, shar
 		counters:          newCountersTable(shardLowerBound, shardUpperBound),
 		gcRecords:         newGCRecordsTable(shardGlobalIndexPrefix),
 		expirationRecords: newExpirationRecordsTable(shardGlobalIndexPrefix),
+		leases: common.NewLeasesTable(
+			shardLowerBound,
+			shardUpperBound,
+			shardGlobalIndexPrefix,
+			tables.Grackle["Grackle.SemaphoresCore.Leases.Table"].Bytes(),
+			tables.Grackle["Grackle.SemaphoresCore.Leases.ProcessIdIndex"].Bytes(),
+			tables.Grackle["Grackle.SemaphoresCore.Leases.ExpirationIndex"].Bytes(),
+		),
 	}
 }
 
@@ -50,6 +61,7 @@ func (c *Core) ranges() []monsterax.KeyRange {
 
 	ranges = append(ranges, c.semaphores.GetTableKeyRanges()...)
 	ranges = append(ranges, c.holders.GetTableKeyRanges()...)
+	ranges = append(ranges, c.leases.GetTableKeyRanges()...)
 
 	return ranges
 }
@@ -79,7 +91,9 @@ func (c *Core) CreateSemaphore(request *corepb.CreateSemaphoreRequest) (*corepb.
 		return nil, monsterax.NewErrorWithContext(
 			monsterax.ResourceExhausted,
 			"max number of semaphores per namespace reached",
-			map[string]string{"limit": fmt.Sprintf("%d", request.MaxNumberOfSemaphoresPerNamespace)})
+			map[string]string{
+				"limit": fmt.Sprintf("%d", request.MaxNumberOfSemaphoresPerNamespace),
+			})
 	}
 
 	semaphore := &corepb.Semaphore{
@@ -176,6 +190,12 @@ func (c *Core) DeleteSemaphore(request *corepb.DeleteSemaphoreRequest) (*corepb.
 	counters, err := c.counters.Get(txn, request.NamespaceId.AccountId, request.NamespaceId.NamespaceId)
 	panicIfNotNil(err)
 
+	// Remove semaphore from expirationRecords
+	if semaphore.EarliestHolderExpiresAt != 0 {
+		err = c.expirationRecords.Delete(txn, semaphore.EarliestHolderExpiresAt, semaphore.Id)
+		panicIfNotNil(err)
+	}
+
 	err = c.semaphores.Delete(txn, semaphore.Id)
 	panicIfNotNil(err)
 
@@ -213,7 +233,20 @@ func (c *Core) GetSemaphore(request *corepb.GetSemaphoreRequest) (*corepb.GetSem
 	// Check expired holders
 	updatedSemaphore := c.deleteExpiredSemaphoreholders(txn, semaphore, request.Now)
 
-	// TODO update expiration index
+	// Update expiration records if earliest expiration changed
+	if semaphore.EarliestHolderExpiresAt != updatedSemaphore.EarliestHolderExpiresAt {
+		// Remove semaphore from expirationRecords at old position
+		if semaphore.EarliestHolderExpiresAt != 0 {
+			err = c.expirationRecords.Delete(txn, semaphore.EarliestHolderExpiresAt, semaphore.Id)
+			panicIfNotNil(err)
+		}
+
+		// Add semaphore to expirationRecords at new position
+		if updatedSemaphore.EarliestHolderExpiresAt != 0 {
+			err = c.expirationRecords.Add(txn, updatedSemaphore.EarliestHolderExpiresAt, semaphore.Id)
+			panicIfNotNil(err)
+		}
+	}
 
 	err = c.semaphores.Update(txn, updatedSemaphore)
 	panicIfNotNil(err)
@@ -247,7 +280,20 @@ func (c *Core) GetSemaphoreByName(request *corepb.GetSemaphoreByNameRequest) (*c
 	// Check expired holders
 	updatedSemaphore := c.deleteExpiredSemaphoreholders(txn, semaphore, request.Now)
 
-	// TODO update expiration index
+	// Update expiration records if earliest expiration changed
+	if semaphore.EarliestHolderExpiresAt != updatedSemaphore.EarliestHolderExpiresAt {
+		// Remove semaphore from expirationRecords at old position
+		if semaphore.EarliestHolderExpiresAt != 0 {
+			err = c.expirationRecords.Delete(txn, semaphore.EarliestHolderExpiresAt, semaphore.Id)
+			panicIfNotNil(err)
+		}
+
+		// Add semaphore to expirationRecords at new position
+		if updatedSemaphore.EarliestHolderExpiresAt != 0 {
+			err = c.expirationRecords.Add(txn, updatedSemaphore.EarliestHolderExpiresAt, semaphore.Id)
+			panicIfNotNil(err)
+		}
+	}
 
 	err = c.semaphores.Update(txn, updatedSemaphore)
 	panicIfNotNil(err)
@@ -316,6 +362,34 @@ func (c *Core) AcquireSemaphore(request *corepb.AcquireSemaphoreRequest) (*corep
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
+	// Validate and get the lease
+	lease, err := c.leases.Get(txn, &corepb.LeaseId{
+		AccountId:   request.NamespaceId.AccountId,
+		NamespaceId: request.NamespaceId.NamespaceId,
+		LeaseId:     request.LeaseId,
+	})
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			return nil, monsterax.NewErrorWithContext(
+				monsterax.NotFound,
+				"lease not found",
+				map[string]string{
+					"lease_id": fmt.Sprintf("%d", request.LeaseId),
+				})
+		}
+		panic(err)
+	}
+
+	// Check if lease has expired
+	if lease.ExpiresAt <= request.Now {
+		return nil, monsterax.NewErrorWithContext(
+			monsterax.NotFound,
+			"lease not found",
+			map[string]string{
+				"lease_id": fmt.Sprintf("%d", request.LeaseId),
+			})
+	}
+
 	semaphore, err := c.semaphores.GetByName(txn, request.NamespaceId.AccountId, request.NamespaceId.NamespaceId, request.SemaphoreName)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
@@ -340,7 +414,7 @@ func (c *Core) AcquireSemaphore(request *corepb.AcquireSemaphoreRequest) (*corep
 		AccountId:   request.NamespaceId.AccountId,
 		NamespaceId: request.NamespaceId.NamespaceId,
 		SemaphoreId: semaphore.Id.SemaphoreId,
-		ProcessId:   request.ProcessId,
+		LeaseId:     lease.Id.LeaseId,
 	}
 	existingHolder, err := c.holders.Get(txn, holderId)
 	if err != nil {
@@ -350,7 +424,7 @@ func (c *Core) AcquireSemaphore(request *corepb.AcquireSemaphoreRequest) (*corep
 				// Add a new lock holder
 				newHolder := &corepb.SemaphoreHolder{
 					Id:        holderId,
-					ExpiresAt: request.ExpiresAt,
+					ExpiresAt: lease.ExpiresAt,
 					LockedAt:  request.Now,
 					Weight:    request.Weight,
 				}
@@ -361,7 +435,8 @@ func (c *Core) AcquireSemaphore(request *corepb.AcquireSemaphoreRequest) (*corep
 				updatedSemaphore.ActiveHoldersCount += 1
 				updatedSemaphore.ActiveHolds += request.Weight
 
-				if updatedSemaphore.EarliestHolderExpiresAt < newHolder.ExpiresAt {
+				// Update earliest expiration if this is the first holder or expires earlier
+				if updatedSemaphore.EarliestHolderExpiresAt == 0 || newHolder.ExpiresAt < updatedSemaphore.EarliestHolderExpiresAt {
 					updatedSemaphore.EarliestHolderExpiresAt = newHolder.ExpiresAt
 				}
 
@@ -374,10 +449,11 @@ func (c *Core) AcquireSemaphore(request *corepb.AcquireSemaphoreRequest) (*corep
 		// TODO check if weight changed?
 
 		// Update expiration time (extend lock)
-		existingHolder.ExpiresAt = request.ExpiresAt
+		existingHolder.ExpiresAt = lease.ExpiresAt
 		existingHolder.LockedAt = request.Now
 
-		if updatedSemaphore.EarliestHolderExpiresAt < existingHolder.ExpiresAt {
+		// Update earliest expiration if this holder expires earlier
+		if updatedSemaphore.EarliestHolderExpiresAt == 0 || existingHolder.ExpiresAt < updatedSemaphore.EarliestHolderExpiresAt {
 			updatedSemaphore.EarliestHolderExpiresAt = existingHolder.ExpiresAt
 		}
 
@@ -417,6 +493,24 @@ func (c *Core) ReleaseSemaphore(request *corepb.ReleaseSemaphoreRequest) (*corep
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
+	// Validate and get the lease
+	lease, err := c.leases.Get(txn, &corepb.LeaseId{
+		AccountId:   request.NamespaceId.AccountId,
+		NamespaceId: request.NamespaceId.NamespaceId,
+		LeaseId:     request.LeaseId,
+	})
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			return nil, monsterax.NewErrorWithContext(
+				monsterax.NotFound,
+				"lease not found",
+				map[string]string{
+					"lease_id": fmt.Sprintf("%d", request.LeaseId),
+				})
+		}
+		panic(err)
+	}
+
 	semaphore, err := c.semaphores.GetByName(txn, request.NamespaceId.AccountId, request.NamespaceId.NamespaceId, request.SemaphoreName)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
@@ -436,7 +530,7 @@ func (c *Core) ReleaseSemaphore(request *corepb.ReleaseSemaphoreRequest) (*corep
 		AccountId:   request.NamespaceId.AccountId,
 		NamespaceId: request.NamespaceId.NamespaceId,
 		SemaphoreId: semaphore.Id.SemaphoreId,
-		ProcessId:   request.ProcessId,
+		LeaseId:     lease.Id.LeaseId,
 	}
 	existingHolder, err := c.holders.Get(txn, holderId)
 	if err != nil {
@@ -543,24 +637,20 @@ func (c *Core) RunSemaphoresGarbageCollection(request *corepb.RunSemaphoresGarba
 			semaphore, err := c.semaphores.Get(txn, record.SemaphoreId)
 			panicIfNotNil(err)
 
+			// Remove a semaphore from expirationRecords at old position
+			// Always delete first to handle stale/duplicate expiration records
+			if semaphore.EarliestHolderExpiresAt != 0 {
+				err = c.expirationRecords.Delete(txn, semaphore.EarliestHolderExpiresAt, semaphore.Id)
+				panicIfNotNil(err)
+			}
+
 			updatedSemaphore := c.deleteExpiredSemaphoreholders(txn, semaphore, request.Now)
 
-			if semaphore.EarliestHolderExpiresAt != updatedSemaphore.EarliestHolderExpiresAt {
-				// Remove a semaphore from expirationRecords at old position
-				if semaphore.EarliestHolderExpiresAt != 0 {
-					err = c.expirationRecords.Delete(txn, semaphore.EarliestHolderExpiresAt, semaphore.Id)
-					panicIfNotNil(err)
-				}
-
-				// If semaphore still has holders it will have non zero expiration time
-				if updatedSemaphore.EarliestHolderExpiresAt != 0 {
-					// Add a semaphore into expirationRecords at new position
-					err = c.expirationRecords.Add(txn, updatedSemaphore.EarliestHolderExpiresAt, semaphore.Id)
-					panicIfNotNil(err)
-				}
-			} else {
-				// This should not happen
-				panic("oldExpiresAt == newExpiresAt")
+			// If semaphore still has holders it will have non zero expiration time
+			if updatedSemaphore.EarliestHolderExpiresAt != 0 {
+				// Add a semaphore into expirationRecords at new position
+				err = c.expirationRecords.Add(txn, updatedSemaphore.EarliestHolderExpiresAt, semaphore.Id)
+				panicIfNotNil(err)
 			}
 
 			err = c.semaphores.Update(txn, updatedSemaphore)
@@ -597,6 +687,153 @@ func (c *Core) SemaphoresDeleteNamespace(request *corepb.SemaphoresDeleteNamespa
 	panicIfNotNil(err)
 
 	return &corepb.SemaphoresDeleteNamespaceResponse{}, nil
+}
+
+func (c *Core) CreateSemaphoreLease(request *corepb.CreateSemaphoreLeaseRequest) (*corepb.CreateSemaphoreLeaseResponse, error) {
+	txn := c.badgerStore.Update()
+	defer txn.Discard()
+
+	// TODO: check max number of semaphore leases
+
+	// Calculate expiration time
+	expiresAt := request.Now + int64(request.TtlSeconds)*1e9
+
+	// Create the lease
+	lease := &corepb.Lease{
+		Id:        request.LeaseId,
+		ProcessId: request.ProcessId,
+		CreatedAt: request.Now,
+		ExpiresAt: expiresAt,
+	}
+
+	err := c.leases.Create(txn, lease)
+	panicIfNotNil(err)
+
+	// TODO: add to expiration index
+
+	err = txn.Commit()
+	panicIfNotNil(err)
+
+	return &corepb.CreateSemaphoreLeaseResponse{
+		Lease: lease,
+	}, nil
+}
+
+func (c *Core) GetSemaphoreLease(request *corepb.GetSemaphoreLeaseRequest) (*corepb.GetSemaphoreLeaseResponse, error) {
+	txn := c.badgerStore.View()
+	defer txn.Discard()
+
+	lease, err := c.leases.Get(txn, request.LeaseId)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			return nil, monsterax.NewErrorWithContext(
+				monsterax.NotFound,
+				"lease not found",
+				map[string]string{
+					"lease_id": ids.EncodeLeaseId(request.LeaseId),
+				})
+		}
+		panic(err)
+	}
+
+	return &corepb.GetSemaphoreLeaseResponse{
+		Lease: lease,
+	}, nil
+}
+
+func (c *Core) ListSemaphoreLeases(request *corepb.ListSemaphoreLeasesRequest) (*corepb.ListSemaphoreLeasesResponse, error) {
+	txn := c.badgerStore.View()
+	defer txn.Discard()
+
+	result, err := c.leases.List(txn, request.NamespaceId, request.PaginationToken, pagination.GetLimitWithDefaults(int(request.Limit)))
+	panicIfNotNil(err)
+
+	return &corepb.ListSemaphoreLeasesResponse{
+		Leases:                  result.Leases,
+		NextPaginationToken:     result.NextPaginationToken,
+		PreviousPaginationToken: result.PreviousPaginationToken,
+	}, nil
+}
+
+func (c *Core) RefreshSemaphoreLease(request *corepb.RefreshSemaphoreLeaseRequest) (*corepb.RefreshSemaphoreLeaseResponse, error) {
+	txn := c.badgerStore.Update()
+	defer txn.Discard()
+
+	// TODO: revoke if expired
+
+	lease, err := c.leases.Get(txn, request.LeaseId)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			return nil, monsterax.NewErrorWithContext(
+				monsterax.NotFound,
+				"lease not found",
+				map[string]string{
+					"lease_id": ids.EncodeLeaseId(request.LeaseId),
+				})
+		}
+		panic(err)
+	}
+
+	// Update the expiration time
+	lease.ExpiresAt = request.Now + int64(request.TtlSeconds)*1e9
+
+	// Save the updated lease
+	err = c.leases.Update(txn, lease)
+	panicIfNotNil(err)
+
+	err = txn.Commit()
+	panicIfNotNil(err)
+
+	return &corepb.RefreshSemaphoreLeaseResponse{}, nil
+}
+
+func (c *Core) RevokeSemaphoreLease(request *corepb.RevokeSemaphoreLeaseRequest) (*corepb.RevokeSemaphoreLeaseResponse, error) {
+	txn := c.badgerStore.Update()
+	defer txn.Discard()
+
+	// Check if the lease exists
+	lease, err := c.leases.Get(txn, request.LeaseId)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			// Lease doesn't exist, nothing to do
+			return &corepb.RevokeSemaphoreLeaseResponse{}, nil
+		}
+		panic(err)
+	}
+
+	// Delete the lease
+	err = c.leases.Delete(txn, lease)
+	panicIfNotNil(err)
+
+	// TODO: When lease-semaphore integration is added, release all semaphores attached to this lease here
+
+	err = txn.Commit()
+	panicIfNotNil(err)
+
+	return &corepb.RevokeSemaphoreLeaseResponse{}, nil
+}
+
+func (c *Core) ListSemaphoreLeasesByProcessId(request *corepb.ListSemaphoreLeasesByProcessIdRequest) (*corepb.ListSemaphoreLeasesByProcessIdResponse, error) {
+	txn := c.badgerStore.View()
+	defer txn.Discard()
+
+	result, err := c.leases.ListByProcessId(txn, request.NamespaceId, request.ProcessId, request.PaginationToken, pagination.GetLimitWithDefaults(int(request.Limit)))
+	panicIfNotNil(err)
+
+	return &corepb.ListSemaphoreLeasesByProcessIdResponse{
+		Leases:                  result.Leases,
+		NextPaginationToken:     result.NextPaginationToken,
+		PreviousPaginationToken: result.PreviousPaginationToken,
+	}, nil
+}
+
+func (c *Core) ListSemaphoresByLeaseId(request *corepb.ListSemaphoresByLeaseIdRequest) (*corepb.ListSemaphoresByLeaseIdResponse, error) {
+	// TODO: Implement when semaphore-lease integration is added
+	return &corepb.ListSemaphoresByLeaseIdResponse{
+		Semaphores:              []*corepb.Semaphore{},
+		NextPaginationToken:     nil,
+		PreviousPaginationToken: nil,
+	}, nil
 }
 
 // deleteExpiredSemaphoreholders ensures that the semaphore is still held at the moment `now`.

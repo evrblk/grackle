@@ -21,9 +21,11 @@ const (
 	maxPaginationTokenLength = 1024
 	maxPaginationLimit       = 100
 	maxTimeoutSeconds        = 300
+	maxLeaseIdLength         = 64
 
 	nameRegex     = "^[-_0-9a-zA-Z]*$"
 	lockNameRegex = "^[-_0-9a-zA-Z//]*$"
+	leaseIdRegex  = "^ls_[0-9a-zA-Z]+$"
 )
 
 func ValidateCreateNamespaceRequest(request *gracklepb.CreateNamespaceRequest) error {
@@ -256,7 +258,7 @@ func ValidateReleaseLockRequest(request *gracklepb.ReleaseLockRequest) error {
 		return err
 	}
 
-	if err := validateProcessId(request.ProcessId, "ReleaseLockRequest.ProcessId"); err != nil {
+	if err := validateLeaseId(request.LeaseId, "ReleaseLockRequest.LeaseId"); err != nil {
 		return err
 	}
 
@@ -272,12 +274,8 @@ func ValidateAcquireLockRequest(request *gracklepb.AcquireLockRequest) error {
 		return err
 	}
 
-	if err := validateProcessId(request.ProcessId, "AcquireLockRequest.ProcessId"); err != nil {
+	if err := validateLeaseId(request.LeaseId, "AcquireLockRequest.LeaseId"); err != nil {
 		return err
-	}
-
-	if request.ExpiresAt <= 0 {
-		return invalid("AcquireLockRequest.ExpiresAt", "ExpiresAt must be greater than zero")
 	}
 
 	return nil
@@ -320,7 +318,7 @@ func ValidateReleaseSemaphoreRequest(request *gracklepb.ReleaseSemaphoreRequest)
 		return err
 	}
 
-	if err := validateProcessId(request.ProcessId, "ReleaseSemaphoreRequest.ProcessId"); err != nil {
+	if err := validateLeaseId(request.LeaseId, "ReleaseSemaphoreRequest.LeaseId"); err != nil {
 		return err
 	}
 
@@ -400,12 +398,8 @@ func ValidateAcquireSemaphoreRequest(request *gracklepb.AcquireSemaphoreRequest)
 		return err
 	}
 
-	if err := validateProcessId(request.ProcessId, "AcquireSemaphoreRequest.ProcessId"); err != nil {
+	if err := validateLeaseId(request.LeaseId, "AcquireSemaphoreRequest.LeaseId"); err != nil {
 		return err
-	}
-
-	if request.ExpiresAt <= 0 {
-		return invalid("AcquireSemaphoreRequest.ExpiresAt", "ExpiresAt must be greater than zero")
 	}
 
 	return nil
@@ -559,6 +553,46 @@ func ValidateListBarrierParticipantsRequest(request *gracklepb.ListBarrierPartic
 	return nil
 }
 
+func ValidateCreateSemaphoreLeaseRequest(request *gracklepb.CreateSemaphoreLeaseRequest) error {
+
+}
+
+func ValidateRevokeSemaphoreLeaseRequest(request *gracklepb.RevokeSemaphoreLeaseRequest) error {
+
+}
+
+func ValidateRefreshSemaphoreLeaseRequest(request *gracklepb.RefreshSemaphoreLeaseRequest) error {
+
+}
+
+func ValidateListSemaphoreLeasesRequest(request *gracklepb.ListSemaphoreLeasesRequest) error {
+
+}
+
+func ValidateGetSemaphoreLeaseRequest(request *gracklepb.GetSemaphoreLeaseRequest) error {
+
+}
+
+func ValidateCreateLockLeaseRequest(request *gracklepb.CreateLockLeaseRequest) error {
+
+}
+
+func ValidateRevokeLockLeaseRequest(request *gracklepb.RevokeLockLeaseRequest) error {
+
+}
+
+func ValidateRefreshLockLeaseRequest(request *gracklepb.RefreshLockLeaseRequest) error {
+
+}
+
+func ValidateListLockLeasesRequest(request *gracklepb.ListLockLeasesRequest) error {
+
+}
+
+func ValidateGetLockLeaseRequest(request *gracklepb.GetLockLeaseRequest) error {
+
+}
+
 func validateProcessId(value string, fieldName string) error {
 	return validateString(value, 1, maxProcessIdLength, nameRegex, fieldName)
 }
@@ -581,6 +615,10 @@ func validateLockName(value string, fieldName string) error {
 
 func validateWaitGroupName(value string, fieldName string) error {
 	return validateString(value, 1, maxWaitGroupNameLength, nameRegex, fieldName)
+}
+
+func validateLeaseId(value string, fieldName string) error {
+	return validateString(value, 1, maxLeaseIdLength, leaseIdRegex, fieldName)
 }
 
 func validateDescription(value string, fieldName string) error {

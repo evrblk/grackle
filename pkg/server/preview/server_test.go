@@ -808,16 +808,14 @@ func TestAcquireLock(t *testing.T) {
 		_, err = server.AcquireLock(ctx, &gracklepb.AcquireLockRequest{
 			NamespaceName: "namespace1",
 			LockName:      "lock1",
-			ProcessId:     "proc1",
-			ExpiresAt:     time.Now().UnixNano(),
+			LeaseId:       "lease1",
 		})
 		require.NoError(t, err)
 
-		// invalid request - missing process id
+		// invalid request - missing lease id
 		_, err = server.AcquireLock(ctx, &gracklepb.AcquireLockRequest{
 			NamespaceName: "namespace1",
 			LockName:      "lock2",
-			ExpiresAt:     time.Now().UnixNano(),
 		})
 		require.Error(t, err)
 	})
@@ -838,11 +836,11 @@ func TestReleaseLock(t *testing.T) {
 		_, err = server.ReleaseLock(ctx, &gracklepb.ReleaseLockRequest{
 			NamespaceName: "namespace1",
 			LockName:      "lock1",
-			ProcessId:     "proc1",
+			LeaseId:       "lease1",
 		})
 		require.NoError(t, err)
 
-		// invalid request - missing process id
+		// invalid request - missing lease id
 		_, err = server.ReleaseLock(ctx, &gracklepb.ReleaseLockRequest{
 			NamespaceName: "namespace1",
 			LockName:      "lock1",
@@ -946,8 +944,7 @@ func TestListLocks(t *testing.T) {
 			_, err := server.AcquireLock(ctx, &gracklepb.AcquireLockRequest{
 				NamespaceName: "test-namespace",
 				LockName:      fmt.Sprintf("lock_%03d", i+1),
-				ProcessId:     fmt.Sprintf("process_%03d", i+1),
-				ExpiresAt:     time.Now().Add(10 * time.Minute).UnixNano(),
+				LeaseId:       fmt.Sprintf("lease_%03d", i+1),
 			})
 			require.NoError(t, err)
 		}
@@ -1126,9 +1123,8 @@ func TestAcquireSemaphore(t *testing.T) {
 		resp, err := server.AcquireSemaphore(ctx, &gracklepb.AcquireSemaphoreRequest{
 			NamespaceName: "namespace1",
 			SemaphoreName: "semaphore1",
-			ProcessId:     "proc1",
+			LeaseId:       "lease1",
 			Weight:        1,
-			ExpiresAt:     time.Now().UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp)
@@ -1138,7 +1134,6 @@ func TestAcquireSemaphore(t *testing.T) {
 			NamespaceName: "namespace1",
 			SemaphoreName: "semaphore1",
 			Weight:        1,
-			ExpiresAt:     time.Now().UnixNano(),
 		})
 		require.Error(t, err)
 	})
@@ -1166,7 +1161,7 @@ func TestReleaseSemaphore(t *testing.T) {
 		resp, err := server.ReleaseSemaphore(ctx, &gracklepb.ReleaseSemaphoreRequest{
 			NamespaceName: "namespace1",
 			SemaphoreName: "semaphore1",
-			ProcessId:     "proc1",
+			LeaseId:       "lease1",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp)
@@ -1450,8 +1445,7 @@ func TestListSemaphoreHolders(t *testing.T) {
 			_, err := server.AcquireSemaphore(ctx, &gracklepb.AcquireSemaphoreRequest{
 				NamespaceName: "test-namespace",
 				SemaphoreName: "test-semaphore",
-				ProcessId:     fmt.Sprintf("process_%03d", i+1),
-				ExpiresAt:     time.Now().Add(10 * time.Minute).UnixNano(),
+				LeaseId:       fmt.Sprintf("lease_%03d", i+1),
 				Weight:        1,
 			})
 			require.NoError(t, err)

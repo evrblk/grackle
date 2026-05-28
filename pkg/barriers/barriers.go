@@ -35,8 +35,16 @@ type barriersTable struct {
 
 func newBarriersTable(shardLowerBound []byte, shardUpperBound []byte) *barriersTable {
 	return &barriersTable{
-		table:      monsterax.NewBinaryTable[*corepb.Barrier, corepb.Barrier](tables.GrackleBarriersTableId, shardLowerBound, shardUpperBound),
-		namesIndex: monsterax.NewUint64Table(tables.GrackleBarriersNamesIndexId, shardLowerBound, shardUpperBound),
+		table: monsterax.NewBinaryTable[*corepb.Barrier, corepb.Barrier](
+			tables.Grackle["Grackle.BarriersCore.Barriers.Table"].Bytes(),
+			shardLowerBound,
+			shardUpperBound,
+		),
+		namesIndex: monsterax.NewUint64Table(
+			tables.Grackle["Grackle.BarriersCore.Barriers.NamesIndex"].Bytes(),
+			shardLowerBound,
+			shardUpperBound,
+		),
 	}
 }
 

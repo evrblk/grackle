@@ -28,7 +28,11 @@ type GrackleReadRequest struct {
 	//	*GrackleReadRequest_GetSemaphoreRequest
 	//	*GrackleReadRequest_GetSemaphoreByNameRequest
 	//	*GrackleReadRequest_ListSemaphoresRequest
+	//	*GrackleReadRequest_ListSemaphoresByLeaseIdRequest
 	//	*GrackleReadRequest_ListSemaphoreHoldersRequest
+	//	*GrackleReadRequest_ListSemaphoreLeasesRequest
+	//	*GrackleReadRequest_ListSemaphoreLeasesByProcessIdRequest
+	//	*GrackleReadRequest_GetSemaphoreLeaseRequest
 	//	*GrackleReadRequest_GetWaitGroupRequest
 	//	*GrackleReadRequest_GetWaitGroupByNameRequest
 	//	*GrackleReadRequest_ListWaitGroupsRequest
@@ -37,6 +41,10 @@ type GrackleReadRequest struct {
 	//	*GrackleReadRequest_GetNamespaceByNameRequest
 	//	*GrackleReadRequest_ListNamespacesRequest
 	//	*GrackleReadRequest_ListLocksRequest
+	//	*GrackleReadRequest_ListLocksByLeaseIdRequest
+	//	*GrackleReadRequest_GetLockLeaseRequest
+	//	*GrackleReadRequest_ListLockLeasesRequest
+	//	*GrackleReadRequest_ListLockLeasesByProcessIdRequest
 	//	*GrackleReadRequest_GetBarrierRequest
 	//	*GrackleReadRequest_GetBarrierByNameRequest
 	//	*GrackleReadRequest_ListBarriersRequest
@@ -110,10 +118,46 @@ func (x *GrackleReadRequest) GetListSemaphoresRequest() *ListSemaphoresRequest {
 	return nil
 }
 
+func (x *GrackleReadRequest) GetListSemaphoresByLeaseIdRequest() *ListSemaphoresByLeaseIdRequest {
+	if x != nil {
+		if x, ok := x.Request.(*GrackleReadRequest_ListSemaphoresByLeaseIdRequest); ok {
+			return x.ListSemaphoresByLeaseIdRequest
+		}
+	}
+	return nil
+}
+
 func (x *GrackleReadRequest) GetListSemaphoreHoldersRequest() *ListSemaphoreHoldersRequest {
 	if x != nil {
 		if x, ok := x.Request.(*GrackleReadRequest_ListSemaphoreHoldersRequest); ok {
 			return x.ListSemaphoreHoldersRequest
+		}
+	}
+	return nil
+}
+
+func (x *GrackleReadRequest) GetListSemaphoreLeasesRequest() *ListSemaphoreLeasesRequest {
+	if x != nil {
+		if x, ok := x.Request.(*GrackleReadRequest_ListSemaphoreLeasesRequest); ok {
+			return x.ListSemaphoreLeasesRequest
+		}
+	}
+	return nil
+}
+
+func (x *GrackleReadRequest) GetListSemaphoreLeasesByProcessIdRequest() *ListSemaphoreLeasesByProcessIdRequest {
+	if x != nil {
+		if x, ok := x.Request.(*GrackleReadRequest_ListSemaphoreLeasesByProcessIdRequest); ok {
+			return x.ListSemaphoreLeasesByProcessIdRequest
+		}
+	}
+	return nil
+}
+
+func (x *GrackleReadRequest) GetGetSemaphoreLeaseRequest() *GetSemaphoreLeaseRequest {
+	if x != nil {
+		if x, ok := x.Request.(*GrackleReadRequest_GetSemaphoreLeaseRequest); ok {
+			return x.GetSemaphoreLeaseRequest
 		}
 	}
 	return nil
@@ -191,6 +235,42 @@ func (x *GrackleReadRequest) GetListLocksRequest() *ListLocksRequest {
 	return nil
 }
 
+func (x *GrackleReadRequest) GetListLocksByLeaseIdRequest() *ListLocksByLeaseIdRequest {
+	if x != nil {
+		if x, ok := x.Request.(*GrackleReadRequest_ListLocksByLeaseIdRequest); ok {
+			return x.ListLocksByLeaseIdRequest
+		}
+	}
+	return nil
+}
+
+func (x *GrackleReadRequest) GetGetLockLeaseRequest() *GetLockLeaseRequest {
+	if x != nil {
+		if x, ok := x.Request.(*GrackleReadRequest_GetLockLeaseRequest); ok {
+			return x.GetLockLeaseRequest
+		}
+	}
+	return nil
+}
+
+func (x *GrackleReadRequest) GetListLockLeasesRequest() *ListLockLeasesRequest {
+	if x != nil {
+		if x, ok := x.Request.(*GrackleReadRequest_ListLockLeasesRequest); ok {
+			return x.ListLockLeasesRequest
+		}
+	}
+	return nil
+}
+
+func (x *GrackleReadRequest) GetListLockLeasesByProcessIdRequest() *ListLockLeasesByProcessIdRequest {
+	if x != nil {
+		if x, ok := x.Request.(*GrackleReadRequest_ListLockLeasesByProcessIdRequest); ok {
+			return x.ListLockLeasesByProcessIdRequest
+		}
+	}
+	return nil
+}
+
 func (x *GrackleReadRequest) GetGetBarrierRequest() *GetBarrierRequest {
 	if x != nil {
 		if x, ok := x.Request.(*GrackleReadRequest_GetBarrierRequest); ok {
@@ -243,56 +323,88 @@ type GrackleReadRequest_ListSemaphoresRequest struct {
 	ListSemaphoresRequest *ListSemaphoresRequest `protobuf:"bytes,3,opt,name=list_semaphores_request,json=listSemaphoresRequest,proto3,oneof"`
 }
 
+type GrackleReadRequest_ListSemaphoresByLeaseIdRequest struct {
+	ListSemaphoresByLeaseIdRequest *ListSemaphoresByLeaseIdRequest `protobuf:"bytes,4,opt,name=list_semaphores_by_lease_id_request,json=listSemaphoresByLeaseIdRequest,proto3,oneof"`
+}
+
 type GrackleReadRequest_ListSemaphoreHoldersRequest struct {
-	ListSemaphoreHoldersRequest *ListSemaphoreHoldersRequest `protobuf:"bytes,4,opt,name=list_semaphore_holders_request,json=listSemaphoreHoldersRequest,proto3,oneof"`
+	ListSemaphoreHoldersRequest *ListSemaphoreHoldersRequest `protobuf:"bytes,5,opt,name=list_semaphore_holders_request,json=listSemaphoreHoldersRequest,proto3,oneof"`
+}
+
+type GrackleReadRequest_ListSemaphoreLeasesRequest struct {
+	ListSemaphoreLeasesRequest *ListSemaphoreLeasesRequest `protobuf:"bytes,6,opt,name=list_semaphore_leases_request,json=listSemaphoreLeasesRequest,proto3,oneof"`
+}
+
+type GrackleReadRequest_ListSemaphoreLeasesByProcessIdRequest struct {
+	ListSemaphoreLeasesByProcessIdRequest *ListSemaphoreLeasesByProcessIdRequest `protobuf:"bytes,7,opt,name=list_semaphore_leases_by_process_id_request,json=listSemaphoreLeasesByProcessIdRequest,proto3,oneof"`
+}
+
+type GrackleReadRequest_GetSemaphoreLeaseRequest struct {
+	GetSemaphoreLeaseRequest *GetSemaphoreLeaseRequest `protobuf:"bytes,8,opt,name=get_semaphore_lease_request,json=getSemaphoreLeaseRequest,proto3,oneof"`
 }
 
 type GrackleReadRequest_GetWaitGroupRequest struct {
-	GetWaitGroupRequest *GetWaitGroupRequest `protobuf:"bytes,5,opt,name=get_wait_group_request,json=getWaitGroupRequest,proto3,oneof"`
+	GetWaitGroupRequest *GetWaitGroupRequest `protobuf:"bytes,9,opt,name=get_wait_group_request,json=getWaitGroupRequest,proto3,oneof"`
 }
 
 type GrackleReadRequest_GetWaitGroupByNameRequest struct {
-	GetWaitGroupByNameRequest *GetWaitGroupByNameRequest `protobuf:"bytes,6,opt,name=get_wait_group_by_name_request,json=getWaitGroupByNameRequest,proto3,oneof"`
+	GetWaitGroupByNameRequest *GetWaitGroupByNameRequest `protobuf:"bytes,10,opt,name=get_wait_group_by_name_request,json=getWaitGroupByNameRequest,proto3,oneof"`
 }
 
 type GrackleReadRequest_ListWaitGroupsRequest struct {
-	ListWaitGroupsRequest *ListWaitGroupsRequest `protobuf:"bytes,7,opt,name=list_wait_groups_request,json=listWaitGroupsRequest,proto3,oneof"`
+	ListWaitGroupsRequest *ListWaitGroupsRequest `protobuf:"bytes,11,opt,name=list_wait_groups_request,json=listWaitGroupsRequest,proto3,oneof"`
 }
 
 type GrackleReadRequest_ListWaitGroupJobsRequest struct {
-	ListWaitGroupJobsRequest *ListWaitGroupJobsRequest `protobuf:"bytes,8,opt,name=list_wait_group_jobs_request,json=listWaitGroupJobsRequest,proto3,oneof"`
+	ListWaitGroupJobsRequest *ListWaitGroupJobsRequest `protobuf:"bytes,12,opt,name=list_wait_group_jobs_request,json=listWaitGroupJobsRequest,proto3,oneof"`
 }
 
 type GrackleReadRequest_GetNamespaceRequest struct {
-	GetNamespaceRequest *GetNamespaceRequest `protobuf:"bytes,9,opt,name=get_namespace_request,json=getNamespaceRequest,proto3,oneof"`
+	GetNamespaceRequest *GetNamespaceRequest `protobuf:"bytes,13,opt,name=get_namespace_request,json=getNamespaceRequest,proto3,oneof"`
 }
 
 type GrackleReadRequest_GetNamespaceByNameRequest struct {
-	GetNamespaceByNameRequest *GetNamespaceByNameRequest `protobuf:"bytes,10,opt,name=get_namespace_by_name_request,json=getNamespaceByNameRequest,proto3,oneof"`
+	GetNamespaceByNameRequest *GetNamespaceByNameRequest `protobuf:"bytes,14,opt,name=get_namespace_by_name_request,json=getNamespaceByNameRequest,proto3,oneof"`
 }
 
 type GrackleReadRequest_ListNamespacesRequest struct {
-	ListNamespacesRequest *ListNamespacesRequest `protobuf:"bytes,11,opt,name=list_namespaces_request,json=listNamespacesRequest,proto3,oneof"`
+	ListNamespacesRequest *ListNamespacesRequest `protobuf:"bytes,15,opt,name=list_namespaces_request,json=listNamespacesRequest,proto3,oneof"`
 }
 
 type GrackleReadRequest_ListLocksRequest struct {
-	ListLocksRequest *ListLocksRequest `protobuf:"bytes,12,opt,name=list_locks_request,json=listLocksRequest,proto3,oneof"`
+	ListLocksRequest *ListLocksRequest `protobuf:"bytes,16,opt,name=list_locks_request,json=listLocksRequest,proto3,oneof"`
+}
+
+type GrackleReadRequest_ListLocksByLeaseIdRequest struct {
+	ListLocksByLeaseIdRequest *ListLocksByLeaseIdRequest `protobuf:"bytes,17,opt,name=list_locks_by_lease_id_request,json=listLocksByLeaseIdRequest,proto3,oneof"`
+}
+
+type GrackleReadRequest_GetLockLeaseRequest struct {
+	GetLockLeaseRequest *GetLockLeaseRequest `protobuf:"bytes,18,opt,name=get_lock_lease_request,json=getLockLeaseRequest,proto3,oneof"`
+}
+
+type GrackleReadRequest_ListLockLeasesRequest struct {
+	ListLockLeasesRequest *ListLockLeasesRequest `protobuf:"bytes,19,opt,name=list_lock_leases_request,json=listLockLeasesRequest,proto3,oneof"`
+}
+
+type GrackleReadRequest_ListLockLeasesByProcessIdRequest struct {
+	ListLockLeasesByProcessIdRequest *ListLockLeasesByProcessIdRequest `protobuf:"bytes,20,opt,name=list_lock_leases_by_process_id_request,json=listLockLeasesByProcessIdRequest,proto3,oneof"`
 }
 
 type GrackleReadRequest_GetBarrierRequest struct {
-	GetBarrierRequest *GetBarrierRequest `protobuf:"bytes,13,opt,name=get_barrier_request,json=getBarrierRequest,proto3,oneof"`
+	GetBarrierRequest *GetBarrierRequest `protobuf:"bytes,21,opt,name=get_barrier_request,json=getBarrierRequest,proto3,oneof"`
 }
 
 type GrackleReadRequest_GetBarrierByNameRequest struct {
-	GetBarrierByNameRequest *GetBarrierByNameRequest `protobuf:"bytes,14,opt,name=get_barrier_by_name_request,json=getBarrierByNameRequest,proto3,oneof"`
+	GetBarrierByNameRequest *GetBarrierByNameRequest `protobuf:"bytes,22,opt,name=get_barrier_by_name_request,json=getBarrierByNameRequest,proto3,oneof"`
 }
 
 type GrackleReadRequest_ListBarriersRequest struct {
-	ListBarriersRequest *ListBarriersRequest `protobuf:"bytes,15,opt,name=list_barriers_request,json=listBarriersRequest,proto3,oneof"`
+	ListBarriersRequest *ListBarriersRequest `protobuf:"bytes,23,opt,name=list_barriers_request,json=listBarriersRequest,proto3,oneof"`
 }
 
 type GrackleReadRequest_ListBarrierParticipantsRequest struct {
-	ListBarrierParticipantsRequest *ListBarrierParticipantsRequest `protobuf:"bytes,16,opt,name=list_barrier_participants_request,json=listBarrierParticipantsRequest,proto3,oneof"`
+	ListBarrierParticipantsRequest *ListBarrierParticipantsRequest `protobuf:"bytes,24,opt,name=list_barrier_participants_request,json=listBarrierParticipantsRequest,proto3,oneof"`
 }
 
 func (*GrackleReadRequest_GetSemaphoreRequest) isGrackleReadRequest_Request() {}
@@ -301,7 +413,15 @@ func (*GrackleReadRequest_GetSemaphoreByNameRequest) isGrackleReadRequest_Reques
 
 func (*GrackleReadRequest_ListSemaphoresRequest) isGrackleReadRequest_Request() {}
 
+func (*GrackleReadRequest_ListSemaphoresByLeaseIdRequest) isGrackleReadRequest_Request() {}
+
 func (*GrackleReadRequest_ListSemaphoreHoldersRequest) isGrackleReadRequest_Request() {}
+
+func (*GrackleReadRequest_ListSemaphoreLeasesRequest) isGrackleReadRequest_Request() {}
+
+func (*GrackleReadRequest_ListSemaphoreLeasesByProcessIdRequest) isGrackleReadRequest_Request() {}
+
+func (*GrackleReadRequest_GetSemaphoreLeaseRequest) isGrackleReadRequest_Request() {}
 
 func (*GrackleReadRequest_GetWaitGroupRequest) isGrackleReadRequest_Request() {}
 
@@ -319,6 +439,14 @@ func (*GrackleReadRequest_ListNamespacesRequest) isGrackleReadRequest_Request() 
 
 func (*GrackleReadRequest_ListLocksRequest) isGrackleReadRequest_Request() {}
 
+func (*GrackleReadRequest_ListLocksByLeaseIdRequest) isGrackleReadRequest_Request() {}
+
+func (*GrackleReadRequest_GetLockLeaseRequest) isGrackleReadRequest_Request() {}
+
+func (*GrackleReadRequest_ListLockLeasesRequest) isGrackleReadRequest_Request() {}
+
+func (*GrackleReadRequest_ListLockLeasesByProcessIdRequest) isGrackleReadRequest_Request() {}
+
 func (*GrackleReadRequest_GetBarrierRequest) isGrackleReadRequest_Request() {}
 
 func (*GrackleReadRequest_GetBarrierByNameRequest) isGrackleReadRequest_Request() {}
@@ -334,7 +462,11 @@ type GrackleReadResponse struct {
 	//	*GrackleReadResponse_GetSemaphoreResponse
 	//	*GrackleReadResponse_GetSemaphoreByNameResponse
 	//	*GrackleReadResponse_ListSemaphoresResponse
+	//	*GrackleReadResponse_ListSemaphoresByLeaseIdResponse
 	//	*GrackleReadResponse_ListSemaphoreHoldersResponse
+	//	*GrackleReadResponse_ListSemaphoreLeasesResponse
+	//	*GrackleReadResponse_GetSemaphoreLeaseResponse
+	//	*GrackleReadResponse_ListSemaphoreLeasesByProcessIdResponse
 	//	*GrackleReadResponse_GetWaitGroupResponse
 	//	*GrackleReadResponse_GetWaitGroupByNameResponse
 	//	*GrackleReadResponse_ListWaitGroupsResponse
@@ -343,6 +475,10 @@ type GrackleReadResponse struct {
 	//	*GrackleReadResponse_GetNamespaceByNameResponse
 	//	*GrackleReadResponse_ListNamespacesResponse
 	//	*GrackleReadResponse_ListLocksResponse
+	//	*GrackleReadResponse_ListLocksByLeaseIdResponse
+	//	*GrackleReadResponse_GetLockLeaseResponse
+	//	*GrackleReadResponse_ListLockLeasesResponse
+	//	*GrackleReadResponse_ListLockLeasesByProcessIdResponse
 	//	*GrackleReadResponse_GetBarrierResponse
 	//	*GrackleReadResponse_GetBarrierByNameResponse
 	//	*GrackleReadResponse_ListBarriersResponse
@@ -416,10 +552,46 @@ func (x *GrackleReadResponse) GetListSemaphoresResponse() *ListSemaphoresRespons
 	return nil
 }
 
+func (x *GrackleReadResponse) GetListSemaphoresByLeaseIdResponse() *ListSemaphoresByLeaseIdResponse {
+	if x != nil {
+		if x, ok := x.Response.(*GrackleReadResponse_ListSemaphoresByLeaseIdResponse); ok {
+			return x.ListSemaphoresByLeaseIdResponse
+		}
+	}
+	return nil
+}
+
 func (x *GrackleReadResponse) GetListSemaphoreHoldersResponse() *ListSemaphoreHoldersResponse {
 	if x != nil {
 		if x, ok := x.Response.(*GrackleReadResponse_ListSemaphoreHoldersResponse); ok {
 			return x.ListSemaphoreHoldersResponse
+		}
+	}
+	return nil
+}
+
+func (x *GrackleReadResponse) GetListSemaphoreLeasesResponse() *ListSemaphoreLeasesResponse {
+	if x != nil {
+		if x, ok := x.Response.(*GrackleReadResponse_ListSemaphoreLeasesResponse); ok {
+			return x.ListSemaphoreLeasesResponse
+		}
+	}
+	return nil
+}
+
+func (x *GrackleReadResponse) GetGetSemaphoreLeaseResponse() *GetSemaphoreLeaseResponse {
+	if x != nil {
+		if x, ok := x.Response.(*GrackleReadResponse_GetSemaphoreLeaseResponse); ok {
+			return x.GetSemaphoreLeaseResponse
+		}
+	}
+	return nil
+}
+
+func (x *GrackleReadResponse) GetListSemaphoreLeasesByProcessIdResponse() *ListSemaphoreLeasesByProcessIdResponse {
+	if x != nil {
+		if x, ok := x.Response.(*GrackleReadResponse_ListSemaphoreLeasesByProcessIdResponse); ok {
+			return x.ListSemaphoreLeasesByProcessIdResponse
 		}
 	}
 	return nil
@@ -497,6 +669,42 @@ func (x *GrackleReadResponse) GetListLocksResponse() *ListLocksResponse {
 	return nil
 }
 
+func (x *GrackleReadResponse) GetListLocksByLeaseIdResponse() *ListLocksByLeaseIdResponse {
+	if x != nil {
+		if x, ok := x.Response.(*GrackleReadResponse_ListLocksByLeaseIdResponse); ok {
+			return x.ListLocksByLeaseIdResponse
+		}
+	}
+	return nil
+}
+
+func (x *GrackleReadResponse) GetGetLockLeaseResponse() *GetLockLeaseResponse {
+	if x != nil {
+		if x, ok := x.Response.(*GrackleReadResponse_GetLockLeaseResponse); ok {
+			return x.GetLockLeaseResponse
+		}
+	}
+	return nil
+}
+
+func (x *GrackleReadResponse) GetListLockLeasesResponse() *ListLockLeasesResponse {
+	if x != nil {
+		if x, ok := x.Response.(*GrackleReadResponse_ListLockLeasesResponse); ok {
+			return x.ListLockLeasesResponse
+		}
+	}
+	return nil
+}
+
+func (x *GrackleReadResponse) GetListLockLeasesByProcessIdResponse() *ListLockLeasesByProcessIdResponse {
+	if x != nil {
+		if x, ok := x.Response.(*GrackleReadResponse_ListLockLeasesByProcessIdResponse); ok {
+			return x.ListLockLeasesByProcessIdResponse
+		}
+	}
+	return nil
+}
+
 func (x *GrackleReadResponse) GetGetBarrierResponse() *GetBarrierResponse {
 	if x != nil {
 		if x, ok := x.Response.(*GrackleReadResponse_GetBarrierResponse); ok {
@@ -549,56 +757,88 @@ type GrackleReadResponse_ListSemaphoresResponse struct {
 	ListSemaphoresResponse *ListSemaphoresResponse `protobuf:"bytes,3,opt,name=list_semaphores_response,json=listSemaphoresResponse,proto3,oneof"`
 }
 
+type GrackleReadResponse_ListSemaphoresByLeaseIdResponse struct {
+	ListSemaphoresByLeaseIdResponse *ListSemaphoresByLeaseIdResponse `protobuf:"bytes,4,opt,name=list_semaphores_by_lease_id_response,json=listSemaphoresByLeaseIdResponse,proto3,oneof"`
+}
+
 type GrackleReadResponse_ListSemaphoreHoldersResponse struct {
-	ListSemaphoreHoldersResponse *ListSemaphoreHoldersResponse `protobuf:"bytes,4,opt,name=list_semaphore_holders_response,json=listSemaphoreHoldersResponse,proto3,oneof"`
+	ListSemaphoreHoldersResponse *ListSemaphoreHoldersResponse `protobuf:"bytes,5,opt,name=list_semaphore_holders_response,json=listSemaphoreHoldersResponse,proto3,oneof"`
+}
+
+type GrackleReadResponse_ListSemaphoreLeasesResponse struct {
+	ListSemaphoreLeasesResponse *ListSemaphoreLeasesResponse `protobuf:"bytes,6,opt,name=list_semaphore_leases_response,json=listSemaphoreLeasesResponse,proto3,oneof"`
+}
+
+type GrackleReadResponse_GetSemaphoreLeaseResponse struct {
+	GetSemaphoreLeaseResponse *GetSemaphoreLeaseResponse `protobuf:"bytes,7,opt,name=get_semaphore_lease_response,json=getSemaphoreLeaseResponse,proto3,oneof"`
+}
+
+type GrackleReadResponse_ListSemaphoreLeasesByProcessIdResponse struct {
+	ListSemaphoreLeasesByProcessIdResponse *ListSemaphoreLeasesByProcessIdResponse `protobuf:"bytes,8,opt,name=list_semaphore_leases_by_process_id_response,json=listSemaphoreLeasesByProcessIdResponse,proto3,oneof"`
 }
 
 type GrackleReadResponse_GetWaitGroupResponse struct {
-	GetWaitGroupResponse *GetWaitGroupResponse `protobuf:"bytes,5,opt,name=get_wait_group_response,json=getWaitGroupResponse,proto3,oneof"`
+	GetWaitGroupResponse *GetWaitGroupResponse `protobuf:"bytes,9,opt,name=get_wait_group_response,json=getWaitGroupResponse,proto3,oneof"`
 }
 
 type GrackleReadResponse_GetWaitGroupByNameResponse struct {
-	GetWaitGroupByNameResponse *GetWaitGroupByNameResponse `protobuf:"bytes,6,opt,name=get_wait_group_by_name_response,json=getWaitGroupByNameResponse,proto3,oneof"`
+	GetWaitGroupByNameResponse *GetWaitGroupByNameResponse `protobuf:"bytes,10,opt,name=get_wait_group_by_name_response,json=getWaitGroupByNameResponse,proto3,oneof"`
 }
 
 type GrackleReadResponse_ListWaitGroupsResponse struct {
-	ListWaitGroupsResponse *ListWaitGroupsResponse `protobuf:"bytes,7,opt,name=list_wait_groups_response,json=listWaitGroupsResponse,proto3,oneof"`
+	ListWaitGroupsResponse *ListWaitGroupsResponse `protobuf:"bytes,11,opt,name=list_wait_groups_response,json=listWaitGroupsResponse,proto3,oneof"`
 }
 
 type GrackleReadResponse_ListWaitGroupJobsResponse struct {
-	ListWaitGroupJobsResponse *ListWaitGroupJobsResponse `protobuf:"bytes,8,opt,name=list_wait_group_jobs_response,json=listWaitGroupJobsResponse,proto3,oneof"`
+	ListWaitGroupJobsResponse *ListWaitGroupJobsResponse `protobuf:"bytes,12,opt,name=list_wait_group_jobs_response,json=listWaitGroupJobsResponse,proto3,oneof"`
 }
 
 type GrackleReadResponse_GetNamespaceResponse struct {
-	GetNamespaceResponse *GetNamespaceResponse `protobuf:"bytes,9,opt,name=get_namespace_response,json=getNamespaceResponse,proto3,oneof"`
+	GetNamespaceResponse *GetNamespaceResponse `protobuf:"bytes,13,opt,name=get_namespace_response,json=getNamespaceResponse,proto3,oneof"`
 }
 
 type GrackleReadResponse_GetNamespaceByNameResponse struct {
-	GetNamespaceByNameResponse *GetNamespaceByNameResponse `protobuf:"bytes,10,opt,name=get_namespace_by_name_response,json=getNamespaceByNameResponse,proto3,oneof"`
+	GetNamespaceByNameResponse *GetNamespaceByNameResponse `protobuf:"bytes,14,opt,name=get_namespace_by_name_response,json=getNamespaceByNameResponse,proto3,oneof"`
 }
 
 type GrackleReadResponse_ListNamespacesResponse struct {
-	ListNamespacesResponse *ListNamespacesResponse `protobuf:"bytes,11,opt,name=list_namespaces_response,json=listNamespacesResponse,proto3,oneof"`
+	ListNamespacesResponse *ListNamespacesResponse `protobuf:"bytes,15,opt,name=list_namespaces_response,json=listNamespacesResponse,proto3,oneof"`
 }
 
 type GrackleReadResponse_ListLocksResponse struct {
-	ListLocksResponse *ListLocksResponse `protobuf:"bytes,12,opt,name=list_locks_response,json=listLocksResponse,proto3,oneof"`
+	ListLocksResponse *ListLocksResponse `protobuf:"bytes,16,opt,name=list_locks_response,json=listLocksResponse,proto3,oneof"`
+}
+
+type GrackleReadResponse_ListLocksByLeaseIdResponse struct {
+	ListLocksByLeaseIdResponse *ListLocksByLeaseIdResponse `protobuf:"bytes,17,opt,name=list_locks_by_lease_id_response,json=listLocksByLeaseIdResponse,proto3,oneof"`
+}
+
+type GrackleReadResponse_GetLockLeaseResponse struct {
+	GetLockLeaseResponse *GetLockLeaseResponse `protobuf:"bytes,18,opt,name=get_lock_lease_response,json=getLockLeaseResponse,proto3,oneof"`
+}
+
+type GrackleReadResponse_ListLockLeasesResponse struct {
+	ListLockLeasesResponse *ListLockLeasesResponse `protobuf:"bytes,19,opt,name=list_lock_leases_response,json=listLockLeasesResponse,proto3,oneof"`
+}
+
+type GrackleReadResponse_ListLockLeasesByProcessIdResponse struct {
+	ListLockLeasesByProcessIdResponse *ListLockLeasesByProcessIdResponse `protobuf:"bytes,20,opt,name=list_lock_leases_by_process_id_response,json=listLockLeasesByProcessIdResponse,proto3,oneof"`
 }
 
 type GrackleReadResponse_GetBarrierResponse struct {
-	GetBarrierResponse *GetBarrierResponse `protobuf:"bytes,13,opt,name=get_barrier_response,json=getBarrierResponse,proto3,oneof"`
+	GetBarrierResponse *GetBarrierResponse `protobuf:"bytes,21,opt,name=get_barrier_response,json=getBarrierResponse,proto3,oneof"`
 }
 
 type GrackleReadResponse_GetBarrierByNameResponse struct {
-	GetBarrierByNameResponse *GetBarrierByNameResponse `protobuf:"bytes,14,opt,name=get_barrier_by_name_response,json=getBarrierByNameResponse,proto3,oneof"`
+	GetBarrierByNameResponse *GetBarrierByNameResponse `protobuf:"bytes,22,opt,name=get_barrier_by_name_response,json=getBarrierByNameResponse,proto3,oneof"`
 }
 
 type GrackleReadResponse_ListBarriersResponse struct {
-	ListBarriersResponse *ListBarriersResponse `protobuf:"bytes,15,opt,name=list_barriers_response,json=listBarriersResponse,proto3,oneof"`
+	ListBarriersResponse *ListBarriersResponse `protobuf:"bytes,23,opt,name=list_barriers_response,json=listBarriersResponse,proto3,oneof"`
 }
 
 type GrackleReadResponse_ListBarrierParticipantsResponse struct {
-	ListBarrierParticipantsResponse *ListBarrierParticipantsResponse `protobuf:"bytes,16,opt,name=list_barrier_participants_response,json=listBarrierParticipantsResponse,proto3,oneof"`
+	ListBarrierParticipantsResponse *ListBarrierParticipantsResponse `protobuf:"bytes,24,opt,name=list_barrier_participants_response,json=listBarrierParticipantsResponse,proto3,oneof"`
 }
 
 func (*GrackleReadResponse_GetSemaphoreResponse) isGrackleReadResponse_Response() {}
@@ -607,7 +847,15 @@ func (*GrackleReadResponse_GetSemaphoreByNameResponse) isGrackleReadResponse_Res
 
 func (*GrackleReadResponse_ListSemaphoresResponse) isGrackleReadResponse_Response() {}
 
+func (*GrackleReadResponse_ListSemaphoresByLeaseIdResponse) isGrackleReadResponse_Response() {}
+
 func (*GrackleReadResponse_ListSemaphoreHoldersResponse) isGrackleReadResponse_Response() {}
+
+func (*GrackleReadResponse_ListSemaphoreLeasesResponse) isGrackleReadResponse_Response() {}
+
+func (*GrackleReadResponse_GetSemaphoreLeaseResponse) isGrackleReadResponse_Response() {}
+
+func (*GrackleReadResponse_ListSemaphoreLeasesByProcessIdResponse) isGrackleReadResponse_Response() {}
 
 func (*GrackleReadResponse_GetWaitGroupResponse) isGrackleReadResponse_Response() {}
 
@@ -624,6 +872,14 @@ func (*GrackleReadResponse_GetNamespaceByNameResponse) isGrackleReadResponse_Res
 func (*GrackleReadResponse_ListNamespacesResponse) isGrackleReadResponse_Response() {}
 
 func (*GrackleReadResponse_ListLocksResponse) isGrackleReadResponse_Response() {}
+
+func (*GrackleReadResponse_ListLocksByLeaseIdResponse) isGrackleReadResponse_Response() {}
+
+func (*GrackleReadResponse_GetLockLeaseResponse) isGrackleReadResponse_Response() {}
+
+func (*GrackleReadResponse_ListLockLeasesResponse) isGrackleReadResponse_Response() {}
+
+func (*GrackleReadResponse_ListLockLeasesByProcessIdResponse) isGrackleReadResponse_Response() {}
 
 func (*GrackleReadResponse_GetBarrierResponse) isGrackleReadResponse_Response() {}
 
@@ -644,6 +900,9 @@ type GrackleUpdateRequest struct {
 	//	*GrackleUpdateRequest_ReleaseSemaphoreRequest
 	//	*GrackleUpdateRequest_RunSemaphoresGarbageCollectionRequest
 	//	*GrackleUpdateRequest_SemaphoresDeleteNamespaceRequest
+	//	*GrackleUpdateRequest_CreateSemaphoreLeaseRequest
+	//	*GrackleUpdateRequest_RefreshSemaphoreLeaseRequest
+	//	*GrackleUpdateRequest_RevokeSemaphoreLeaseRequest
 	//	*GrackleUpdateRequest_CreateWaitGroupRequest
 	//	*GrackleUpdateRequest_DeleteWaitGroupRequest
 	//	*GrackleUpdateRequest_AddJobsToWaitGroupRequest
@@ -656,6 +915,9 @@ type GrackleUpdateRequest struct {
 	//	*GrackleUpdateRequest_GetLockRequest
 	//	*GrackleUpdateRequest_RunLocksGarbageCollectionRequest
 	//	*GrackleUpdateRequest_LocksDeleteNamespaceRequest
+	//	*GrackleUpdateRequest_CreateLockLeaseRequest
+	//	*GrackleUpdateRequest_RefreshLockLeaseRequest
+	//	*GrackleUpdateRequest_RevokeLockLeaseRequest
 	//	*GrackleUpdateRequest_CreateNamespaceRequest
 	//	*GrackleUpdateRequest_UpdateNamespaceRequest
 	//	*GrackleUpdateRequest_DeleteNamespaceRequest
@@ -771,6 +1033,33 @@ func (x *GrackleUpdateRequest) GetSemaphoresDeleteNamespaceRequest() *Semaphores
 	return nil
 }
 
+func (x *GrackleUpdateRequest) GetCreateSemaphoreLeaseRequest() *CreateSemaphoreLeaseRequest {
+	if x != nil {
+		if x, ok := x.Request.(*GrackleUpdateRequest_CreateSemaphoreLeaseRequest); ok {
+			return x.CreateSemaphoreLeaseRequest
+		}
+	}
+	return nil
+}
+
+func (x *GrackleUpdateRequest) GetRefreshSemaphoreLeaseRequest() *RefreshSemaphoreLeaseRequest {
+	if x != nil {
+		if x, ok := x.Request.(*GrackleUpdateRequest_RefreshSemaphoreLeaseRequest); ok {
+			return x.RefreshSemaphoreLeaseRequest
+		}
+	}
+	return nil
+}
+
+func (x *GrackleUpdateRequest) GetRevokeSemaphoreLeaseRequest() *RevokeSemaphoreLeaseRequest {
+	if x != nil {
+		if x, ok := x.Request.(*GrackleUpdateRequest_RevokeSemaphoreLeaseRequest); ok {
+			return x.RevokeSemaphoreLeaseRequest
+		}
+	}
+	return nil
+}
+
 func (x *GrackleUpdateRequest) GetCreateWaitGroupRequest() *CreateWaitGroupRequest {
 	if x != nil {
 		if x, ok := x.Request.(*GrackleUpdateRequest_CreateWaitGroupRequest); ok {
@@ -874,6 +1163,33 @@ func (x *GrackleUpdateRequest) GetLocksDeleteNamespaceRequest() *LocksDeleteName
 	if x != nil {
 		if x, ok := x.Request.(*GrackleUpdateRequest_LocksDeleteNamespaceRequest); ok {
 			return x.LocksDeleteNamespaceRequest
+		}
+	}
+	return nil
+}
+
+func (x *GrackleUpdateRequest) GetCreateLockLeaseRequest() *CreateLockLeaseRequest {
+	if x != nil {
+		if x, ok := x.Request.(*GrackleUpdateRequest_CreateLockLeaseRequest); ok {
+			return x.CreateLockLeaseRequest
+		}
+	}
+	return nil
+}
+
+func (x *GrackleUpdateRequest) GetRefreshLockLeaseRequest() *RefreshLockLeaseRequest {
+	if x != nil {
+		if x, ok := x.Request.(*GrackleUpdateRequest_RefreshLockLeaseRequest); ok {
+			return x.RefreshLockLeaseRequest
+		}
+	}
+	return nil
+}
+
+func (x *GrackleUpdateRequest) GetRevokeLockLeaseRequest() *RevokeLockLeaseRequest {
+	if x != nil {
+		if x, ok := x.Request.(*GrackleUpdateRequest_RevokeLockLeaseRequest); ok {
+			return x.RevokeLockLeaseRequest
 		}
 	}
 	return nil
@@ -1001,92 +1317,116 @@ type GrackleUpdateRequest_SemaphoresDeleteNamespaceRequest struct {
 	SemaphoresDeleteNamespaceRequest *SemaphoresDeleteNamespaceRequest `protobuf:"bytes,7,opt,name=semaphores_delete_namespace_request,json=semaphoresDeleteNamespaceRequest,proto3,oneof"`
 }
 
+type GrackleUpdateRequest_CreateSemaphoreLeaseRequest struct {
+	CreateSemaphoreLeaseRequest *CreateSemaphoreLeaseRequest `protobuf:"bytes,8,opt,name=create_semaphore_lease_request,json=createSemaphoreLeaseRequest,proto3,oneof"`
+}
+
+type GrackleUpdateRequest_RefreshSemaphoreLeaseRequest struct {
+	RefreshSemaphoreLeaseRequest *RefreshSemaphoreLeaseRequest `protobuf:"bytes,9,opt,name=refresh_semaphore_lease_request,json=refreshSemaphoreLeaseRequest,proto3,oneof"`
+}
+
+type GrackleUpdateRequest_RevokeSemaphoreLeaseRequest struct {
+	RevokeSemaphoreLeaseRequest *RevokeSemaphoreLeaseRequest `protobuf:"bytes,10,opt,name=revoke_semaphore_lease_request,json=revokeSemaphoreLeaseRequest,proto3,oneof"`
+}
+
 type GrackleUpdateRequest_CreateWaitGroupRequest struct {
-	CreateWaitGroupRequest *CreateWaitGroupRequest `protobuf:"bytes,8,opt,name=create_wait_group_request,json=createWaitGroupRequest,proto3,oneof"`
+	CreateWaitGroupRequest *CreateWaitGroupRequest `protobuf:"bytes,11,opt,name=create_wait_group_request,json=createWaitGroupRequest,proto3,oneof"`
 }
 
 type GrackleUpdateRequest_DeleteWaitGroupRequest struct {
-	DeleteWaitGroupRequest *DeleteWaitGroupRequest `protobuf:"bytes,9,opt,name=delete_wait_group_request,json=deleteWaitGroupRequest,proto3,oneof"`
+	DeleteWaitGroupRequest *DeleteWaitGroupRequest `protobuf:"bytes,12,opt,name=delete_wait_group_request,json=deleteWaitGroupRequest,proto3,oneof"`
 }
 
 type GrackleUpdateRequest_AddJobsToWaitGroupRequest struct {
-	AddJobsToWaitGroupRequest *AddJobsToWaitGroupRequest `protobuf:"bytes,10,opt,name=add_jobs_to_wait_group_request,json=addJobsToWaitGroupRequest,proto3,oneof"`
+	AddJobsToWaitGroupRequest *AddJobsToWaitGroupRequest `protobuf:"bytes,13,opt,name=add_jobs_to_wait_group_request,json=addJobsToWaitGroupRequest,proto3,oneof"`
 }
 
 type GrackleUpdateRequest_CompleteJobsFromWaitGroupRequest struct {
-	CompleteJobsFromWaitGroupRequest *CompleteJobsFromWaitGroupRequest `protobuf:"bytes,11,opt,name=complete_jobs_from_wait_group_request,json=completeJobsFromWaitGroupRequest,proto3,oneof"`
+	CompleteJobsFromWaitGroupRequest *CompleteJobsFromWaitGroupRequest `protobuf:"bytes,14,opt,name=complete_jobs_from_wait_group_request,json=completeJobsFromWaitGroupRequest,proto3,oneof"`
 }
 
 type GrackleUpdateRequest_RunWaitGroupsGarbageCollectionRequest struct {
-	RunWaitGroupsGarbageCollectionRequest *RunWaitGroupsGarbageCollectionRequest `protobuf:"bytes,12,opt,name=run_wait_groups_garbage_collection_request,json=runWaitGroupsGarbageCollectionRequest,proto3,oneof"`
+	RunWaitGroupsGarbageCollectionRequest *RunWaitGroupsGarbageCollectionRequest `protobuf:"bytes,15,opt,name=run_wait_groups_garbage_collection_request,json=runWaitGroupsGarbageCollectionRequest,proto3,oneof"`
 }
 
 type GrackleUpdateRequest_WaitGroupsDeleteNamespaceRequest struct {
-	WaitGroupsDeleteNamespaceRequest *WaitGroupsDeleteNamespaceRequest `protobuf:"bytes,13,opt,name=wait_groups_delete_namespace_request,json=waitGroupsDeleteNamespaceRequest,proto3,oneof"`
+	WaitGroupsDeleteNamespaceRequest *WaitGroupsDeleteNamespaceRequest `protobuf:"bytes,16,opt,name=wait_groups_delete_namespace_request,json=waitGroupsDeleteNamespaceRequest,proto3,oneof"`
 }
 
 type GrackleUpdateRequest_AcquireLockRequest struct {
-	AcquireLockRequest *AcquireLockRequest `protobuf:"bytes,14,opt,name=acquire_lock_request,json=acquireLockRequest,proto3,oneof"`
+	AcquireLockRequest *AcquireLockRequest `protobuf:"bytes,17,opt,name=acquire_lock_request,json=acquireLockRequest,proto3,oneof"`
 }
 
 type GrackleUpdateRequest_ReleaseLockRequest struct {
-	ReleaseLockRequest *ReleaseLockRequest `protobuf:"bytes,15,opt,name=release_lock_request,json=releaseLockRequest,proto3,oneof"`
+	ReleaseLockRequest *ReleaseLockRequest `protobuf:"bytes,18,opt,name=release_lock_request,json=releaseLockRequest,proto3,oneof"`
 }
 
 type GrackleUpdateRequest_DeleteLockRequest struct {
-	DeleteLockRequest *DeleteLockRequest `protobuf:"bytes,16,opt,name=delete_lock_request,json=deleteLockRequest,proto3,oneof"`
+	DeleteLockRequest *DeleteLockRequest `protobuf:"bytes,19,opt,name=delete_lock_request,json=deleteLockRequest,proto3,oneof"`
 }
 
 type GrackleUpdateRequest_GetLockRequest struct {
-	GetLockRequest *GetLockRequest `protobuf:"bytes,17,opt,name=get_lock_request,json=getLockRequest,proto3,oneof"`
+	GetLockRequest *GetLockRequest `protobuf:"bytes,20,opt,name=get_lock_request,json=getLockRequest,proto3,oneof"`
 }
 
 type GrackleUpdateRequest_RunLocksGarbageCollectionRequest struct {
-	RunLocksGarbageCollectionRequest *RunLocksGarbageCollectionRequest `protobuf:"bytes,18,opt,name=run_locks_garbage_collection_request,json=runLocksGarbageCollectionRequest,proto3,oneof"`
+	RunLocksGarbageCollectionRequest *RunLocksGarbageCollectionRequest `protobuf:"bytes,21,opt,name=run_locks_garbage_collection_request,json=runLocksGarbageCollectionRequest,proto3,oneof"`
 }
 
 type GrackleUpdateRequest_LocksDeleteNamespaceRequest struct {
-	LocksDeleteNamespaceRequest *LocksDeleteNamespaceRequest `protobuf:"bytes,19,opt,name=locks_delete_namespace_request,json=locksDeleteNamespaceRequest,proto3,oneof"`
+	LocksDeleteNamespaceRequest *LocksDeleteNamespaceRequest `protobuf:"bytes,22,opt,name=locks_delete_namespace_request,json=locksDeleteNamespaceRequest,proto3,oneof"`
+}
+
+type GrackleUpdateRequest_CreateLockLeaseRequest struct {
+	CreateLockLeaseRequest *CreateLockLeaseRequest `protobuf:"bytes,23,opt,name=create_lock_lease_request,json=createLockLeaseRequest,proto3,oneof"`
+}
+
+type GrackleUpdateRequest_RefreshLockLeaseRequest struct {
+	RefreshLockLeaseRequest *RefreshLockLeaseRequest `protobuf:"bytes,24,opt,name=refresh_lock_lease_request,json=refreshLockLeaseRequest,proto3,oneof"`
+}
+
+type GrackleUpdateRequest_RevokeLockLeaseRequest struct {
+	RevokeLockLeaseRequest *RevokeLockLeaseRequest `protobuf:"bytes,25,opt,name=revoke_lock_lease_request,json=revokeLockLeaseRequest,proto3,oneof"`
 }
 
 type GrackleUpdateRequest_CreateNamespaceRequest struct {
-	CreateNamespaceRequest *CreateNamespaceRequest `protobuf:"bytes,20,opt,name=create_namespace_request,json=createNamespaceRequest,proto3,oneof"`
+	CreateNamespaceRequest *CreateNamespaceRequest `protobuf:"bytes,26,opt,name=create_namespace_request,json=createNamespaceRequest,proto3,oneof"`
 }
 
 type GrackleUpdateRequest_UpdateNamespaceRequest struct {
-	UpdateNamespaceRequest *UpdateNamespaceRequest `protobuf:"bytes,21,opt,name=update_namespace_request,json=updateNamespaceRequest,proto3,oneof"`
+	UpdateNamespaceRequest *UpdateNamespaceRequest `protobuf:"bytes,27,opt,name=update_namespace_request,json=updateNamespaceRequest,proto3,oneof"`
 }
 
 type GrackleUpdateRequest_DeleteNamespaceRequest struct {
-	DeleteNamespaceRequest *DeleteNamespaceRequest `protobuf:"bytes,22,opt,name=delete_namespace_request,json=deleteNamespaceRequest,proto3,oneof"`
+	DeleteNamespaceRequest *DeleteNamespaceRequest `protobuf:"bytes,28,opt,name=delete_namespace_request,json=deleteNamespaceRequest,proto3,oneof"`
 }
 
 type GrackleUpdateRequest_CreateBarrierRequest struct {
-	CreateBarrierRequest *CreateBarrierRequest `protobuf:"bytes,23,opt,name=create_barrier_request,json=createBarrierRequest,proto3,oneof"`
+	CreateBarrierRequest *CreateBarrierRequest `protobuf:"bytes,29,opt,name=create_barrier_request,json=createBarrierRequest,proto3,oneof"`
 }
 
 type GrackleUpdateRequest_DeleteBarrierRequest struct {
-	DeleteBarrierRequest *DeleteBarrierRequest `protobuf:"bytes,24,opt,name=delete_barrier_request,json=deleteBarrierRequest,proto3,oneof"`
+	DeleteBarrierRequest *DeleteBarrierRequest `protobuf:"bytes,30,opt,name=delete_barrier_request,json=deleteBarrierRequest,proto3,oneof"`
 }
 
 type GrackleUpdateRequest_UpdateBarrierRequest struct {
-	UpdateBarrierRequest *UpdateBarrierRequest `protobuf:"bytes,25,opt,name=update_barrier_request,json=updateBarrierRequest,proto3,oneof"`
+	UpdateBarrierRequest *UpdateBarrierRequest `protobuf:"bytes,31,opt,name=update_barrier_request,json=updateBarrierRequest,proto3,oneof"`
 }
 
 type GrackleUpdateRequest_ArriveAtBarrierRequest struct {
-	ArriveAtBarrierRequest *ArriveAtBarrierRequest `protobuf:"bytes,26,opt,name=arrive_at_barrier_request,json=arriveAtBarrierRequest,proto3,oneof"`
+	ArriveAtBarrierRequest *ArriveAtBarrierRequest `protobuf:"bytes,32,opt,name=arrive_at_barrier_request,json=arriveAtBarrierRequest,proto3,oneof"`
 }
 
 type GrackleUpdateRequest_WaitAtBarrierRequest struct {
-	WaitAtBarrierRequest *WaitAtBarrierRequest `protobuf:"bytes,27,opt,name=wait_at_barrier_request,json=waitAtBarrierRequest,proto3,oneof"`
+	WaitAtBarrierRequest *WaitAtBarrierRequest `protobuf:"bytes,33,opt,name=wait_at_barrier_request,json=waitAtBarrierRequest,proto3,oneof"`
 }
 
 type GrackleUpdateRequest_RunBarriersGarbageCollectionRequest struct {
-	RunBarriersGarbageCollectionRequest *RunBarriersGarbageCollectionRequest `protobuf:"bytes,28,opt,name=run_barriers_garbage_collection_request,json=runBarriersGarbageCollectionRequest,proto3,oneof"`
+	RunBarriersGarbageCollectionRequest *RunBarriersGarbageCollectionRequest `protobuf:"bytes,34,opt,name=run_barriers_garbage_collection_request,json=runBarriersGarbageCollectionRequest,proto3,oneof"`
 }
 
 type GrackleUpdateRequest_BarriersDeleteNamespaceRequest struct {
-	BarriersDeleteNamespaceRequest *BarriersDeleteNamespaceRequest `protobuf:"bytes,29,opt,name=barriers_delete_namespace_request,json=barriersDeleteNamespaceRequest,proto3,oneof"`
+	BarriersDeleteNamespaceRequest *BarriersDeleteNamespaceRequest `protobuf:"bytes,35,opt,name=barriers_delete_namespace_request,json=barriersDeleteNamespaceRequest,proto3,oneof"`
 }
 
 func (*GrackleUpdateRequest_CreateSemaphoreRequest) isGrackleUpdateRequest_Request() {}
@@ -1102,6 +1442,12 @@ func (*GrackleUpdateRequest_ReleaseSemaphoreRequest) isGrackleUpdateRequest_Requ
 func (*GrackleUpdateRequest_RunSemaphoresGarbageCollectionRequest) isGrackleUpdateRequest_Request() {}
 
 func (*GrackleUpdateRequest_SemaphoresDeleteNamespaceRequest) isGrackleUpdateRequest_Request() {}
+
+func (*GrackleUpdateRequest_CreateSemaphoreLeaseRequest) isGrackleUpdateRequest_Request() {}
+
+func (*GrackleUpdateRequest_RefreshSemaphoreLeaseRequest) isGrackleUpdateRequest_Request() {}
+
+func (*GrackleUpdateRequest_RevokeSemaphoreLeaseRequest) isGrackleUpdateRequest_Request() {}
 
 func (*GrackleUpdateRequest_CreateWaitGroupRequest) isGrackleUpdateRequest_Request() {}
 
@@ -1126,6 +1472,12 @@ func (*GrackleUpdateRequest_GetLockRequest) isGrackleUpdateRequest_Request() {}
 func (*GrackleUpdateRequest_RunLocksGarbageCollectionRequest) isGrackleUpdateRequest_Request() {}
 
 func (*GrackleUpdateRequest_LocksDeleteNamespaceRequest) isGrackleUpdateRequest_Request() {}
+
+func (*GrackleUpdateRequest_CreateLockLeaseRequest) isGrackleUpdateRequest_Request() {}
+
+func (*GrackleUpdateRequest_RefreshLockLeaseRequest) isGrackleUpdateRequest_Request() {}
+
+func (*GrackleUpdateRequest_RevokeLockLeaseRequest) isGrackleUpdateRequest_Request() {}
 
 func (*GrackleUpdateRequest_CreateNamespaceRequest) isGrackleUpdateRequest_Request() {}
 
@@ -1158,6 +1510,9 @@ type GrackleUpdateResponse struct {
 	//	*GrackleUpdateResponse_ReleaseSemaphoreResponse
 	//	*GrackleUpdateResponse_RunSemaphoresGarbageCollectionResponse
 	//	*GrackleUpdateResponse_SemaphoresDeleteNamespaceResponse
+	//	*GrackleUpdateResponse_CreateSemaphoreLeaseResponse
+	//	*GrackleUpdateResponse_RefreshSemaphoreLeaseResponse
+	//	*GrackleUpdateResponse_RevokeSemaphoreLeaseResponse
 	//	*GrackleUpdateResponse_CreateWaitGroupResponse
 	//	*GrackleUpdateResponse_DeleteWaitGroupResponse
 	//	*GrackleUpdateResponse_AddJobsToWaitGroupResponse
@@ -1170,6 +1525,9 @@ type GrackleUpdateResponse struct {
 	//	*GrackleUpdateResponse_GetLockResponse
 	//	*GrackleUpdateResponse_RunLocksGarbageCollectionResponse
 	//	*GrackleUpdateResponse_LocksDeleteNamespaceResponse
+	//	*GrackleUpdateResponse_CreateLockLeaseResponse
+	//	*GrackleUpdateResponse_RefreshLockLeaseResponse
+	//	*GrackleUpdateResponse_RevokeLockLeaseResponse
 	//	*GrackleUpdateResponse_CreateNamespaceResponse
 	//	*GrackleUpdateResponse_UpdateNamespaceResponse
 	//	*GrackleUpdateResponse_DeleteNamespaceResponse
@@ -1285,6 +1643,33 @@ func (x *GrackleUpdateResponse) GetSemaphoresDeleteNamespaceResponse() *Semaphor
 	return nil
 }
 
+func (x *GrackleUpdateResponse) GetCreateSemaphoreLeaseResponse() *CreateSemaphoreLeaseResponse {
+	if x != nil {
+		if x, ok := x.Response.(*GrackleUpdateResponse_CreateSemaphoreLeaseResponse); ok {
+			return x.CreateSemaphoreLeaseResponse
+		}
+	}
+	return nil
+}
+
+func (x *GrackleUpdateResponse) GetRefreshSemaphoreLeaseResponse() *RefreshSemaphoreLeaseResponse {
+	if x != nil {
+		if x, ok := x.Response.(*GrackleUpdateResponse_RefreshSemaphoreLeaseResponse); ok {
+			return x.RefreshSemaphoreLeaseResponse
+		}
+	}
+	return nil
+}
+
+func (x *GrackleUpdateResponse) GetRevokeSemaphoreLeaseResponse() *RevokeSemaphoreLeaseResponse {
+	if x != nil {
+		if x, ok := x.Response.(*GrackleUpdateResponse_RevokeSemaphoreLeaseResponse); ok {
+			return x.RevokeSemaphoreLeaseResponse
+		}
+	}
+	return nil
+}
+
 func (x *GrackleUpdateResponse) GetCreateWaitGroupResponse() *CreateWaitGroupResponse {
 	if x != nil {
 		if x, ok := x.Response.(*GrackleUpdateResponse_CreateWaitGroupResponse); ok {
@@ -1388,6 +1773,33 @@ func (x *GrackleUpdateResponse) GetLocksDeleteNamespaceResponse() *LocksDeleteNa
 	if x != nil {
 		if x, ok := x.Response.(*GrackleUpdateResponse_LocksDeleteNamespaceResponse); ok {
 			return x.LocksDeleteNamespaceResponse
+		}
+	}
+	return nil
+}
+
+func (x *GrackleUpdateResponse) GetCreateLockLeaseResponse() *CreateLockLeaseResponse {
+	if x != nil {
+		if x, ok := x.Response.(*GrackleUpdateResponse_CreateLockLeaseResponse); ok {
+			return x.CreateLockLeaseResponse
+		}
+	}
+	return nil
+}
+
+func (x *GrackleUpdateResponse) GetRefreshLockLeaseResponse() *RefreshLockLeaseResponse {
+	if x != nil {
+		if x, ok := x.Response.(*GrackleUpdateResponse_RefreshLockLeaseResponse); ok {
+			return x.RefreshLockLeaseResponse
+		}
+	}
+	return nil
+}
+
+func (x *GrackleUpdateResponse) GetRevokeLockLeaseResponse() *RevokeLockLeaseResponse {
+	if x != nil {
+		if x, ok := x.Response.(*GrackleUpdateResponse_RevokeLockLeaseResponse); ok {
+			return x.RevokeLockLeaseResponse
 		}
 	}
 	return nil
@@ -1515,92 +1927,116 @@ type GrackleUpdateResponse_SemaphoresDeleteNamespaceResponse struct {
 	SemaphoresDeleteNamespaceResponse *SemaphoresDeleteNamespaceResponse `protobuf:"bytes,7,opt,name=semaphores_delete_namespace_response,json=semaphoresDeleteNamespaceResponse,proto3,oneof"`
 }
 
+type GrackleUpdateResponse_CreateSemaphoreLeaseResponse struct {
+	CreateSemaphoreLeaseResponse *CreateSemaphoreLeaseResponse `protobuf:"bytes,8,opt,name=create_semaphore_lease_response,json=createSemaphoreLeaseResponse,proto3,oneof"`
+}
+
+type GrackleUpdateResponse_RefreshSemaphoreLeaseResponse struct {
+	RefreshSemaphoreLeaseResponse *RefreshSemaphoreLeaseResponse `protobuf:"bytes,9,opt,name=refresh_semaphore_lease_response,json=refreshSemaphoreLeaseResponse,proto3,oneof"`
+}
+
+type GrackleUpdateResponse_RevokeSemaphoreLeaseResponse struct {
+	RevokeSemaphoreLeaseResponse *RevokeSemaphoreLeaseResponse `protobuf:"bytes,10,opt,name=revoke_semaphore_lease_response,json=revokeSemaphoreLeaseResponse,proto3,oneof"`
+}
+
 type GrackleUpdateResponse_CreateWaitGroupResponse struct {
-	CreateWaitGroupResponse *CreateWaitGroupResponse `protobuf:"bytes,8,opt,name=create_wait_group_response,json=createWaitGroupResponse,proto3,oneof"`
+	CreateWaitGroupResponse *CreateWaitGroupResponse `protobuf:"bytes,11,opt,name=create_wait_group_response,json=createWaitGroupResponse,proto3,oneof"`
 }
 
 type GrackleUpdateResponse_DeleteWaitGroupResponse struct {
-	DeleteWaitGroupResponse *DeleteWaitGroupResponse `protobuf:"bytes,9,opt,name=delete_wait_group_response,json=deleteWaitGroupResponse,proto3,oneof"`
+	DeleteWaitGroupResponse *DeleteWaitGroupResponse `protobuf:"bytes,12,opt,name=delete_wait_group_response,json=deleteWaitGroupResponse,proto3,oneof"`
 }
 
 type GrackleUpdateResponse_AddJobsToWaitGroupResponse struct {
-	AddJobsToWaitGroupResponse *AddJobsToWaitGroupResponse `protobuf:"bytes,10,opt,name=add_jobs_to_wait_group_response,json=addJobsToWaitGroupResponse,proto3,oneof"`
+	AddJobsToWaitGroupResponse *AddJobsToWaitGroupResponse `protobuf:"bytes,13,opt,name=add_jobs_to_wait_group_response,json=addJobsToWaitGroupResponse,proto3,oneof"`
 }
 
 type GrackleUpdateResponse_CompleteJobsFromWaitGroupResponse struct {
-	CompleteJobsFromWaitGroupResponse *CompleteJobsFromWaitGroupResponse `protobuf:"bytes,11,opt,name=complete_jobs_from_wait_group_response,json=completeJobsFromWaitGroupResponse,proto3,oneof"`
+	CompleteJobsFromWaitGroupResponse *CompleteJobsFromWaitGroupResponse `protobuf:"bytes,14,opt,name=complete_jobs_from_wait_group_response,json=completeJobsFromWaitGroupResponse,proto3,oneof"`
 }
 
 type GrackleUpdateResponse_RunWaitGroupsGarbageCollectionResponse struct {
-	RunWaitGroupsGarbageCollectionResponse *RunWaitGroupsGarbageCollectionResponse `protobuf:"bytes,12,opt,name=run_wait_groups_garbage_collection_response,json=runWaitGroupsGarbageCollectionResponse,proto3,oneof"`
+	RunWaitGroupsGarbageCollectionResponse *RunWaitGroupsGarbageCollectionResponse `protobuf:"bytes,15,opt,name=run_wait_groups_garbage_collection_response,json=runWaitGroupsGarbageCollectionResponse,proto3,oneof"`
 }
 
 type GrackleUpdateResponse_WaitGroupsDeleteNamespaceResponse struct {
-	WaitGroupsDeleteNamespaceResponse *WaitGroupsDeleteNamespaceResponse `protobuf:"bytes,13,opt,name=wait_groups_delete_namespace_response,json=waitGroupsDeleteNamespaceResponse,proto3,oneof"`
+	WaitGroupsDeleteNamespaceResponse *WaitGroupsDeleteNamespaceResponse `protobuf:"bytes,16,opt,name=wait_groups_delete_namespace_response,json=waitGroupsDeleteNamespaceResponse,proto3,oneof"`
 }
 
 type GrackleUpdateResponse_AcquireLockResponse struct {
-	AcquireLockResponse *AcquireLockResponse `protobuf:"bytes,14,opt,name=acquire_lock_response,json=acquireLockResponse,proto3,oneof"`
+	AcquireLockResponse *AcquireLockResponse `protobuf:"bytes,17,opt,name=acquire_lock_response,json=acquireLockResponse,proto3,oneof"`
 }
 
 type GrackleUpdateResponse_ReleaseLockResponse struct {
-	ReleaseLockResponse *ReleaseLockResponse `protobuf:"bytes,15,opt,name=release_lock_response,json=releaseLockResponse,proto3,oneof"`
+	ReleaseLockResponse *ReleaseLockResponse `protobuf:"bytes,18,opt,name=release_lock_response,json=releaseLockResponse,proto3,oneof"`
 }
 
 type GrackleUpdateResponse_DeleteLockResponse struct {
-	DeleteLockResponse *DeleteLockResponse `protobuf:"bytes,16,opt,name=delete_lock_response,json=deleteLockResponse,proto3,oneof"`
+	DeleteLockResponse *DeleteLockResponse `protobuf:"bytes,19,opt,name=delete_lock_response,json=deleteLockResponse,proto3,oneof"`
 }
 
 type GrackleUpdateResponse_GetLockResponse struct {
-	GetLockResponse *GetLockResponse `protobuf:"bytes,17,opt,name=get_lock_response,json=getLockResponse,proto3,oneof"`
+	GetLockResponse *GetLockResponse `protobuf:"bytes,20,opt,name=get_lock_response,json=getLockResponse,proto3,oneof"`
 }
 
 type GrackleUpdateResponse_RunLocksGarbageCollectionResponse struct {
-	RunLocksGarbageCollectionResponse *RunLocksGarbageCollectionResponse `protobuf:"bytes,18,opt,name=run_locks_garbage_collection_response,json=runLocksGarbageCollectionResponse,proto3,oneof"`
+	RunLocksGarbageCollectionResponse *RunLocksGarbageCollectionResponse `protobuf:"bytes,21,opt,name=run_locks_garbage_collection_response,json=runLocksGarbageCollectionResponse,proto3,oneof"`
 }
 
 type GrackleUpdateResponse_LocksDeleteNamespaceResponse struct {
-	LocksDeleteNamespaceResponse *LocksDeleteNamespaceResponse `protobuf:"bytes,19,opt,name=locks_delete_namespace_response,json=locksDeleteNamespaceResponse,proto3,oneof"`
+	LocksDeleteNamespaceResponse *LocksDeleteNamespaceResponse `protobuf:"bytes,22,opt,name=locks_delete_namespace_response,json=locksDeleteNamespaceResponse,proto3,oneof"`
+}
+
+type GrackleUpdateResponse_CreateLockLeaseResponse struct {
+	CreateLockLeaseResponse *CreateLockLeaseResponse `protobuf:"bytes,23,opt,name=create_lock_lease_response,json=createLockLeaseResponse,proto3,oneof"`
+}
+
+type GrackleUpdateResponse_RefreshLockLeaseResponse struct {
+	RefreshLockLeaseResponse *RefreshLockLeaseResponse `protobuf:"bytes,24,opt,name=refresh_lock_lease_response,json=refreshLockLeaseResponse,proto3,oneof"`
+}
+
+type GrackleUpdateResponse_RevokeLockLeaseResponse struct {
+	RevokeLockLeaseResponse *RevokeLockLeaseResponse `protobuf:"bytes,25,opt,name=revoke_lock_lease_response,json=revokeLockLeaseResponse,proto3,oneof"`
 }
 
 type GrackleUpdateResponse_CreateNamespaceResponse struct {
-	CreateNamespaceResponse *CreateNamespaceResponse `protobuf:"bytes,20,opt,name=create_namespace_response,json=createNamespaceResponse,proto3,oneof"`
+	CreateNamespaceResponse *CreateNamespaceResponse `protobuf:"bytes,26,opt,name=create_namespace_response,json=createNamespaceResponse,proto3,oneof"`
 }
 
 type GrackleUpdateResponse_UpdateNamespaceResponse struct {
-	UpdateNamespaceResponse *UpdateNamespaceResponse `protobuf:"bytes,21,opt,name=update_namespace_response,json=updateNamespaceResponse,proto3,oneof"`
+	UpdateNamespaceResponse *UpdateNamespaceResponse `protobuf:"bytes,27,opt,name=update_namespace_response,json=updateNamespaceResponse,proto3,oneof"`
 }
 
 type GrackleUpdateResponse_DeleteNamespaceResponse struct {
-	DeleteNamespaceResponse *DeleteNamespaceResponse `protobuf:"bytes,22,opt,name=delete_namespace_response,json=deleteNamespaceResponse,proto3,oneof"`
+	DeleteNamespaceResponse *DeleteNamespaceResponse `protobuf:"bytes,28,opt,name=delete_namespace_response,json=deleteNamespaceResponse,proto3,oneof"`
 }
 
 type GrackleUpdateResponse_CreateBarrierResponse struct {
-	CreateBarrierResponse *CreateBarrierResponse `protobuf:"bytes,23,opt,name=create_barrier_response,json=createBarrierResponse,proto3,oneof"`
+	CreateBarrierResponse *CreateBarrierResponse `protobuf:"bytes,29,opt,name=create_barrier_response,json=createBarrierResponse,proto3,oneof"`
 }
 
 type GrackleUpdateResponse_DeleteBarrierResponse struct {
-	DeleteBarrierResponse *DeleteBarrierResponse `protobuf:"bytes,24,opt,name=delete_barrier_response,json=deleteBarrierResponse,proto3,oneof"`
+	DeleteBarrierResponse *DeleteBarrierResponse `protobuf:"bytes,30,opt,name=delete_barrier_response,json=deleteBarrierResponse,proto3,oneof"`
 }
 
 type GrackleUpdateResponse_UpdateBarrierResponse struct {
-	UpdateBarrierResponse *UpdateBarrierResponse `protobuf:"bytes,25,opt,name=update_barrier_response,json=updateBarrierResponse,proto3,oneof"`
+	UpdateBarrierResponse *UpdateBarrierResponse `protobuf:"bytes,31,opt,name=update_barrier_response,json=updateBarrierResponse,proto3,oneof"`
 }
 
 type GrackleUpdateResponse_ArriveAtBarrierResponse struct {
-	ArriveAtBarrierResponse *ArriveAtBarrierResponse `protobuf:"bytes,26,opt,name=arrive_at_barrier_response,json=arriveAtBarrierResponse,proto3,oneof"`
+	ArriveAtBarrierResponse *ArriveAtBarrierResponse `protobuf:"bytes,32,opt,name=arrive_at_barrier_response,json=arriveAtBarrierResponse,proto3,oneof"`
 }
 
 type GrackleUpdateResponse_WaitAtBarrierResponse struct {
-	WaitAtBarrierResponse *WaitAtBarrierResponse `protobuf:"bytes,27,opt,name=wait_at_barrier_response,json=waitAtBarrierResponse,proto3,oneof"`
+	WaitAtBarrierResponse *WaitAtBarrierResponse `protobuf:"bytes,33,opt,name=wait_at_barrier_response,json=waitAtBarrierResponse,proto3,oneof"`
 }
 
 type GrackleUpdateResponse_RunBarriersGarbageCollectionResponse struct {
-	RunBarriersGarbageCollectionResponse *RunBarriersGarbageCollectionResponse `protobuf:"bytes,28,opt,name=run_barriers_garbage_collection_response,json=runBarriersGarbageCollectionResponse,proto3,oneof"`
+	RunBarriersGarbageCollectionResponse *RunBarriersGarbageCollectionResponse `protobuf:"bytes,34,opt,name=run_barriers_garbage_collection_response,json=runBarriersGarbageCollectionResponse,proto3,oneof"`
 }
 
 type GrackleUpdateResponse_BarriersDeleteNamespaceResponse struct {
-	BarriersDeleteNamespaceResponse *BarriersDeleteNamespaceResponse `protobuf:"bytes,29,opt,name=barriers_delete_namespace_response,json=barriersDeleteNamespaceResponse,proto3,oneof"`
+	BarriersDeleteNamespaceResponse *BarriersDeleteNamespaceResponse `protobuf:"bytes,35,opt,name=barriers_delete_namespace_response,json=barriersDeleteNamespaceResponse,proto3,oneof"`
 }
 
 func (*GrackleUpdateResponse_CreateSemaphoreResponse) isGrackleUpdateResponse_Response() {}
@@ -1617,6 +2053,12 @@ func (*GrackleUpdateResponse_RunSemaphoresGarbageCollectionResponse) isGrackleUp
 }
 
 func (*GrackleUpdateResponse_SemaphoresDeleteNamespaceResponse) isGrackleUpdateResponse_Response() {}
+
+func (*GrackleUpdateResponse_CreateSemaphoreLeaseResponse) isGrackleUpdateResponse_Response() {}
+
+func (*GrackleUpdateResponse_RefreshSemaphoreLeaseResponse) isGrackleUpdateResponse_Response() {}
+
+func (*GrackleUpdateResponse_RevokeSemaphoreLeaseResponse) isGrackleUpdateResponse_Response() {}
 
 func (*GrackleUpdateResponse_CreateWaitGroupResponse) isGrackleUpdateResponse_Response() {}
 
@@ -1643,6 +2085,12 @@ func (*GrackleUpdateResponse_RunLocksGarbageCollectionResponse) isGrackleUpdateR
 
 func (*GrackleUpdateResponse_LocksDeleteNamespaceResponse) isGrackleUpdateResponse_Response() {}
 
+func (*GrackleUpdateResponse_CreateLockLeaseResponse) isGrackleUpdateResponse_Response() {}
+
+func (*GrackleUpdateResponse_RefreshLockLeaseResponse) isGrackleUpdateResponse_Response() {}
+
+func (*GrackleUpdateResponse_RevokeLockLeaseResponse) isGrackleUpdateResponse_Response() {}
+
 func (*GrackleUpdateResponse_CreateNamespaceResponse) isGrackleUpdateResponse_Response() {}
 
 func (*GrackleUpdateResponse_UpdateNamespaceResponse) isGrackleUpdateResponse_Response() {}
@@ -1668,46 +2116,62 @@ var File_pkg_corepb_monstera_proto protoreflect.FileDescriptor
 
 const file_pkg_corepb_monstera_proto_rawDesc = "" +
 	"\n" +
-	"\x19pkg/corepb/monstera.proto\x12\x19com.evrblk.grackle.corepb\x1a\x19pkg/corepb/barriers.proto\x1a\x16pkg/corepb/locks.proto\x1a\x1bpkg/corepb/namespaces.proto\x1a\x1bpkg/corepb/semaphores.proto\x1a\x1cpkg/corepb/wait_groups.proto\"\x9c\x0e\n" +
+	"\x19pkg/corepb/monstera.proto\x12\x19com.evrblk.grackle.corepb\x1a\x19pkg/corepb/barriers.proto\x1a\x16pkg/corepb/locks.proto\x1a\x1bpkg/corepb/namespaces.proto\x1a\x1bpkg/corepb/semaphores.proto\x1a\x1cpkg/corepb/wait_groups.proto\"\x9b\x16\n" +
 	"\x12GrackleReadRequest\x12d\n" +
 	"\x15get_semaphore_request\x18\x01 \x01(\v2..com.evrblk.grackle.corepb.GetSemaphoreRequestH\x00R\x13getSemaphoreRequest\x12x\n" +
 	"\x1dget_semaphore_by_name_request\x18\x02 \x01(\v24.com.evrblk.grackle.corepb.GetSemaphoreByNameRequestH\x00R\x19getSemaphoreByNameRequest\x12j\n" +
-	"\x17list_semaphores_request\x18\x03 \x01(\v20.com.evrblk.grackle.corepb.ListSemaphoresRequestH\x00R\x15listSemaphoresRequest\x12}\n" +
-	"\x1elist_semaphore_holders_request\x18\x04 \x01(\v26.com.evrblk.grackle.corepb.ListSemaphoreHoldersRequestH\x00R\x1blistSemaphoreHoldersRequest\x12e\n" +
-	"\x16get_wait_group_request\x18\x05 \x01(\v2..com.evrblk.grackle.corepb.GetWaitGroupRequestH\x00R\x13getWaitGroupRequest\x12y\n" +
-	"\x1eget_wait_group_by_name_request\x18\x06 \x01(\v24.com.evrblk.grackle.corepb.GetWaitGroupByNameRequestH\x00R\x19getWaitGroupByNameRequest\x12k\n" +
-	"\x18list_wait_groups_request\x18\a \x01(\v20.com.evrblk.grackle.corepb.ListWaitGroupsRequestH\x00R\x15listWaitGroupsRequest\x12u\n" +
-	"\x1clist_wait_group_jobs_request\x18\b \x01(\v23.com.evrblk.grackle.corepb.ListWaitGroupJobsRequestH\x00R\x18listWaitGroupJobsRequest\x12d\n" +
-	"\x15get_namespace_request\x18\t \x01(\v2..com.evrblk.grackle.corepb.GetNamespaceRequestH\x00R\x13getNamespaceRequest\x12x\n" +
-	"\x1dget_namespace_by_name_request\x18\n" +
-	" \x01(\v24.com.evrblk.grackle.corepb.GetNamespaceByNameRequestH\x00R\x19getNamespaceByNameRequest\x12j\n" +
-	"\x17list_namespaces_request\x18\v \x01(\v20.com.evrblk.grackle.corepb.ListNamespacesRequestH\x00R\x15listNamespacesRequest\x12[\n" +
-	"\x12list_locks_request\x18\f \x01(\v2+.com.evrblk.grackle.corepb.ListLocksRequestH\x00R\x10listLocksRequest\x12^\n" +
-	"\x13get_barrier_request\x18\r \x01(\v2,.com.evrblk.grackle.corepb.GetBarrierRequestH\x00R\x11getBarrierRequest\x12r\n" +
-	"\x1bget_barrier_by_name_request\x18\x0e \x01(\v22.com.evrblk.grackle.corepb.GetBarrierByNameRequestH\x00R\x17getBarrierByNameRequest\x12d\n" +
-	"\x15list_barriers_request\x18\x0f \x01(\v2..com.evrblk.grackle.corepb.ListBarriersRequestH\x00R\x13listBarriersRequest\x12\x86\x01\n" +
-	"!list_barrier_participants_request\x18\x10 \x01(\v29.com.evrblk.grackle.corepb.ListBarrierParticipantsRequestH\x00R\x1elistBarrierParticipantsRequestB\t\n" +
-	"\arequest\"\xcf\x0e\n" +
+	"\x17list_semaphores_request\x18\x03 \x01(\v20.com.evrblk.grackle.corepb.ListSemaphoresRequestH\x00R\x15listSemaphoresRequest\x12\x88\x01\n" +
+	"#list_semaphores_by_lease_id_request\x18\x04 \x01(\v29.com.evrblk.grackle.corepb.ListSemaphoresByLeaseIdRequestH\x00R\x1elistSemaphoresByLeaseIdRequest\x12}\n" +
+	"\x1elist_semaphore_holders_request\x18\x05 \x01(\v26.com.evrblk.grackle.corepb.ListSemaphoreHoldersRequestH\x00R\x1blistSemaphoreHoldersRequest\x12z\n" +
+	"\x1dlist_semaphore_leases_request\x18\x06 \x01(\v25.com.evrblk.grackle.corepb.ListSemaphoreLeasesRequestH\x00R\x1alistSemaphoreLeasesRequest\x12\x9e\x01\n" +
+	"+list_semaphore_leases_by_process_id_request\x18\a \x01(\v2@.com.evrblk.grackle.corepb.ListSemaphoreLeasesByProcessIdRequestH\x00R%listSemaphoreLeasesByProcessIdRequest\x12t\n" +
+	"\x1bget_semaphore_lease_request\x18\b \x01(\v23.com.evrblk.grackle.corepb.GetSemaphoreLeaseRequestH\x00R\x18getSemaphoreLeaseRequest\x12e\n" +
+	"\x16get_wait_group_request\x18\t \x01(\v2..com.evrblk.grackle.corepb.GetWaitGroupRequestH\x00R\x13getWaitGroupRequest\x12y\n" +
+	"\x1eget_wait_group_by_name_request\x18\n" +
+	" \x01(\v24.com.evrblk.grackle.corepb.GetWaitGroupByNameRequestH\x00R\x19getWaitGroupByNameRequest\x12k\n" +
+	"\x18list_wait_groups_request\x18\v \x01(\v20.com.evrblk.grackle.corepb.ListWaitGroupsRequestH\x00R\x15listWaitGroupsRequest\x12u\n" +
+	"\x1clist_wait_group_jobs_request\x18\f \x01(\v23.com.evrblk.grackle.corepb.ListWaitGroupJobsRequestH\x00R\x18listWaitGroupJobsRequest\x12d\n" +
+	"\x15get_namespace_request\x18\r \x01(\v2..com.evrblk.grackle.corepb.GetNamespaceRequestH\x00R\x13getNamespaceRequest\x12x\n" +
+	"\x1dget_namespace_by_name_request\x18\x0e \x01(\v24.com.evrblk.grackle.corepb.GetNamespaceByNameRequestH\x00R\x19getNamespaceByNameRequest\x12j\n" +
+	"\x17list_namespaces_request\x18\x0f \x01(\v20.com.evrblk.grackle.corepb.ListNamespacesRequestH\x00R\x15listNamespacesRequest\x12[\n" +
+	"\x12list_locks_request\x18\x10 \x01(\v2+.com.evrblk.grackle.corepb.ListLocksRequestH\x00R\x10listLocksRequest\x12y\n" +
+	"\x1elist_locks_by_lease_id_request\x18\x11 \x01(\v24.com.evrblk.grackle.corepb.ListLocksByLeaseIdRequestH\x00R\x19listLocksByLeaseIdRequest\x12e\n" +
+	"\x16get_lock_lease_request\x18\x12 \x01(\v2..com.evrblk.grackle.corepb.GetLockLeaseRequestH\x00R\x13getLockLeaseRequest\x12k\n" +
+	"\x18list_lock_leases_request\x18\x13 \x01(\v20.com.evrblk.grackle.corepb.ListLockLeasesRequestH\x00R\x15listLockLeasesRequest\x12\x8f\x01\n" +
+	"&list_lock_leases_by_process_id_request\x18\x14 \x01(\v2;.com.evrblk.grackle.corepb.ListLockLeasesByProcessIdRequestH\x00R listLockLeasesByProcessIdRequest\x12^\n" +
+	"\x13get_barrier_request\x18\x15 \x01(\v2,.com.evrblk.grackle.corepb.GetBarrierRequestH\x00R\x11getBarrierRequest\x12r\n" +
+	"\x1bget_barrier_by_name_request\x18\x16 \x01(\v22.com.evrblk.grackle.corepb.GetBarrierByNameRequestH\x00R\x17getBarrierByNameRequest\x12d\n" +
+	"\x15list_barriers_request\x18\x17 \x01(\v2..com.evrblk.grackle.corepb.ListBarriersRequestH\x00R\x13listBarriersRequest\x12\x86\x01\n" +
+	"!list_barrier_participants_request\x18\x18 \x01(\v29.com.evrblk.grackle.corepb.ListBarrierParticipantsRequestH\x00R\x1elistBarrierParticipantsRequestB\t\n" +
+	"\arequest\"\xe6\x16\n" +
 	"\x13GrackleReadResponse\x12g\n" +
 	"\x16get_semaphore_response\x18\x01 \x01(\v2/.com.evrblk.grackle.corepb.GetSemaphoreResponseH\x00R\x14getSemaphoreResponse\x12{\n" +
 	"\x1eget_semaphore_by_name_response\x18\x02 \x01(\v25.com.evrblk.grackle.corepb.GetSemaphoreByNameResponseH\x00R\x1agetSemaphoreByNameResponse\x12m\n" +
-	"\x18list_semaphores_response\x18\x03 \x01(\v21.com.evrblk.grackle.corepb.ListSemaphoresResponseH\x00R\x16listSemaphoresResponse\x12\x80\x01\n" +
-	"\x1flist_semaphore_holders_response\x18\x04 \x01(\v27.com.evrblk.grackle.corepb.ListSemaphoreHoldersResponseH\x00R\x1clistSemaphoreHoldersResponse\x12h\n" +
-	"\x17get_wait_group_response\x18\x05 \x01(\v2/.com.evrblk.grackle.corepb.GetWaitGroupResponseH\x00R\x14getWaitGroupResponse\x12|\n" +
-	"\x1fget_wait_group_by_name_response\x18\x06 \x01(\v25.com.evrblk.grackle.corepb.GetWaitGroupByNameResponseH\x00R\x1agetWaitGroupByNameResponse\x12n\n" +
-	"\x19list_wait_groups_response\x18\a \x01(\v21.com.evrblk.grackle.corepb.ListWaitGroupsResponseH\x00R\x16listWaitGroupsResponse\x12x\n" +
-	"\x1dlist_wait_group_jobs_response\x18\b \x01(\v24.com.evrblk.grackle.corepb.ListWaitGroupJobsResponseH\x00R\x19listWaitGroupJobsResponse\x12g\n" +
-	"\x16get_namespace_response\x18\t \x01(\v2/.com.evrblk.grackle.corepb.GetNamespaceResponseH\x00R\x14getNamespaceResponse\x12{\n" +
-	"\x1eget_namespace_by_name_response\x18\n" +
-	" \x01(\v25.com.evrblk.grackle.corepb.GetNamespaceByNameResponseH\x00R\x1agetNamespaceByNameResponse\x12m\n" +
-	"\x18list_namespaces_response\x18\v \x01(\v21.com.evrblk.grackle.corepb.ListNamespacesResponseH\x00R\x16listNamespacesResponse\x12^\n" +
-	"\x13list_locks_response\x18\f \x01(\v2,.com.evrblk.grackle.corepb.ListLocksResponseH\x00R\x11listLocksResponse\x12a\n" +
-	"\x14get_barrier_response\x18\r \x01(\v2-.com.evrblk.grackle.corepb.GetBarrierResponseH\x00R\x12getBarrierResponse\x12u\n" +
-	"\x1cget_barrier_by_name_response\x18\x0e \x01(\v23.com.evrblk.grackle.corepb.GetBarrierByNameResponseH\x00R\x18getBarrierByNameResponse\x12g\n" +
-	"\x16list_barriers_response\x18\x0f \x01(\v2/.com.evrblk.grackle.corepb.ListBarriersResponseH\x00R\x14listBarriersResponse\x12\x89\x01\n" +
-	"\"list_barrier_participants_response\x18\x10 \x01(\v2:.com.evrblk.grackle.corepb.ListBarrierParticipantsResponseH\x00R\x1flistBarrierParticipantsResponseB\n" +
+	"\x18list_semaphores_response\x18\x03 \x01(\v21.com.evrblk.grackle.corepb.ListSemaphoresResponseH\x00R\x16listSemaphoresResponse\x12\x8b\x01\n" +
+	"$list_semaphores_by_lease_id_response\x18\x04 \x01(\v2:.com.evrblk.grackle.corepb.ListSemaphoresByLeaseIdResponseH\x00R\x1flistSemaphoresByLeaseIdResponse\x12\x80\x01\n" +
+	"\x1flist_semaphore_holders_response\x18\x05 \x01(\v27.com.evrblk.grackle.corepb.ListSemaphoreHoldersResponseH\x00R\x1clistSemaphoreHoldersResponse\x12}\n" +
+	"\x1elist_semaphore_leases_response\x18\x06 \x01(\v26.com.evrblk.grackle.corepb.ListSemaphoreLeasesResponseH\x00R\x1blistSemaphoreLeasesResponse\x12w\n" +
+	"\x1cget_semaphore_lease_response\x18\a \x01(\v24.com.evrblk.grackle.corepb.GetSemaphoreLeaseResponseH\x00R\x19getSemaphoreLeaseResponse\x12\xa1\x01\n" +
+	",list_semaphore_leases_by_process_id_response\x18\b \x01(\v2A.com.evrblk.grackle.corepb.ListSemaphoreLeasesByProcessIdResponseH\x00R&listSemaphoreLeasesByProcessIdResponse\x12h\n" +
+	"\x17get_wait_group_response\x18\t \x01(\v2/.com.evrblk.grackle.corepb.GetWaitGroupResponseH\x00R\x14getWaitGroupResponse\x12|\n" +
+	"\x1fget_wait_group_by_name_response\x18\n" +
+	" \x01(\v25.com.evrblk.grackle.corepb.GetWaitGroupByNameResponseH\x00R\x1agetWaitGroupByNameResponse\x12n\n" +
+	"\x19list_wait_groups_response\x18\v \x01(\v21.com.evrblk.grackle.corepb.ListWaitGroupsResponseH\x00R\x16listWaitGroupsResponse\x12x\n" +
+	"\x1dlist_wait_group_jobs_response\x18\f \x01(\v24.com.evrblk.grackle.corepb.ListWaitGroupJobsResponseH\x00R\x19listWaitGroupJobsResponse\x12g\n" +
+	"\x16get_namespace_response\x18\r \x01(\v2/.com.evrblk.grackle.corepb.GetNamespaceResponseH\x00R\x14getNamespaceResponse\x12{\n" +
+	"\x1eget_namespace_by_name_response\x18\x0e \x01(\v25.com.evrblk.grackle.corepb.GetNamespaceByNameResponseH\x00R\x1agetNamespaceByNameResponse\x12m\n" +
+	"\x18list_namespaces_response\x18\x0f \x01(\v21.com.evrblk.grackle.corepb.ListNamespacesResponseH\x00R\x16listNamespacesResponse\x12^\n" +
+	"\x13list_locks_response\x18\x10 \x01(\v2,.com.evrblk.grackle.corepb.ListLocksResponseH\x00R\x11listLocksResponse\x12|\n" +
+	"\x1flist_locks_by_lease_id_response\x18\x11 \x01(\v25.com.evrblk.grackle.corepb.ListLocksByLeaseIdResponseH\x00R\x1alistLocksByLeaseIdResponse\x12h\n" +
+	"\x17get_lock_lease_response\x18\x12 \x01(\v2/.com.evrblk.grackle.corepb.GetLockLeaseResponseH\x00R\x14getLockLeaseResponse\x12n\n" +
+	"\x19list_lock_leases_response\x18\x13 \x01(\v21.com.evrblk.grackle.corepb.ListLockLeasesResponseH\x00R\x16listLockLeasesResponse\x12\x92\x01\n" +
+	"'list_lock_leases_by_process_id_response\x18\x14 \x01(\v2<.com.evrblk.grackle.corepb.ListLockLeasesByProcessIdResponseH\x00R!listLockLeasesByProcessIdResponse\x12a\n" +
+	"\x14get_barrier_response\x18\x15 \x01(\v2-.com.evrblk.grackle.corepb.GetBarrierResponseH\x00R\x12getBarrierResponse\x12u\n" +
+	"\x1cget_barrier_by_name_response\x18\x16 \x01(\v23.com.evrblk.grackle.corepb.GetBarrierByNameResponseH\x00R\x18getBarrierByNameResponse\x12g\n" +
+	"\x16list_barriers_response\x18\x17 \x01(\v2/.com.evrblk.grackle.corepb.ListBarriersResponseH\x00R\x14listBarriersResponse\x12\x89\x01\n" +
+	"\"list_barrier_participants_response\x18\x18 \x01(\v2:.com.evrblk.grackle.corepb.ListBarrierParticipantsResponseH\x00R\x1flistBarrierParticipantsResponseB\n" +
 	"\n" +
-	"\bresponse\"\xac\x1b\n" +
+	"\bresponse\"\x80!\n" +
 	"\x14GrackleUpdateRequest\x12m\n" +
 	"\x18create_semaphore_request\x18\x01 \x01(\v21.com.evrblk.grackle.corepb.CreateSemaphoreRequestH\x00R\x16createSemaphoreRequest\x12m\n" +
 	"\x18update_semaphore_request\x18\x02 \x01(\v21.com.evrblk.grackle.corepb.UpdateSemaphoreRequestH\x00R\x16updateSemaphoreRequest\x12m\n" +
@@ -1715,31 +2179,37 @@ const file_pkg_corepb_monstera_proto_rawDesc = "" +
 	"\x19acquire_semaphore_request\x18\x04 \x01(\v22.com.evrblk.grackle.corepb.AcquireSemaphoreRequestH\x00R\x17acquireSemaphoreRequest\x12p\n" +
 	"\x19release_semaphore_request\x18\x05 \x01(\v22.com.evrblk.grackle.corepb.ReleaseSemaphoreRequestH\x00R\x17releaseSemaphoreRequest\x12\x9c\x01\n" +
 	")run_semaphores_garbage_collection_request\x18\x06 \x01(\v2@.com.evrblk.grackle.corepb.RunSemaphoresGarbageCollectionRequestH\x00R%runSemaphoresGarbageCollectionRequest\x12\x8c\x01\n" +
-	"#semaphores_delete_namespace_request\x18\a \x01(\v2;.com.evrblk.grackle.corepb.SemaphoresDeleteNamespaceRequestH\x00R semaphoresDeleteNamespaceRequest\x12n\n" +
-	"\x19create_wait_group_request\x18\b \x01(\v21.com.evrblk.grackle.corepb.CreateWaitGroupRequestH\x00R\x16createWaitGroupRequest\x12n\n" +
-	"\x19delete_wait_group_request\x18\t \x01(\v21.com.evrblk.grackle.corepb.DeleteWaitGroupRequestH\x00R\x16deleteWaitGroupRequest\x12y\n" +
-	"\x1eadd_jobs_to_wait_group_request\x18\n" +
-	" \x01(\v24.com.evrblk.grackle.corepb.AddJobsToWaitGroupRequestH\x00R\x19addJobsToWaitGroupRequest\x12\x8e\x01\n" +
-	"%complete_jobs_from_wait_group_request\x18\v \x01(\v2;.com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupRequestH\x00R completeJobsFromWaitGroupRequest\x12\x9d\x01\n" +
-	"*run_wait_groups_garbage_collection_request\x18\f \x01(\v2@.com.evrblk.grackle.corepb.RunWaitGroupsGarbageCollectionRequestH\x00R%runWaitGroupsGarbageCollectionRequest\x12\x8d\x01\n" +
-	"$wait_groups_delete_namespace_request\x18\r \x01(\v2;.com.evrblk.grackle.corepb.WaitGroupsDeleteNamespaceRequestH\x00R waitGroupsDeleteNamespaceRequest\x12a\n" +
-	"\x14acquire_lock_request\x18\x0e \x01(\v2-.com.evrblk.grackle.corepb.AcquireLockRequestH\x00R\x12acquireLockRequest\x12a\n" +
-	"\x14release_lock_request\x18\x0f \x01(\v2-.com.evrblk.grackle.corepb.ReleaseLockRequestH\x00R\x12releaseLockRequest\x12^\n" +
-	"\x13delete_lock_request\x18\x10 \x01(\v2,.com.evrblk.grackle.corepb.DeleteLockRequestH\x00R\x11deleteLockRequest\x12U\n" +
-	"\x10get_lock_request\x18\x11 \x01(\v2).com.evrblk.grackle.corepb.GetLockRequestH\x00R\x0egetLockRequest\x12\x8d\x01\n" +
-	"$run_locks_garbage_collection_request\x18\x12 \x01(\v2;.com.evrblk.grackle.corepb.RunLocksGarbageCollectionRequestH\x00R runLocksGarbageCollectionRequest\x12}\n" +
-	"\x1elocks_delete_namespace_request\x18\x13 \x01(\v26.com.evrblk.grackle.corepb.LocksDeleteNamespaceRequestH\x00R\x1blocksDeleteNamespaceRequest\x12m\n" +
-	"\x18create_namespace_request\x18\x14 \x01(\v21.com.evrblk.grackle.corepb.CreateNamespaceRequestH\x00R\x16createNamespaceRequest\x12m\n" +
-	"\x18update_namespace_request\x18\x15 \x01(\v21.com.evrblk.grackle.corepb.UpdateNamespaceRequestH\x00R\x16updateNamespaceRequest\x12m\n" +
-	"\x18delete_namespace_request\x18\x16 \x01(\v21.com.evrblk.grackle.corepb.DeleteNamespaceRequestH\x00R\x16deleteNamespaceRequest\x12g\n" +
-	"\x16create_barrier_request\x18\x17 \x01(\v2/.com.evrblk.grackle.corepb.CreateBarrierRequestH\x00R\x14createBarrierRequest\x12g\n" +
-	"\x16delete_barrier_request\x18\x18 \x01(\v2/.com.evrblk.grackle.corepb.DeleteBarrierRequestH\x00R\x14deleteBarrierRequest\x12g\n" +
-	"\x16update_barrier_request\x18\x19 \x01(\v2/.com.evrblk.grackle.corepb.UpdateBarrierRequestH\x00R\x14updateBarrierRequest\x12n\n" +
-	"\x19arrive_at_barrier_request\x18\x1a \x01(\v21.com.evrblk.grackle.corepb.ArriveAtBarrierRequestH\x00R\x16arriveAtBarrierRequest\x12h\n" +
-	"\x17wait_at_barrier_request\x18\x1b \x01(\v2/.com.evrblk.grackle.corepb.WaitAtBarrierRequestH\x00R\x14waitAtBarrierRequest\x12\x96\x01\n" +
-	"'run_barriers_garbage_collection_request\x18\x1c \x01(\v2>.com.evrblk.grackle.corepb.RunBarriersGarbageCollectionRequestH\x00R#runBarriersGarbageCollectionRequest\x12\x86\x01\n" +
-	"!barriers_delete_namespace_request\x18\x1d \x01(\v29.com.evrblk.grackle.corepb.BarriersDeleteNamespaceRequestH\x00R\x1ebarriersDeleteNamespaceRequestB\t\n" +
-	"\arequest\"\x86\x1c\n" +
+	"#semaphores_delete_namespace_request\x18\a \x01(\v2;.com.evrblk.grackle.corepb.SemaphoresDeleteNamespaceRequestH\x00R semaphoresDeleteNamespaceRequest\x12}\n" +
+	"\x1ecreate_semaphore_lease_request\x18\b \x01(\v26.com.evrblk.grackle.corepb.CreateSemaphoreLeaseRequestH\x00R\x1bcreateSemaphoreLeaseRequest\x12\x80\x01\n" +
+	"\x1frefresh_semaphore_lease_request\x18\t \x01(\v27.com.evrblk.grackle.corepb.RefreshSemaphoreLeaseRequestH\x00R\x1crefreshSemaphoreLeaseRequest\x12}\n" +
+	"\x1erevoke_semaphore_lease_request\x18\n" +
+	" \x01(\v26.com.evrblk.grackle.corepb.RevokeSemaphoreLeaseRequestH\x00R\x1brevokeSemaphoreLeaseRequest\x12n\n" +
+	"\x19create_wait_group_request\x18\v \x01(\v21.com.evrblk.grackle.corepb.CreateWaitGroupRequestH\x00R\x16createWaitGroupRequest\x12n\n" +
+	"\x19delete_wait_group_request\x18\f \x01(\v21.com.evrblk.grackle.corepb.DeleteWaitGroupRequestH\x00R\x16deleteWaitGroupRequest\x12y\n" +
+	"\x1eadd_jobs_to_wait_group_request\x18\r \x01(\v24.com.evrblk.grackle.corepb.AddJobsToWaitGroupRequestH\x00R\x19addJobsToWaitGroupRequest\x12\x8e\x01\n" +
+	"%complete_jobs_from_wait_group_request\x18\x0e \x01(\v2;.com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupRequestH\x00R completeJobsFromWaitGroupRequest\x12\x9d\x01\n" +
+	"*run_wait_groups_garbage_collection_request\x18\x0f \x01(\v2@.com.evrblk.grackle.corepb.RunWaitGroupsGarbageCollectionRequestH\x00R%runWaitGroupsGarbageCollectionRequest\x12\x8d\x01\n" +
+	"$wait_groups_delete_namespace_request\x18\x10 \x01(\v2;.com.evrblk.grackle.corepb.WaitGroupsDeleteNamespaceRequestH\x00R waitGroupsDeleteNamespaceRequest\x12a\n" +
+	"\x14acquire_lock_request\x18\x11 \x01(\v2-.com.evrblk.grackle.corepb.AcquireLockRequestH\x00R\x12acquireLockRequest\x12a\n" +
+	"\x14release_lock_request\x18\x12 \x01(\v2-.com.evrblk.grackle.corepb.ReleaseLockRequestH\x00R\x12releaseLockRequest\x12^\n" +
+	"\x13delete_lock_request\x18\x13 \x01(\v2,.com.evrblk.grackle.corepb.DeleteLockRequestH\x00R\x11deleteLockRequest\x12U\n" +
+	"\x10get_lock_request\x18\x14 \x01(\v2).com.evrblk.grackle.corepb.GetLockRequestH\x00R\x0egetLockRequest\x12\x8d\x01\n" +
+	"$run_locks_garbage_collection_request\x18\x15 \x01(\v2;.com.evrblk.grackle.corepb.RunLocksGarbageCollectionRequestH\x00R runLocksGarbageCollectionRequest\x12}\n" +
+	"\x1elocks_delete_namespace_request\x18\x16 \x01(\v26.com.evrblk.grackle.corepb.LocksDeleteNamespaceRequestH\x00R\x1blocksDeleteNamespaceRequest\x12n\n" +
+	"\x19create_lock_lease_request\x18\x17 \x01(\v21.com.evrblk.grackle.corepb.CreateLockLeaseRequestH\x00R\x16createLockLeaseRequest\x12q\n" +
+	"\x1arefresh_lock_lease_request\x18\x18 \x01(\v22.com.evrblk.grackle.corepb.RefreshLockLeaseRequestH\x00R\x17refreshLockLeaseRequest\x12n\n" +
+	"\x19revoke_lock_lease_request\x18\x19 \x01(\v21.com.evrblk.grackle.corepb.RevokeLockLeaseRequestH\x00R\x16revokeLockLeaseRequest\x12m\n" +
+	"\x18create_namespace_request\x18\x1a \x01(\v21.com.evrblk.grackle.corepb.CreateNamespaceRequestH\x00R\x16createNamespaceRequest\x12m\n" +
+	"\x18update_namespace_request\x18\x1b \x01(\v21.com.evrblk.grackle.corepb.UpdateNamespaceRequestH\x00R\x16updateNamespaceRequest\x12m\n" +
+	"\x18delete_namespace_request\x18\x1c \x01(\v21.com.evrblk.grackle.corepb.DeleteNamespaceRequestH\x00R\x16deleteNamespaceRequest\x12g\n" +
+	"\x16create_barrier_request\x18\x1d \x01(\v2/.com.evrblk.grackle.corepb.CreateBarrierRequestH\x00R\x14createBarrierRequest\x12g\n" +
+	"\x16delete_barrier_request\x18\x1e \x01(\v2/.com.evrblk.grackle.corepb.DeleteBarrierRequestH\x00R\x14deleteBarrierRequest\x12g\n" +
+	"\x16update_barrier_request\x18\x1f \x01(\v2/.com.evrblk.grackle.corepb.UpdateBarrierRequestH\x00R\x14updateBarrierRequest\x12n\n" +
+	"\x19arrive_at_barrier_request\x18  \x01(\v21.com.evrblk.grackle.corepb.ArriveAtBarrierRequestH\x00R\x16arriveAtBarrierRequest\x12h\n" +
+	"\x17wait_at_barrier_request\x18! \x01(\v2/.com.evrblk.grackle.corepb.WaitAtBarrierRequestH\x00R\x14waitAtBarrierRequest\x12\x96\x01\n" +
+	"'run_barriers_garbage_collection_request\x18\" \x01(\v2>.com.evrblk.grackle.corepb.RunBarriersGarbageCollectionRequestH\x00R#runBarriersGarbageCollectionRequest\x12\x86\x01\n" +
+	"!barriers_delete_namespace_request\x18# \x01(\v29.com.evrblk.grackle.corepb.BarriersDeleteNamespaceRequestH\x00R\x1ebarriersDeleteNamespaceRequestB\t\n" +
+	"\arequest\"\xee!\n" +
 	"\x15GrackleUpdateResponse\x12p\n" +
 	"\x19create_semaphore_response\x18\x01 \x01(\v22.com.evrblk.grackle.corepb.CreateSemaphoreResponseH\x00R\x17createSemaphoreResponse\x12p\n" +
 	"\x19update_semaphore_response\x18\x02 \x01(\v22.com.evrblk.grackle.corepb.UpdateSemaphoreResponseH\x00R\x17updateSemaphoreResponse\x12p\n" +
@@ -1747,30 +2217,36 @@ const file_pkg_corepb_monstera_proto_rawDesc = "" +
 	"\x1aacquire_semaphore_response\x18\x04 \x01(\v23.com.evrblk.grackle.corepb.AcquireSemaphoreResponseH\x00R\x18acquireSemaphoreResponse\x12s\n" +
 	"\x1arelease_semaphore_response\x18\x05 \x01(\v23.com.evrblk.grackle.corepb.ReleaseSemaphoreResponseH\x00R\x18releaseSemaphoreResponse\x12\x9f\x01\n" +
 	"*run_semaphores_garbage_collection_response\x18\x06 \x01(\v2A.com.evrblk.grackle.corepb.RunSemaphoresGarbageCollectionResponseH\x00R&runSemaphoresGarbageCollectionResponse\x12\x8f\x01\n" +
-	"$semaphores_delete_namespace_response\x18\a \x01(\v2<.com.evrblk.grackle.corepb.SemaphoresDeleteNamespaceResponseH\x00R!semaphoresDeleteNamespaceResponse\x12q\n" +
-	"\x1acreate_wait_group_response\x18\b \x01(\v22.com.evrblk.grackle.corepb.CreateWaitGroupResponseH\x00R\x17createWaitGroupResponse\x12q\n" +
-	"\x1adelete_wait_group_response\x18\t \x01(\v22.com.evrblk.grackle.corepb.DeleteWaitGroupResponseH\x00R\x17deleteWaitGroupResponse\x12|\n" +
-	"\x1fadd_jobs_to_wait_group_response\x18\n" +
-	" \x01(\v25.com.evrblk.grackle.corepb.AddJobsToWaitGroupResponseH\x00R\x1aaddJobsToWaitGroupResponse\x12\x91\x01\n" +
-	"&complete_jobs_from_wait_group_response\x18\v \x01(\v2<.com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupResponseH\x00R!completeJobsFromWaitGroupResponse\x12\xa0\x01\n" +
-	"+run_wait_groups_garbage_collection_response\x18\f \x01(\v2A.com.evrblk.grackle.corepb.RunWaitGroupsGarbageCollectionResponseH\x00R&runWaitGroupsGarbageCollectionResponse\x12\x90\x01\n" +
-	"%wait_groups_delete_namespace_response\x18\r \x01(\v2<.com.evrblk.grackle.corepb.WaitGroupsDeleteNamespaceResponseH\x00R!waitGroupsDeleteNamespaceResponse\x12d\n" +
-	"\x15acquire_lock_response\x18\x0e \x01(\v2..com.evrblk.grackle.corepb.AcquireLockResponseH\x00R\x13acquireLockResponse\x12d\n" +
-	"\x15release_lock_response\x18\x0f \x01(\v2..com.evrblk.grackle.corepb.ReleaseLockResponseH\x00R\x13releaseLockResponse\x12a\n" +
-	"\x14delete_lock_response\x18\x10 \x01(\v2-.com.evrblk.grackle.corepb.DeleteLockResponseH\x00R\x12deleteLockResponse\x12X\n" +
-	"\x11get_lock_response\x18\x11 \x01(\v2*.com.evrblk.grackle.corepb.GetLockResponseH\x00R\x0fgetLockResponse\x12\x90\x01\n" +
-	"%run_locks_garbage_collection_response\x18\x12 \x01(\v2<.com.evrblk.grackle.corepb.RunLocksGarbageCollectionResponseH\x00R!runLocksGarbageCollectionResponse\x12\x80\x01\n" +
-	"\x1flocks_delete_namespace_response\x18\x13 \x01(\v27.com.evrblk.grackle.corepb.LocksDeleteNamespaceResponseH\x00R\x1clocksDeleteNamespaceResponse\x12p\n" +
-	"\x19create_namespace_response\x18\x14 \x01(\v22.com.evrblk.grackle.corepb.CreateNamespaceResponseH\x00R\x17createNamespaceResponse\x12p\n" +
-	"\x19update_namespace_response\x18\x15 \x01(\v22.com.evrblk.grackle.corepb.UpdateNamespaceResponseH\x00R\x17updateNamespaceResponse\x12p\n" +
-	"\x19delete_namespace_response\x18\x16 \x01(\v22.com.evrblk.grackle.corepb.DeleteNamespaceResponseH\x00R\x17deleteNamespaceResponse\x12j\n" +
-	"\x17create_barrier_response\x18\x17 \x01(\v20.com.evrblk.grackle.corepb.CreateBarrierResponseH\x00R\x15createBarrierResponse\x12j\n" +
-	"\x17delete_barrier_response\x18\x18 \x01(\v20.com.evrblk.grackle.corepb.DeleteBarrierResponseH\x00R\x15deleteBarrierResponse\x12j\n" +
-	"\x17update_barrier_response\x18\x19 \x01(\v20.com.evrblk.grackle.corepb.UpdateBarrierResponseH\x00R\x15updateBarrierResponse\x12q\n" +
-	"\x1aarrive_at_barrier_response\x18\x1a \x01(\v22.com.evrblk.grackle.corepb.ArriveAtBarrierResponseH\x00R\x17arriveAtBarrierResponse\x12k\n" +
-	"\x18wait_at_barrier_response\x18\x1b \x01(\v20.com.evrblk.grackle.corepb.WaitAtBarrierResponseH\x00R\x15waitAtBarrierResponse\x12\x99\x01\n" +
-	"(run_barriers_garbage_collection_response\x18\x1c \x01(\v2?.com.evrblk.grackle.corepb.RunBarriersGarbageCollectionResponseH\x00R$runBarriersGarbageCollectionResponse\x12\x89\x01\n" +
-	"\"barriers_delete_namespace_response\x18\x1d \x01(\v2:.com.evrblk.grackle.corepb.BarriersDeleteNamespaceResponseH\x00R\x1fbarriersDeleteNamespaceResponseB\n" +
+	"$semaphores_delete_namespace_response\x18\a \x01(\v2<.com.evrblk.grackle.corepb.SemaphoresDeleteNamespaceResponseH\x00R!semaphoresDeleteNamespaceResponse\x12\x80\x01\n" +
+	"\x1fcreate_semaphore_lease_response\x18\b \x01(\v27.com.evrblk.grackle.corepb.CreateSemaphoreLeaseResponseH\x00R\x1ccreateSemaphoreLeaseResponse\x12\x83\x01\n" +
+	" refresh_semaphore_lease_response\x18\t \x01(\v28.com.evrblk.grackle.corepb.RefreshSemaphoreLeaseResponseH\x00R\x1drefreshSemaphoreLeaseResponse\x12\x80\x01\n" +
+	"\x1frevoke_semaphore_lease_response\x18\n" +
+	" \x01(\v27.com.evrblk.grackle.corepb.RevokeSemaphoreLeaseResponseH\x00R\x1crevokeSemaphoreLeaseResponse\x12q\n" +
+	"\x1acreate_wait_group_response\x18\v \x01(\v22.com.evrblk.grackle.corepb.CreateWaitGroupResponseH\x00R\x17createWaitGroupResponse\x12q\n" +
+	"\x1adelete_wait_group_response\x18\f \x01(\v22.com.evrblk.grackle.corepb.DeleteWaitGroupResponseH\x00R\x17deleteWaitGroupResponse\x12|\n" +
+	"\x1fadd_jobs_to_wait_group_response\x18\r \x01(\v25.com.evrblk.grackle.corepb.AddJobsToWaitGroupResponseH\x00R\x1aaddJobsToWaitGroupResponse\x12\x91\x01\n" +
+	"&complete_jobs_from_wait_group_response\x18\x0e \x01(\v2<.com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupResponseH\x00R!completeJobsFromWaitGroupResponse\x12\xa0\x01\n" +
+	"+run_wait_groups_garbage_collection_response\x18\x0f \x01(\v2A.com.evrblk.grackle.corepb.RunWaitGroupsGarbageCollectionResponseH\x00R&runWaitGroupsGarbageCollectionResponse\x12\x90\x01\n" +
+	"%wait_groups_delete_namespace_response\x18\x10 \x01(\v2<.com.evrblk.grackle.corepb.WaitGroupsDeleteNamespaceResponseH\x00R!waitGroupsDeleteNamespaceResponse\x12d\n" +
+	"\x15acquire_lock_response\x18\x11 \x01(\v2..com.evrblk.grackle.corepb.AcquireLockResponseH\x00R\x13acquireLockResponse\x12d\n" +
+	"\x15release_lock_response\x18\x12 \x01(\v2..com.evrblk.grackle.corepb.ReleaseLockResponseH\x00R\x13releaseLockResponse\x12a\n" +
+	"\x14delete_lock_response\x18\x13 \x01(\v2-.com.evrblk.grackle.corepb.DeleteLockResponseH\x00R\x12deleteLockResponse\x12X\n" +
+	"\x11get_lock_response\x18\x14 \x01(\v2*.com.evrblk.grackle.corepb.GetLockResponseH\x00R\x0fgetLockResponse\x12\x90\x01\n" +
+	"%run_locks_garbage_collection_response\x18\x15 \x01(\v2<.com.evrblk.grackle.corepb.RunLocksGarbageCollectionResponseH\x00R!runLocksGarbageCollectionResponse\x12\x80\x01\n" +
+	"\x1flocks_delete_namespace_response\x18\x16 \x01(\v27.com.evrblk.grackle.corepb.LocksDeleteNamespaceResponseH\x00R\x1clocksDeleteNamespaceResponse\x12q\n" +
+	"\x1acreate_lock_lease_response\x18\x17 \x01(\v22.com.evrblk.grackle.corepb.CreateLockLeaseResponseH\x00R\x17createLockLeaseResponse\x12t\n" +
+	"\x1brefresh_lock_lease_response\x18\x18 \x01(\v23.com.evrblk.grackle.corepb.RefreshLockLeaseResponseH\x00R\x18refreshLockLeaseResponse\x12q\n" +
+	"\x1arevoke_lock_lease_response\x18\x19 \x01(\v22.com.evrblk.grackle.corepb.RevokeLockLeaseResponseH\x00R\x17revokeLockLeaseResponse\x12p\n" +
+	"\x19create_namespace_response\x18\x1a \x01(\v22.com.evrblk.grackle.corepb.CreateNamespaceResponseH\x00R\x17createNamespaceResponse\x12p\n" +
+	"\x19update_namespace_response\x18\x1b \x01(\v22.com.evrblk.grackle.corepb.UpdateNamespaceResponseH\x00R\x17updateNamespaceResponse\x12p\n" +
+	"\x19delete_namespace_response\x18\x1c \x01(\v22.com.evrblk.grackle.corepb.DeleteNamespaceResponseH\x00R\x17deleteNamespaceResponse\x12j\n" +
+	"\x17create_barrier_response\x18\x1d \x01(\v20.com.evrblk.grackle.corepb.CreateBarrierResponseH\x00R\x15createBarrierResponse\x12j\n" +
+	"\x17delete_barrier_response\x18\x1e \x01(\v20.com.evrblk.grackle.corepb.DeleteBarrierResponseH\x00R\x15deleteBarrierResponse\x12j\n" +
+	"\x17update_barrier_response\x18\x1f \x01(\v20.com.evrblk.grackle.corepb.UpdateBarrierResponseH\x00R\x15updateBarrierResponse\x12q\n" +
+	"\x1aarrive_at_barrier_response\x18  \x01(\v22.com.evrblk.grackle.corepb.ArriveAtBarrierResponseH\x00R\x17arriveAtBarrierResponse\x12k\n" +
+	"\x18wait_at_barrier_response\x18! \x01(\v20.com.evrblk.grackle.corepb.WaitAtBarrierResponseH\x00R\x15waitAtBarrierResponse\x12\x99\x01\n" +
+	"(run_barriers_garbage_collection_response\x18\" \x01(\v2?.com.evrblk.grackle.corepb.RunBarriersGarbageCollectionResponseH\x00R$runBarriersGarbageCollectionResponse\x12\x89\x01\n" +
+	"\"barriers_delete_namespace_response\x18# \x01(\v2:.com.evrblk.grackle.corepb.BarriersDeleteNamespaceResponseH\x00R\x1fbarriersDeleteNamespaceResponseB\n" +
 	"\n" +
 	"\bresponseB&Z$github.com/evrblk/grackle/pkg/corepbb\x06proto3"
 
@@ -1795,190 +2271,246 @@ var file_pkg_corepb_monstera_proto_goTypes = []any{
 	(*GetSemaphoreRequest)(nil),                    // 4: com.evrblk.grackle.corepb.GetSemaphoreRequest
 	(*GetSemaphoreByNameRequest)(nil),              // 5: com.evrblk.grackle.corepb.GetSemaphoreByNameRequest
 	(*ListSemaphoresRequest)(nil),                  // 6: com.evrblk.grackle.corepb.ListSemaphoresRequest
-	(*ListSemaphoreHoldersRequest)(nil),            // 7: com.evrblk.grackle.corepb.ListSemaphoreHoldersRequest
-	(*GetWaitGroupRequest)(nil),                    // 8: com.evrblk.grackle.corepb.GetWaitGroupRequest
-	(*GetWaitGroupByNameRequest)(nil),              // 9: com.evrblk.grackle.corepb.GetWaitGroupByNameRequest
-	(*ListWaitGroupsRequest)(nil),                  // 10: com.evrblk.grackle.corepb.ListWaitGroupsRequest
-	(*ListWaitGroupJobsRequest)(nil),               // 11: com.evrblk.grackle.corepb.ListWaitGroupJobsRequest
-	(*GetNamespaceRequest)(nil),                    // 12: com.evrblk.grackle.corepb.GetNamespaceRequest
-	(*GetNamespaceByNameRequest)(nil),              // 13: com.evrblk.grackle.corepb.GetNamespaceByNameRequest
-	(*ListNamespacesRequest)(nil),                  // 14: com.evrblk.grackle.corepb.ListNamespacesRequest
-	(*ListLocksRequest)(nil),                       // 15: com.evrblk.grackle.corepb.ListLocksRequest
-	(*GetBarrierRequest)(nil),                      // 16: com.evrblk.grackle.corepb.GetBarrierRequest
-	(*GetBarrierByNameRequest)(nil),                // 17: com.evrblk.grackle.corepb.GetBarrierByNameRequest
-	(*ListBarriersRequest)(nil),                    // 18: com.evrblk.grackle.corepb.ListBarriersRequest
-	(*ListBarrierParticipantsRequest)(nil),         // 19: com.evrblk.grackle.corepb.ListBarrierParticipantsRequest
-	(*GetSemaphoreResponse)(nil),                   // 20: com.evrblk.grackle.corepb.GetSemaphoreResponse
-	(*GetSemaphoreByNameResponse)(nil),             // 21: com.evrblk.grackle.corepb.GetSemaphoreByNameResponse
-	(*ListSemaphoresResponse)(nil),                 // 22: com.evrblk.grackle.corepb.ListSemaphoresResponse
-	(*ListSemaphoreHoldersResponse)(nil),           // 23: com.evrblk.grackle.corepb.ListSemaphoreHoldersResponse
-	(*GetWaitGroupResponse)(nil),                   // 24: com.evrblk.grackle.corepb.GetWaitGroupResponse
-	(*GetWaitGroupByNameResponse)(nil),             // 25: com.evrblk.grackle.corepb.GetWaitGroupByNameResponse
-	(*ListWaitGroupsResponse)(nil),                 // 26: com.evrblk.grackle.corepb.ListWaitGroupsResponse
-	(*ListWaitGroupJobsResponse)(nil),              // 27: com.evrblk.grackle.corepb.ListWaitGroupJobsResponse
-	(*GetNamespaceResponse)(nil),                   // 28: com.evrblk.grackle.corepb.GetNamespaceResponse
-	(*GetNamespaceByNameResponse)(nil),             // 29: com.evrblk.grackle.corepb.GetNamespaceByNameResponse
-	(*ListNamespacesResponse)(nil),                 // 30: com.evrblk.grackle.corepb.ListNamespacesResponse
-	(*ListLocksResponse)(nil),                      // 31: com.evrblk.grackle.corepb.ListLocksResponse
-	(*GetBarrierResponse)(nil),                     // 32: com.evrblk.grackle.corepb.GetBarrierResponse
-	(*GetBarrierByNameResponse)(nil),               // 33: com.evrblk.grackle.corepb.GetBarrierByNameResponse
-	(*ListBarriersResponse)(nil),                   // 34: com.evrblk.grackle.corepb.ListBarriersResponse
-	(*ListBarrierParticipantsResponse)(nil),        // 35: com.evrblk.grackle.corepb.ListBarrierParticipantsResponse
-	(*CreateSemaphoreRequest)(nil),                 // 36: com.evrblk.grackle.corepb.CreateSemaphoreRequest
-	(*UpdateSemaphoreRequest)(nil),                 // 37: com.evrblk.grackle.corepb.UpdateSemaphoreRequest
-	(*DeleteSemaphoreRequest)(nil),                 // 38: com.evrblk.grackle.corepb.DeleteSemaphoreRequest
-	(*AcquireSemaphoreRequest)(nil),                // 39: com.evrblk.grackle.corepb.AcquireSemaphoreRequest
-	(*ReleaseSemaphoreRequest)(nil),                // 40: com.evrblk.grackle.corepb.ReleaseSemaphoreRequest
-	(*RunSemaphoresGarbageCollectionRequest)(nil),  // 41: com.evrblk.grackle.corepb.RunSemaphoresGarbageCollectionRequest
-	(*SemaphoresDeleteNamespaceRequest)(nil),       // 42: com.evrblk.grackle.corepb.SemaphoresDeleteNamespaceRequest
-	(*CreateWaitGroupRequest)(nil),                 // 43: com.evrblk.grackle.corepb.CreateWaitGroupRequest
-	(*DeleteWaitGroupRequest)(nil),                 // 44: com.evrblk.grackle.corepb.DeleteWaitGroupRequest
-	(*AddJobsToWaitGroupRequest)(nil),              // 45: com.evrblk.grackle.corepb.AddJobsToWaitGroupRequest
-	(*CompleteJobsFromWaitGroupRequest)(nil),       // 46: com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupRequest
-	(*RunWaitGroupsGarbageCollectionRequest)(nil),  // 47: com.evrblk.grackle.corepb.RunWaitGroupsGarbageCollectionRequest
-	(*WaitGroupsDeleteNamespaceRequest)(nil),       // 48: com.evrblk.grackle.corepb.WaitGroupsDeleteNamespaceRequest
-	(*AcquireLockRequest)(nil),                     // 49: com.evrblk.grackle.corepb.AcquireLockRequest
-	(*ReleaseLockRequest)(nil),                     // 50: com.evrblk.grackle.corepb.ReleaseLockRequest
-	(*DeleteLockRequest)(nil),                      // 51: com.evrblk.grackle.corepb.DeleteLockRequest
-	(*GetLockRequest)(nil),                         // 52: com.evrblk.grackle.corepb.GetLockRequest
-	(*RunLocksGarbageCollectionRequest)(nil),       // 53: com.evrblk.grackle.corepb.RunLocksGarbageCollectionRequest
-	(*LocksDeleteNamespaceRequest)(nil),            // 54: com.evrblk.grackle.corepb.LocksDeleteNamespaceRequest
-	(*CreateNamespaceRequest)(nil),                 // 55: com.evrblk.grackle.corepb.CreateNamespaceRequest
-	(*UpdateNamespaceRequest)(nil),                 // 56: com.evrblk.grackle.corepb.UpdateNamespaceRequest
-	(*DeleteNamespaceRequest)(nil),                 // 57: com.evrblk.grackle.corepb.DeleteNamespaceRequest
-	(*CreateBarrierRequest)(nil),                   // 58: com.evrblk.grackle.corepb.CreateBarrierRequest
-	(*DeleteBarrierRequest)(nil),                   // 59: com.evrblk.grackle.corepb.DeleteBarrierRequest
-	(*UpdateBarrierRequest)(nil),                   // 60: com.evrblk.grackle.corepb.UpdateBarrierRequest
-	(*ArriveAtBarrierRequest)(nil),                 // 61: com.evrblk.grackle.corepb.ArriveAtBarrierRequest
-	(*WaitAtBarrierRequest)(nil),                   // 62: com.evrblk.grackle.corepb.WaitAtBarrierRequest
-	(*RunBarriersGarbageCollectionRequest)(nil),    // 63: com.evrblk.grackle.corepb.RunBarriersGarbageCollectionRequest
-	(*BarriersDeleteNamespaceRequest)(nil),         // 64: com.evrblk.grackle.corepb.BarriersDeleteNamespaceRequest
-	(*CreateSemaphoreResponse)(nil),                // 65: com.evrblk.grackle.corepb.CreateSemaphoreResponse
-	(*UpdateSemaphoreResponse)(nil),                // 66: com.evrblk.grackle.corepb.UpdateSemaphoreResponse
-	(*DeleteSemaphoreResponse)(nil),                // 67: com.evrblk.grackle.corepb.DeleteSemaphoreResponse
-	(*AcquireSemaphoreResponse)(nil),               // 68: com.evrblk.grackle.corepb.AcquireSemaphoreResponse
-	(*ReleaseSemaphoreResponse)(nil),               // 69: com.evrblk.grackle.corepb.ReleaseSemaphoreResponse
-	(*RunSemaphoresGarbageCollectionResponse)(nil), // 70: com.evrblk.grackle.corepb.RunSemaphoresGarbageCollectionResponse
-	(*SemaphoresDeleteNamespaceResponse)(nil),      // 71: com.evrblk.grackle.corepb.SemaphoresDeleteNamespaceResponse
-	(*CreateWaitGroupResponse)(nil),                // 72: com.evrblk.grackle.corepb.CreateWaitGroupResponse
-	(*DeleteWaitGroupResponse)(nil),                // 73: com.evrblk.grackle.corepb.DeleteWaitGroupResponse
-	(*AddJobsToWaitGroupResponse)(nil),             // 74: com.evrblk.grackle.corepb.AddJobsToWaitGroupResponse
-	(*CompleteJobsFromWaitGroupResponse)(nil),      // 75: com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupResponse
-	(*RunWaitGroupsGarbageCollectionResponse)(nil), // 76: com.evrblk.grackle.corepb.RunWaitGroupsGarbageCollectionResponse
-	(*WaitGroupsDeleteNamespaceResponse)(nil),      // 77: com.evrblk.grackle.corepb.WaitGroupsDeleteNamespaceResponse
-	(*AcquireLockResponse)(nil),                    // 78: com.evrblk.grackle.corepb.AcquireLockResponse
-	(*ReleaseLockResponse)(nil),                    // 79: com.evrblk.grackle.corepb.ReleaseLockResponse
-	(*DeleteLockResponse)(nil),                     // 80: com.evrblk.grackle.corepb.DeleteLockResponse
-	(*GetLockResponse)(nil),                        // 81: com.evrblk.grackle.corepb.GetLockResponse
-	(*RunLocksGarbageCollectionResponse)(nil),      // 82: com.evrblk.grackle.corepb.RunLocksGarbageCollectionResponse
-	(*LocksDeleteNamespaceResponse)(nil),           // 83: com.evrblk.grackle.corepb.LocksDeleteNamespaceResponse
-	(*CreateNamespaceResponse)(nil),                // 84: com.evrblk.grackle.corepb.CreateNamespaceResponse
-	(*UpdateNamespaceResponse)(nil),                // 85: com.evrblk.grackle.corepb.UpdateNamespaceResponse
-	(*DeleteNamespaceResponse)(nil),                // 86: com.evrblk.grackle.corepb.DeleteNamespaceResponse
-	(*CreateBarrierResponse)(nil),                  // 87: com.evrblk.grackle.corepb.CreateBarrierResponse
-	(*DeleteBarrierResponse)(nil),                  // 88: com.evrblk.grackle.corepb.DeleteBarrierResponse
-	(*UpdateBarrierResponse)(nil),                  // 89: com.evrblk.grackle.corepb.UpdateBarrierResponse
-	(*ArriveAtBarrierResponse)(nil),                // 90: com.evrblk.grackle.corepb.ArriveAtBarrierResponse
-	(*WaitAtBarrierResponse)(nil),                  // 91: com.evrblk.grackle.corepb.WaitAtBarrierResponse
-	(*RunBarriersGarbageCollectionResponse)(nil),   // 92: com.evrblk.grackle.corepb.RunBarriersGarbageCollectionResponse
-	(*BarriersDeleteNamespaceResponse)(nil),        // 93: com.evrblk.grackle.corepb.BarriersDeleteNamespaceResponse
+	(*ListSemaphoresByLeaseIdRequest)(nil),         // 7: com.evrblk.grackle.corepb.ListSemaphoresByLeaseIdRequest
+	(*ListSemaphoreHoldersRequest)(nil),            // 8: com.evrblk.grackle.corepb.ListSemaphoreHoldersRequest
+	(*ListSemaphoreLeasesRequest)(nil),             // 9: com.evrblk.grackle.corepb.ListSemaphoreLeasesRequest
+	(*ListSemaphoreLeasesByProcessIdRequest)(nil),  // 10: com.evrblk.grackle.corepb.ListSemaphoreLeasesByProcessIdRequest
+	(*GetSemaphoreLeaseRequest)(nil),               // 11: com.evrblk.grackle.corepb.GetSemaphoreLeaseRequest
+	(*GetWaitGroupRequest)(nil),                    // 12: com.evrblk.grackle.corepb.GetWaitGroupRequest
+	(*GetWaitGroupByNameRequest)(nil),              // 13: com.evrblk.grackle.corepb.GetWaitGroupByNameRequest
+	(*ListWaitGroupsRequest)(nil),                  // 14: com.evrblk.grackle.corepb.ListWaitGroupsRequest
+	(*ListWaitGroupJobsRequest)(nil),               // 15: com.evrblk.grackle.corepb.ListWaitGroupJobsRequest
+	(*GetNamespaceRequest)(nil),                    // 16: com.evrblk.grackle.corepb.GetNamespaceRequest
+	(*GetNamespaceByNameRequest)(nil),              // 17: com.evrblk.grackle.corepb.GetNamespaceByNameRequest
+	(*ListNamespacesRequest)(nil),                  // 18: com.evrblk.grackle.corepb.ListNamespacesRequest
+	(*ListLocksRequest)(nil),                       // 19: com.evrblk.grackle.corepb.ListLocksRequest
+	(*ListLocksByLeaseIdRequest)(nil),              // 20: com.evrblk.grackle.corepb.ListLocksByLeaseIdRequest
+	(*GetLockLeaseRequest)(nil),                    // 21: com.evrblk.grackle.corepb.GetLockLeaseRequest
+	(*ListLockLeasesRequest)(nil),                  // 22: com.evrblk.grackle.corepb.ListLockLeasesRequest
+	(*ListLockLeasesByProcessIdRequest)(nil),       // 23: com.evrblk.grackle.corepb.ListLockLeasesByProcessIdRequest
+	(*GetBarrierRequest)(nil),                      // 24: com.evrblk.grackle.corepb.GetBarrierRequest
+	(*GetBarrierByNameRequest)(nil),                // 25: com.evrblk.grackle.corepb.GetBarrierByNameRequest
+	(*ListBarriersRequest)(nil),                    // 26: com.evrblk.grackle.corepb.ListBarriersRequest
+	(*ListBarrierParticipantsRequest)(nil),         // 27: com.evrblk.grackle.corepb.ListBarrierParticipantsRequest
+	(*GetSemaphoreResponse)(nil),                   // 28: com.evrblk.grackle.corepb.GetSemaphoreResponse
+	(*GetSemaphoreByNameResponse)(nil),             // 29: com.evrblk.grackle.corepb.GetSemaphoreByNameResponse
+	(*ListSemaphoresResponse)(nil),                 // 30: com.evrblk.grackle.corepb.ListSemaphoresResponse
+	(*ListSemaphoresByLeaseIdResponse)(nil),        // 31: com.evrblk.grackle.corepb.ListSemaphoresByLeaseIdResponse
+	(*ListSemaphoreHoldersResponse)(nil),           // 32: com.evrblk.grackle.corepb.ListSemaphoreHoldersResponse
+	(*ListSemaphoreLeasesResponse)(nil),            // 33: com.evrblk.grackle.corepb.ListSemaphoreLeasesResponse
+	(*GetSemaphoreLeaseResponse)(nil),              // 34: com.evrblk.grackle.corepb.GetSemaphoreLeaseResponse
+	(*ListSemaphoreLeasesByProcessIdResponse)(nil), // 35: com.evrblk.grackle.corepb.ListSemaphoreLeasesByProcessIdResponse
+	(*GetWaitGroupResponse)(nil),                   // 36: com.evrblk.grackle.corepb.GetWaitGroupResponse
+	(*GetWaitGroupByNameResponse)(nil),             // 37: com.evrblk.grackle.corepb.GetWaitGroupByNameResponse
+	(*ListWaitGroupsResponse)(nil),                 // 38: com.evrblk.grackle.corepb.ListWaitGroupsResponse
+	(*ListWaitGroupJobsResponse)(nil),              // 39: com.evrblk.grackle.corepb.ListWaitGroupJobsResponse
+	(*GetNamespaceResponse)(nil),                   // 40: com.evrblk.grackle.corepb.GetNamespaceResponse
+	(*GetNamespaceByNameResponse)(nil),             // 41: com.evrblk.grackle.corepb.GetNamespaceByNameResponse
+	(*ListNamespacesResponse)(nil),                 // 42: com.evrblk.grackle.corepb.ListNamespacesResponse
+	(*ListLocksResponse)(nil),                      // 43: com.evrblk.grackle.corepb.ListLocksResponse
+	(*ListLocksByLeaseIdResponse)(nil),             // 44: com.evrblk.grackle.corepb.ListLocksByLeaseIdResponse
+	(*GetLockLeaseResponse)(nil),                   // 45: com.evrblk.grackle.corepb.GetLockLeaseResponse
+	(*ListLockLeasesResponse)(nil),                 // 46: com.evrblk.grackle.corepb.ListLockLeasesResponse
+	(*ListLockLeasesByProcessIdResponse)(nil),      // 47: com.evrblk.grackle.corepb.ListLockLeasesByProcessIdResponse
+	(*GetBarrierResponse)(nil),                     // 48: com.evrblk.grackle.corepb.GetBarrierResponse
+	(*GetBarrierByNameResponse)(nil),               // 49: com.evrblk.grackle.corepb.GetBarrierByNameResponse
+	(*ListBarriersResponse)(nil),                   // 50: com.evrblk.grackle.corepb.ListBarriersResponse
+	(*ListBarrierParticipantsResponse)(nil),        // 51: com.evrblk.grackle.corepb.ListBarrierParticipantsResponse
+	(*CreateSemaphoreRequest)(nil),                 // 52: com.evrblk.grackle.corepb.CreateSemaphoreRequest
+	(*UpdateSemaphoreRequest)(nil),                 // 53: com.evrblk.grackle.corepb.UpdateSemaphoreRequest
+	(*DeleteSemaphoreRequest)(nil),                 // 54: com.evrblk.grackle.corepb.DeleteSemaphoreRequest
+	(*AcquireSemaphoreRequest)(nil),                // 55: com.evrblk.grackle.corepb.AcquireSemaphoreRequest
+	(*ReleaseSemaphoreRequest)(nil),                // 56: com.evrblk.grackle.corepb.ReleaseSemaphoreRequest
+	(*RunSemaphoresGarbageCollectionRequest)(nil),  // 57: com.evrblk.grackle.corepb.RunSemaphoresGarbageCollectionRequest
+	(*SemaphoresDeleteNamespaceRequest)(nil),       // 58: com.evrblk.grackle.corepb.SemaphoresDeleteNamespaceRequest
+	(*CreateSemaphoreLeaseRequest)(nil),            // 59: com.evrblk.grackle.corepb.CreateSemaphoreLeaseRequest
+	(*RefreshSemaphoreLeaseRequest)(nil),           // 60: com.evrblk.grackle.corepb.RefreshSemaphoreLeaseRequest
+	(*RevokeSemaphoreLeaseRequest)(nil),            // 61: com.evrblk.grackle.corepb.RevokeSemaphoreLeaseRequest
+	(*CreateWaitGroupRequest)(nil),                 // 62: com.evrblk.grackle.corepb.CreateWaitGroupRequest
+	(*DeleteWaitGroupRequest)(nil),                 // 63: com.evrblk.grackle.corepb.DeleteWaitGroupRequest
+	(*AddJobsToWaitGroupRequest)(nil),              // 64: com.evrblk.grackle.corepb.AddJobsToWaitGroupRequest
+	(*CompleteJobsFromWaitGroupRequest)(nil),       // 65: com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupRequest
+	(*RunWaitGroupsGarbageCollectionRequest)(nil),  // 66: com.evrblk.grackle.corepb.RunWaitGroupsGarbageCollectionRequest
+	(*WaitGroupsDeleteNamespaceRequest)(nil),       // 67: com.evrblk.grackle.corepb.WaitGroupsDeleteNamespaceRequest
+	(*AcquireLockRequest)(nil),                     // 68: com.evrblk.grackle.corepb.AcquireLockRequest
+	(*ReleaseLockRequest)(nil),                     // 69: com.evrblk.grackle.corepb.ReleaseLockRequest
+	(*DeleteLockRequest)(nil),                      // 70: com.evrblk.grackle.corepb.DeleteLockRequest
+	(*GetLockRequest)(nil),                         // 71: com.evrblk.grackle.corepb.GetLockRequest
+	(*RunLocksGarbageCollectionRequest)(nil),       // 72: com.evrblk.grackle.corepb.RunLocksGarbageCollectionRequest
+	(*LocksDeleteNamespaceRequest)(nil),            // 73: com.evrblk.grackle.corepb.LocksDeleteNamespaceRequest
+	(*CreateLockLeaseRequest)(nil),                 // 74: com.evrblk.grackle.corepb.CreateLockLeaseRequest
+	(*RefreshLockLeaseRequest)(nil),                // 75: com.evrblk.grackle.corepb.RefreshLockLeaseRequest
+	(*RevokeLockLeaseRequest)(nil),                 // 76: com.evrblk.grackle.corepb.RevokeLockLeaseRequest
+	(*CreateNamespaceRequest)(nil),                 // 77: com.evrblk.grackle.corepb.CreateNamespaceRequest
+	(*UpdateNamespaceRequest)(nil),                 // 78: com.evrblk.grackle.corepb.UpdateNamespaceRequest
+	(*DeleteNamespaceRequest)(nil),                 // 79: com.evrblk.grackle.corepb.DeleteNamespaceRequest
+	(*CreateBarrierRequest)(nil),                   // 80: com.evrblk.grackle.corepb.CreateBarrierRequest
+	(*DeleteBarrierRequest)(nil),                   // 81: com.evrblk.grackle.corepb.DeleteBarrierRequest
+	(*UpdateBarrierRequest)(nil),                   // 82: com.evrblk.grackle.corepb.UpdateBarrierRequest
+	(*ArriveAtBarrierRequest)(nil),                 // 83: com.evrblk.grackle.corepb.ArriveAtBarrierRequest
+	(*WaitAtBarrierRequest)(nil),                   // 84: com.evrblk.grackle.corepb.WaitAtBarrierRequest
+	(*RunBarriersGarbageCollectionRequest)(nil),    // 85: com.evrblk.grackle.corepb.RunBarriersGarbageCollectionRequest
+	(*BarriersDeleteNamespaceRequest)(nil),         // 86: com.evrblk.grackle.corepb.BarriersDeleteNamespaceRequest
+	(*CreateSemaphoreResponse)(nil),                // 87: com.evrblk.grackle.corepb.CreateSemaphoreResponse
+	(*UpdateSemaphoreResponse)(nil),                // 88: com.evrblk.grackle.corepb.UpdateSemaphoreResponse
+	(*DeleteSemaphoreResponse)(nil),                // 89: com.evrblk.grackle.corepb.DeleteSemaphoreResponse
+	(*AcquireSemaphoreResponse)(nil),               // 90: com.evrblk.grackle.corepb.AcquireSemaphoreResponse
+	(*ReleaseSemaphoreResponse)(nil),               // 91: com.evrblk.grackle.corepb.ReleaseSemaphoreResponse
+	(*RunSemaphoresGarbageCollectionResponse)(nil), // 92: com.evrblk.grackle.corepb.RunSemaphoresGarbageCollectionResponse
+	(*SemaphoresDeleteNamespaceResponse)(nil),      // 93: com.evrblk.grackle.corepb.SemaphoresDeleteNamespaceResponse
+	(*CreateSemaphoreLeaseResponse)(nil),           // 94: com.evrblk.grackle.corepb.CreateSemaphoreLeaseResponse
+	(*RefreshSemaphoreLeaseResponse)(nil),          // 95: com.evrblk.grackle.corepb.RefreshSemaphoreLeaseResponse
+	(*RevokeSemaphoreLeaseResponse)(nil),           // 96: com.evrblk.grackle.corepb.RevokeSemaphoreLeaseResponse
+	(*CreateWaitGroupResponse)(nil),                // 97: com.evrblk.grackle.corepb.CreateWaitGroupResponse
+	(*DeleteWaitGroupResponse)(nil),                // 98: com.evrblk.grackle.corepb.DeleteWaitGroupResponse
+	(*AddJobsToWaitGroupResponse)(nil),             // 99: com.evrblk.grackle.corepb.AddJobsToWaitGroupResponse
+	(*CompleteJobsFromWaitGroupResponse)(nil),      // 100: com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupResponse
+	(*RunWaitGroupsGarbageCollectionResponse)(nil), // 101: com.evrblk.grackle.corepb.RunWaitGroupsGarbageCollectionResponse
+	(*WaitGroupsDeleteNamespaceResponse)(nil),      // 102: com.evrblk.grackle.corepb.WaitGroupsDeleteNamespaceResponse
+	(*AcquireLockResponse)(nil),                    // 103: com.evrblk.grackle.corepb.AcquireLockResponse
+	(*ReleaseLockResponse)(nil),                    // 104: com.evrblk.grackle.corepb.ReleaseLockResponse
+	(*DeleteLockResponse)(nil),                     // 105: com.evrblk.grackle.corepb.DeleteLockResponse
+	(*GetLockResponse)(nil),                        // 106: com.evrblk.grackle.corepb.GetLockResponse
+	(*RunLocksGarbageCollectionResponse)(nil),      // 107: com.evrblk.grackle.corepb.RunLocksGarbageCollectionResponse
+	(*LocksDeleteNamespaceResponse)(nil),           // 108: com.evrblk.grackle.corepb.LocksDeleteNamespaceResponse
+	(*CreateLockLeaseResponse)(nil),                // 109: com.evrblk.grackle.corepb.CreateLockLeaseResponse
+	(*RefreshLockLeaseResponse)(nil),               // 110: com.evrblk.grackle.corepb.RefreshLockLeaseResponse
+	(*RevokeLockLeaseResponse)(nil),                // 111: com.evrblk.grackle.corepb.RevokeLockLeaseResponse
+	(*CreateNamespaceResponse)(nil),                // 112: com.evrblk.grackle.corepb.CreateNamespaceResponse
+	(*UpdateNamespaceResponse)(nil),                // 113: com.evrblk.grackle.corepb.UpdateNamespaceResponse
+	(*DeleteNamespaceResponse)(nil),                // 114: com.evrblk.grackle.corepb.DeleteNamespaceResponse
+	(*CreateBarrierResponse)(nil),                  // 115: com.evrblk.grackle.corepb.CreateBarrierResponse
+	(*DeleteBarrierResponse)(nil),                  // 116: com.evrblk.grackle.corepb.DeleteBarrierResponse
+	(*UpdateBarrierResponse)(nil),                  // 117: com.evrblk.grackle.corepb.UpdateBarrierResponse
+	(*ArriveAtBarrierResponse)(nil),                // 118: com.evrblk.grackle.corepb.ArriveAtBarrierResponse
+	(*WaitAtBarrierResponse)(nil),                  // 119: com.evrblk.grackle.corepb.WaitAtBarrierResponse
+	(*RunBarriersGarbageCollectionResponse)(nil),   // 120: com.evrblk.grackle.corepb.RunBarriersGarbageCollectionResponse
+	(*BarriersDeleteNamespaceResponse)(nil),        // 121: com.evrblk.grackle.corepb.BarriersDeleteNamespaceResponse
 }
 var file_pkg_corepb_monstera_proto_depIdxs = []int32{
-	4,  // 0: com.evrblk.grackle.corepb.GrackleReadRequest.get_semaphore_request:type_name -> com.evrblk.grackle.corepb.GetSemaphoreRequest
-	5,  // 1: com.evrblk.grackle.corepb.GrackleReadRequest.get_semaphore_by_name_request:type_name -> com.evrblk.grackle.corepb.GetSemaphoreByNameRequest
-	6,  // 2: com.evrblk.grackle.corepb.GrackleReadRequest.list_semaphores_request:type_name -> com.evrblk.grackle.corepb.ListSemaphoresRequest
-	7,  // 3: com.evrblk.grackle.corepb.GrackleReadRequest.list_semaphore_holders_request:type_name -> com.evrblk.grackle.corepb.ListSemaphoreHoldersRequest
-	8,  // 4: com.evrblk.grackle.corepb.GrackleReadRequest.get_wait_group_request:type_name -> com.evrblk.grackle.corepb.GetWaitGroupRequest
-	9,  // 5: com.evrblk.grackle.corepb.GrackleReadRequest.get_wait_group_by_name_request:type_name -> com.evrblk.grackle.corepb.GetWaitGroupByNameRequest
-	10, // 6: com.evrblk.grackle.corepb.GrackleReadRequest.list_wait_groups_request:type_name -> com.evrblk.grackle.corepb.ListWaitGroupsRequest
-	11, // 7: com.evrblk.grackle.corepb.GrackleReadRequest.list_wait_group_jobs_request:type_name -> com.evrblk.grackle.corepb.ListWaitGroupJobsRequest
-	12, // 8: com.evrblk.grackle.corepb.GrackleReadRequest.get_namespace_request:type_name -> com.evrblk.grackle.corepb.GetNamespaceRequest
-	13, // 9: com.evrblk.grackle.corepb.GrackleReadRequest.get_namespace_by_name_request:type_name -> com.evrblk.grackle.corepb.GetNamespaceByNameRequest
-	14, // 10: com.evrblk.grackle.corepb.GrackleReadRequest.list_namespaces_request:type_name -> com.evrblk.grackle.corepb.ListNamespacesRequest
-	15, // 11: com.evrblk.grackle.corepb.GrackleReadRequest.list_locks_request:type_name -> com.evrblk.grackle.corepb.ListLocksRequest
-	16, // 12: com.evrblk.grackle.corepb.GrackleReadRequest.get_barrier_request:type_name -> com.evrblk.grackle.corepb.GetBarrierRequest
-	17, // 13: com.evrblk.grackle.corepb.GrackleReadRequest.get_barrier_by_name_request:type_name -> com.evrblk.grackle.corepb.GetBarrierByNameRequest
-	18, // 14: com.evrblk.grackle.corepb.GrackleReadRequest.list_barriers_request:type_name -> com.evrblk.grackle.corepb.ListBarriersRequest
-	19, // 15: com.evrblk.grackle.corepb.GrackleReadRequest.list_barrier_participants_request:type_name -> com.evrblk.grackle.corepb.ListBarrierParticipantsRequest
-	20, // 16: com.evrblk.grackle.corepb.GrackleReadResponse.get_semaphore_response:type_name -> com.evrblk.grackle.corepb.GetSemaphoreResponse
-	21, // 17: com.evrblk.grackle.corepb.GrackleReadResponse.get_semaphore_by_name_response:type_name -> com.evrblk.grackle.corepb.GetSemaphoreByNameResponse
-	22, // 18: com.evrblk.grackle.corepb.GrackleReadResponse.list_semaphores_response:type_name -> com.evrblk.grackle.corepb.ListSemaphoresResponse
-	23, // 19: com.evrblk.grackle.corepb.GrackleReadResponse.list_semaphore_holders_response:type_name -> com.evrblk.grackle.corepb.ListSemaphoreHoldersResponse
-	24, // 20: com.evrblk.grackle.corepb.GrackleReadResponse.get_wait_group_response:type_name -> com.evrblk.grackle.corepb.GetWaitGroupResponse
-	25, // 21: com.evrblk.grackle.corepb.GrackleReadResponse.get_wait_group_by_name_response:type_name -> com.evrblk.grackle.corepb.GetWaitGroupByNameResponse
-	26, // 22: com.evrblk.grackle.corepb.GrackleReadResponse.list_wait_groups_response:type_name -> com.evrblk.grackle.corepb.ListWaitGroupsResponse
-	27, // 23: com.evrblk.grackle.corepb.GrackleReadResponse.list_wait_group_jobs_response:type_name -> com.evrblk.grackle.corepb.ListWaitGroupJobsResponse
-	28, // 24: com.evrblk.grackle.corepb.GrackleReadResponse.get_namespace_response:type_name -> com.evrblk.grackle.corepb.GetNamespaceResponse
-	29, // 25: com.evrblk.grackle.corepb.GrackleReadResponse.get_namespace_by_name_response:type_name -> com.evrblk.grackle.corepb.GetNamespaceByNameResponse
-	30, // 26: com.evrblk.grackle.corepb.GrackleReadResponse.list_namespaces_response:type_name -> com.evrblk.grackle.corepb.ListNamespacesResponse
-	31, // 27: com.evrblk.grackle.corepb.GrackleReadResponse.list_locks_response:type_name -> com.evrblk.grackle.corepb.ListLocksResponse
-	32, // 28: com.evrblk.grackle.corepb.GrackleReadResponse.get_barrier_response:type_name -> com.evrblk.grackle.corepb.GetBarrierResponse
-	33, // 29: com.evrblk.grackle.corepb.GrackleReadResponse.get_barrier_by_name_response:type_name -> com.evrblk.grackle.corepb.GetBarrierByNameResponse
-	34, // 30: com.evrblk.grackle.corepb.GrackleReadResponse.list_barriers_response:type_name -> com.evrblk.grackle.corepb.ListBarriersResponse
-	35, // 31: com.evrblk.grackle.corepb.GrackleReadResponse.list_barrier_participants_response:type_name -> com.evrblk.grackle.corepb.ListBarrierParticipantsResponse
-	36, // 32: com.evrblk.grackle.corepb.GrackleUpdateRequest.create_semaphore_request:type_name -> com.evrblk.grackle.corepb.CreateSemaphoreRequest
-	37, // 33: com.evrblk.grackle.corepb.GrackleUpdateRequest.update_semaphore_request:type_name -> com.evrblk.grackle.corepb.UpdateSemaphoreRequest
-	38, // 34: com.evrblk.grackle.corepb.GrackleUpdateRequest.delete_semaphore_request:type_name -> com.evrblk.grackle.corepb.DeleteSemaphoreRequest
-	39, // 35: com.evrblk.grackle.corepb.GrackleUpdateRequest.acquire_semaphore_request:type_name -> com.evrblk.grackle.corepb.AcquireSemaphoreRequest
-	40, // 36: com.evrblk.grackle.corepb.GrackleUpdateRequest.release_semaphore_request:type_name -> com.evrblk.grackle.corepb.ReleaseSemaphoreRequest
-	41, // 37: com.evrblk.grackle.corepb.GrackleUpdateRequest.run_semaphores_garbage_collection_request:type_name -> com.evrblk.grackle.corepb.RunSemaphoresGarbageCollectionRequest
-	42, // 38: com.evrblk.grackle.corepb.GrackleUpdateRequest.semaphores_delete_namespace_request:type_name -> com.evrblk.grackle.corepb.SemaphoresDeleteNamespaceRequest
-	43, // 39: com.evrblk.grackle.corepb.GrackleUpdateRequest.create_wait_group_request:type_name -> com.evrblk.grackle.corepb.CreateWaitGroupRequest
-	44, // 40: com.evrblk.grackle.corepb.GrackleUpdateRequest.delete_wait_group_request:type_name -> com.evrblk.grackle.corepb.DeleteWaitGroupRequest
-	45, // 41: com.evrblk.grackle.corepb.GrackleUpdateRequest.add_jobs_to_wait_group_request:type_name -> com.evrblk.grackle.corepb.AddJobsToWaitGroupRequest
-	46, // 42: com.evrblk.grackle.corepb.GrackleUpdateRequest.complete_jobs_from_wait_group_request:type_name -> com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupRequest
-	47, // 43: com.evrblk.grackle.corepb.GrackleUpdateRequest.run_wait_groups_garbage_collection_request:type_name -> com.evrblk.grackle.corepb.RunWaitGroupsGarbageCollectionRequest
-	48, // 44: com.evrblk.grackle.corepb.GrackleUpdateRequest.wait_groups_delete_namespace_request:type_name -> com.evrblk.grackle.corepb.WaitGroupsDeleteNamespaceRequest
-	49, // 45: com.evrblk.grackle.corepb.GrackleUpdateRequest.acquire_lock_request:type_name -> com.evrblk.grackle.corepb.AcquireLockRequest
-	50, // 46: com.evrblk.grackle.corepb.GrackleUpdateRequest.release_lock_request:type_name -> com.evrblk.grackle.corepb.ReleaseLockRequest
-	51, // 47: com.evrblk.grackle.corepb.GrackleUpdateRequest.delete_lock_request:type_name -> com.evrblk.grackle.corepb.DeleteLockRequest
-	52, // 48: com.evrblk.grackle.corepb.GrackleUpdateRequest.get_lock_request:type_name -> com.evrblk.grackle.corepb.GetLockRequest
-	53, // 49: com.evrblk.grackle.corepb.GrackleUpdateRequest.run_locks_garbage_collection_request:type_name -> com.evrblk.grackle.corepb.RunLocksGarbageCollectionRequest
-	54, // 50: com.evrblk.grackle.corepb.GrackleUpdateRequest.locks_delete_namespace_request:type_name -> com.evrblk.grackle.corepb.LocksDeleteNamespaceRequest
-	55, // 51: com.evrblk.grackle.corepb.GrackleUpdateRequest.create_namespace_request:type_name -> com.evrblk.grackle.corepb.CreateNamespaceRequest
-	56, // 52: com.evrblk.grackle.corepb.GrackleUpdateRequest.update_namespace_request:type_name -> com.evrblk.grackle.corepb.UpdateNamespaceRequest
-	57, // 53: com.evrblk.grackle.corepb.GrackleUpdateRequest.delete_namespace_request:type_name -> com.evrblk.grackle.corepb.DeleteNamespaceRequest
-	58, // 54: com.evrblk.grackle.corepb.GrackleUpdateRequest.create_barrier_request:type_name -> com.evrblk.grackle.corepb.CreateBarrierRequest
-	59, // 55: com.evrblk.grackle.corepb.GrackleUpdateRequest.delete_barrier_request:type_name -> com.evrblk.grackle.corepb.DeleteBarrierRequest
-	60, // 56: com.evrblk.grackle.corepb.GrackleUpdateRequest.update_barrier_request:type_name -> com.evrblk.grackle.corepb.UpdateBarrierRequest
-	61, // 57: com.evrblk.grackle.corepb.GrackleUpdateRequest.arrive_at_barrier_request:type_name -> com.evrblk.grackle.corepb.ArriveAtBarrierRequest
-	62, // 58: com.evrblk.grackle.corepb.GrackleUpdateRequest.wait_at_barrier_request:type_name -> com.evrblk.grackle.corepb.WaitAtBarrierRequest
-	63, // 59: com.evrblk.grackle.corepb.GrackleUpdateRequest.run_barriers_garbage_collection_request:type_name -> com.evrblk.grackle.corepb.RunBarriersGarbageCollectionRequest
-	64, // 60: com.evrblk.grackle.corepb.GrackleUpdateRequest.barriers_delete_namespace_request:type_name -> com.evrblk.grackle.corepb.BarriersDeleteNamespaceRequest
-	65, // 61: com.evrblk.grackle.corepb.GrackleUpdateResponse.create_semaphore_response:type_name -> com.evrblk.grackle.corepb.CreateSemaphoreResponse
-	66, // 62: com.evrblk.grackle.corepb.GrackleUpdateResponse.update_semaphore_response:type_name -> com.evrblk.grackle.corepb.UpdateSemaphoreResponse
-	67, // 63: com.evrblk.grackle.corepb.GrackleUpdateResponse.delete_semaphore_response:type_name -> com.evrblk.grackle.corepb.DeleteSemaphoreResponse
-	68, // 64: com.evrblk.grackle.corepb.GrackleUpdateResponse.acquire_semaphore_response:type_name -> com.evrblk.grackle.corepb.AcquireSemaphoreResponse
-	69, // 65: com.evrblk.grackle.corepb.GrackleUpdateResponse.release_semaphore_response:type_name -> com.evrblk.grackle.corepb.ReleaseSemaphoreResponse
-	70, // 66: com.evrblk.grackle.corepb.GrackleUpdateResponse.run_semaphores_garbage_collection_response:type_name -> com.evrblk.grackle.corepb.RunSemaphoresGarbageCollectionResponse
-	71, // 67: com.evrblk.grackle.corepb.GrackleUpdateResponse.semaphores_delete_namespace_response:type_name -> com.evrblk.grackle.corepb.SemaphoresDeleteNamespaceResponse
-	72, // 68: com.evrblk.grackle.corepb.GrackleUpdateResponse.create_wait_group_response:type_name -> com.evrblk.grackle.corepb.CreateWaitGroupResponse
-	73, // 69: com.evrblk.grackle.corepb.GrackleUpdateResponse.delete_wait_group_response:type_name -> com.evrblk.grackle.corepb.DeleteWaitGroupResponse
-	74, // 70: com.evrblk.grackle.corepb.GrackleUpdateResponse.add_jobs_to_wait_group_response:type_name -> com.evrblk.grackle.corepb.AddJobsToWaitGroupResponse
-	75, // 71: com.evrblk.grackle.corepb.GrackleUpdateResponse.complete_jobs_from_wait_group_response:type_name -> com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupResponse
-	76, // 72: com.evrblk.grackle.corepb.GrackleUpdateResponse.run_wait_groups_garbage_collection_response:type_name -> com.evrblk.grackle.corepb.RunWaitGroupsGarbageCollectionResponse
-	77, // 73: com.evrblk.grackle.corepb.GrackleUpdateResponse.wait_groups_delete_namespace_response:type_name -> com.evrblk.grackle.corepb.WaitGroupsDeleteNamespaceResponse
-	78, // 74: com.evrblk.grackle.corepb.GrackleUpdateResponse.acquire_lock_response:type_name -> com.evrblk.grackle.corepb.AcquireLockResponse
-	79, // 75: com.evrblk.grackle.corepb.GrackleUpdateResponse.release_lock_response:type_name -> com.evrblk.grackle.corepb.ReleaseLockResponse
-	80, // 76: com.evrblk.grackle.corepb.GrackleUpdateResponse.delete_lock_response:type_name -> com.evrblk.grackle.corepb.DeleteLockResponse
-	81, // 77: com.evrblk.grackle.corepb.GrackleUpdateResponse.get_lock_response:type_name -> com.evrblk.grackle.corepb.GetLockResponse
-	82, // 78: com.evrblk.grackle.corepb.GrackleUpdateResponse.run_locks_garbage_collection_response:type_name -> com.evrblk.grackle.corepb.RunLocksGarbageCollectionResponse
-	83, // 79: com.evrblk.grackle.corepb.GrackleUpdateResponse.locks_delete_namespace_response:type_name -> com.evrblk.grackle.corepb.LocksDeleteNamespaceResponse
-	84, // 80: com.evrblk.grackle.corepb.GrackleUpdateResponse.create_namespace_response:type_name -> com.evrblk.grackle.corepb.CreateNamespaceResponse
-	85, // 81: com.evrblk.grackle.corepb.GrackleUpdateResponse.update_namespace_response:type_name -> com.evrblk.grackle.corepb.UpdateNamespaceResponse
-	86, // 82: com.evrblk.grackle.corepb.GrackleUpdateResponse.delete_namespace_response:type_name -> com.evrblk.grackle.corepb.DeleteNamespaceResponse
-	87, // 83: com.evrblk.grackle.corepb.GrackleUpdateResponse.create_barrier_response:type_name -> com.evrblk.grackle.corepb.CreateBarrierResponse
-	88, // 84: com.evrblk.grackle.corepb.GrackleUpdateResponse.delete_barrier_response:type_name -> com.evrblk.grackle.corepb.DeleteBarrierResponse
-	89, // 85: com.evrblk.grackle.corepb.GrackleUpdateResponse.update_barrier_response:type_name -> com.evrblk.grackle.corepb.UpdateBarrierResponse
-	90, // 86: com.evrblk.grackle.corepb.GrackleUpdateResponse.arrive_at_barrier_response:type_name -> com.evrblk.grackle.corepb.ArriveAtBarrierResponse
-	91, // 87: com.evrblk.grackle.corepb.GrackleUpdateResponse.wait_at_barrier_response:type_name -> com.evrblk.grackle.corepb.WaitAtBarrierResponse
-	92, // 88: com.evrblk.grackle.corepb.GrackleUpdateResponse.run_barriers_garbage_collection_response:type_name -> com.evrblk.grackle.corepb.RunBarriersGarbageCollectionResponse
-	93, // 89: com.evrblk.grackle.corepb.GrackleUpdateResponse.barriers_delete_namespace_response:type_name -> com.evrblk.grackle.corepb.BarriersDeleteNamespaceResponse
-	90, // [90:90] is the sub-list for method output_type
-	90, // [90:90] is the sub-list for method input_type
-	90, // [90:90] is the sub-list for extension type_name
-	90, // [90:90] is the sub-list for extension extendee
-	0,  // [0:90] is the sub-list for field type_name
+	4,   // 0: com.evrblk.grackle.corepb.GrackleReadRequest.get_semaphore_request:type_name -> com.evrblk.grackle.corepb.GetSemaphoreRequest
+	5,   // 1: com.evrblk.grackle.corepb.GrackleReadRequest.get_semaphore_by_name_request:type_name -> com.evrblk.grackle.corepb.GetSemaphoreByNameRequest
+	6,   // 2: com.evrblk.grackle.corepb.GrackleReadRequest.list_semaphores_request:type_name -> com.evrblk.grackle.corepb.ListSemaphoresRequest
+	7,   // 3: com.evrblk.grackle.corepb.GrackleReadRequest.list_semaphores_by_lease_id_request:type_name -> com.evrblk.grackle.corepb.ListSemaphoresByLeaseIdRequest
+	8,   // 4: com.evrblk.grackle.corepb.GrackleReadRequest.list_semaphore_holders_request:type_name -> com.evrblk.grackle.corepb.ListSemaphoreHoldersRequest
+	9,   // 5: com.evrblk.grackle.corepb.GrackleReadRequest.list_semaphore_leases_request:type_name -> com.evrblk.grackle.corepb.ListSemaphoreLeasesRequest
+	10,  // 6: com.evrblk.grackle.corepb.GrackleReadRequest.list_semaphore_leases_by_process_id_request:type_name -> com.evrblk.grackle.corepb.ListSemaphoreLeasesByProcessIdRequest
+	11,  // 7: com.evrblk.grackle.corepb.GrackleReadRequest.get_semaphore_lease_request:type_name -> com.evrblk.grackle.corepb.GetSemaphoreLeaseRequest
+	12,  // 8: com.evrblk.grackle.corepb.GrackleReadRequest.get_wait_group_request:type_name -> com.evrblk.grackle.corepb.GetWaitGroupRequest
+	13,  // 9: com.evrblk.grackle.corepb.GrackleReadRequest.get_wait_group_by_name_request:type_name -> com.evrblk.grackle.corepb.GetWaitGroupByNameRequest
+	14,  // 10: com.evrblk.grackle.corepb.GrackleReadRequest.list_wait_groups_request:type_name -> com.evrblk.grackle.corepb.ListWaitGroupsRequest
+	15,  // 11: com.evrblk.grackle.corepb.GrackleReadRequest.list_wait_group_jobs_request:type_name -> com.evrblk.grackle.corepb.ListWaitGroupJobsRequest
+	16,  // 12: com.evrblk.grackle.corepb.GrackleReadRequest.get_namespace_request:type_name -> com.evrblk.grackle.corepb.GetNamespaceRequest
+	17,  // 13: com.evrblk.grackle.corepb.GrackleReadRequest.get_namespace_by_name_request:type_name -> com.evrblk.grackle.corepb.GetNamespaceByNameRequest
+	18,  // 14: com.evrblk.grackle.corepb.GrackleReadRequest.list_namespaces_request:type_name -> com.evrblk.grackle.corepb.ListNamespacesRequest
+	19,  // 15: com.evrblk.grackle.corepb.GrackleReadRequest.list_locks_request:type_name -> com.evrblk.grackle.corepb.ListLocksRequest
+	20,  // 16: com.evrblk.grackle.corepb.GrackleReadRequest.list_locks_by_lease_id_request:type_name -> com.evrblk.grackle.corepb.ListLocksByLeaseIdRequest
+	21,  // 17: com.evrblk.grackle.corepb.GrackleReadRequest.get_lock_lease_request:type_name -> com.evrblk.grackle.corepb.GetLockLeaseRequest
+	22,  // 18: com.evrblk.grackle.corepb.GrackleReadRequest.list_lock_leases_request:type_name -> com.evrblk.grackle.corepb.ListLockLeasesRequest
+	23,  // 19: com.evrblk.grackle.corepb.GrackleReadRequest.list_lock_leases_by_process_id_request:type_name -> com.evrblk.grackle.corepb.ListLockLeasesByProcessIdRequest
+	24,  // 20: com.evrblk.grackle.corepb.GrackleReadRequest.get_barrier_request:type_name -> com.evrblk.grackle.corepb.GetBarrierRequest
+	25,  // 21: com.evrblk.grackle.corepb.GrackleReadRequest.get_barrier_by_name_request:type_name -> com.evrblk.grackle.corepb.GetBarrierByNameRequest
+	26,  // 22: com.evrblk.grackle.corepb.GrackleReadRequest.list_barriers_request:type_name -> com.evrblk.grackle.corepb.ListBarriersRequest
+	27,  // 23: com.evrblk.grackle.corepb.GrackleReadRequest.list_barrier_participants_request:type_name -> com.evrblk.grackle.corepb.ListBarrierParticipantsRequest
+	28,  // 24: com.evrblk.grackle.corepb.GrackleReadResponse.get_semaphore_response:type_name -> com.evrblk.grackle.corepb.GetSemaphoreResponse
+	29,  // 25: com.evrblk.grackle.corepb.GrackleReadResponse.get_semaphore_by_name_response:type_name -> com.evrblk.grackle.corepb.GetSemaphoreByNameResponse
+	30,  // 26: com.evrblk.grackle.corepb.GrackleReadResponse.list_semaphores_response:type_name -> com.evrblk.grackle.corepb.ListSemaphoresResponse
+	31,  // 27: com.evrblk.grackle.corepb.GrackleReadResponse.list_semaphores_by_lease_id_response:type_name -> com.evrblk.grackle.corepb.ListSemaphoresByLeaseIdResponse
+	32,  // 28: com.evrblk.grackle.corepb.GrackleReadResponse.list_semaphore_holders_response:type_name -> com.evrblk.grackle.corepb.ListSemaphoreHoldersResponse
+	33,  // 29: com.evrblk.grackle.corepb.GrackleReadResponse.list_semaphore_leases_response:type_name -> com.evrblk.grackle.corepb.ListSemaphoreLeasesResponse
+	34,  // 30: com.evrblk.grackle.corepb.GrackleReadResponse.get_semaphore_lease_response:type_name -> com.evrblk.grackle.corepb.GetSemaphoreLeaseResponse
+	35,  // 31: com.evrblk.grackle.corepb.GrackleReadResponse.list_semaphore_leases_by_process_id_response:type_name -> com.evrblk.grackle.corepb.ListSemaphoreLeasesByProcessIdResponse
+	36,  // 32: com.evrblk.grackle.corepb.GrackleReadResponse.get_wait_group_response:type_name -> com.evrblk.grackle.corepb.GetWaitGroupResponse
+	37,  // 33: com.evrblk.grackle.corepb.GrackleReadResponse.get_wait_group_by_name_response:type_name -> com.evrblk.grackle.corepb.GetWaitGroupByNameResponse
+	38,  // 34: com.evrblk.grackle.corepb.GrackleReadResponse.list_wait_groups_response:type_name -> com.evrblk.grackle.corepb.ListWaitGroupsResponse
+	39,  // 35: com.evrblk.grackle.corepb.GrackleReadResponse.list_wait_group_jobs_response:type_name -> com.evrblk.grackle.corepb.ListWaitGroupJobsResponse
+	40,  // 36: com.evrblk.grackle.corepb.GrackleReadResponse.get_namespace_response:type_name -> com.evrblk.grackle.corepb.GetNamespaceResponse
+	41,  // 37: com.evrblk.grackle.corepb.GrackleReadResponse.get_namespace_by_name_response:type_name -> com.evrblk.grackle.corepb.GetNamespaceByNameResponse
+	42,  // 38: com.evrblk.grackle.corepb.GrackleReadResponse.list_namespaces_response:type_name -> com.evrblk.grackle.corepb.ListNamespacesResponse
+	43,  // 39: com.evrblk.grackle.corepb.GrackleReadResponse.list_locks_response:type_name -> com.evrblk.grackle.corepb.ListLocksResponse
+	44,  // 40: com.evrblk.grackle.corepb.GrackleReadResponse.list_locks_by_lease_id_response:type_name -> com.evrblk.grackle.corepb.ListLocksByLeaseIdResponse
+	45,  // 41: com.evrblk.grackle.corepb.GrackleReadResponse.get_lock_lease_response:type_name -> com.evrblk.grackle.corepb.GetLockLeaseResponse
+	46,  // 42: com.evrblk.grackle.corepb.GrackleReadResponse.list_lock_leases_response:type_name -> com.evrblk.grackle.corepb.ListLockLeasesResponse
+	47,  // 43: com.evrblk.grackle.corepb.GrackleReadResponse.list_lock_leases_by_process_id_response:type_name -> com.evrblk.grackle.corepb.ListLockLeasesByProcessIdResponse
+	48,  // 44: com.evrblk.grackle.corepb.GrackleReadResponse.get_barrier_response:type_name -> com.evrblk.grackle.corepb.GetBarrierResponse
+	49,  // 45: com.evrblk.grackle.corepb.GrackleReadResponse.get_barrier_by_name_response:type_name -> com.evrblk.grackle.corepb.GetBarrierByNameResponse
+	50,  // 46: com.evrblk.grackle.corepb.GrackleReadResponse.list_barriers_response:type_name -> com.evrblk.grackle.corepb.ListBarriersResponse
+	51,  // 47: com.evrblk.grackle.corepb.GrackleReadResponse.list_barrier_participants_response:type_name -> com.evrblk.grackle.corepb.ListBarrierParticipantsResponse
+	52,  // 48: com.evrblk.grackle.corepb.GrackleUpdateRequest.create_semaphore_request:type_name -> com.evrblk.grackle.corepb.CreateSemaphoreRequest
+	53,  // 49: com.evrblk.grackle.corepb.GrackleUpdateRequest.update_semaphore_request:type_name -> com.evrblk.grackle.corepb.UpdateSemaphoreRequest
+	54,  // 50: com.evrblk.grackle.corepb.GrackleUpdateRequest.delete_semaphore_request:type_name -> com.evrblk.grackle.corepb.DeleteSemaphoreRequest
+	55,  // 51: com.evrblk.grackle.corepb.GrackleUpdateRequest.acquire_semaphore_request:type_name -> com.evrblk.grackle.corepb.AcquireSemaphoreRequest
+	56,  // 52: com.evrblk.grackle.corepb.GrackleUpdateRequest.release_semaphore_request:type_name -> com.evrblk.grackle.corepb.ReleaseSemaphoreRequest
+	57,  // 53: com.evrblk.grackle.corepb.GrackleUpdateRequest.run_semaphores_garbage_collection_request:type_name -> com.evrblk.grackle.corepb.RunSemaphoresGarbageCollectionRequest
+	58,  // 54: com.evrblk.grackle.corepb.GrackleUpdateRequest.semaphores_delete_namespace_request:type_name -> com.evrblk.grackle.corepb.SemaphoresDeleteNamespaceRequest
+	59,  // 55: com.evrblk.grackle.corepb.GrackleUpdateRequest.create_semaphore_lease_request:type_name -> com.evrblk.grackle.corepb.CreateSemaphoreLeaseRequest
+	60,  // 56: com.evrblk.grackle.corepb.GrackleUpdateRequest.refresh_semaphore_lease_request:type_name -> com.evrblk.grackle.corepb.RefreshSemaphoreLeaseRequest
+	61,  // 57: com.evrblk.grackle.corepb.GrackleUpdateRequest.revoke_semaphore_lease_request:type_name -> com.evrblk.grackle.corepb.RevokeSemaphoreLeaseRequest
+	62,  // 58: com.evrblk.grackle.corepb.GrackleUpdateRequest.create_wait_group_request:type_name -> com.evrblk.grackle.corepb.CreateWaitGroupRequest
+	63,  // 59: com.evrblk.grackle.corepb.GrackleUpdateRequest.delete_wait_group_request:type_name -> com.evrblk.grackle.corepb.DeleteWaitGroupRequest
+	64,  // 60: com.evrblk.grackle.corepb.GrackleUpdateRequest.add_jobs_to_wait_group_request:type_name -> com.evrblk.grackle.corepb.AddJobsToWaitGroupRequest
+	65,  // 61: com.evrblk.grackle.corepb.GrackleUpdateRequest.complete_jobs_from_wait_group_request:type_name -> com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupRequest
+	66,  // 62: com.evrblk.grackle.corepb.GrackleUpdateRequest.run_wait_groups_garbage_collection_request:type_name -> com.evrblk.grackle.corepb.RunWaitGroupsGarbageCollectionRequest
+	67,  // 63: com.evrblk.grackle.corepb.GrackleUpdateRequest.wait_groups_delete_namespace_request:type_name -> com.evrblk.grackle.corepb.WaitGroupsDeleteNamespaceRequest
+	68,  // 64: com.evrblk.grackle.corepb.GrackleUpdateRequest.acquire_lock_request:type_name -> com.evrblk.grackle.corepb.AcquireLockRequest
+	69,  // 65: com.evrblk.grackle.corepb.GrackleUpdateRequest.release_lock_request:type_name -> com.evrblk.grackle.corepb.ReleaseLockRequest
+	70,  // 66: com.evrblk.grackle.corepb.GrackleUpdateRequest.delete_lock_request:type_name -> com.evrblk.grackle.corepb.DeleteLockRequest
+	71,  // 67: com.evrblk.grackle.corepb.GrackleUpdateRequest.get_lock_request:type_name -> com.evrblk.grackle.corepb.GetLockRequest
+	72,  // 68: com.evrblk.grackle.corepb.GrackleUpdateRequest.run_locks_garbage_collection_request:type_name -> com.evrblk.grackle.corepb.RunLocksGarbageCollectionRequest
+	73,  // 69: com.evrblk.grackle.corepb.GrackleUpdateRequest.locks_delete_namespace_request:type_name -> com.evrblk.grackle.corepb.LocksDeleteNamespaceRequest
+	74,  // 70: com.evrblk.grackle.corepb.GrackleUpdateRequest.create_lock_lease_request:type_name -> com.evrblk.grackle.corepb.CreateLockLeaseRequest
+	75,  // 71: com.evrblk.grackle.corepb.GrackleUpdateRequest.refresh_lock_lease_request:type_name -> com.evrblk.grackle.corepb.RefreshLockLeaseRequest
+	76,  // 72: com.evrblk.grackle.corepb.GrackleUpdateRequest.revoke_lock_lease_request:type_name -> com.evrblk.grackle.corepb.RevokeLockLeaseRequest
+	77,  // 73: com.evrblk.grackle.corepb.GrackleUpdateRequest.create_namespace_request:type_name -> com.evrblk.grackle.corepb.CreateNamespaceRequest
+	78,  // 74: com.evrblk.grackle.corepb.GrackleUpdateRequest.update_namespace_request:type_name -> com.evrblk.grackle.corepb.UpdateNamespaceRequest
+	79,  // 75: com.evrblk.grackle.corepb.GrackleUpdateRequest.delete_namespace_request:type_name -> com.evrblk.grackle.corepb.DeleteNamespaceRequest
+	80,  // 76: com.evrblk.grackle.corepb.GrackleUpdateRequest.create_barrier_request:type_name -> com.evrblk.grackle.corepb.CreateBarrierRequest
+	81,  // 77: com.evrblk.grackle.corepb.GrackleUpdateRequest.delete_barrier_request:type_name -> com.evrblk.grackle.corepb.DeleteBarrierRequest
+	82,  // 78: com.evrblk.grackle.corepb.GrackleUpdateRequest.update_barrier_request:type_name -> com.evrblk.grackle.corepb.UpdateBarrierRequest
+	83,  // 79: com.evrblk.grackle.corepb.GrackleUpdateRequest.arrive_at_barrier_request:type_name -> com.evrblk.grackle.corepb.ArriveAtBarrierRequest
+	84,  // 80: com.evrblk.grackle.corepb.GrackleUpdateRequest.wait_at_barrier_request:type_name -> com.evrblk.grackle.corepb.WaitAtBarrierRequest
+	85,  // 81: com.evrblk.grackle.corepb.GrackleUpdateRequest.run_barriers_garbage_collection_request:type_name -> com.evrblk.grackle.corepb.RunBarriersGarbageCollectionRequest
+	86,  // 82: com.evrblk.grackle.corepb.GrackleUpdateRequest.barriers_delete_namespace_request:type_name -> com.evrblk.grackle.corepb.BarriersDeleteNamespaceRequest
+	87,  // 83: com.evrblk.grackle.corepb.GrackleUpdateResponse.create_semaphore_response:type_name -> com.evrblk.grackle.corepb.CreateSemaphoreResponse
+	88,  // 84: com.evrblk.grackle.corepb.GrackleUpdateResponse.update_semaphore_response:type_name -> com.evrblk.grackle.corepb.UpdateSemaphoreResponse
+	89,  // 85: com.evrblk.grackle.corepb.GrackleUpdateResponse.delete_semaphore_response:type_name -> com.evrblk.grackle.corepb.DeleteSemaphoreResponse
+	90,  // 86: com.evrblk.grackle.corepb.GrackleUpdateResponse.acquire_semaphore_response:type_name -> com.evrblk.grackle.corepb.AcquireSemaphoreResponse
+	91,  // 87: com.evrblk.grackle.corepb.GrackleUpdateResponse.release_semaphore_response:type_name -> com.evrblk.grackle.corepb.ReleaseSemaphoreResponse
+	92,  // 88: com.evrblk.grackle.corepb.GrackleUpdateResponse.run_semaphores_garbage_collection_response:type_name -> com.evrblk.grackle.corepb.RunSemaphoresGarbageCollectionResponse
+	93,  // 89: com.evrblk.grackle.corepb.GrackleUpdateResponse.semaphores_delete_namespace_response:type_name -> com.evrblk.grackle.corepb.SemaphoresDeleteNamespaceResponse
+	94,  // 90: com.evrblk.grackle.corepb.GrackleUpdateResponse.create_semaphore_lease_response:type_name -> com.evrblk.grackle.corepb.CreateSemaphoreLeaseResponse
+	95,  // 91: com.evrblk.grackle.corepb.GrackleUpdateResponse.refresh_semaphore_lease_response:type_name -> com.evrblk.grackle.corepb.RefreshSemaphoreLeaseResponse
+	96,  // 92: com.evrblk.grackle.corepb.GrackleUpdateResponse.revoke_semaphore_lease_response:type_name -> com.evrblk.grackle.corepb.RevokeSemaphoreLeaseResponse
+	97,  // 93: com.evrblk.grackle.corepb.GrackleUpdateResponse.create_wait_group_response:type_name -> com.evrblk.grackle.corepb.CreateWaitGroupResponse
+	98,  // 94: com.evrblk.grackle.corepb.GrackleUpdateResponse.delete_wait_group_response:type_name -> com.evrblk.grackle.corepb.DeleteWaitGroupResponse
+	99,  // 95: com.evrblk.grackle.corepb.GrackleUpdateResponse.add_jobs_to_wait_group_response:type_name -> com.evrblk.grackle.corepb.AddJobsToWaitGroupResponse
+	100, // 96: com.evrblk.grackle.corepb.GrackleUpdateResponse.complete_jobs_from_wait_group_response:type_name -> com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupResponse
+	101, // 97: com.evrblk.grackle.corepb.GrackleUpdateResponse.run_wait_groups_garbage_collection_response:type_name -> com.evrblk.grackle.corepb.RunWaitGroupsGarbageCollectionResponse
+	102, // 98: com.evrblk.grackle.corepb.GrackleUpdateResponse.wait_groups_delete_namespace_response:type_name -> com.evrblk.grackle.corepb.WaitGroupsDeleteNamespaceResponse
+	103, // 99: com.evrblk.grackle.corepb.GrackleUpdateResponse.acquire_lock_response:type_name -> com.evrblk.grackle.corepb.AcquireLockResponse
+	104, // 100: com.evrblk.grackle.corepb.GrackleUpdateResponse.release_lock_response:type_name -> com.evrblk.grackle.corepb.ReleaseLockResponse
+	105, // 101: com.evrblk.grackle.corepb.GrackleUpdateResponse.delete_lock_response:type_name -> com.evrblk.grackle.corepb.DeleteLockResponse
+	106, // 102: com.evrblk.grackle.corepb.GrackleUpdateResponse.get_lock_response:type_name -> com.evrblk.grackle.corepb.GetLockResponse
+	107, // 103: com.evrblk.grackle.corepb.GrackleUpdateResponse.run_locks_garbage_collection_response:type_name -> com.evrblk.grackle.corepb.RunLocksGarbageCollectionResponse
+	108, // 104: com.evrblk.grackle.corepb.GrackleUpdateResponse.locks_delete_namespace_response:type_name -> com.evrblk.grackle.corepb.LocksDeleteNamespaceResponse
+	109, // 105: com.evrblk.grackle.corepb.GrackleUpdateResponse.create_lock_lease_response:type_name -> com.evrblk.grackle.corepb.CreateLockLeaseResponse
+	110, // 106: com.evrblk.grackle.corepb.GrackleUpdateResponse.refresh_lock_lease_response:type_name -> com.evrblk.grackle.corepb.RefreshLockLeaseResponse
+	111, // 107: com.evrblk.grackle.corepb.GrackleUpdateResponse.revoke_lock_lease_response:type_name -> com.evrblk.grackle.corepb.RevokeLockLeaseResponse
+	112, // 108: com.evrblk.grackle.corepb.GrackleUpdateResponse.create_namespace_response:type_name -> com.evrblk.grackle.corepb.CreateNamespaceResponse
+	113, // 109: com.evrblk.grackle.corepb.GrackleUpdateResponse.update_namespace_response:type_name -> com.evrblk.grackle.corepb.UpdateNamespaceResponse
+	114, // 110: com.evrblk.grackle.corepb.GrackleUpdateResponse.delete_namespace_response:type_name -> com.evrblk.grackle.corepb.DeleteNamespaceResponse
+	115, // 111: com.evrblk.grackle.corepb.GrackleUpdateResponse.create_barrier_response:type_name -> com.evrblk.grackle.corepb.CreateBarrierResponse
+	116, // 112: com.evrblk.grackle.corepb.GrackleUpdateResponse.delete_barrier_response:type_name -> com.evrblk.grackle.corepb.DeleteBarrierResponse
+	117, // 113: com.evrblk.grackle.corepb.GrackleUpdateResponse.update_barrier_response:type_name -> com.evrblk.grackle.corepb.UpdateBarrierResponse
+	118, // 114: com.evrblk.grackle.corepb.GrackleUpdateResponse.arrive_at_barrier_response:type_name -> com.evrblk.grackle.corepb.ArriveAtBarrierResponse
+	119, // 115: com.evrblk.grackle.corepb.GrackleUpdateResponse.wait_at_barrier_response:type_name -> com.evrblk.grackle.corepb.WaitAtBarrierResponse
+	120, // 116: com.evrblk.grackle.corepb.GrackleUpdateResponse.run_barriers_garbage_collection_response:type_name -> com.evrblk.grackle.corepb.RunBarriersGarbageCollectionResponse
+	121, // 117: com.evrblk.grackle.corepb.GrackleUpdateResponse.barriers_delete_namespace_response:type_name -> com.evrblk.grackle.corepb.BarriersDeleteNamespaceResponse
+	118, // [118:118] is the sub-list for method output_type
+	118, // [118:118] is the sub-list for method input_type
+	118, // [118:118] is the sub-list for extension type_name
+	118, // [118:118] is the sub-list for extension extendee
+	0,   // [0:118] is the sub-list for field type_name
 }
 
 func init() { file_pkg_corepb_monstera_proto_init() }
@@ -1995,7 +2527,11 @@ func file_pkg_corepb_monstera_proto_init() {
 		(*GrackleReadRequest_GetSemaphoreRequest)(nil),
 		(*GrackleReadRequest_GetSemaphoreByNameRequest)(nil),
 		(*GrackleReadRequest_ListSemaphoresRequest)(nil),
+		(*GrackleReadRequest_ListSemaphoresByLeaseIdRequest)(nil),
 		(*GrackleReadRequest_ListSemaphoreHoldersRequest)(nil),
+		(*GrackleReadRequest_ListSemaphoreLeasesRequest)(nil),
+		(*GrackleReadRequest_ListSemaphoreLeasesByProcessIdRequest)(nil),
+		(*GrackleReadRequest_GetSemaphoreLeaseRequest)(nil),
 		(*GrackleReadRequest_GetWaitGroupRequest)(nil),
 		(*GrackleReadRequest_GetWaitGroupByNameRequest)(nil),
 		(*GrackleReadRequest_ListWaitGroupsRequest)(nil),
@@ -2004,6 +2540,10 @@ func file_pkg_corepb_monstera_proto_init() {
 		(*GrackleReadRequest_GetNamespaceByNameRequest)(nil),
 		(*GrackleReadRequest_ListNamespacesRequest)(nil),
 		(*GrackleReadRequest_ListLocksRequest)(nil),
+		(*GrackleReadRequest_ListLocksByLeaseIdRequest)(nil),
+		(*GrackleReadRequest_GetLockLeaseRequest)(nil),
+		(*GrackleReadRequest_ListLockLeasesRequest)(nil),
+		(*GrackleReadRequest_ListLockLeasesByProcessIdRequest)(nil),
 		(*GrackleReadRequest_GetBarrierRequest)(nil),
 		(*GrackleReadRequest_GetBarrierByNameRequest)(nil),
 		(*GrackleReadRequest_ListBarriersRequest)(nil),
@@ -2013,7 +2553,11 @@ func file_pkg_corepb_monstera_proto_init() {
 		(*GrackleReadResponse_GetSemaphoreResponse)(nil),
 		(*GrackleReadResponse_GetSemaphoreByNameResponse)(nil),
 		(*GrackleReadResponse_ListSemaphoresResponse)(nil),
+		(*GrackleReadResponse_ListSemaphoresByLeaseIdResponse)(nil),
 		(*GrackleReadResponse_ListSemaphoreHoldersResponse)(nil),
+		(*GrackleReadResponse_ListSemaphoreLeasesResponse)(nil),
+		(*GrackleReadResponse_GetSemaphoreLeaseResponse)(nil),
+		(*GrackleReadResponse_ListSemaphoreLeasesByProcessIdResponse)(nil),
 		(*GrackleReadResponse_GetWaitGroupResponse)(nil),
 		(*GrackleReadResponse_GetWaitGroupByNameResponse)(nil),
 		(*GrackleReadResponse_ListWaitGroupsResponse)(nil),
@@ -2022,6 +2566,10 @@ func file_pkg_corepb_monstera_proto_init() {
 		(*GrackleReadResponse_GetNamespaceByNameResponse)(nil),
 		(*GrackleReadResponse_ListNamespacesResponse)(nil),
 		(*GrackleReadResponse_ListLocksResponse)(nil),
+		(*GrackleReadResponse_ListLocksByLeaseIdResponse)(nil),
+		(*GrackleReadResponse_GetLockLeaseResponse)(nil),
+		(*GrackleReadResponse_ListLockLeasesResponse)(nil),
+		(*GrackleReadResponse_ListLockLeasesByProcessIdResponse)(nil),
 		(*GrackleReadResponse_GetBarrierResponse)(nil),
 		(*GrackleReadResponse_GetBarrierByNameResponse)(nil),
 		(*GrackleReadResponse_ListBarriersResponse)(nil),
@@ -2035,6 +2583,9 @@ func file_pkg_corepb_monstera_proto_init() {
 		(*GrackleUpdateRequest_ReleaseSemaphoreRequest)(nil),
 		(*GrackleUpdateRequest_RunSemaphoresGarbageCollectionRequest)(nil),
 		(*GrackleUpdateRequest_SemaphoresDeleteNamespaceRequest)(nil),
+		(*GrackleUpdateRequest_CreateSemaphoreLeaseRequest)(nil),
+		(*GrackleUpdateRequest_RefreshSemaphoreLeaseRequest)(nil),
+		(*GrackleUpdateRequest_RevokeSemaphoreLeaseRequest)(nil),
 		(*GrackleUpdateRequest_CreateWaitGroupRequest)(nil),
 		(*GrackleUpdateRequest_DeleteWaitGroupRequest)(nil),
 		(*GrackleUpdateRequest_AddJobsToWaitGroupRequest)(nil),
@@ -2047,6 +2598,9 @@ func file_pkg_corepb_monstera_proto_init() {
 		(*GrackleUpdateRequest_GetLockRequest)(nil),
 		(*GrackleUpdateRequest_RunLocksGarbageCollectionRequest)(nil),
 		(*GrackleUpdateRequest_LocksDeleteNamespaceRequest)(nil),
+		(*GrackleUpdateRequest_CreateLockLeaseRequest)(nil),
+		(*GrackleUpdateRequest_RefreshLockLeaseRequest)(nil),
+		(*GrackleUpdateRequest_RevokeLockLeaseRequest)(nil),
 		(*GrackleUpdateRequest_CreateNamespaceRequest)(nil),
 		(*GrackleUpdateRequest_UpdateNamespaceRequest)(nil),
 		(*GrackleUpdateRequest_DeleteNamespaceRequest)(nil),
@@ -2066,6 +2620,9 @@ func file_pkg_corepb_monstera_proto_init() {
 		(*GrackleUpdateResponse_ReleaseSemaphoreResponse)(nil),
 		(*GrackleUpdateResponse_RunSemaphoresGarbageCollectionResponse)(nil),
 		(*GrackleUpdateResponse_SemaphoresDeleteNamespaceResponse)(nil),
+		(*GrackleUpdateResponse_CreateSemaphoreLeaseResponse)(nil),
+		(*GrackleUpdateResponse_RefreshSemaphoreLeaseResponse)(nil),
+		(*GrackleUpdateResponse_RevokeSemaphoreLeaseResponse)(nil),
 		(*GrackleUpdateResponse_CreateWaitGroupResponse)(nil),
 		(*GrackleUpdateResponse_DeleteWaitGroupResponse)(nil),
 		(*GrackleUpdateResponse_AddJobsToWaitGroupResponse)(nil),
@@ -2078,6 +2635,9 @@ func file_pkg_corepb_monstera_proto_init() {
 		(*GrackleUpdateResponse_GetLockResponse)(nil),
 		(*GrackleUpdateResponse_RunLocksGarbageCollectionResponse)(nil),
 		(*GrackleUpdateResponse_LocksDeleteNamespaceResponse)(nil),
+		(*GrackleUpdateResponse_CreateLockLeaseResponse)(nil),
+		(*GrackleUpdateResponse_RefreshLockLeaseResponse)(nil),
+		(*GrackleUpdateResponse_RevokeLockLeaseResponse)(nil),
 		(*GrackleUpdateResponse_CreateNamespaceResponse)(nil),
 		(*GrackleUpdateResponse_UpdateNamespaceResponse)(nil),
 		(*GrackleUpdateResponse_DeleteNamespaceResponse)(nil),

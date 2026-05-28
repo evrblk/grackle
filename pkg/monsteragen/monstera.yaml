@@ -6,6 +6,14 @@ cores:
     reads:
       - method: ListLocks
         sharded: true
+      - method: ListLocksByLeaseId
+        sharded: true
+      - method: ListLockLeases
+        sharded: true
+      - method: ListLockLeasesByProcessId
+        sharded: true
+      - method: GetLockLease
+        sharded: true
     updates:
       - method: AcquireLock
         sharded: true
@@ -18,6 +26,12 @@ cores:
       - method: RunLocksGarbageCollection
         sharded: false
       - method: LocksDeleteNamespace
+        sharded: true
+      - method: CreateLockLease
+        sharded: true
+      - method: RefreshLockLease
+        sharded: true
+      - method: RevokeLockLease
         sharded: true
     update_request_proto: GrackleUpdateRequest
     update_response_proto: GrackleUpdateResponse
@@ -32,7 +46,15 @@ cores:
         sharded: true
       - method: ListSemaphores
         sharded: true
+      - method: ListSemaphoresByLeaseId
+        sharded: true
       - method: ListSemaphoreHolders
+        sharded: true
+      - method: ListSemaphoreLeases
+        sharded: true
+      - method: ListSemaphoreLeasesByProcessId
+        sharded: true
+      - method: GetSemaphoreLease
         sharded: true
     updates:
       - method: AcquireSemaphore
@@ -48,6 +70,12 @@ cores:
       - method: RunSemaphoresGarbageCollection
         sharded: false
       - method: SemaphoresDeleteNamespace
+        sharded: true
+      - method: CreateSemaphoreLease
+        sharded: true
+      - method: RevokeSemaphoreLease
+        sharded: true
+      - method: RefreshSemaphoreLease
         sharded: true
     update_request_proto: GrackleUpdateRequest
     update_response_proto: GrackleUpdateResponse

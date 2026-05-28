@@ -28,7 +28,11 @@ type participantsTable struct {
 
 func newParticipantsTable(shardLowerBound []byte, shardUpperBound []byte) *participantsTable {
 	return &participantsTable{
-		table: monsterax.NewBinaryTable[*corepb.BarrierParticipant, corepb.BarrierParticipant](tables.GrackleBarrierParticipantsTableId, shardLowerBound, shardUpperBound),
+		table: monsterax.NewBinaryTable[*corepb.BarrierParticipant, corepb.BarrierParticipant](
+			tables.Grackle["Grackle.BarriersCore.Participants.Table"].Bytes(),
+			shardLowerBound,
+			shardUpperBound,
+		),
 	}
 }
 

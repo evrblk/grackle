@@ -42,13 +42,15 @@ func RegisterMetrics() {
 
 var (
 	defaultServiceLimits = grackle.GrackleServiceLimits{
-		MaxNumberOfNamespaces:             10_000,
-		MaxNumberOfWaitGroupsPerNamespace: 100_000,
-		MaxNumberOfLocksPerNamespace:      100_000,
-		MaxNumberOfSemaphoresPerNamespace: 100_000,
-		MaxNumberOfBarriersPerNamespace:   100_000,
-		MaxNumberOfSharedLockHolders:      100,
+		MaxNumberOfNamespaces:             100_000,
+		MaxNumberOfWaitGroupsPerNamespace: 1_000_000,
+		MaxNumberOfLocksPerNamespace:      1_000_000,
+		MaxNumberOfSemaphoresPerNamespace: 1_000_000,
+		MaxNumberOfBarriersPerNamespace:   1_000_000,
+		MaxNumberOfSharedLockHolders:      1_000,
 		MaxNumberOfSemaphoreHolders:       1_000,
+		MaxNumberOfLockLeases:             1_000_000,
+		MaxNumberOfSemaphoreLeases:        1_000_000,
 		MaxWaitGroupSize:                  100_000_000,
 		MaxNumberOfBarrierParticipants:    1_000_000,
 	}
@@ -374,6 +376,86 @@ func (s *GrackleApiServer) ListBarrierParticipants(ctx context.Context, request 
 	}
 
 	return s.handler.ListBarrierParticipants(ctx, request, 0, defaultServiceLimits)
+}
+
+func (s *GrackleApiServer) CreateSemaphoreLease(ctx context.Context, request *gracklepb.CreateSemaphoreLeaseRequest) (*gracklepb.CreateSemaphoreLeaseResponse, error) {
+	if err := ValidateCreateSemaphoreLeaseRequest(request); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
+	}
+
+	return s.handler.CreateSemaphoreLease(ctx, request, 0, defaultServiceLimits)
+}
+
+func (s *GrackleApiServer) RevokeSemaphoreLease(ctx context.Context, request *gracklepb.RevokeSemaphoreLeaseRequest) (*gracklepb.RevokeSemaphoreLeaseResponse, error) {
+	if err := ValidateRevokeSemaphoreLeaseRequest(request); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
+	}
+
+	return s.handler.RevokeSemaphoreLease(ctx, request, 0, defaultServiceLimits)
+}
+
+func (s *GrackleApiServer) RefreshSemaphoreLease(ctx context.Context, request *gracklepb.RefreshSemaphoreLeaseRequest) (*gracklepb.RefreshSemaphoreLeaseResponse, error) {
+	if err := ValidateRefreshSemaphoreLeaseRequest(request); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
+	}
+
+	return s.handler.RefreshSemaphoreLease(ctx, request, 0, defaultServiceLimits)
+}
+
+func (s *GrackleApiServer) ListSemaphoreLeases(ctx context.Context, request *gracklepb.ListSemaphoreLeasesRequest) (*gracklepb.ListSemaphoreLeasesResponse, error) {
+	if err := ValidateListSemaphoreLeasesRequest(request); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
+	}
+
+	return s.handler.ListSemaphoreLeases(ctx, request, 0, defaultServiceLimits)
+}
+
+func (s *GrackleApiServer) GetSemaphoreLease(ctx context.Context, request *gracklepb.GetSemaphoreLeaseRequest) (*gracklepb.GetSemaphoreLeaseResponse, error) {
+	if err := ValidateGetSemaphoreLeaseRequest(request); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
+	}
+
+	return s.handler.GetSemaphoreLease(ctx, request, 0, defaultServiceLimits)
+}
+
+func (s *GrackleApiServer) CreateLockLease(ctx context.Context, request *gracklepb.CreateLockLeaseRequest) (*gracklepb.CreateLockLeaseResponse, error) {
+	if err := ValidateCreateLockLeaseRequest(request); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
+	}
+
+	return s.handler.CreateLockLease(ctx, request, 0, defaultServiceLimits)
+}
+
+func (s *GrackleApiServer) RevokeLockLease(ctx context.Context, request *gracklepb.RevokeLockLeaseRequest) (*gracklepb.RevokeLockLeaseResponse, error) {
+	if err := ValidateRevokeLockLeaseRequest(request); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
+	}
+
+	return s.handler.RevokeLockLease(ctx, request, 0, defaultServiceLimits)
+}
+
+func (s *GrackleApiServer) RefreshLockLease(ctx context.Context, request *gracklepb.RefreshLockLeaseRequest) (*gracklepb.RefreshLockLeaseResponse, error) {
+	if err := ValidateRefreshLockLeaseRequest(request); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
+	}
+
+	return s.handler.RefreshLockLease(ctx, request, 0, defaultServiceLimits)
+}
+
+func (s *GrackleApiServer) ListLockLeases(ctx context.Context, request *gracklepb.ListLockLeasesRequest) (*gracklepb.ListLockLeasesResponse, error) {
+	if err := ValidateListLockLeasesRequest(request); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
+	}
+
+	return s.handler.ListLockLeases(ctx, request, 0, defaultServiceLimits)
+}
+
+func (s *GrackleApiServer) GetLockLease(ctx context.Context, request *gracklepb.GetLockLeaseRequest) (*gracklepb.GetLockLeaseResponse, error) {
+	if err := ValidateGetLockLeaseRequest(request); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
+	}
+
+	return s.handler.GetLockLease(ctx, request, 0, defaultServiceLimits)
 }
 
 func NewGrackleApiServer(grackleCoreApiClient monsteragen.GrackleCoreApi) *GrackleApiServer {

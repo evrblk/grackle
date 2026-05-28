@@ -19,6 +19,7 @@ var (
 	waitGroupIdRegex = regexp.MustCompile("wg_[0-9a-zA-Z]+")
 	semaphoreIdRegex = regexp.MustCompile("sem_[0-9a-zA-Z]+")
 	barrierIdRegex   = regexp.MustCompile("bar_[0-9a-zA-Z]+")
+	leaseIdRegex     = regexp.MustCompile("ls_[0-9a-zA-Z]+")
 )
 
 func DecodeNamespaceId(s string) (*corepb.NamespaceId, error) {
@@ -133,4 +134,33 @@ func EncodeBarrierId(id *corepb.BarrierId) string {
 	binary.BigEndian.PutUint32(src[8:8+4], id.NamespaceId)
 	binary.BigEndian.PutUint64(src[8+4:8+4+8], id.BarrierId)
 	return fmt.Sprintf("bar_%s", base62.Encode(src))
+}
+
+func DecodeLeaseId(s string) (*corepb.LeaseId, error) {
+	if !leaseIdRegex.MatchString(s) {
+		return nil, ErrInvalidId
+	}
+
+	b, err := base62.DecodeString(strings.TrimPrefix(s, "ls_"))
+	if err != nil {
+		return nil, ErrInvalidId
+	}
+
+	if len(b) != 8+4+8 {
+		return nil, ErrInvalidId
+	}
+
+	return &corepb.LeaseId{
+		AccountId:   binary.BigEndian.Uint64(b[0:8]),
+		NamespaceId: binary.BigEndian.Uint32(b[8 : 8+4]),
+		LeaseId:     binary.BigEndian.Uint64(b[8+4 : 8+4+8]),
+	}, nil
+}
+
+func EncodeLeaseId(id *corepb.LeaseId) string {
+	src := make([]byte, 8+4+8)
+	binary.BigEndian.PutUint64(src[0:8], id.AccountId)
+	binary.BigEndian.PutUint32(src[8:8+4], id.NamespaceId)
+	binary.BigEndian.PutUint64(src[8+4:8+4+8], id.LeaseId)
+	return fmt.Sprintf("ls_%s", base62.Encode(src))
 }

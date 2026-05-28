@@ -8,6 +8,7 @@ import (
 	gracklepb "github.com/evrblk/evrblk-go/grackle/preview"
 
 	"github.com/evrblk/grackle/pkg/corepb"
+	"github.com/evrblk/grackle/pkg/ids"
 )
 
 func namespaceToFront(namespace *corepb.Namespace) *gracklepb.Namespace {
@@ -91,26 +92,29 @@ func lockToFront(lock *corepb.Lock) *gracklepb.Lock {
 		Name:        lock.Id.LockName,
 		State:       gracklepb.LockState(lock.State),
 		LockedAt:    lock.LockedAt,
-		LockHolders: lockHoldersToFront(lock.LockHolders),
+		LockHolders: lockHoldersToFront(lock.LockHolders, lock.Id.AccountId, lock.Id.NamespaceId),
 	}
 }
 
-func lockHolderToFront(lockHolder *corepb.LockHolder) *gracklepb.LockHolder {
+func lockHolderToFront(lockHolder *corepb.LockHolder, accountId uint64, namespaceId uint32) *gracklepb.LockHolder {
 	if lockHolder == nil {
 		return nil
 	}
 
 	return &gracklepb.LockHolder{
-		ProcessId: lockHolder.ProcessId,
-		LockedAt:  lockHolder.LockedAt,
-		ExpiresAt: lockHolder.ExpiresAt,
+		LeaseId: ids.EncodeLeaseId(&corepb.LeaseId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LeaseId:     lockHolder.LeaseId,
+		}),
+		LockedAt: lockHolder.LockedAt,
 	}
 }
 
-func lockHoldersToFront(lockHolders []*corepb.LockHolder) []*gracklepb.LockHolder {
+func lockHoldersToFront(lockHolders []*corepb.LockHolder, accountId uint64, namespaceId uint32) []*gracklepb.LockHolder {
 	frontLockHolders := make([]*gracklepb.LockHolder, len(lockHolders))
 	for i, lockHolder := range lockHolders {
-		frontLockHolders[i] = lockHolderToFront(lockHolder)
+		frontLockHolders[i] = lockHolderToFront(lockHolder, accountId, namespaceId)
 	}
 	return frontLockHolders
 }
@@ -144,10 +148,13 @@ func semaphoreHolderToFront(holder *corepb.SemaphoreHolder) *gracklepb.Semaphore
 	}
 
 	return &gracklepb.SemaphoreHolder{
-		ProcessId: holder.Id.ProcessId,
-		LockedAt:  holder.LockedAt,
-		ExpiresAt: holder.ExpiresAt,
-		Weight:    holder.Weight,
+		LeaseId: ids.EncodeLeaseId(&corepb.LeaseId{
+			AccountId:   holder.Id.AccountId,
+			NamespaceId: holder.Id.NamespaceId,
+			LeaseId:     holder.Id.LeaseId,
+		}),
+		LockedAt: holder.LockedAt,
+		Weight:   holder.Weight,
 	}
 }
 

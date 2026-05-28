@@ -25,7 +25,7 @@ func newGCRecordsTable(shardGlobalIndexPrefix []byte) *gcRecordsTable {
 		shardGlobalIndexPrefix: shardGlobalIndexPrefix,
 
 		table: monsterax.NewBinaryTable[*corepb.WaitGroupsGarbageCollectionRecord, corepb.WaitGroupsGarbageCollectionRecord](
-			tables.GrackleWaitGroupsGarbageCollectionRecordsTableId,
+			tables.Grackle["Grackle.WaitGroupsCore.GarbageCollectionRecords.Table"].Bytes(),
 			shardGlobalIndexPrefix,
 			shardGlobalIndexPrefix,
 		),

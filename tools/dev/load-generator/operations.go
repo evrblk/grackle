@@ -64,21 +64,17 @@ func executeAcquireLock(ctx context.Context, client grackle.GrackleApi, pool *Re
 	}
 	lockName := locks[rng.Intn(len(locks))]
 
-	// Generate process ID
-	processID := fmt.Sprintf("load-worker-%d-%d", workerID, time.Now().UnixNano())
+	// Generate lease ID
+	leaseID := fmt.Sprintf("lease-worker-%d-%d", workerID, time.Now().UnixNano())
 
 	// Determine if exclusive or shared
 	exclusive := rng.Intn(100) < config.ExclusiveLockPct
 
-	// Set expiration
-	expiresAt := time.Now().Add(30 * time.Second).UnixNano()
-
 	resp, err := client.AcquireLock(ctx, &grackle.AcquireLockRequest{
 		NamespaceName: ns,
 		LockName:      lockName,
-		ProcessId:     processID,
+		LeaseId:       leaseID,
 		Exclusive:     exclusive,
-		ExpiresAt:     expiresAt,
 	})
 	if err != nil {
 		return err
@@ -89,7 +85,7 @@ func executeAcquireLock(ctx context.Context, client grackle.GrackleApi, pool *Re
 		pool.TrackAcquiredLock(workerID, LockHandle{
 			Namespace: ns,
 			LockName:  lockName,
-			ProcessID: processID,
+			LeaseID:   leaseID,
 			Exclusive: exclusive,
 		})
 	}
@@ -109,7 +105,7 @@ func executeReleaseLock(ctx context.Context, client grackle.GrackleApi, pool *Re
 	_, err := client.ReleaseLock(ctx, &grackle.ReleaseLockRequest{
 		NamespaceName: handle.Namespace,
 		LockName:      handle.LockName,
-		ProcessId:     handle.ProcessID,
+		LeaseId:       handle.LeaseID,
 	})
 	return err
 }
@@ -145,21 +141,17 @@ func executeAcquireSemaphore(ctx context.Context, client grackle.GrackleApi, poo
 	}
 	semName := semaphores[rng.Intn(len(semaphores))]
 
-	// Generate process ID
-	processID := fmt.Sprintf("load-worker-%d-%d", workerID, time.Now().UnixNano())
+	// Generate lease ID
+	leaseID := fmt.Sprintf("lease-worker-%d-%d", workerID, time.Now().UnixNano())
 
 	// Random weight (1 to max)
 	weight := uint64(rng.Intn(config.SemaphoreWeightMax) + 1)
 
-	// Set expiration
-	expiresAt := time.Now().Add(30 * time.Second).UnixNano()
-
 	resp, err := client.AcquireSemaphore(ctx, &grackle.AcquireSemaphoreRequest{
 		NamespaceName: ns,
 		SemaphoreName: semName,
-		ProcessId:     processID,
+		LeaseId:       leaseID,
 		Weight:        weight,
-		ExpiresAt:     expiresAt,
 	})
 	if err != nil {
 		return err
@@ -170,7 +162,7 @@ func executeAcquireSemaphore(ctx context.Context, client grackle.GrackleApi, poo
 		pool.TrackAcquiredSemaphore(workerID, SemaphoreHandle{
 			Namespace:     ns,
 			SemaphoreName: semName,
-			ProcessID:     processID,
+			LeaseID:       leaseID,
 			Weight:        weight,
 		})
 	}
@@ -190,7 +182,7 @@ func executeReleaseSemaphore(ctx context.Context, client grackle.GrackleApi, poo
 	_, err := client.ReleaseSemaphore(ctx, &grackle.ReleaseSemaphoreRequest{
 		NamespaceName: handle.Namespace,
 		SemaphoreName: handle.SemaphoreName,
-		ProcessId:     handle.ProcessID,
+		LeaseId:       handle.LeaseID,
 	})
 	return err
 }

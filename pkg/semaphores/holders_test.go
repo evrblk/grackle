@@ -1,7 +1,6 @@
 package semaphores
 
 import (
-	"fmt"
 	"math/rand/v2"
 	"testing"
 	"time"
@@ -13,7 +12,7 @@ import (
 	"github.com/evrblk/grackle/pkg/corepb"
 )
 
-func TestHoldersTableGet(t *testing.T) {
+func TestHoldersTable_Get(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
@@ -22,7 +21,7 @@ func TestHoldersTableGet(t *testing.T) {
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint32()
 	semaphoreId := rand.Uint64()
-	processId := "test_process_1"
+	leaseId := rand.Uint64()
 	now := time.Now()
 
 	holder := &corepb.SemaphoreHolder{
@@ -30,7 +29,7 @@ func TestHoldersTableGet(t *testing.T) {
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
 			SemaphoreId: semaphoreId,
-			ProcessId:   processId,
+			LeaseId:     leaseId,
 		},
 		LockedAt:  now.UnixNano(),
 		ExpiresAt: now.Add(time.Hour).UnixNano(),
@@ -53,13 +52,13 @@ func TestHoldersTableGet(t *testing.T) {
 	require.Equal(t, holder.Id.AccountId, actual.Id.AccountId)
 	require.Equal(t, holder.Id.NamespaceId, actual.Id.NamespaceId)
 	require.Equal(t, holder.Id.SemaphoreId, actual.Id.SemaphoreId)
-	require.Equal(t, holder.Id.ProcessId, actual.Id.ProcessId)
+	require.Equal(t, holder.Id.LeaseId, actual.Id.LeaseId)
 	require.Equal(t, holder.Weight, actual.Weight)
 	require.Equal(t, holder.LockedAt, actual.LockedAt)
 	require.Equal(t, holder.ExpiresAt, actual.ExpiresAt)
 }
 
-func TestHoldersTableGetNonExistent(t *testing.T) {
+func TestHoldersTable_GetNonExistent(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
@@ -68,13 +67,13 @@ func TestHoldersTableGetNonExistent(t *testing.T) {
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint32()
 	semaphoreId := rand.Uint64()
-	processId := "nonexistent_process"
+	leaseId := rand.Uint64()
 
 	holderId := &corepb.SemaphoreHolderId{
 		AccountId:   accountId,
 		NamespaceId: namespaceId,
 		SemaphoreId: semaphoreId,
-		ProcessId:   processId,
+		LeaseId:     leaseId,
 	}
 
 	txn := store.View()
@@ -85,7 +84,7 @@ func TestHoldersTableGetNonExistent(t *testing.T) {
 	require.Contains(t, err.Error(), "not found")
 }
 
-func TestHoldersTableCreate(t *testing.T) {
+func TestHoldersTable_Create(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
@@ -94,7 +93,7 @@ func TestHoldersTableCreate(t *testing.T) {
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint32()
 	semaphoreId := rand.Uint64()
-	processId := "test_process_1"
+	leaseId := rand.Uint64()
 	now := time.Now()
 
 	holder := &corepb.SemaphoreHolder{
@@ -102,7 +101,7 @@ func TestHoldersTableCreate(t *testing.T) {
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
 			SemaphoreId: semaphoreId,
-			ProcessId:   processId,
+			LeaseId:     leaseId,
 		},
 		LockedAt:  now.UnixNano(),
 		ExpiresAt: now.Add(time.Hour).UnixNano(),
@@ -120,22 +119,22 @@ func TestHoldersTableCreate(t *testing.T) {
 	actual, err := table.Get(txn, holder.Id)
 	require.NoError(t, err)
 	require.NotNil(t, actual)
-	require.Equal(t, holder.Id.ProcessId, actual.Id.ProcessId)
+	require.Equal(t, holder.Id.LeaseId, actual.Id.LeaseId)
 	require.Equal(t, holder.Weight, actual.Weight)
 
 	// Verify holder was created in expiration index
 	indexPK := table.expirationIndexPK(accountId, namespaceId, semaphoreId)
-	indexSK := table.expirationIndexSK(holder.ExpiresAt, processId)
+	indexSK := table.expirationIndexSK(holder.ExpiresAt, leaseId)
 	indexKey := utils.ConcatBytes(indexPK, indexSK)
 
-	processIdFromIndex, err := table.expirationIndex.Get(txn, indexKey)
+	exists, err := table.expirationIndex.NotEmpty(txn, indexKey)
 	txn.Discard()
 
 	require.NoError(t, err)
-	require.Equal(t, processId, processIdFromIndex)
+	require.True(t, exists)
 }
 
-func TestHoldersTableUpdate(t *testing.T) {
+func TestHoldersTable_Update(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
@@ -144,7 +143,7 @@ func TestHoldersTableUpdate(t *testing.T) {
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint32()
 	semaphoreId := rand.Uint64()
-	processId := "test_process_1"
+	leaseId := rand.Uint64()
 	now := time.Now()
 
 	holder := &corepb.SemaphoreHolder{
@@ -152,7 +151,7 @@ func TestHoldersTableUpdate(t *testing.T) {
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
 			SemaphoreId: semaphoreId,
-			ProcessId:   processId,
+			LeaseId:     leaseId,
 		},
 		LockedAt:  now.UnixNano(),
 		ExpiresAt: now.Add(time.Hour).UnixNano(),
@@ -189,25 +188,25 @@ func TestHoldersTableUpdate(t *testing.T) {
 	// Verify old expiration index entry was deleted
 	oldIndexKey := utils.ConcatBytes(
 		table.expirationIndexPK(accountId, namespaceId, semaphoreId),
-		table.expirationIndexSK(holder.ExpiresAt, processId),
+		table.expirationIndexSK(holder.ExpiresAt, leaseId),
 	)
-	_, err = table.expirationIndex.Get(txn, oldIndexKey)
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "not found")
+	exists, err := table.expirationIndex.NotEmpty(txn, oldIndexKey)
+	require.NoError(t, err)
+	require.False(t, exists)
 
 	// Verify new expiration index entry was created
 	newIndexKey := utils.ConcatBytes(
 		table.expirationIndexPK(accountId, namespaceId, semaphoreId),
-		table.expirationIndexSK(newExpiresAt, processId),
+		table.expirationIndexSK(newExpiresAt, leaseId),
 	)
-	processIdFromIndex, err := table.expirationIndex.Get(txn, newIndexKey)
+	exists, err = table.expirationIndex.NotEmpty(txn, newIndexKey)
 	txn.Discard()
 
 	require.NoError(t, err)
-	require.Equal(t, processId, processIdFromIndex)
+	require.True(t, exists)
 }
 
-func TestHoldersTableUpdateSameExpiration(t *testing.T) {
+func TestHoldersTable_UpdateSameExpiration(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
@@ -216,7 +215,7 @@ func TestHoldersTableUpdateSameExpiration(t *testing.T) {
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint32()
 	semaphoreId := rand.Uint64()
-	processId := "test_process_1"
+	leaseId := rand.Uint64()
 	now := time.Now()
 	expiresAt := now.Add(time.Hour).UnixNano()
 
@@ -225,7 +224,7 @@ func TestHoldersTableUpdateSameExpiration(t *testing.T) {
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
 			SemaphoreId: semaphoreId,
-			ProcessId:   processId,
+			LeaseId:     leaseId,
 		},
 		LockedAt:  now.UnixNano(),
 		ExpiresAt: expiresAt,
@@ -261,16 +260,16 @@ func TestHoldersTableUpdateSameExpiration(t *testing.T) {
 	// Verify expiration index entry still exists
 	indexKey := utils.ConcatBytes(
 		table.expirationIndexPK(accountId, namespaceId, semaphoreId),
-		table.expirationIndexSK(expiresAt, processId),
+		table.expirationIndexSK(expiresAt, leaseId),
 	)
-	processIdFromIndex, err := table.expirationIndex.Get(txn, indexKey)
+	exists, err := table.expirationIndex.NotEmpty(txn, indexKey)
 	txn.Discard()
 
 	require.NoError(t, err)
-	require.Equal(t, processId, processIdFromIndex)
+	require.True(t, exists)
 }
 
-func TestHoldersTableUpdateNonExistent(t *testing.T) {
+func TestHoldersTable_UpdateNonExistent(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
@@ -279,7 +278,7 @@ func TestHoldersTableUpdateNonExistent(t *testing.T) {
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint32()
 	semaphoreId := rand.Uint64()
-	processId := "nonexistent_process"
+	leaseId := rand.Uint64()
 	now := time.Now()
 
 	holder := &corepb.SemaphoreHolder{
@@ -287,7 +286,7 @@ func TestHoldersTableUpdateNonExistent(t *testing.T) {
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
 			SemaphoreId: semaphoreId,
-			ProcessId:   processId,
+			LeaseId:     leaseId,
 		},
 		LockedAt:  now.UnixNano(),
 		ExpiresAt: now.Add(time.Hour).UnixNano(),
@@ -302,7 +301,7 @@ func TestHoldersTableUpdateNonExistent(t *testing.T) {
 	require.Contains(t, err.Error(), "not found")
 }
 
-func TestHoldersTableDelete(t *testing.T) {
+func TestHoldersTable_Delete(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
@@ -311,7 +310,7 @@ func TestHoldersTableDelete(t *testing.T) {
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint32()
 	semaphoreId := rand.Uint64()
-	processId := "test_process_1"
+	leaseId := rand.Uint64()
 	now := time.Now()
 
 	holder := &corepb.SemaphoreHolder{
@@ -319,7 +318,7 @@ func TestHoldersTableDelete(t *testing.T) {
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
 			SemaphoreId: semaphoreId,
-			ProcessId:   processId,
+			LeaseId:     leaseId,
 		},
 		LockedAt:  now.UnixNano(),
 		ExpiresAt: now.Add(time.Hour).UnixNano(),
@@ -347,16 +346,16 @@ func TestHoldersTableDelete(t *testing.T) {
 	// Verify holder was deleted from expiration index
 	indexKey := utils.ConcatBytes(
 		table.expirationIndexPK(accountId, namespaceId, semaphoreId),
-		table.expirationIndexSK(holder.ExpiresAt, processId),
+		table.expirationIndexSK(holder.ExpiresAt, leaseId),
 	)
-	_, err = table.expirationIndex.Get(txn, indexKey)
+	exists, err := table.expirationIndex.NotEmpty(txn, indexKey)
 	txn.Discard()
 
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "not found")
+	require.NoError(t, err)
+	require.False(t, exists)
 }
 
-func TestHoldersTableDeleteNonExistent(t *testing.T) {
+func TestHoldersTable_DeleteNonExistent(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
@@ -365,13 +364,13 @@ func TestHoldersTableDeleteNonExistent(t *testing.T) {
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint32()
 	semaphoreId := rand.Uint64()
-	processId := "nonexistent_process"
+	leaseId := rand.Uint64()
 
 	holderId := &corepb.SemaphoreHolderId{
 		AccountId:   accountId,
 		NamespaceId: namespaceId,
 		SemaphoreId: semaphoreId,
-		ProcessId:   processId,
+		LeaseId:     leaseId,
 	}
 
 	txn := store.Update()
@@ -382,7 +381,7 @@ func TestHoldersTableDeleteNonExistent(t *testing.T) {
 	require.Contains(t, err.Error(), "not found")
 }
 
-func TestHoldersTableList(t *testing.T) {
+func TestHoldersTable_List(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
@@ -401,7 +400,7 @@ func TestHoldersTableList(t *testing.T) {
 				AccountId:   accountId,
 				NamespaceId: namespaceId,
 				SemaphoreId: semaphoreId,
-				ProcessId:   fmt.Sprintf("process_%d", i),
+				LeaseId:     uint64(i),
 			},
 			LockedAt:  now.Add(time.Duration(i) * time.Minute).UnixNano(),
 			ExpiresAt: now.Add(time.Duration(i+1) * time.Hour).UnixNano(),
@@ -428,11 +427,11 @@ func TestHoldersTableList(t *testing.T) {
 
 	// Verify holders are sorted by process id (sort key)
 	for i, holder := range result.holders {
-		require.Equal(t, fmt.Sprintf("process_%d", i), holder.Id.ProcessId)
+		require.EqualValues(t, i, holder.Id.LeaseId)
 	}
 }
 
-func TestHoldersTableListWithPagination(t *testing.T) {
+func TestHoldersTable_ListWithPagination(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
@@ -451,7 +450,7 @@ func TestHoldersTableListWithPagination(t *testing.T) {
 				AccountId:   accountId,
 				NamespaceId: namespaceId,
 				SemaphoreId: semaphoreId,
-				ProcessId:   fmt.Sprintf("process_%02d", i),
+				LeaseId:     uint64(i),
 			},
 			LockedAt:  now.Add(time.Duration(i) * time.Minute).UnixNano(),
 			ExpiresAt: now.Add(time.Duration(i+1) * time.Hour).UnixNano(),
@@ -473,9 +472,9 @@ func TestHoldersTableListWithPagination(t *testing.T) {
 	require.Len(t, result1.holders, 3)
 	require.NotNil(t, result1.nextPaginationToken)
 	require.Nil(t, result1.previousPaginationToken)
-	require.Equal(t, "process_00", result1.holders[0].Id.ProcessId)
-	require.Equal(t, "process_01", result1.holders[1].Id.ProcessId)
-	require.Equal(t, "process_02", result1.holders[2].Id.ProcessId)
+	require.EqualValues(t, 0, result1.holders[0].Id.LeaseId)
+	require.EqualValues(t, 1, result1.holders[1].Id.LeaseId)
+	require.EqualValues(t, 2, result1.holders[2].Id.LeaseId)
 
 	// List second page
 	txn = store.View()
@@ -486,9 +485,9 @@ func TestHoldersTableListWithPagination(t *testing.T) {
 	require.Len(t, result2.holders, 3)
 	require.NotNil(t, result2.nextPaginationToken)
 	require.NotNil(t, result2.previousPaginationToken)
-	require.Equal(t, "process_03", result2.holders[0].Id.ProcessId)
-	require.Equal(t, "process_04", result2.holders[1].Id.ProcessId)
-	require.Equal(t, "process_05", result2.holders[2].Id.ProcessId)
+	require.EqualValues(t, 3, result2.holders[0].Id.LeaseId)
+	require.EqualValues(t, 4, result2.holders[1].Id.LeaseId)
+	require.EqualValues(t, 5, result2.holders[2].Id.LeaseId)
 
 	// List third page
 	txn = store.View()
@@ -509,10 +508,10 @@ func TestHoldersTableListWithPagination(t *testing.T) {
 	require.Len(t, result4.holders, 1)
 	require.Nil(t, result4.nextPaginationToken)
 	require.NotNil(t, result4.previousPaginationToken)
-	require.Equal(t, "process_09", result4.holders[0].Id.ProcessId)
+	require.EqualValues(t, 9, result4.holders[0].Id.LeaseId)
 }
 
-func TestHoldersTableListEmpty(t *testing.T) {
+func TestHoldersTable_ListEmpty(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
@@ -531,7 +530,7 @@ func TestHoldersTableListEmpty(t *testing.T) {
 	require.Nil(t, result.nextPaginationToken)
 }
 
-func TestHoldersTableListByExpiration(t *testing.T) {
+func TestHoldersTable_ListByExpiration(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
@@ -549,7 +548,7 @@ func TestHoldersTableListByExpiration(t *testing.T) {
 				AccountId:   accountId,
 				NamespaceId: namespaceId,
 				SemaphoreId: semaphoreId,
-				ProcessId:   "process_1",
+				LeaseId:     1,
 			},
 			LockedAt:  now.UnixNano(),
 			ExpiresAt: now.Add(10 * time.Minute).UnixNano(),
@@ -560,7 +559,7 @@ func TestHoldersTableListByExpiration(t *testing.T) {
 				AccountId:   accountId,
 				NamespaceId: namespaceId,
 				SemaphoreId: semaphoreId,
-				ProcessId:   "process_2",
+				LeaseId:     2,
 			},
 			LockedAt:  now.UnixNano(),
 			ExpiresAt: now.Add(30 * time.Minute).UnixNano(),
@@ -571,7 +570,7 @@ func TestHoldersTableListByExpiration(t *testing.T) {
 				AccountId:   accountId,
 				NamespaceId: namespaceId,
 				SemaphoreId: semaphoreId,
-				ProcessId:   "process_3",
+				LeaseId:     3,
 			},
 			LockedAt:  now.UnixNano(),
 			ExpiresAt: now.Add(50 * time.Minute).UnixNano(),
@@ -582,7 +581,7 @@ func TestHoldersTableListByExpiration(t *testing.T) {
 				AccountId:   accountId,
 				NamespaceId: namespaceId,
 				SemaphoreId: semaphoreId,
-				ProcessId:   "process_4",
+				LeaseId:     4,
 			},
 			LockedAt:  now.UnixNano(),
 			ExpiresAt: now.Add(70 * time.Minute).UnixNano(),
@@ -616,11 +615,11 @@ func TestHoldersTableListByExpiration(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Len(t, actuals, 2)
-	require.Equal(t, "process_2", actuals[0].Id.ProcessId)
-	require.Equal(t, "process_3", actuals[1].Id.ProcessId)
+	require.EqualValues(t, 2, actuals[0].Id.LeaseId)
+	require.EqualValues(t, 3, actuals[1].Id.LeaseId)
 }
 
-func TestHoldersTableListByExpirationStopEarly(t *testing.T) {
+func TestHoldersTable_ListByExpirationStopEarly(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
@@ -638,7 +637,7 @@ func TestHoldersTableListByExpirationStopEarly(t *testing.T) {
 				AccountId:   accountId,
 				NamespaceId: namespaceId,
 				SemaphoreId: semaphoreId,
-				ProcessId:   fmt.Sprintf("process_%d", i+1),
+				LeaseId:     uint64(i + 1),
 			},
 			LockedAt:  now.UnixNano(),
 			ExpiresAt: now.Add(time.Duration(i+1) * 10 * time.Minute).UnixNano(),
@@ -671,7 +670,7 @@ func TestHoldersTableListByExpirationStopEarly(t *testing.T) {
 	require.Len(t, actuals, 2)
 }
 
-func TestHoldersTableListByExpirationEmpty(t *testing.T) {
+func TestHoldersTable_ListByExpirationEmpty(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
@@ -680,6 +679,7 @@ func TestHoldersTableListByExpirationEmpty(t *testing.T) {
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint32()
 	semaphoreId := rand.Uint64()
+	leaseId := rand.Uint64()
 	now := time.Now()
 
 	// Create holders with expiration times outside the query range
@@ -688,7 +688,7 @@ func TestHoldersTableListByExpirationEmpty(t *testing.T) {
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
 			SemaphoreId: semaphoreId,
-			ProcessId:   "process_1",
+			LeaseId:     leaseId,
 		},
 		LockedAt:  now.UnixNano(),
 		ExpiresAt: now.Add(2 * time.Hour).UnixNano(),
@@ -720,7 +720,7 @@ func TestHoldersTableListByExpirationEmpty(t *testing.T) {
 	require.Empty(t, actuals)
 }
 
-func TestHoldersTableMultipleSemaphores(t *testing.T) {
+func TestHoldersTable_MultipleSemaphores(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
@@ -738,7 +738,7 @@ func TestHoldersTableMultipleSemaphores(t *testing.T) {
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
 			SemaphoreId: semaphoreId1,
-			ProcessId:   "process_1",
+			LeaseId:     1,
 		},
 		LockedAt:  now.UnixNano(),
 		ExpiresAt: now.Add(time.Hour).UnixNano(),
@@ -751,7 +751,7 @@ func TestHoldersTableMultipleSemaphores(t *testing.T) {
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
 			SemaphoreId: semaphoreId2,
-			ProcessId:   "process_2",
+			LeaseId:     2,
 		},
 		LockedAt:  now.UnixNano(),
 		ExpiresAt: now.Add(time.Hour).UnixNano(),
@@ -770,7 +770,7 @@ func TestHoldersTableMultipleSemaphores(t *testing.T) {
 	result1, err := table.List(txn, accountId, namespaceId, semaphoreId1, nil, 10)
 	require.NoError(t, err)
 	require.Len(t, result1.holders, 1)
-	require.Equal(t, "process_1", result1.holders[0].Id.ProcessId)
+	require.EqualValues(t, 1, result1.holders[0].Id.LeaseId)
 
 	// List holders for second semaphore
 	result2, err := table.List(txn, accountId, namespaceId, semaphoreId2, nil, 10)
@@ -778,5 +778,5 @@ func TestHoldersTableMultipleSemaphores(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Len(t, result2.holders, 1)
-	require.Equal(t, "process_2", result2.holders[0].Id.ProcessId)
+	require.EqualValues(t, 2, result2.holders[0].Id.LeaseId)
 }

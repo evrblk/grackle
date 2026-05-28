@@ -12,32 +12,6 @@ import (
 	"github.com/evrblk/grackle/pkg/corepb"
 )
 
-func TestLockAncestorNames(t *testing.T) {
-	require.Nil(t, lockAncestorNames("flat"))
-	require.Nil(t, lockAncestorNames(""))
-	require.Equal(t, []string{"a"}, lockAncestorNames("a/b"))
-	require.Equal(t, []string{"a", "a/b"}, lockAncestorNames("a/b/c"))
-	require.Equal(t, []string{"a", "a/b", "a/b/c"}, lockAncestorNames("a/b/c/d"))
-}
-
-// getAncestor is a test helper to fetch an ancestor entry directly.
-func getAncestor(t *testing.T, core *Core, lockId *corepb.LockId) *corepb.LockAncestor {
-	t.Helper()
-	txn := core.badgerStore.View()
-	defer txn.Discard()
-	ancestor, err := core.ancestors.Get(txn, lockId)
-	require.NoError(t, err)
-	return ancestor
-}
-
-func ancestorId(lockId *corepb.LockId, name string) *corepb.LockId {
-	return &corepb.LockId{
-		AccountId:   lockId.AccountId,
-		NamespaceId: lockId.NamespaceId,
-		LockName:    name,
-	}
-}
-
 func TestAncestors_ExclusiveLock(t *testing.T) {
 	core := newLocksCore(t)
 	now := time.Now()
@@ -48,13 +22,15 @@ func TestAncestors_ExclusiveLock(t *testing.T) {
 		LockName:    "a/b/c",
 	}
 
+	// Create a lease
+	lease := createLease(t, core, lockId.AccountId, lockId.NamespaceId, "proc1", now, time.Hour)
+
 	// Acquire exclusive lock on a/b/c
 	resp, err := core.AcquireLock(&corepb.AcquireLockRequest{
 		LockId:                       lockId,
 		Now:                          now.UnixNano(),
-		ProcessId:                    "proc1",
+		LeaseId:                      lease.Id.LeaseId,
 		Exclusive:                    true,
-		ExpiresAt:                    now.Add(time.Hour).UnixNano(),
 		MaxNumberOfLocksPerNamespace: 100,
 	})
 	require.NoError(t, err)
@@ -71,9 +47,9 @@ func TestAncestors_ExclusiveLock(t *testing.T) {
 
 	// Release the lock
 	_, err = core.ReleaseLock(&corepb.ReleaseLockRequest{
-		LockId:    lockId,
-		ProcessId: "proc1",
-		Now:       now.Add(time.Minute).UnixNano(),
+		LockId:  lockId,
+		LeaseId: lease.Id.LeaseId,
+		Now:     now.Add(time.Minute).UnixNano(),
 	})
 	require.NoError(t, err)
 
@@ -97,13 +73,16 @@ func TestAncestors_SharedLock(t *testing.T) {
 		LockName:    "a/b/c",
 	}
 
+	// Create leases for two processes
+	lease1 := createLease(t, core, lockId.AccountId, lockId.NamespaceId, "proc1", now, time.Hour)
+	lease2 := createLease(t, core, lockId.AccountId, lockId.NamespaceId, "proc2", now, time.Hour)
+
 	// Two processes acquire shared lock on a/b/c
 	resp1, err := core.AcquireLock(&corepb.AcquireLockRequest{
 		LockId:                       lockId,
 		Now:                          now.UnixNano(),
-		ProcessId:                    "proc1",
+		LeaseId:                      lease1.Id.LeaseId,
 		Exclusive:                    false,
-		ExpiresAt:                    now.Add(time.Hour).UnixNano(),
 		MaxNumberOfLocksPerNamespace: 100,
 	})
 	require.NoError(t, err)
@@ -112,9 +91,8 @@ func TestAncestors_SharedLock(t *testing.T) {
 	resp2, err := core.AcquireLock(&corepb.AcquireLockRequest{
 		LockId:                       lockId,
 		Now:                          now.UnixNano(),
-		ProcessId:                    "proc2",
+		LeaseId:                      lease2.Id.LeaseId,
 		Exclusive:                    false,
-		ExpiresAt:                    now.Add(time.Hour).UnixNano(),
 		MaxNumberOfLocksPerNamespace: 100,
 	})
 	require.NoError(t, err)
@@ -127,9 +105,9 @@ func TestAncestors_SharedLock(t *testing.T) {
 
 	// Release proc1 — lock still held by proc2, ancestors unchanged
 	_, err = core.ReleaseLock(&corepb.ReleaseLockRequest{
-		LockId:    lockId,
-		ProcessId: "proc1",
-		Now:       now.Add(time.Minute).UnixNano(),
+		LockId:  lockId,
+		LeaseId: lease1.Id.LeaseId,
+		Now:     now.Add(time.Minute).UnixNano(),
 	})
 	require.NoError(t, err)
 
@@ -138,9 +116,9 @@ func TestAncestors_SharedLock(t *testing.T) {
 
 	// Release proc2 — lock now fully released
 	_, err = core.ReleaseLock(&corepb.ReleaseLockRequest{
-		LockId:    lockId,
-		ProcessId: "proc2",
-		Now:       now.Add(2 * time.Minute).UnixNano(),
+		LockId:  lockId,
+		LeaseId: lease2.Id.LeaseId,
+		Now:     now.Add(2 * time.Minute).UnixNano(),
 	})
 	require.NoError(t, err)
 
@@ -160,24 +138,29 @@ func TestAncestors_MultipleLocksSameAncestor(t *testing.T) {
 	lockId2 := &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a/b/d"}
 	lockId3 := &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a/x"}
 
+	// Create leases for three processes
+	lease1 := createLease(t, core, accountId, namespaceId, "proc1", now, time.Hour)
+	lease2 := createLease(t, core, accountId, namespaceId, "proc2", now, time.Hour)
+	lease3 := createLease(t, core, accountId, namespaceId, "proc3", now, time.Hour)
+
 	// Acquire a/b/c exclusive
 	_, err := core.AcquireLock(&corepb.AcquireLockRequest{
-		LockId: lockId1, Now: now.UnixNano(), ProcessId: "proc1",
-		Exclusive: true, ExpiresAt: now.Add(time.Hour).UnixNano(), MaxNumberOfLocksPerNamespace: 100,
+		LockId: lockId1, Now: now.UnixNano(), LeaseId: lease1.Id.LeaseId,
+		Exclusive: true, MaxNumberOfLocksPerNamespace: 100,
 	})
 	require.NoError(t, err)
 
 	// Acquire a/b/d shared
 	_, err = core.AcquireLock(&corepb.AcquireLockRequest{
-		LockId: lockId2, Now: now.UnixNano(), ProcessId: "proc2",
-		Exclusive: false, ExpiresAt: now.Add(time.Hour).UnixNano(), MaxNumberOfLocksPerNamespace: 100,
+		LockId: lockId2, Now: now.UnixNano(), LeaseId: lease2.Id.LeaseId,
+		Exclusive: false, MaxNumberOfLocksPerNamespace: 100,
 	})
 	require.NoError(t, err)
 
 	// Acquire a/x exclusive
 	_, err = core.AcquireLock(&corepb.AcquireLockRequest{
-		LockId: lockId3, Now: now.UnixNano(), ProcessId: "proc3",
-		Exclusive: true, ExpiresAt: now.Add(time.Hour).UnixNano(), MaxNumberOfLocksPerNamespace: 100,
+		LockId: lockId3, Now: now.UnixNano(), LeaseId: lease3.Id.LeaseId,
+		Exclusive: true, MaxNumberOfLocksPerNamespace: 100,
 	})
 	require.NoError(t, err)
 
@@ -216,9 +199,12 @@ func TestAncestors_FlatLockNoAncestors(t *testing.T) {
 		LockName:    "flat_lock",
 	}
 
+	// Create a lease
+	lease := createLease(t, core, lockId.AccountId, lockId.NamespaceId, "proc1", now, time.Hour)
+
 	_, err := core.AcquireLock(&corepb.AcquireLockRequest{
-		LockId: lockId, Now: now.UnixNano(), ProcessId: "proc1",
-		Exclusive: true, ExpiresAt: now.Add(time.Hour).UnixNano(), MaxNumberOfLocksPerNamespace: 100,
+		LockId: lockId, Now: now.UnixNano(), LeaseId: lease.Id.LeaseId,
+		Exclusive: true, MaxNumberOfLocksPerNamespace: 100,
 	})
 	require.NoError(t, err)
 
@@ -242,10 +228,13 @@ func TestAncestors_ExpirationCleansUpAncestors(t *testing.T) {
 		LockName:    "a/b/c",
 	}
 
+	// Create a lease with short expiry
+	lease := createLease(t, core, lockId.AccountId, lockId.NamespaceId, "proc1", now, time.Minute)
+
 	// Acquire with short expiry
 	_, err := core.AcquireLock(&corepb.AcquireLockRequest{
-		LockId: lockId, Now: now.UnixNano(), ProcessId: "proc1",
-		Exclusive: true, ExpiresAt: now.Add(time.Minute).UnixNano(), MaxNumberOfLocksPerNamespace: 100,
+		LockId: lockId, Now: now.UnixNano(), LeaseId: lease.Id.LeaseId,
+		Exclusive: true, MaxNumberOfLocksPerNamespace: 100,
 	})
 	require.NoError(t, err)
 
@@ -274,10 +263,13 @@ func TestAncestors_GarbageCollectionCleansUpAncestors(t *testing.T) {
 		LockName:    "x/y/z",
 	}
 
+	// Create a lease with short expiry
+	lease := createLease(t, core, lockId.AccountId, lockId.NamespaceId, "proc1", now, time.Minute)
+
 	// Acquire with short expiry
 	_, err := core.AcquireLock(&corepb.AcquireLockRequest{
-		LockId: lockId, Now: now.UnixNano(), ProcessId: "proc1",
-		Exclusive: false, ExpiresAt: now.Add(time.Minute).UnixNano(), MaxNumberOfLocksPerNamespace: 100,
+		LockId: lockId, Now: now.UnixNano(), LeaseId: lease.Id.LeaseId,
+		Exclusive: false, MaxNumberOfLocksPerNamespace: 100,
 	})
 	require.NoError(t, err)
 
@@ -314,10 +306,13 @@ func TestAncestors_NamespaceGCCleansUpAncestors(t *testing.T) {
 		LockName:    "a/b/c",
 	}
 
+	// Create a lease
+	lease := createLease(t, core, namespaceId.AccountId, namespaceId.NamespaceId, "proc1", now, time.Hour)
+
 	// Acquire lock
 	_, err := core.AcquireLock(&corepb.AcquireLockRequest{
-		LockId: lockId, Now: now.UnixNano(), ProcessId: "proc1",
-		Exclusive: true, ExpiresAt: now.Add(time.Hour).UnixNano(), MaxNumberOfLocksPerNamespace: 100,
+		LockId: lockId, Now: now.UnixNano(), LeaseId: lease.Id.LeaseId,
+		Exclusive: true, MaxNumberOfLocksPerNamespace: 100,
 	})
 	require.NoError(t, err)
 
@@ -356,10 +351,14 @@ func TestAncestors_ReacquireExpiredWithDifferentMode(t *testing.T) {
 		LockName:    "a/b/c",
 	}
 
+	// Create leases for two processes
+	lease1 := createLease(t, core, lockId.AccountId, lockId.NamespaceId, "proc1", now, time.Minute)
+	lease2 := createLease(t, core, lockId.AccountId, lockId.NamespaceId, "proc2", now.Add(2*time.Minute), time.Minute)
+
 	// Acquire shared lock
 	_, err := core.AcquireLock(&corepb.AcquireLockRequest{
-		LockId: lockId, Now: now.UnixNano(), ProcessId: "proc1",
-		Exclusive: false, ExpiresAt: now.Add(time.Minute).UnixNano(), MaxNumberOfLocksPerNamespace: 100,
+		LockId: lockId, Now: now.UnixNano(), LeaseId: lease1.Id.LeaseId,
+		Exclusive: false, MaxNumberOfLocksPerNamespace: 100,
 	})
 	require.NoError(t, err)
 
@@ -369,8 +368,8 @@ func TestAncestors_ReacquireExpiredWithDifferentMode(t *testing.T) {
 
 	// Re-acquire as exclusive after expiry (without GC running first)
 	_, err = core.AcquireLock(&corepb.AcquireLockRequest{
-		LockId: lockId, Now: now.Add(2 * time.Minute).UnixNano(), ProcessId: "proc2",
-		Exclusive: true, ExpiresAt: now.Add(3 * time.Minute).UnixNano(), MaxNumberOfLocksPerNamespace: 100,
+		LockId: lockId, Now: now.Add(2 * time.Minute).UnixNano(), LeaseId: lease2.Id.LeaseId,
+		Exclusive: true, MaxNumberOfLocksPerNamespace: 100,
 	})
 	require.NoError(t, err)
 
@@ -390,9 +389,12 @@ func TestAncestors_SnapshotRestore(t *testing.T) {
 		LockName:    "a/b/c",
 	}
 
+	// Create a lease
+	lease := createLease(t, core1, lockId.AccountId, lockId.NamespaceId, "proc1", now, time.Hour)
+
 	_, err := core1.AcquireLock(&corepb.AcquireLockRequest{
-		LockId: lockId, Now: now.UnixNano(), ProcessId: "proc1",
-		Exclusive: true, ExpiresAt: now.Add(time.Hour).UnixNano(), MaxNumberOfLocksPerNamespace: 100,
+		LockId: lockId, Now: now.UnixNano(), LeaseId: lease.Id.LeaseId,
+		Exclusive: true, MaxNumberOfLocksPerNamespace: 100,
 	})
 	require.NoError(t, err)
 
@@ -411,4 +413,22 @@ func TestAncestors_SnapshotRestore(t *testing.T) {
 	anc_a := getAncestor(t, core2, ancestorId(lockId, "a"))
 	require.EqualValues(t, 1, anc_a.ExclusiveCount)
 	require.EqualValues(t, 0, anc_a.SharedCount)
+}
+
+// getAncestor is a test helper to fetch an ancestor entry directly.
+func getAncestor(t *testing.T, core *Core, lockId *corepb.LockId) *corepb.LockAncestor {
+	t.Helper()
+	txn := core.badgerStore.View()
+	defer txn.Discard()
+	ancestor, err := core.ancestors.Get(txn, lockId)
+	require.NoError(t, err)
+	return ancestor
+}
+
+func ancestorId(lockId *corepb.LockId, name string) *corepb.LockId {
+	return &corepb.LockId{
+		AccountId:   lockId.AccountId,
+		NamespaceId: lockId.NamespaceId,
+		LockName:    name,
+	}
 }

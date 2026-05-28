@@ -119,6 +119,134 @@ func (x *PaginationToken) GetValue() []byte {
 	return nil
 }
 
+type LeaseId struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccountId     uint64                 `protobuf:"varint,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	NamespaceId   uint32                 `protobuf:"varint,2,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
+	LeaseId       uint64                 `protobuf:"varint,3,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LeaseId) Reset() {
+	*x = LeaseId{}
+	mi := &file_pkg_corepb_common_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LeaseId) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LeaseId) ProtoMessage() {}
+
+func (x *LeaseId) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_common_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LeaseId.ProtoReflect.Descriptor instead.
+func (*LeaseId) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_common_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *LeaseId) GetAccountId() uint64 {
+	if x != nil {
+		return x.AccountId
+	}
+	return 0
+}
+
+func (x *LeaseId) GetNamespaceId() uint32 {
+	if x != nil {
+		return x.NamespaceId
+	}
+	return 0
+}
+
+func (x *LeaseId) GetLeaseId() uint64 {
+	if x != nil {
+		return x.LeaseId
+	}
+	return 0
+}
+
+type Lease struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            *LeaseId               `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	ProcessId     string                 `protobuf:"bytes,2,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
+	CreatedAt     int64                  `protobuf:"varint,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	ExpiresAt     int64                  `protobuf:"varint,4,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Lease) Reset() {
+	*x = Lease{}
+	mi := &file_pkg_corepb_common_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Lease) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Lease) ProtoMessage() {}
+
+func (x *Lease) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_common_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Lease.ProtoReflect.Descriptor instead.
+func (*Lease) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_common_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *Lease) GetId() *LeaseId {
+	if x != nil {
+		return x.Id
+	}
+	return nil
+}
+
+func (x *Lease) GetProcessId() string {
+	if x != nil {
+		return x.ProcessId
+	}
+	return ""
+}
+
+func (x *Lease) GetCreatedAt() int64 {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return 0
+}
+
+func (x *Lease) GetExpiresAt() int64 {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return 0
+}
+
 var File_pkg_corepb_common_proto protoreflect.FileDescriptor
 
 const file_pkg_corepb_common_proto_rawDesc = "" +
@@ -129,7 +257,20 @@ const file_pkg_corepb_common_proto_rawDesc = "" +
 	"\x05value\x18\x02 \x01(\fR\x05value\"\x1e\n" +
 	"\x04Type\x12\b\n" +
 	"\x04NEXT\x10\x00\x12\f\n" +
-	"\bPREVIOUS\x10\x01B&Z$github.com/evrblk/grackle/pkg/corepbb\x06proto3"
+	"\bPREVIOUS\x10\x01\"f\n" +
+	"\aLeaseId\x12\x1d\n" +
+	"\n" +
+	"account_id\x18\x01 \x01(\x04R\taccountId\x12!\n" +
+	"\fnamespace_id\x18\x02 \x01(\rR\vnamespaceId\x12\x19\n" +
+	"\blease_id\x18\x03 \x01(\x04R\aleaseId\"\x98\x01\n" +
+	"\x05Lease\x122\n" +
+	"\x02id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\x02id\x12\x1d\n" +
+	"\n" +
+	"process_id\x18\x02 \x01(\tR\tprocessId\x12\x1d\n" +
+	"\n" +
+	"created_at\x18\x03 \x01(\x03R\tcreatedAt\x12\x1d\n" +
+	"\n" +
+	"expires_at\x18\x04 \x01(\x03R\texpiresAtB&Z$github.com/evrblk/grackle/pkg/corepbb\x06proto3"
 
 var (
 	file_pkg_corepb_common_proto_rawDescOnce sync.Once
@@ -144,18 +285,21 @@ func file_pkg_corepb_common_proto_rawDescGZIP() []byte {
 }
 
 var file_pkg_corepb_common_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_pkg_corepb_common_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_pkg_corepb_common_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_pkg_corepb_common_proto_goTypes = []any{
 	(PaginationToken_Type)(0), // 0: com.evrblk.grackle.corepb.PaginationToken.Type
 	(*PaginationToken)(nil),   // 1: com.evrblk.grackle.corepb.PaginationToken
+	(*LeaseId)(nil),           // 2: com.evrblk.grackle.corepb.LeaseId
+	(*Lease)(nil),             // 3: com.evrblk.grackle.corepb.Lease
 }
 var file_pkg_corepb_common_proto_depIdxs = []int32{
 	0, // 0: com.evrblk.grackle.corepb.PaginationToken.type:type_name -> com.evrblk.grackle.corepb.PaginationToken.Type
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	2, // 1: com.evrblk.grackle.corepb.Lease.id:type_name -> com.evrblk.grackle.corepb.LeaseId
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_pkg_corepb_common_proto_init() }
@@ -169,7 +313,7 @@ func file_pkg_corepb_common_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_corepb_common_proto_rawDesc), len(file_pkg_corepb_common_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   1,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

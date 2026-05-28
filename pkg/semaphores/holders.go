@@ -20,7 +20,7 @@ import (
 // 4. semaphore id
 //
 // Table Sort Key:
-// 1. process id
+// 1. lease id
 //
 // Expiration Index Primay Key:
 // 1. shard key (by account id and namespace id)
@@ -30,20 +30,20 @@ import (
 //
 // Expiration Index Sort Key:
 // 1. expiration time
-// 2. process id
+// 2. lease id
 type holdersTable struct {
 	table           *monsterax.BinaryTable[*corepb.SemaphoreHolder, corepb.SemaphoreHolder]
-	expirationIndex *monsterax.StringTable // TODO empty values
+	expirationIndex *monsterax.SortedIndex
 }
 
 func newHoldersTable(shardLowerBound []byte, shardUpperBound []byte) *holdersTable {
 	return &holdersTable{
 		table: monsterax.NewBinaryTable[*corepb.SemaphoreHolder, corepb.SemaphoreHolder](
-			tables.GrackleSemaphoreHoldersTableId,
+			tables.Grackle["Grackle.SemaphoresCore.Holders.Table"].Bytes(),
 			shardLowerBound,
 			shardUpperBound),
-		expirationIndex: monsterax.NewStringTable(
-			tables.GrackleSemaphoreHoldersExpirationIndexId,
+		expirationIndex: monsterax.NewSortedIndex(
+			tables.Grackle["Grackle.SemaphoresCore.Holders.ExpirationIndex"].Bytes(),
 			shardLowerBound,
 			shardUpperBound),
 	}
@@ -60,15 +60,14 @@ func (t *holdersTable) Get(txn *store.Txn, holderId *corepb.SemaphoreHolderId) (
 	return t.table.Get(txn,
 		utils.ConcatBytes(
 			t.tablePK(holderId.AccountId, holderId.NamespaceId, holderId.SemaphoreId),
-			t.tableSK(holderId.ProcessId)))
+			t.tableSK(holderId.LeaseId)))
 }
 
 func (t *holdersTable) Create(txn *store.Txn, holder *corepb.SemaphoreHolder) error {
-	err := t.expirationIndex.Set(txn,
+	err := t.expirationIndex.Add(txn,
 		utils.ConcatBytes(
 			t.expirationIndexPK(holder.Id.AccountId, holder.Id.NamespaceId, holder.Id.SemaphoreId),
-			t.expirationIndexSK(holder.ExpiresAt, holder.Id.ProcessId)),
-		holder.Id.ProcessId,
+			t.expirationIndexSK(holder.ExpiresAt, holder.Id.LeaseId)),
 	)
 	if err != nil {
 		return err
@@ -77,14 +76,14 @@ func (t *holdersTable) Create(txn *store.Txn, holder *corepb.SemaphoreHolder) er
 	return t.table.Set(txn,
 		utils.ConcatBytes(
 			t.tablePK(holder.Id.AccountId, holder.Id.NamespaceId, holder.Id.SemaphoreId),
-			t.tableSK(holder.Id.ProcessId)),
+			t.tableSK(holder.Id.LeaseId)),
 		holder)
 }
 
 func (t *holdersTable) Update(txn *store.Txn, updatedHolder *corepb.SemaphoreHolder) error {
 	key := utils.ConcatBytes(
 		t.tablePK(updatedHolder.Id.AccountId, updatedHolder.Id.NamespaceId, updatedHolder.Id.SemaphoreId),
-		t.tableSK(updatedHolder.Id.ProcessId))
+		t.tableSK(updatedHolder.Id.LeaseId))
 	existingHolder, err := t.table.Get(txn, key)
 	if err != nil {
 		return err
@@ -93,9 +92,9 @@ func (t *holdersTable) Update(txn *store.Txn, updatedHolder *corepb.SemaphoreHol
 	if existingHolder.ExpiresAt != updatedHolder.ExpiresAt {
 		indexPK := t.expirationIndexPK(updatedHolder.Id.AccountId, updatedHolder.Id.NamespaceId, updatedHolder.Id.SemaphoreId)
 
-		t.expirationIndex.Delete(txn, utils.ConcatBytes(indexPK, t.expirationIndexSK(existingHolder.ExpiresAt, updatedHolder.Id.ProcessId)))
+		t.expirationIndex.Delete(txn, utils.ConcatBytes(indexPK, t.expirationIndexSK(existingHolder.ExpiresAt, updatedHolder.Id.LeaseId)))
 
-		t.expirationIndex.Set(txn, utils.ConcatBytes(indexPK, t.expirationIndexSK(updatedHolder.ExpiresAt, updatedHolder.Id.ProcessId)), updatedHolder.Id.ProcessId)
+		t.expirationIndex.Add(txn, utils.ConcatBytes(indexPK, t.expirationIndexSK(updatedHolder.ExpiresAt, updatedHolder.Id.LeaseId)))
 	}
 
 	return t.table.Set(txn, key, updatedHolder)
@@ -104,7 +103,7 @@ func (t *holdersTable) Update(txn *store.Txn, updatedHolder *corepb.SemaphoreHol
 func (t *holdersTable) Delete(txn *store.Txn, holderId *corepb.SemaphoreHolderId) error {
 	key := utils.ConcatBytes(
 		t.tablePK(holderId.AccountId, holderId.NamespaceId, holderId.SemaphoreId),
-		t.tableSK(holderId.ProcessId))
+		t.tableSK(holderId.LeaseId))
 
 	holder, err := t.table.Get(txn, key)
 	if err != nil {
@@ -114,7 +113,7 @@ func (t *holdersTable) Delete(txn *store.Txn, holderId *corepb.SemaphoreHolderId
 	err = t.expirationIndex.Delete(txn,
 		utils.ConcatBytes(
 			t.expirationIndexPK(holder.Id.AccountId, holder.Id.NamespaceId, holder.Id.SemaphoreId),
-			t.expirationIndexSK(holder.ExpiresAt, holderId.ProcessId)))
+			t.expirationIndexSK(holder.ExpiresAt, holderId.LeaseId)))
 	if err != nil {
 		return err
 	}
@@ -122,7 +121,7 @@ func (t *holdersTable) Delete(txn *store.Txn, holderId *corepb.SemaphoreHolderId
 	return t.table.Delete(txn,
 		utils.ConcatBytes(
 			t.tablePK(holderId.AccountId, holderId.NamespaceId, holderId.SemaphoreId),
-			t.tableSK(holderId.ProcessId)))
+			t.tableSK(holderId.LeaseId)))
 }
 
 type listHoldersResult struct {
@@ -153,11 +152,12 @@ func (t *holdersTable) ListByExpiration(txn *store.Txn, semaphoreId *corepb.Sema
 	lowerBound := utils.ConcatBytes(pk, t.expirationIndexSKPrefix(from))
 	upperBound := utils.ConcatBytes(pk, t.expirationIndexSKPrefix(to))
 
-	return t.expirationIndex.ListInRange(txn, lowerBound, upperBound, false, func(processId string) (bool, error) {
+	return t.expirationIndex.ListInRange(txn, lowerBound, upperBound, func(key []byte) (bool, error) {
+		leaseId := utils.BytesToUint64(key[len(key)-8:])
 		holder, err := t.table.Get(txn,
 			utils.ConcatBytes(
 				t.tablePK(semaphoreId.AccountId, semaphoreId.NamespaceId, semaphoreId.SemaphoreId),
-				t.tableSK(processId)))
+				t.tableSK(leaseId)))
 		if err != nil {
 			return false, err
 		}
@@ -174,9 +174,9 @@ func (t *holdersTable) tablePK(accountId uint64, namespaceId uint32, semaphoreId
 	)
 }
 
-func (t *holdersTable) tableSK(processId string) []byte {
+func (t *holdersTable) tableSK(leaseId uint64) []byte {
 	return utils.ConcatBytes(
-		processId,
+		leaseId,
 	)
 }
 
@@ -189,10 +189,10 @@ func (t *holdersTable) expirationIndexPK(accountId uint64, namespaceId uint32, s
 	)
 }
 
-func (t *holdersTable) expirationIndexSK(expirationTime int64, processId string) []byte {
+func (t *holdersTable) expirationIndexSK(expirationTime int64, leaseId uint64) []byte {
 	return utils.ConcatBytes(
 		expirationTime,
-		processId,
+		leaseId,
 	)
 }
 

@@ -117,6 +117,25 @@ func (m *GrackleReadRequest_ListSemaphoresRequest) MarshalToSizedBufferVT(dAtA [
 	}
 	return len(dAtA) - i, nil
 }
+func (m *GrackleReadRequest_ListSemaphoresByLeaseIdRequest) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleReadRequest_ListSemaphoresByLeaseIdRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.ListSemaphoresByLeaseIdRequest != nil {
+		size, err := m.ListSemaphoresByLeaseIdRequest.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x22
+	}
+	return len(dAtA) - i, nil
+}
 func (m *GrackleReadRequest_ListSemaphoreHoldersRequest) MarshalToVT(dAtA []byte) (int, error) {
 	size := m.SizeVT()
 	return m.MarshalToSizedBufferVT(dAtA[:size])
@@ -132,7 +151,64 @@ func (m *GrackleReadRequest_ListSemaphoreHoldersRequest) MarshalToSizedBufferVT(
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x22
+		dAtA[i] = 0x2a
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GrackleReadRequest_ListSemaphoreLeasesRequest) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleReadRequest_ListSemaphoreLeasesRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.ListSemaphoreLeasesRequest != nil {
+		size, err := m.ListSemaphoreLeasesRequest.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x32
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GrackleReadRequest_ListSemaphoreLeasesByProcessIdRequest) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleReadRequest_ListSemaphoreLeasesByProcessIdRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.ListSemaphoreLeasesByProcessIdRequest != nil {
+		size, err := m.ListSemaphoreLeasesByProcessIdRequest.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x3a
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GrackleReadRequest_GetSemaphoreLeaseRequest) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleReadRequest_GetSemaphoreLeaseRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.GetSemaphoreLeaseRequest != nil {
+		size, err := m.GetSemaphoreLeaseRequest.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x42
 	}
 	return len(dAtA) - i, nil
 }
@@ -151,7 +227,7 @@ func (m *GrackleReadRequest_GetWaitGroupRequest) MarshalToSizedBufferVT(dAtA []b
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x2a
+		dAtA[i] = 0x4a
 	}
 	return len(dAtA) - i, nil
 }
@@ -170,7 +246,7 @@ func (m *GrackleReadRequest_GetWaitGroupByNameRequest) MarshalToSizedBufferVT(dA
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x32
+		dAtA[i] = 0x52
 	}
 	return len(dAtA) - i, nil
 }
@@ -189,7 +265,7 @@ func (m *GrackleReadRequest_ListWaitGroupsRequest) MarshalToSizedBufferVT(dAtA [
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x3a
+		dAtA[i] = 0x5a
 	}
 	return len(dAtA) - i, nil
 }
@@ -208,7 +284,7 @@ func (m *GrackleReadRequest_ListWaitGroupJobsRequest) MarshalToSizedBufferVT(dAt
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x42
+		dAtA[i] = 0x62
 	}
 	return len(dAtA) - i, nil
 }
@@ -227,7 +303,7 @@ func (m *GrackleReadRequest_GetNamespaceRequest) MarshalToSizedBufferVT(dAtA []b
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x4a
+		dAtA[i] = 0x6a
 	}
 	return len(dAtA) - i, nil
 }
@@ -246,7 +322,7 @@ func (m *GrackleReadRequest_GetNamespaceByNameRequest) MarshalToSizedBufferVT(dA
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x52
+		dAtA[i] = 0x72
 	}
 	return len(dAtA) - i, nil
 }
@@ -265,7 +341,7 @@ func (m *GrackleReadRequest_ListNamespacesRequest) MarshalToSizedBufferVT(dAtA [
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x5a
+		dAtA[i] = 0x7a
 	}
 	return len(dAtA) - i, nil
 }
@@ -284,7 +360,93 @@ func (m *GrackleReadRequest_ListLocksRequest) MarshalToSizedBufferVT(dAtA []byte
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x62
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x82
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GrackleReadRequest_ListLocksByLeaseIdRequest) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleReadRequest_ListLocksByLeaseIdRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.ListLocksByLeaseIdRequest != nil {
+		size, err := m.ListLocksByLeaseIdRequest.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x8a
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GrackleReadRequest_GetLockLeaseRequest) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleReadRequest_GetLockLeaseRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.GetLockLeaseRequest != nil {
+		size, err := m.GetLockLeaseRequest.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x92
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GrackleReadRequest_ListLockLeasesRequest) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleReadRequest_ListLockLeasesRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.ListLockLeasesRequest != nil {
+		size, err := m.ListLockLeasesRequest.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x9a
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GrackleReadRequest_ListLockLeasesByProcessIdRequest) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleReadRequest_ListLockLeasesByProcessIdRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.ListLockLeasesByProcessIdRequest != nil {
+		size, err := m.ListLockLeasesByProcessIdRequest.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xa2
 	}
 	return len(dAtA) - i, nil
 }
@@ -303,7 +465,9 @@ func (m *GrackleReadRequest_GetBarrierRequest) MarshalToSizedBufferVT(dAtA []byt
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x6a
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xaa
 	}
 	return len(dAtA) - i, nil
 }
@@ -322,7 +486,9 @@ func (m *GrackleReadRequest_GetBarrierByNameRequest) MarshalToSizedBufferVT(dAtA
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x72
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xb2
 	}
 	return len(dAtA) - i, nil
 }
@@ -341,7 +507,9 @@ func (m *GrackleReadRequest_ListBarriersRequest) MarshalToSizedBufferVT(dAtA []b
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x7a
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xba
 	}
 	return len(dAtA) - i, nil
 }
@@ -362,7 +530,7 @@ func (m *GrackleReadRequest_ListBarrierParticipantsRequest) MarshalToSizedBuffer
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0x82
+		dAtA[i] = 0xc2
 	}
 	return len(dAtA) - i, nil
 }
@@ -465,6 +633,25 @@ func (m *GrackleReadResponse_ListSemaphoresResponse) MarshalToSizedBufferVT(dAtA
 	}
 	return len(dAtA) - i, nil
 }
+func (m *GrackleReadResponse_ListSemaphoresByLeaseIdResponse) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleReadResponse_ListSemaphoresByLeaseIdResponse) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.ListSemaphoresByLeaseIdResponse != nil {
+		size, err := m.ListSemaphoresByLeaseIdResponse.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x22
+	}
+	return len(dAtA) - i, nil
+}
 func (m *GrackleReadResponse_ListSemaphoreHoldersResponse) MarshalToVT(dAtA []byte) (int, error) {
 	size := m.SizeVT()
 	return m.MarshalToSizedBufferVT(dAtA[:size])
@@ -480,7 +667,64 @@ func (m *GrackleReadResponse_ListSemaphoreHoldersResponse) MarshalToSizedBufferV
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x22
+		dAtA[i] = 0x2a
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GrackleReadResponse_ListSemaphoreLeasesResponse) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleReadResponse_ListSemaphoreLeasesResponse) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.ListSemaphoreLeasesResponse != nil {
+		size, err := m.ListSemaphoreLeasesResponse.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x32
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GrackleReadResponse_GetSemaphoreLeaseResponse) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleReadResponse_GetSemaphoreLeaseResponse) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.GetSemaphoreLeaseResponse != nil {
+		size, err := m.GetSemaphoreLeaseResponse.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x3a
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GrackleReadResponse_ListSemaphoreLeasesByProcessIdResponse) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleReadResponse_ListSemaphoreLeasesByProcessIdResponse) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.ListSemaphoreLeasesByProcessIdResponse != nil {
+		size, err := m.ListSemaphoreLeasesByProcessIdResponse.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x42
 	}
 	return len(dAtA) - i, nil
 }
@@ -499,7 +743,7 @@ func (m *GrackleReadResponse_GetWaitGroupResponse) MarshalToSizedBufferVT(dAtA [
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x2a
+		dAtA[i] = 0x4a
 	}
 	return len(dAtA) - i, nil
 }
@@ -518,7 +762,7 @@ func (m *GrackleReadResponse_GetWaitGroupByNameResponse) MarshalToSizedBufferVT(
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x32
+		dAtA[i] = 0x52
 	}
 	return len(dAtA) - i, nil
 }
@@ -537,7 +781,7 @@ func (m *GrackleReadResponse_ListWaitGroupsResponse) MarshalToSizedBufferVT(dAtA
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x3a
+		dAtA[i] = 0x5a
 	}
 	return len(dAtA) - i, nil
 }
@@ -556,7 +800,7 @@ func (m *GrackleReadResponse_ListWaitGroupJobsResponse) MarshalToSizedBufferVT(d
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x42
+		dAtA[i] = 0x62
 	}
 	return len(dAtA) - i, nil
 }
@@ -575,7 +819,7 @@ func (m *GrackleReadResponse_GetNamespaceResponse) MarshalToSizedBufferVT(dAtA [
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x4a
+		dAtA[i] = 0x6a
 	}
 	return len(dAtA) - i, nil
 }
@@ -594,7 +838,7 @@ func (m *GrackleReadResponse_GetNamespaceByNameResponse) MarshalToSizedBufferVT(
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x52
+		dAtA[i] = 0x72
 	}
 	return len(dAtA) - i, nil
 }
@@ -613,7 +857,7 @@ func (m *GrackleReadResponse_ListNamespacesResponse) MarshalToSizedBufferVT(dAtA
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x5a
+		dAtA[i] = 0x7a
 	}
 	return len(dAtA) - i, nil
 }
@@ -632,7 +876,93 @@ func (m *GrackleReadResponse_ListLocksResponse) MarshalToSizedBufferVT(dAtA []by
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x62
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x82
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GrackleReadResponse_ListLocksByLeaseIdResponse) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleReadResponse_ListLocksByLeaseIdResponse) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.ListLocksByLeaseIdResponse != nil {
+		size, err := m.ListLocksByLeaseIdResponse.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x8a
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GrackleReadResponse_GetLockLeaseResponse) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleReadResponse_GetLockLeaseResponse) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.GetLockLeaseResponse != nil {
+		size, err := m.GetLockLeaseResponse.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x92
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GrackleReadResponse_ListLockLeasesResponse) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleReadResponse_ListLockLeasesResponse) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.ListLockLeasesResponse != nil {
+		size, err := m.ListLockLeasesResponse.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x9a
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GrackleReadResponse_ListLockLeasesByProcessIdResponse) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleReadResponse_ListLockLeasesByProcessIdResponse) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.ListLockLeasesByProcessIdResponse != nil {
+		size, err := m.ListLockLeasesByProcessIdResponse.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xa2
 	}
 	return len(dAtA) - i, nil
 }
@@ -651,7 +981,9 @@ func (m *GrackleReadResponse_GetBarrierResponse) MarshalToSizedBufferVT(dAtA []b
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x6a
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xaa
 	}
 	return len(dAtA) - i, nil
 }
@@ -670,7 +1002,9 @@ func (m *GrackleReadResponse_GetBarrierByNameResponse) MarshalToSizedBufferVT(dA
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x72
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xb2
 	}
 	return len(dAtA) - i, nil
 }
@@ -689,7 +1023,9 @@ func (m *GrackleReadResponse_ListBarriersResponse) MarshalToSizedBufferVT(dAtA [
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x7a
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xba
 	}
 	return len(dAtA) - i, nil
 }
@@ -710,7 +1046,7 @@ func (m *GrackleReadResponse_ListBarrierParticipantsResponse) MarshalToSizedBuff
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0x82
+		dAtA[i] = 0xc2
 	}
 	return len(dAtA) - i, nil
 }
@@ -889,6 +1225,63 @@ func (m *GrackleUpdateRequest_SemaphoresDeleteNamespaceRequest) MarshalToSizedBu
 	}
 	return len(dAtA) - i, nil
 }
+func (m *GrackleUpdateRequest_CreateSemaphoreLeaseRequest) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleUpdateRequest_CreateSemaphoreLeaseRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.CreateSemaphoreLeaseRequest != nil {
+		size, err := m.CreateSemaphoreLeaseRequest.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x42
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GrackleUpdateRequest_RefreshSemaphoreLeaseRequest) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleUpdateRequest_RefreshSemaphoreLeaseRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.RefreshSemaphoreLeaseRequest != nil {
+		size, err := m.RefreshSemaphoreLeaseRequest.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x4a
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GrackleUpdateRequest_RevokeSemaphoreLeaseRequest) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleUpdateRequest_RevokeSemaphoreLeaseRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.RevokeSemaphoreLeaseRequest != nil {
+		size, err := m.RevokeSemaphoreLeaseRequest.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x52
+	}
+	return len(dAtA) - i, nil
+}
 func (m *GrackleUpdateRequest_CreateWaitGroupRequest) MarshalToVT(dAtA []byte) (int, error) {
 	size := m.SizeVT()
 	return m.MarshalToSizedBufferVT(dAtA[:size])
@@ -904,7 +1297,7 @@ func (m *GrackleUpdateRequest_CreateWaitGroupRequest) MarshalToSizedBufferVT(dAt
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x42
+		dAtA[i] = 0x5a
 	}
 	return len(dAtA) - i, nil
 }
@@ -923,7 +1316,7 @@ func (m *GrackleUpdateRequest_DeleteWaitGroupRequest) MarshalToSizedBufferVT(dAt
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x4a
+		dAtA[i] = 0x62
 	}
 	return len(dAtA) - i, nil
 }
@@ -942,7 +1335,7 @@ func (m *GrackleUpdateRequest_AddJobsToWaitGroupRequest) MarshalToSizedBufferVT(
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x52
+		dAtA[i] = 0x6a
 	}
 	return len(dAtA) - i, nil
 }
@@ -961,7 +1354,7 @@ func (m *GrackleUpdateRequest_CompleteJobsFromWaitGroupRequest) MarshalToSizedBu
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x5a
+		dAtA[i] = 0x72
 	}
 	return len(dAtA) - i, nil
 }
@@ -980,7 +1373,7 @@ func (m *GrackleUpdateRequest_RunWaitGroupsGarbageCollectionRequest) MarshalToSi
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x62
+		dAtA[i] = 0x7a
 	}
 	return len(dAtA) - i, nil
 }
@@ -999,7 +1392,9 @@ func (m *GrackleUpdateRequest_WaitGroupsDeleteNamespaceRequest) MarshalToSizedBu
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x6a
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x82
 	}
 	return len(dAtA) - i, nil
 }
@@ -1018,7 +1413,9 @@ func (m *GrackleUpdateRequest_AcquireLockRequest) MarshalToSizedBufferVT(dAtA []
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x72
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x8a
 	}
 	return len(dAtA) - i, nil
 }
@@ -1037,7 +1434,9 @@ func (m *GrackleUpdateRequest_ReleaseLockRequest) MarshalToSizedBufferVT(dAtA []
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x7a
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x92
 	}
 	return len(dAtA) - i, nil
 }
@@ -1058,7 +1457,7 @@ func (m *GrackleUpdateRequest_DeleteLockRequest) MarshalToSizedBufferVT(dAtA []b
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0x82
+		dAtA[i] = 0x9a
 	}
 	return len(dAtA) - i, nil
 }
@@ -1079,7 +1478,7 @@ func (m *GrackleUpdateRequest_GetLockRequest) MarshalToSizedBufferVT(dAtA []byte
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0x8a
+		dAtA[i] = 0xa2
 	}
 	return len(dAtA) - i, nil
 }
@@ -1100,7 +1499,7 @@ func (m *GrackleUpdateRequest_RunLocksGarbageCollectionRequest) MarshalToSizedBu
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0x92
+		dAtA[i] = 0xaa
 	}
 	return len(dAtA) - i, nil
 }
@@ -1121,7 +1520,70 @@ func (m *GrackleUpdateRequest_LocksDeleteNamespaceRequest) MarshalToSizedBufferV
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0x9a
+		dAtA[i] = 0xb2
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GrackleUpdateRequest_CreateLockLeaseRequest) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleUpdateRequest_CreateLockLeaseRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.CreateLockLeaseRequest != nil {
+		size, err := m.CreateLockLeaseRequest.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xba
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GrackleUpdateRequest_RefreshLockLeaseRequest) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleUpdateRequest_RefreshLockLeaseRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.RefreshLockLeaseRequest != nil {
+		size, err := m.RefreshLockLeaseRequest.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xc2
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GrackleUpdateRequest_RevokeLockLeaseRequest) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleUpdateRequest_RevokeLockLeaseRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.RevokeLockLeaseRequest != nil {
+		size, err := m.RevokeLockLeaseRequest.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xca
 	}
 	return len(dAtA) - i, nil
 }
@@ -1142,7 +1604,7 @@ func (m *GrackleUpdateRequest_CreateNamespaceRequest) MarshalToSizedBufferVT(dAt
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0xa2
+		dAtA[i] = 0xd2
 	}
 	return len(dAtA) - i, nil
 }
@@ -1163,7 +1625,7 @@ func (m *GrackleUpdateRequest_UpdateNamespaceRequest) MarshalToSizedBufferVT(dAt
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0xaa
+		dAtA[i] = 0xda
 	}
 	return len(dAtA) - i, nil
 }
@@ -1184,7 +1646,7 @@ func (m *GrackleUpdateRequest_DeleteNamespaceRequest) MarshalToSizedBufferVT(dAt
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0xb2
+		dAtA[i] = 0xe2
 	}
 	return len(dAtA) - i, nil
 }
@@ -1205,7 +1667,7 @@ func (m *GrackleUpdateRequest_CreateBarrierRequest) MarshalToSizedBufferVT(dAtA 
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0xba
+		dAtA[i] = 0xea
 	}
 	return len(dAtA) - i, nil
 }
@@ -1226,7 +1688,7 @@ func (m *GrackleUpdateRequest_DeleteBarrierRequest) MarshalToSizedBufferVT(dAtA 
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0xc2
+		dAtA[i] = 0xf2
 	}
 	return len(dAtA) - i, nil
 }
@@ -1247,7 +1709,7 @@ func (m *GrackleUpdateRequest_UpdateBarrierRequest) MarshalToSizedBufferVT(dAtA 
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0xca
+		dAtA[i] = 0xfa
 	}
 	return len(dAtA) - i, nil
 }
@@ -1266,9 +1728,9 @@ func (m *GrackleUpdateRequest_ArriveAtBarrierRequest) MarshalToSizedBufferVT(dAt
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x1
+		dAtA[i] = 0x2
 		i--
-		dAtA[i] = 0xd2
+		dAtA[i] = 0x82
 	}
 	return len(dAtA) - i, nil
 }
@@ -1287,9 +1749,9 @@ func (m *GrackleUpdateRequest_WaitAtBarrierRequest) MarshalToSizedBufferVT(dAtA 
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x1
+		dAtA[i] = 0x2
 		i--
-		dAtA[i] = 0xda
+		dAtA[i] = 0x8a
 	}
 	return len(dAtA) - i, nil
 }
@@ -1308,9 +1770,9 @@ func (m *GrackleUpdateRequest_RunBarriersGarbageCollectionRequest) MarshalToSize
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x1
+		dAtA[i] = 0x2
 		i--
-		dAtA[i] = 0xe2
+		dAtA[i] = 0x92
 	}
 	return len(dAtA) - i, nil
 }
@@ -1329,9 +1791,9 @@ func (m *GrackleUpdateRequest_BarriersDeleteNamespaceRequest) MarshalToSizedBuff
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x1
+		dAtA[i] = 0x2
 		i--
-		dAtA[i] = 0xea
+		dAtA[i] = 0x9a
 	}
 	return len(dAtA) - i, nil
 }
@@ -1510,6 +1972,63 @@ func (m *GrackleUpdateResponse_SemaphoresDeleteNamespaceResponse) MarshalToSized
 	}
 	return len(dAtA) - i, nil
 }
+func (m *GrackleUpdateResponse_CreateSemaphoreLeaseResponse) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleUpdateResponse_CreateSemaphoreLeaseResponse) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.CreateSemaphoreLeaseResponse != nil {
+		size, err := m.CreateSemaphoreLeaseResponse.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x42
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GrackleUpdateResponse_RefreshSemaphoreLeaseResponse) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleUpdateResponse_RefreshSemaphoreLeaseResponse) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.RefreshSemaphoreLeaseResponse != nil {
+		size, err := m.RefreshSemaphoreLeaseResponse.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x4a
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GrackleUpdateResponse_RevokeSemaphoreLeaseResponse) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleUpdateResponse_RevokeSemaphoreLeaseResponse) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.RevokeSemaphoreLeaseResponse != nil {
+		size, err := m.RevokeSemaphoreLeaseResponse.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x52
+	}
+	return len(dAtA) - i, nil
+}
 func (m *GrackleUpdateResponse_CreateWaitGroupResponse) MarshalToVT(dAtA []byte) (int, error) {
 	size := m.SizeVT()
 	return m.MarshalToSizedBufferVT(dAtA[:size])
@@ -1525,7 +2044,7 @@ func (m *GrackleUpdateResponse_CreateWaitGroupResponse) MarshalToSizedBufferVT(d
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x42
+		dAtA[i] = 0x5a
 	}
 	return len(dAtA) - i, nil
 }
@@ -1544,7 +2063,7 @@ func (m *GrackleUpdateResponse_DeleteWaitGroupResponse) MarshalToSizedBufferVT(d
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x4a
+		dAtA[i] = 0x62
 	}
 	return len(dAtA) - i, nil
 }
@@ -1563,7 +2082,7 @@ func (m *GrackleUpdateResponse_AddJobsToWaitGroupResponse) MarshalToSizedBufferV
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x52
+		dAtA[i] = 0x6a
 	}
 	return len(dAtA) - i, nil
 }
@@ -1582,7 +2101,7 @@ func (m *GrackleUpdateResponse_CompleteJobsFromWaitGroupResponse) MarshalToSized
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x5a
+		dAtA[i] = 0x72
 	}
 	return len(dAtA) - i, nil
 }
@@ -1601,7 +2120,7 @@ func (m *GrackleUpdateResponse_RunWaitGroupsGarbageCollectionResponse) MarshalTo
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x62
+		dAtA[i] = 0x7a
 	}
 	return len(dAtA) - i, nil
 }
@@ -1620,7 +2139,9 @@ func (m *GrackleUpdateResponse_WaitGroupsDeleteNamespaceResponse) MarshalToSized
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x6a
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x82
 	}
 	return len(dAtA) - i, nil
 }
@@ -1639,7 +2160,9 @@ func (m *GrackleUpdateResponse_AcquireLockResponse) MarshalToSizedBufferVT(dAtA 
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x72
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x8a
 	}
 	return len(dAtA) - i, nil
 }
@@ -1658,7 +2181,9 @@ func (m *GrackleUpdateResponse_ReleaseLockResponse) MarshalToSizedBufferVT(dAtA 
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x7a
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x92
 	}
 	return len(dAtA) - i, nil
 }
@@ -1679,7 +2204,7 @@ func (m *GrackleUpdateResponse_DeleteLockResponse) MarshalToSizedBufferVT(dAtA [
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0x82
+		dAtA[i] = 0x9a
 	}
 	return len(dAtA) - i, nil
 }
@@ -1700,7 +2225,7 @@ func (m *GrackleUpdateResponse_GetLockResponse) MarshalToSizedBufferVT(dAtA []by
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0x8a
+		dAtA[i] = 0xa2
 	}
 	return len(dAtA) - i, nil
 }
@@ -1721,7 +2246,7 @@ func (m *GrackleUpdateResponse_RunLocksGarbageCollectionResponse) MarshalToSized
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0x92
+		dAtA[i] = 0xaa
 	}
 	return len(dAtA) - i, nil
 }
@@ -1742,7 +2267,70 @@ func (m *GrackleUpdateResponse_LocksDeleteNamespaceResponse) MarshalToSizedBuffe
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0x9a
+		dAtA[i] = 0xb2
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GrackleUpdateResponse_CreateLockLeaseResponse) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleUpdateResponse_CreateLockLeaseResponse) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.CreateLockLeaseResponse != nil {
+		size, err := m.CreateLockLeaseResponse.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xba
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GrackleUpdateResponse_RefreshLockLeaseResponse) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleUpdateResponse_RefreshLockLeaseResponse) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.RefreshLockLeaseResponse != nil {
+		size, err := m.RefreshLockLeaseResponse.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xc2
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GrackleUpdateResponse_RevokeLockLeaseResponse) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrackleUpdateResponse_RevokeLockLeaseResponse) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.RevokeLockLeaseResponse != nil {
+		size, err := m.RevokeLockLeaseResponse.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xca
 	}
 	return len(dAtA) - i, nil
 }
@@ -1763,7 +2351,7 @@ func (m *GrackleUpdateResponse_CreateNamespaceResponse) MarshalToSizedBufferVT(d
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0xa2
+		dAtA[i] = 0xd2
 	}
 	return len(dAtA) - i, nil
 }
@@ -1784,7 +2372,7 @@ func (m *GrackleUpdateResponse_UpdateNamespaceResponse) MarshalToSizedBufferVT(d
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0xaa
+		dAtA[i] = 0xda
 	}
 	return len(dAtA) - i, nil
 }
@@ -1805,7 +2393,7 @@ func (m *GrackleUpdateResponse_DeleteNamespaceResponse) MarshalToSizedBufferVT(d
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0xb2
+		dAtA[i] = 0xe2
 	}
 	return len(dAtA) - i, nil
 }
@@ -1826,7 +2414,7 @@ func (m *GrackleUpdateResponse_CreateBarrierResponse) MarshalToSizedBufferVT(dAt
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0xba
+		dAtA[i] = 0xea
 	}
 	return len(dAtA) - i, nil
 }
@@ -1847,7 +2435,7 @@ func (m *GrackleUpdateResponse_DeleteBarrierResponse) MarshalToSizedBufferVT(dAt
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0xc2
+		dAtA[i] = 0xf2
 	}
 	return len(dAtA) - i, nil
 }
@@ -1868,7 +2456,7 @@ func (m *GrackleUpdateResponse_UpdateBarrierResponse) MarshalToSizedBufferVT(dAt
 		i--
 		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0xca
+		dAtA[i] = 0xfa
 	}
 	return len(dAtA) - i, nil
 }
@@ -1887,9 +2475,9 @@ func (m *GrackleUpdateResponse_ArriveAtBarrierResponse) MarshalToSizedBufferVT(d
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x1
+		dAtA[i] = 0x2
 		i--
-		dAtA[i] = 0xd2
+		dAtA[i] = 0x82
 	}
 	return len(dAtA) - i, nil
 }
@@ -1908,9 +2496,9 @@ func (m *GrackleUpdateResponse_WaitAtBarrierResponse) MarshalToSizedBufferVT(dAt
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x1
+		dAtA[i] = 0x2
 		i--
-		dAtA[i] = 0xda
+		dAtA[i] = 0x8a
 	}
 	return len(dAtA) - i, nil
 }
@@ -1929,9 +2517,9 @@ func (m *GrackleUpdateResponse_RunBarriersGarbageCollectionResponse) MarshalToSi
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x1
+		dAtA[i] = 0x2
 		i--
-		dAtA[i] = 0xe2
+		dAtA[i] = 0x92
 	}
 	return len(dAtA) - i, nil
 }
@@ -1950,9 +2538,9 @@ func (m *GrackleUpdateResponse_BarriersDeleteNamespaceResponse) MarshalToSizedBu
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x1
+		dAtA[i] = 0x2
 		i--
-		dAtA[i] = 0xea
+		dAtA[i] = 0x9a
 	}
 	return len(dAtA) - i, nil
 }
@@ -2005,6 +2593,18 @@ func (m *GrackleReadRequest_ListSemaphoresRequest) SizeVT() (n int) {
 	}
 	return n
 }
+func (m *GrackleReadRequest_ListSemaphoresByLeaseIdRequest) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ListSemaphoresByLeaseIdRequest != nil {
+		l = m.ListSemaphoresByLeaseIdRequest.SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
 func (m *GrackleReadRequest_ListSemaphoreHoldersRequest) SizeVT() (n int) {
 	if m == nil {
 		return 0
@@ -2013,6 +2613,42 @@ func (m *GrackleReadRequest_ListSemaphoreHoldersRequest) SizeVT() (n int) {
 	_ = l
 	if m.ListSemaphoreHoldersRequest != nil {
 		l = m.ListSemaphoreHoldersRequest.SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *GrackleReadRequest_ListSemaphoreLeasesRequest) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ListSemaphoreLeasesRequest != nil {
+		l = m.ListSemaphoreLeasesRequest.SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *GrackleReadRequest_ListSemaphoreLeasesByProcessIdRequest) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ListSemaphoreLeasesByProcessIdRequest != nil {
+		l = m.ListSemaphoreLeasesByProcessIdRequest.SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *GrackleReadRequest_GetSemaphoreLeaseRequest) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.GetSemaphoreLeaseRequest != nil {
+		l = m.GetSemaphoreLeaseRequest.SizeVT()
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	return n
@@ -2109,7 +2745,55 @@ func (m *GrackleReadRequest_ListLocksRequest) SizeVT() (n int) {
 	_ = l
 	if m.ListLocksRequest != nil {
 		l = m.ListLocksRequest.SizeVT()
-		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *GrackleReadRequest_ListLocksByLeaseIdRequest) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ListLocksByLeaseIdRequest != nil {
+		l = m.ListLocksByLeaseIdRequest.SizeVT()
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *GrackleReadRequest_GetLockLeaseRequest) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.GetLockLeaseRequest != nil {
+		l = m.GetLockLeaseRequest.SizeVT()
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *GrackleReadRequest_ListLockLeasesRequest) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ListLockLeasesRequest != nil {
+		l = m.ListLockLeasesRequest.SizeVT()
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *GrackleReadRequest_ListLockLeasesByProcessIdRequest) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ListLockLeasesByProcessIdRequest != nil {
+		l = m.ListLockLeasesByProcessIdRequest.SizeVT()
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	return n
 }
@@ -2121,7 +2805,7 @@ func (m *GrackleReadRequest_GetBarrierRequest) SizeVT() (n int) {
 	_ = l
 	if m.GetBarrierRequest != nil {
 		l = m.GetBarrierRequest.SizeVT()
-		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	return n
 }
@@ -2133,7 +2817,7 @@ func (m *GrackleReadRequest_GetBarrierByNameRequest) SizeVT() (n int) {
 	_ = l
 	if m.GetBarrierByNameRequest != nil {
 		l = m.GetBarrierByNameRequest.SizeVT()
-		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	return n
 }
@@ -2145,7 +2829,7 @@ func (m *GrackleReadRequest_ListBarriersRequest) SizeVT() (n int) {
 	_ = l
 	if m.ListBarriersRequest != nil {
 		l = m.ListBarriersRequest.SizeVT()
-		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	return n
 }
@@ -2210,6 +2894,18 @@ func (m *GrackleReadResponse_ListSemaphoresResponse) SizeVT() (n int) {
 	}
 	return n
 }
+func (m *GrackleReadResponse_ListSemaphoresByLeaseIdResponse) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ListSemaphoresByLeaseIdResponse != nil {
+		l = m.ListSemaphoresByLeaseIdResponse.SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
 func (m *GrackleReadResponse_ListSemaphoreHoldersResponse) SizeVT() (n int) {
 	if m == nil {
 		return 0
@@ -2218,6 +2914,42 @@ func (m *GrackleReadResponse_ListSemaphoreHoldersResponse) SizeVT() (n int) {
 	_ = l
 	if m.ListSemaphoreHoldersResponse != nil {
 		l = m.ListSemaphoreHoldersResponse.SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *GrackleReadResponse_ListSemaphoreLeasesResponse) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ListSemaphoreLeasesResponse != nil {
+		l = m.ListSemaphoreLeasesResponse.SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *GrackleReadResponse_GetSemaphoreLeaseResponse) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.GetSemaphoreLeaseResponse != nil {
+		l = m.GetSemaphoreLeaseResponse.SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *GrackleReadResponse_ListSemaphoreLeasesByProcessIdResponse) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ListSemaphoreLeasesByProcessIdResponse != nil {
+		l = m.ListSemaphoreLeasesByProcessIdResponse.SizeVT()
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	return n
@@ -2314,7 +3046,55 @@ func (m *GrackleReadResponse_ListLocksResponse) SizeVT() (n int) {
 	_ = l
 	if m.ListLocksResponse != nil {
 		l = m.ListLocksResponse.SizeVT()
-		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *GrackleReadResponse_ListLocksByLeaseIdResponse) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ListLocksByLeaseIdResponse != nil {
+		l = m.ListLocksByLeaseIdResponse.SizeVT()
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *GrackleReadResponse_GetLockLeaseResponse) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.GetLockLeaseResponse != nil {
+		l = m.GetLockLeaseResponse.SizeVT()
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *GrackleReadResponse_ListLockLeasesResponse) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ListLockLeasesResponse != nil {
+		l = m.ListLockLeasesResponse.SizeVT()
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *GrackleReadResponse_ListLockLeasesByProcessIdResponse) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ListLockLeasesByProcessIdResponse != nil {
+		l = m.ListLockLeasesByProcessIdResponse.SizeVT()
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	return n
 }
@@ -2326,7 +3106,7 @@ func (m *GrackleReadResponse_GetBarrierResponse) SizeVT() (n int) {
 	_ = l
 	if m.GetBarrierResponse != nil {
 		l = m.GetBarrierResponse.SizeVT()
-		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	return n
 }
@@ -2338,7 +3118,7 @@ func (m *GrackleReadResponse_GetBarrierByNameResponse) SizeVT() (n int) {
 	_ = l
 	if m.GetBarrierByNameResponse != nil {
 		l = m.GetBarrierByNameResponse.SizeVT()
-		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	return n
 }
@@ -2350,7 +3130,7 @@ func (m *GrackleReadResponse_ListBarriersResponse) SizeVT() (n int) {
 	_ = l
 	if m.ListBarriersResponse != nil {
 		l = m.ListBarriersResponse.SizeVT()
-		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	return n
 }
@@ -2463,6 +3243,42 @@ func (m *GrackleUpdateRequest_SemaphoresDeleteNamespaceRequest) SizeVT() (n int)
 	}
 	return n
 }
+func (m *GrackleUpdateRequest_CreateSemaphoreLeaseRequest) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.CreateSemaphoreLeaseRequest != nil {
+		l = m.CreateSemaphoreLeaseRequest.SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *GrackleUpdateRequest_RefreshSemaphoreLeaseRequest) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.RefreshSemaphoreLeaseRequest != nil {
+		l = m.RefreshSemaphoreLeaseRequest.SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *GrackleUpdateRequest_RevokeSemaphoreLeaseRequest) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.RevokeSemaphoreLeaseRequest != nil {
+		l = m.RevokeSemaphoreLeaseRequest.SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
 func (m *GrackleUpdateRequest_CreateWaitGroupRequest) SizeVT() (n int) {
 	if m == nil {
 		return 0
@@ -2531,7 +3347,7 @@ func (m *GrackleUpdateRequest_WaitGroupsDeleteNamespaceRequest) SizeVT() (n int)
 	_ = l
 	if m.WaitGroupsDeleteNamespaceRequest != nil {
 		l = m.WaitGroupsDeleteNamespaceRequest.SizeVT()
-		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	return n
 }
@@ -2543,7 +3359,7 @@ func (m *GrackleUpdateRequest_AcquireLockRequest) SizeVT() (n int) {
 	_ = l
 	if m.AcquireLockRequest != nil {
 		l = m.AcquireLockRequest.SizeVT()
-		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	return n
 }
@@ -2555,7 +3371,7 @@ func (m *GrackleUpdateRequest_ReleaseLockRequest) SizeVT() (n int) {
 	_ = l
 	if m.ReleaseLockRequest != nil {
 		l = m.ReleaseLockRequest.SizeVT()
-		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	return n
 }
@@ -2603,6 +3419,42 @@ func (m *GrackleUpdateRequest_LocksDeleteNamespaceRequest) SizeVT() (n int) {
 	_ = l
 	if m.LocksDeleteNamespaceRequest != nil {
 		l = m.LocksDeleteNamespaceRequest.SizeVT()
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *GrackleUpdateRequest_CreateLockLeaseRequest) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.CreateLockLeaseRequest != nil {
+		l = m.CreateLockLeaseRequest.SizeVT()
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *GrackleUpdateRequest_RefreshLockLeaseRequest) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.RefreshLockLeaseRequest != nil {
+		l = m.RefreshLockLeaseRequest.SizeVT()
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *GrackleUpdateRequest_RevokeLockLeaseRequest) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.RevokeLockLeaseRequest != nil {
+		l = m.RevokeLockLeaseRequest.SizeVT()
 		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	return n
@@ -2824,6 +3676,42 @@ func (m *GrackleUpdateResponse_SemaphoresDeleteNamespaceResponse) SizeVT() (n in
 	}
 	return n
 }
+func (m *GrackleUpdateResponse_CreateSemaphoreLeaseResponse) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.CreateSemaphoreLeaseResponse != nil {
+		l = m.CreateSemaphoreLeaseResponse.SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *GrackleUpdateResponse_RefreshSemaphoreLeaseResponse) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.RefreshSemaphoreLeaseResponse != nil {
+		l = m.RefreshSemaphoreLeaseResponse.SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *GrackleUpdateResponse_RevokeSemaphoreLeaseResponse) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.RevokeSemaphoreLeaseResponse != nil {
+		l = m.RevokeSemaphoreLeaseResponse.SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
 func (m *GrackleUpdateResponse_CreateWaitGroupResponse) SizeVT() (n int) {
 	if m == nil {
 		return 0
@@ -2892,7 +3780,7 @@ func (m *GrackleUpdateResponse_WaitGroupsDeleteNamespaceResponse) SizeVT() (n in
 	_ = l
 	if m.WaitGroupsDeleteNamespaceResponse != nil {
 		l = m.WaitGroupsDeleteNamespaceResponse.SizeVT()
-		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	return n
 }
@@ -2904,7 +3792,7 @@ func (m *GrackleUpdateResponse_AcquireLockResponse) SizeVT() (n int) {
 	_ = l
 	if m.AcquireLockResponse != nil {
 		l = m.AcquireLockResponse.SizeVT()
-		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	return n
 }
@@ -2916,7 +3804,7 @@ func (m *GrackleUpdateResponse_ReleaseLockResponse) SizeVT() (n int) {
 	_ = l
 	if m.ReleaseLockResponse != nil {
 		l = m.ReleaseLockResponse.SizeVT()
-		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	return n
 }
@@ -2964,6 +3852,42 @@ func (m *GrackleUpdateResponse_LocksDeleteNamespaceResponse) SizeVT() (n int) {
 	_ = l
 	if m.LocksDeleteNamespaceResponse != nil {
 		l = m.LocksDeleteNamespaceResponse.SizeVT()
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *GrackleUpdateResponse_CreateLockLeaseResponse) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.CreateLockLeaseResponse != nil {
+		l = m.CreateLockLeaseResponse.SizeVT()
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *GrackleUpdateResponse_RefreshLockLeaseResponse) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.RefreshLockLeaseResponse != nil {
+		l = m.RefreshLockLeaseResponse.SizeVT()
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *GrackleUpdateResponse_RevokeLockLeaseResponse) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.RevokeLockLeaseResponse != nil {
+		l = m.RevokeLockLeaseResponse.SizeVT()
 		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	return n
@@ -3242,6 +4166,47 @@ func (m *GrackleReadRequest) UnmarshalVT(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListSemaphoresByLeaseIdRequest", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Request.(*GrackleReadRequest_ListSemaphoresByLeaseIdRequest); ok {
+				if err := oneof.ListSemaphoresByLeaseIdRequest.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &ListSemaphoresByLeaseIdRequest{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Request = &GrackleReadRequest_ListSemaphoresByLeaseIdRequest{ListSemaphoresByLeaseIdRequest: v}
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ListSemaphoreHoldersRequest", wireType)
 			}
 			var msglen int
@@ -3281,7 +4246,130 @@ func (m *GrackleReadRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleReadRequest_ListSemaphoreHoldersRequest{ListSemaphoreHoldersRequest: v}
 			}
 			iNdEx = postIndex
-		case 5:
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListSemaphoreLeasesRequest", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Request.(*GrackleReadRequest_ListSemaphoreLeasesRequest); ok {
+				if err := oneof.ListSemaphoreLeasesRequest.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &ListSemaphoreLeasesRequest{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Request = &GrackleReadRequest_ListSemaphoreLeasesRequest{ListSemaphoreLeasesRequest: v}
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListSemaphoreLeasesByProcessIdRequest", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Request.(*GrackleReadRequest_ListSemaphoreLeasesByProcessIdRequest); ok {
+				if err := oneof.ListSemaphoreLeasesByProcessIdRequest.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &ListSemaphoreLeasesByProcessIdRequest{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Request = &GrackleReadRequest_ListSemaphoreLeasesByProcessIdRequest{ListSemaphoreLeasesByProcessIdRequest: v}
+			}
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GetSemaphoreLeaseRequest", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Request.(*GrackleReadRequest_GetSemaphoreLeaseRequest); ok {
+				if err := oneof.GetSemaphoreLeaseRequest.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &GetSemaphoreLeaseRequest{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Request = &GrackleReadRequest_GetSemaphoreLeaseRequest{GetSemaphoreLeaseRequest: v}
+			}
+			iNdEx = postIndex
+		case 9:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field GetWaitGroupRequest", wireType)
 			}
@@ -3322,7 +4410,7 @@ func (m *GrackleReadRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleReadRequest_GetWaitGroupRequest{GetWaitGroupRequest: v}
 			}
 			iNdEx = postIndex
-		case 6:
+		case 10:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field GetWaitGroupByNameRequest", wireType)
 			}
@@ -3363,7 +4451,7 @@ func (m *GrackleReadRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleReadRequest_GetWaitGroupByNameRequest{GetWaitGroupByNameRequest: v}
 			}
 			iNdEx = postIndex
-		case 7:
+		case 11:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ListWaitGroupsRequest", wireType)
 			}
@@ -3404,7 +4492,7 @@ func (m *GrackleReadRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleReadRequest_ListWaitGroupsRequest{ListWaitGroupsRequest: v}
 			}
 			iNdEx = postIndex
-		case 8:
+		case 12:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ListWaitGroupJobsRequest", wireType)
 			}
@@ -3445,7 +4533,7 @@ func (m *GrackleReadRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleReadRequest_ListWaitGroupJobsRequest{ListWaitGroupJobsRequest: v}
 			}
 			iNdEx = postIndex
-		case 9:
+		case 13:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field GetNamespaceRequest", wireType)
 			}
@@ -3486,7 +4574,7 @@ func (m *GrackleReadRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleReadRequest_GetNamespaceRequest{GetNamespaceRequest: v}
 			}
 			iNdEx = postIndex
-		case 10:
+		case 14:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field GetNamespaceByNameRequest", wireType)
 			}
@@ -3527,7 +4615,7 @@ func (m *GrackleReadRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleReadRequest_GetNamespaceByNameRequest{GetNamespaceByNameRequest: v}
 			}
 			iNdEx = postIndex
-		case 11:
+		case 15:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ListNamespacesRequest", wireType)
 			}
@@ -3568,7 +4656,7 @@ func (m *GrackleReadRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleReadRequest_ListNamespacesRequest{ListNamespacesRequest: v}
 			}
 			iNdEx = postIndex
-		case 12:
+		case 16:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ListLocksRequest", wireType)
 			}
@@ -3609,7 +4697,171 @@ func (m *GrackleReadRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleReadRequest_ListLocksRequest{ListLocksRequest: v}
 			}
 			iNdEx = postIndex
-		case 13:
+		case 17:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListLocksByLeaseIdRequest", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Request.(*GrackleReadRequest_ListLocksByLeaseIdRequest); ok {
+				if err := oneof.ListLocksByLeaseIdRequest.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &ListLocksByLeaseIdRequest{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Request = &GrackleReadRequest_ListLocksByLeaseIdRequest{ListLocksByLeaseIdRequest: v}
+			}
+			iNdEx = postIndex
+		case 18:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GetLockLeaseRequest", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Request.(*GrackleReadRequest_GetLockLeaseRequest); ok {
+				if err := oneof.GetLockLeaseRequest.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &GetLockLeaseRequest{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Request = &GrackleReadRequest_GetLockLeaseRequest{GetLockLeaseRequest: v}
+			}
+			iNdEx = postIndex
+		case 19:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListLockLeasesRequest", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Request.(*GrackleReadRequest_ListLockLeasesRequest); ok {
+				if err := oneof.ListLockLeasesRequest.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &ListLockLeasesRequest{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Request = &GrackleReadRequest_ListLockLeasesRequest{ListLockLeasesRequest: v}
+			}
+			iNdEx = postIndex
+		case 20:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListLockLeasesByProcessIdRequest", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Request.(*GrackleReadRequest_ListLockLeasesByProcessIdRequest); ok {
+				if err := oneof.ListLockLeasesByProcessIdRequest.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &ListLockLeasesByProcessIdRequest{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Request = &GrackleReadRequest_ListLockLeasesByProcessIdRequest{ListLockLeasesByProcessIdRequest: v}
+			}
+			iNdEx = postIndex
+		case 21:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field GetBarrierRequest", wireType)
 			}
@@ -3650,7 +4902,7 @@ func (m *GrackleReadRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleReadRequest_GetBarrierRequest{GetBarrierRequest: v}
 			}
 			iNdEx = postIndex
-		case 14:
+		case 22:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field GetBarrierByNameRequest", wireType)
 			}
@@ -3691,7 +4943,7 @@ func (m *GrackleReadRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleReadRequest_GetBarrierByNameRequest{GetBarrierByNameRequest: v}
 			}
 			iNdEx = postIndex
-		case 15:
+		case 23:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ListBarriersRequest", wireType)
 			}
@@ -3732,7 +4984,7 @@ func (m *GrackleReadRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleReadRequest_ListBarriersRequest{ListBarriersRequest: v}
 			}
 			iNdEx = postIndex
-		case 16:
+		case 24:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ListBarrierParticipantsRequest", wireType)
 			}
@@ -3949,6 +5201,47 @@ func (m *GrackleReadResponse) UnmarshalVT(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListSemaphoresByLeaseIdResponse", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Response.(*GrackleReadResponse_ListSemaphoresByLeaseIdResponse); ok {
+				if err := oneof.ListSemaphoresByLeaseIdResponse.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &ListSemaphoresByLeaseIdResponse{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Response = &GrackleReadResponse_ListSemaphoresByLeaseIdResponse{ListSemaphoresByLeaseIdResponse: v}
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ListSemaphoreHoldersResponse", wireType)
 			}
 			var msglen int
@@ -3988,7 +5281,130 @@ func (m *GrackleReadResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleReadResponse_ListSemaphoreHoldersResponse{ListSemaphoreHoldersResponse: v}
 			}
 			iNdEx = postIndex
-		case 5:
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListSemaphoreLeasesResponse", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Response.(*GrackleReadResponse_ListSemaphoreLeasesResponse); ok {
+				if err := oneof.ListSemaphoreLeasesResponse.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &ListSemaphoreLeasesResponse{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Response = &GrackleReadResponse_ListSemaphoreLeasesResponse{ListSemaphoreLeasesResponse: v}
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GetSemaphoreLeaseResponse", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Response.(*GrackleReadResponse_GetSemaphoreLeaseResponse); ok {
+				if err := oneof.GetSemaphoreLeaseResponse.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &GetSemaphoreLeaseResponse{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Response = &GrackleReadResponse_GetSemaphoreLeaseResponse{GetSemaphoreLeaseResponse: v}
+			}
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListSemaphoreLeasesByProcessIdResponse", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Response.(*GrackleReadResponse_ListSemaphoreLeasesByProcessIdResponse); ok {
+				if err := oneof.ListSemaphoreLeasesByProcessIdResponse.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &ListSemaphoreLeasesByProcessIdResponse{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Response = &GrackleReadResponse_ListSemaphoreLeasesByProcessIdResponse{ListSemaphoreLeasesByProcessIdResponse: v}
+			}
+			iNdEx = postIndex
+		case 9:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field GetWaitGroupResponse", wireType)
 			}
@@ -4029,7 +5445,7 @@ func (m *GrackleReadResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleReadResponse_GetWaitGroupResponse{GetWaitGroupResponse: v}
 			}
 			iNdEx = postIndex
-		case 6:
+		case 10:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field GetWaitGroupByNameResponse", wireType)
 			}
@@ -4070,7 +5486,7 @@ func (m *GrackleReadResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleReadResponse_GetWaitGroupByNameResponse{GetWaitGroupByNameResponse: v}
 			}
 			iNdEx = postIndex
-		case 7:
+		case 11:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ListWaitGroupsResponse", wireType)
 			}
@@ -4111,7 +5527,7 @@ func (m *GrackleReadResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleReadResponse_ListWaitGroupsResponse{ListWaitGroupsResponse: v}
 			}
 			iNdEx = postIndex
-		case 8:
+		case 12:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ListWaitGroupJobsResponse", wireType)
 			}
@@ -4152,7 +5568,7 @@ func (m *GrackleReadResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleReadResponse_ListWaitGroupJobsResponse{ListWaitGroupJobsResponse: v}
 			}
 			iNdEx = postIndex
-		case 9:
+		case 13:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field GetNamespaceResponse", wireType)
 			}
@@ -4193,7 +5609,7 @@ func (m *GrackleReadResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleReadResponse_GetNamespaceResponse{GetNamespaceResponse: v}
 			}
 			iNdEx = postIndex
-		case 10:
+		case 14:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field GetNamespaceByNameResponse", wireType)
 			}
@@ -4234,7 +5650,7 @@ func (m *GrackleReadResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleReadResponse_GetNamespaceByNameResponse{GetNamespaceByNameResponse: v}
 			}
 			iNdEx = postIndex
-		case 11:
+		case 15:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ListNamespacesResponse", wireType)
 			}
@@ -4275,7 +5691,7 @@ func (m *GrackleReadResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleReadResponse_ListNamespacesResponse{ListNamespacesResponse: v}
 			}
 			iNdEx = postIndex
-		case 12:
+		case 16:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ListLocksResponse", wireType)
 			}
@@ -4316,7 +5732,171 @@ func (m *GrackleReadResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleReadResponse_ListLocksResponse{ListLocksResponse: v}
 			}
 			iNdEx = postIndex
-		case 13:
+		case 17:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListLocksByLeaseIdResponse", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Response.(*GrackleReadResponse_ListLocksByLeaseIdResponse); ok {
+				if err := oneof.ListLocksByLeaseIdResponse.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &ListLocksByLeaseIdResponse{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Response = &GrackleReadResponse_ListLocksByLeaseIdResponse{ListLocksByLeaseIdResponse: v}
+			}
+			iNdEx = postIndex
+		case 18:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GetLockLeaseResponse", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Response.(*GrackleReadResponse_GetLockLeaseResponse); ok {
+				if err := oneof.GetLockLeaseResponse.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &GetLockLeaseResponse{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Response = &GrackleReadResponse_GetLockLeaseResponse{GetLockLeaseResponse: v}
+			}
+			iNdEx = postIndex
+		case 19:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListLockLeasesResponse", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Response.(*GrackleReadResponse_ListLockLeasesResponse); ok {
+				if err := oneof.ListLockLeasesResponse.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &ListLockLeasesResponse{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Response = &GrackleReadResponse_ListLockLeasesResponse{ListLockLeasesResponse: v}
+			}
+			iNdEx = postIndex
+		case 20:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListLockLeasesByProcessIdResponse", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Response.(*GrackleReadResponse_ListLockLeasesByProcessIdResponse); ok {
+				if err := oneof.ListLockLeasesByProcessIdResponse.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &ListLockLeasesByProcessIdResponse{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Response = &GrackleReadResponse_ListLockLeasesByProcessIdResponse{ListLockLeasesByProcessIdResponse: v}
+			}
+			iNdEx = postIndex
+		case 21:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field GetBarrierResponse", wireType)
 			}
@@ -4357,7 +5937,7 @@ func (m *GrackleReadResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleReadResponse_GetBarrierResponse{GetBarrierResponse: v}
 			}
 			iNdEx = postIndex
-		case 14:
+		case 22:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field GetBarrierByNameResponse", wireType)
 			}
@@ -4398,7 +5978,7 @@ func (m *GrackleReadResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleReadResponse_GetBarrierByNameResponse{GetBarrierByNameResponse: v}
 			}
 			iNdEx = postIndex
-		case 15:
+		case 23:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ListBarriersResponse", wireType)
 			}
@@ -4439,7 +6019,7 @@ func (m *GrackleReadResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleReadResponse_ListBarriersResponse{ListBarriersResponse: v}
 			}
 			iNdEx = postIndex
-		case 16:
+		case 24:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ListBarrierParticipantsResponse", wireType)
 			}
@@ -4820,6 +6400,129 @@ func (m *GrackleUpdateRequest) UnmarshalVT(dAtA []byte) error {
 			iNdEx = postIndex
 		case 8:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CreateSemaphoreLeaseRequest", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Request.(*GrackleUpdateRequest_CreateSemaphoreLeaseRequest); ok {
+				if err := oneof.CreateSemaphoreLeaseRequest.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &CreateSemaphoreLeaseRequest{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Request = &GrackleUpdateRequest_CreateSemaphoreLeaseRequest{CreateSemaphoreLeaseRequest: v}
+			}
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RefreshSemaphoreLeaseRequest", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Request.(*GrackleUpdateRequest_RefreshSemaphoreLeaseRequest); ok {
+				if err := oneof.RefreshSemaphoreLeaseRequest.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &RefreshSemaphoreLeaseRequest{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Request = &GrackleUpdateRequest_RefreshSemaphoreLeaseRequest{RefreshSemaphoreLeaseRequest: v}
+			}
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RevokeSemaphoreLeaseRequest", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Request.(*GrackleUpdateRequest_RevokeSemaphoreLeaseRequest); ok {
+				if err := oneof.RevokeSemaphoreLeaseRequest.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &RevokeSemaphoreLeaseRequest{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Request = &GrackleUpdateRequest_RevokeSemaphoreLeaseRequest{RevokeSemaphoreLeaseRequest: v}
+			}
+			iNdEx = postIndex
+		case 11:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CreateWaitGroupRequest", wireType)
 			}
 			var msglen int
@@ -4859,7 +6562,7 @@ func (m *GrackleUpdateRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleUpdateRequest_CreateWaitGroupRequest{CreateWaitGroupRequest: v}
 			}
 			iNdEx = postIndex
-		case 9:
+		case 12:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DeleteWaitGroupRequest", wireType)
 			}
@@ -4900,7 +6603,7 @@ func (m *GrackleUpdateRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleUpdateRequest_DeleteWaitGroupRequest{DeleteWaitGroupRequest: v}
 			}
 			iNdEx = postIndex
-		case 10:
+		case 13:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AddJobsToWaitGroupRequest", wireType)
 			}
@@ -4941,7 +6644,7 @@ func (m *GrackleUpdateRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleUpdateRequest_AddJobsToWaitGroupRequest{AddJobsToWaitGroupRequest: v}
 			}
 			iNdEx = postIndex
-		case 11:
+		case 14:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CompleteJobsFromWaitGroupRequest", wireType)
 			}
@@ -4982,7 +6685,7 @@ func (m *GrackleUpdateRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleUpdateRequest_CompleteJobsFromWaitGroupRequest{CompleteJobsFromWaitGroupRequest: v}
 			}
 			iNdEx = postIndex
-		case 12:
+		case 15:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field RunWaitGroupsGarbageCollectionRequest", wireType)
 			}
@@ -5023,7 +6726,7 @@ func (m *GrackleUpdateRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleUpdateRequest_RunWaitGroupsGarbageCollectionRequest{RunWaitGroupsGarbageCollectionRequest: v}
 			}
 			iNdEx = postIndex
-		case 13:
+		case 16:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field WaitGroupsDeleteNamespaceRequest", wireType)
 			}
@@ -5064,7 +6767,7 @@ func (m *GrackleUpdateRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleUpdateRequest_WaitGroupsDeleteNamespaceRequest{WaitGroupsDeleteNamespaceRequest: v}
 			}
 			iNdEx = postIndex
-		case 14:
+		case 17:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AcquireLockRequest", wireType)
 			}
@@ -5105,7 +6808,7 @@ func (m *GrackleUpdateRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleUpdateRequest_AcquireLockRequest{AcquireLockRequest: v}
 			}
 			iNdEx = postIndex
-		case 15:
+		case 18:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ReleaseLockRequest", wireType)
 			}
@@ -5146,7 +6849,7 @@ func (m *GrackleUpdateRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleUpdateRequest_ReleaseLockRequest{ReleaseLockRequest: v}
 			}
 			iNdEx = postIndex
-		case 16:
+		case 19:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DeleteLockRequest", wireType)
 			}
@@ -5187,7 +6890,7 @@ func (m *GrackleUpdateRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleUpdateRequest_DeleteLockRequest{DeleteLockRequest: v}
 			}
 			iNdEx = postIndex
-		case 17:
+		case 20:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field GetLockRequest", wireType)
 			}
@@ -5228,7 +6931,7 @@ func (m *GrackleUpdateRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleUpdateRequest_GetLockRequest{GetLockRequest: v}
 			}
 			iNdEx = postIndex
-		case 18:
+		case 21:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field RunLocksGarbageCollectionRequest", wireType)
 			}
@@ -5269,7 +6972,7 @@ func (m *GrackleUpdateRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleUpdateRequest_RunLocksGarbageCollectionRequest{RunLocksGarbageCollectionRequest: v}
 			}
 			iNdEx = postIndex
-		case 19:
+		case 22:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field LocksDeleteNamespaceRequest", wireType)
 			}
@@ -5310,7 +7013,130 @@ func (m *GrackleUpdateRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleUpdateRequest_LocksDeleteNamespaceRequest{LocksDeleteNamespaceRequest: v}
 			}
 			iNdEx = postIndex
-		case 20:
+		case 23:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CreateLockLeaseRequest", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Request.(*GrackleUpdateRequest_CreateLockLeaseRequest); ok {
+				if err := oneof.CreateLockLeaseRequest.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &CreateLockLeaseRequest{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Request = &GrackleUpdateRequest_CreateLockLeaseRequest{CreateLockLeaseRequest: v}
+			}
+			iNdEx = postIndex
+		case 24:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RefreshLockLeaseRequest", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Request.(*GrackleUpdateRequest_RefreshLockLeaseRequest); ok {
+				if err := oneof.RefreshLockLeaseRequest.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &RefreshLockLeaseRequest{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Request = &GrackleUpdateRequest_RefreshLockLeaseRequest{RefreshLockLeaseRequest: v}
+			}
+			iNdEx = postIndex
+		case 25:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RevokeLockLeaseRequest", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Request.(*GrackleUpdateRequest_RevokeLockLeaseRequest); ok {
+				if err := oneof.RevokeLockLeaseRequest.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &RevokeLockLeaseRequest{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Request = &GrackleUpdateRequest_RevokeLockLeaseRequest{RevokeLockLeaseRequest: v}
+			}
+			iNdEx = postIndex
+		case 26:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CreateNamespaceRequest", wireType)
 			}
@@ -5351,7 +7177,7 @@ func (m *GrackleUpdateRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleUpdateRequest_CreateNamespaceRequest{CreateNamespaceRequest: v}
 			}
 			iNdEx = postIndex
-		case 21:
+		case 27:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field UpdateNamespaceRequest", wireType)
 			}
@@ -5392,7 +7218,7 @@ func (m *GrackleUpdateRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleUpdateRequest_UpdateNamespaceRequest{UpdateNamespaceRequest: v}
 			}
 			iNdEx = postIndex
-		case 22:
+		case 28:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DeleteNamespaceRequest", wireType)
 			}
@@ -5433,7 +7259,7 @@ func (m *GrackleUpdateRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleUpdateRequest_DeleteNamespaceRequest{DeleteNamespaceRequest: v}
 			}
 			iNdEx = postIndex
-		case 23:
+		case 29:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CreateBarrierRequest", wireType)
 			}
@@ -5474,7 +7300,7 @@ func (m *GrackleUpdateRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleUpdateRequest_CreateBarrierRequest{CreateBarrierRequest: v}
 			}
 			iNdEx = postIndex
-		case 24:
+		case 30:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DeleteBarrierRequest", wireType)
 			}
@@ -5515,7 +7341,7 @@ func (m *GrackleUpdateRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleUpdateRequest_DeleteBarrierRequest{DeleteBarrierRequest: v}
 			}
 			iNdEx = postIndex
-		case 25:
+		case 31:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field UpdateBarrierRequest", wireType)
 			}
@@ -5556,7 +7382,7 @@ func (m *GrackleUpdateRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleUpdateRequest_UpdateBarrierRequest{UpdateBarrierRequest: v}
 			}
 			iNdEx = postIndex
-		case 26:
+		case 32:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ArriveAtBarrierRequest", wireType)
 			}
@@ -5597,7 +7423,7 @@ func (m *GrackleUpdateRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleUpdateRequest_ArriveAtBarrierRequest{ArriveAtBarrierRequest: v}
 			}
 			iNdEx = postIndex
-		case 27:
+		case 33:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field WaitAtBarrierRequest", wireType)
 			}
@@ -5638,7 +7464,7 @@ func (m *GrackleUpdateRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleUpdateRequest_WaitAtBarrierRequest{WaitAtBarrierRequest: v}
 			}
 			iNdEx = postIndex
-		case 28:
+		case 34:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field RunBarriersGarbageCollectionRequest", wireType)
 			}
@@ -5679,7 +7505,7 @@ func (m *GrackleUpdateRequest) UnmarshalVT(dAtA []byte) error {
 				m.Request = &GrackleUpdateRequest_RunBarriersGarbageCollectionRequest{RunBarriersGarbageCollectionRequest: v}
 			}
 			iNdEx = postIndex
-		case 29:
+		case 35:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field BarriersDeleteNamespaceRequest", wireType)
 			}
@@ -6060,6 +7886,129 @@ func (m *GrackleUpdateResponse) UnmarshalVT(dAtA []byte) error {
 			iNdEx = postIndex
 		case 8:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CreateSemaphoreLeaseResponse", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Response.(*GrackleUpdateResponse_CreateSemaphoreLeaseResponse); ok {
+				if err := oneof.CreateSemaphoreLeaseResponse.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &CreateSemaphoreLeaseResponse{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Response = &GrackleUpdateResponse_CreateSemaphoreLeaseResponse{CreateSemaphoreLeaseResponse: v}
+			}
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RefreshSemaphoreLeaseResponse", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Response.(*GrackleUpdateResponse_RefreshSemaphoreLeaseResponse); ok {
+				if err := oneof.RefreshSemaphoreLeaseResponse.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &RefreshSemaphoreLeaseResponse{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Response = &GrackleUpdateResponse_RefreshSemaphoreLeaseResponse{RefreshSemaphoreLeaseResponse: v}
+			}
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RevokeSemaphoreLeaseResponse", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Response.(*GrackleUpdateResponse_RevokeSemaphoreLeaseResponse); ok {
+				if err := oneof.RevokeSemaphoreLeaseResponse.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &RevokeSemaphoreLeaseResponse{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Response = &GrackleUpdateResponse_RevokeSemaphoreLeaseResponse{RevokeSemaphoreLeaseResponse: v}
+			}
+			iNdEx = postIndex
+		case 11:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CreateWaitGroupResponse", wireType)
 			}
 			var msglen int
@@ -6099,7 +8048,7 @@ func (m *GrackleUpdateResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleUpdateResponse_CreateWaitGroupResponse{CreateWaitGroupResponse: v}
 			}
 			iNdEx = postIndex
-		case 9:
+		case 12:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DeleteWaitGroupResponse", wireType)
 			}
@@ -6140,7 +8089,7 @@ func (m *GrackleUpdateResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleUpdateResponse_DeleteWaitGroupResponse{DeleteWaitGroupResponse: v}
 			}
 			iNdEx = postIndex
-		case 10:
+		case 13:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AddJobsToWaitGroupResponse", wireType)
 			}
@@ -6181,7 +8130,7 @@ func (m *GrackleUpdateResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleUpdateResponse_AddJobsToWaitGroupResponse{AddJobsToWaitGroupResponse: v}
 			}
 			iNdEx = postIndex
-		case 11:
+		case 14:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CompleteJobsFromWaitGroupResponse", wireType)
 			}
@@ -6222,7 +8171,7 @@ func (m *GrackleUpdateResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleUpdateResponse_CompleteJobsFromWaitGroupResponse{CompleteJobsFromWaitGroupResponse: v}
 			}
 			iNdEx = postIndex
-		case 12:
+		case 15:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field RunWaitGroupsGarbageCollectionResponse", wireType)
 			}
@@ -6263,7 +8212,7 @@ func (m *GrackleUpdateResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleUpdateResponse_RunWaitGroupsGarbageCollectionResponse{RunWaitGroupsGarbageCollectionResponse: v}
 			}
 			iNdEx = postIndex
-		case 13:
+		case 16:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field WaitGroupsDeleteNamespaceResponse", wireType)
 			}
@@ -6304,7 +8253,7 @@ func (m *GrackleUpdateResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleUpdateResponse_WaitGroupsDeleteNamespaceResponse{WaitGroupsDeleteNamespaceResponse: v}
 			}
 			iNdEx = postIndex
-		case 14:
+		case 17:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AcquireLockResponse", wireType)
 			}
@@ -6345,7 +8294,7 @@ func (m *GrackleUpdateResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleUpdateResponse_AcquireLockResponse{AcquireLockResponse: v}
 			}
 			iNdEx = postIndex
-		case 15:
+		case 18:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ReleaseLockResponse", wireType)
 			}
@@ -6386,7 +8335,7 @@ func (m *GrackleUpdateResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleUpdateResponse_ReleaseLockResponse{ReleaseLockResponse: v}
 			}
 			iNdEx = postIndex
-		case 16:
+		case 19:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DeleteLockResponse", wireType)
 			}
@@ -6427,7 +8376,7 @@ func (m *GrackleUpdateResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleUpdateResponse_DeleteLockResponse{DeleteLockResponse: v}
 			}
 			iNdEx = postIndex
-		case 17:
+		case 20:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field GetLockResponse", wireType)
 			}
@@ -6468,7 +8417,7 @@ func (m *GrackleUpdateResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleUpdateResponse_GetLockResponse{GetLockResponse: v}
 			}
 			iNdEx = postIndex
-		case 18:
+		case 21:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field RunLocksGarbageCollectionResponse", wireType)
 			}
@@ -6509,7 +8458,7 @@ func (m *GrackleUpdateResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleUpdateResponse_RunLocksGarbageCollectionResponse{RunLocksGarbageCollectionResponse: v}
 			}
 			iNdEx = postIndex
-		case 19:
+		case 22:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field LocksDeleteNamespaceResponse", wireType)
 			}
@@ -6550,7 +8499,130 @@ func (m *GrackleUpdateResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleUpdateResponse_LocksDeleteNamespaceResponse{LocksDeleteNamespaceResponse: v}
 			}
 			iNdEx = postIndex
-		case 20:
+		case 23:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CreateLockLeaseResponse", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Response.(*GrackleUpdateResponse_CreateLockLeaseResponse); ok {
+				if err := oneof.CreateLockLeaseResponse.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &CreateLockLeaseResponse{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Response = &GrackleUpdateResponse_CreateLockLeaseResponse{CreateLockLeaseResponse: v}
+			}
+			iNdEx = postIndex
+		case 24:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RefreshLockLeaseResponse", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Response.(*GrackleUpdateResponse_RefreshLockLeaseResponse); ok {
+				if err := oneof.RefreshLockLeaseResponse.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &RefreshLockLeaseResponse{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Response = &GrackleUpdateResponse_RefreshLockLeaseResponse{RefreshLockLeaseResponse: v}
+			}
+			iNdEx = postIndex
+		case 25:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RevokeLockLeaseResponse", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Response.(*GrackleUpdateResponse_RevokeLockLeaseResponse); ok {
+				if err := oneof.RevokeLockLeaseResponse.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &RevokeLockLeaseResponse{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Response = &GrackleUpdateResponse_RevokeLockLeaseResponse{RevokeLockLeaseResponse: v}
+			}
+			iNdEx = postIndex
+		case 26:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CreateNamespaceResponse", wireType)
 			}
@@ -6591,7 +8663,7 @@ func (m *GrackleUpdateResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleUpdateResponse_CreateNamespaceResponse{CreateNamespaceResponse: v}
 			}
 			iNdEx = postIndex
-		case 21:
+		case 27:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field UpdateNamespaceResponse", wireType)
 			}
@@ -6632,7 +8704,7 @@ func (m *GrackleUpdateResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleUpdateResponse_UpdateNamespaceResponse{UpdateNamespaceResponse: v}
 			}
 			iNdEx = postIndex
-		case 22:
+		case 28:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DeleteNamespaceResponse", wireType)
 			}
@@ -6673,7 +8745,7 @@ func (m *GrackleUpdateResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleUpdateResponse_DeleteNamespaceResponse{DeleteNamespaceResponse: v}
 			}
 			iNdEx = postIndex
-		case 23:
+		case 29:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CreateBarrierResponse", wireType)
 			}
@@ -6714,7 +8786,7 @@ func (m *GrackleUpdateResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleUpdateResponse_CreateBarrierResponse{CreateBarrierResponse: v}
 			}
 			iNdEx = postIndex
-		case 24:
+		case 30:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DeleteBarrierResponse", wireType)
 			}
@@ -6755,7 +8827,7 @@ func (m *GrackleUpdateResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleUpdateResponse_DeleteBarrierResponse{DeleteBarrierResponse: v}
 			}
 			iNdEx = postIndex
-		case 25:
+		case 31:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field UpdateBarrierResponse", wireType)
 			}
@@ -6796,7 +8868,7 @@ func (m *GrackleUpdateResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleUpdateResponse_UpdateBarrierResponse{UpdateBarrierResponse: v}
 			}
 			iNdEx = postIndex
-		case 26:
+		case 32:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ArriveAtBarrierResponse", wireType)
 			}
@@ -6837,7 +8909,7 @@ func (m *GrackleUpdateResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleUpdateResponse_ArriveAtBarrierResponse{ArriveAtBarrierResponse: v}
 			}
 			iNdEx = postIndex
-		case 27:
+		case 33:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field WaitAtBarrierResponse", wireType)
 			}
@@ -6878,7 +8950,7 @@ func (m *GrackleUpdateResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleUpdateResponse_WaitAtBarrierResponse{WaitAtBarrierResponse: v}
 			}
 			iNdEx = postIndex
-		case 28:
+		case 34:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field RunBarriersGarbageCollectionResponse", wireType)
 			}
@@ -6919,7 +8991,7 @@ func (m *GrackleUpdateResponse) UnmarshalVT(dAtA []byte) error {
 				m.Response = &GrackleUpdateResponse_RunBarriersGarbageCollectionResponse{RunBarriersGarbageCollectionResponse: v}
 			}
 			iNdEx = postIndex
-		case 29:
+		case 35:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field BarriersDeleteNamespaceResponse", wireType)
 			}

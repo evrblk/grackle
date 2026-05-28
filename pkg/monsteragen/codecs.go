@@ -4,6 +4,7 @@ import (
 	"github.com/evrblk/grackle/pkg/corepb"
 )
 
+// GrackleReadRequestProtoCodec is a GrackleReadRequestCodec codec that uses VT protobuf.
 type GrackleReadRequestProtoCodec struct {
 }
 
@@ -17,6 +18,7 @@ func (c *GrackleReadRequestProtoCodec) Decode(data []byte, out *corepb.GrackleRe
 	return out.UnmarshalVT(data)
 }
 
+// GrackleReadResponseProtoCodec is a GrackleReadResponseCodec codec that uses VT protobuf.
 type GrackleReadResponseProtoCodec struct {
 }
 
@@ -30,6 +32,7 @@ func (c *GrackleReadResponseProtoCodec) Decode(data []byte, out *corepb.GrackleR
 	return out.UnmarshalVT(data)
 }
 
+// GrackleUpdateRequestProtoCodec is a GrackleUpdateRequestCodec codec that uses VT protobuf.
 type GrackleUpdateRequestProtoCodec struct {
 }
 
@@ -43,6 +46,7 @@ func (c *GrackleUpdateRequestProtoCodec) Decode(data []byte, out *corepb.Grackle
 	return out.UnmarshalVT(data)
 }
 
+// GrackleUpdateResponseProtoCodec is a GrackleUpdateResponseCodec codec that uses VT protobuf.
 type GrackleUpdateResponseProtoCodec struct {
 }
 

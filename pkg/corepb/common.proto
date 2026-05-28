@@ -13,3 +13,16 @@ message PaginationToken {
   Type type = 1;
   bytes value = 2;
 }
+
+message LeaseId {
+  uint64 account_id = 1;
+  uint32 namespace_id = 2;
+  uint64 lease_id = 3;
+}
+
+message Lease {
+  LeaseId id = 1;
+  string process_id = 2;
+  int64 created_at = 3;
+  int64 expires_at = 4;
+}

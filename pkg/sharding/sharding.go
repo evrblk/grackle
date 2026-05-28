@@ -23,6 +23,34 @@ func (g *GrackleShardKeyCalculator) ListLocksShardKey(request *corepb.ListLocksR
 	return ByAccountAndNamespace(request.NamespaceId.AccountId, request.NamespaceId.NamespaceId)
 }
 
+func (g *GrackleShardKeyCalculator) ListLocksByLeaseIdShardKey(request *corepb.ListLocksByLeaseIdRequest) []byte {
+	return ByAccountAndNamespace(request.LeaseId.AccountId, request.LeaseId.NamespaceId)
+}
+
+func (g *GrackleShardKeyCalculator) GetLockLeaseShardKey(request *corepb.GetLockLeaseRequest) []byte {
+	return ByAccountAndNamespace(request.LeaseId.AccountId, request.LeaseId.NamespaceId)
+}
+
+func (g *GrackleShardKeyCalculator) ListLockLeasesShardKey(request *corepb.ListLockLeasesRequest) []byte {
+	return ByAccountAndNamespace(request.NamespaceId.AccountId, request.NamespaceId.NamespaceId)
+}
+
+func (g *GrackleShardKeyCalculator) ListLockLeasesByProcessIdShardKey(request *corepb.ListLockLeasesByProcessIdRequest) []byte {
+	return ByAccountAndNamespace(request.NamespaceId.AccountId, request.NamespaceId.NamespaceId)
+}
+
+func (g *GrackleShardKeyCalculator) CreateLockLeaseShardKey(request *corepb.CreateLockLeaseRequest) []byte {
+	return ByAccountAndNamespace(request.LeaseId.AccountId, request.LeaseId.NamespaceId)
+}
+
+func (g *GrackleShardKeyCalculator) RefreshLockLeaseShardKey(request *corepb.RefreshLockLeaseRequest) []byte {
+	return ByAccountAndNamespace(request.LeaseId.AccountId, request.LeaseId.NamespaceId)
+}
+
+func (g *GrackleShardKeyCalculator) RevokeLockLeaseShardKey(request *corepb.RevokeLockLeaseRequest) []byte {
+	return ByAccountAndNamespace(request.LeaseId.AccountId, request.LeaseId.NamespaceId)
+}
+
 func (g *GrackleShardKeyCalculator) AcquireLockShardKey(request *corepb.AcquireLockRequest) []byte {
 	return ByAccountAndNamespace(request.LockId.AccountId, request.LockId.NamespaceId)
 }
@@ -103,8 +131,36 @@ func (g *GrackleShardKeyCalculator) ListSemaphoresShardKey(request *corepb.ListS
 	return ByAccountAndNamespace(request.NamespaceId.AccountId, request.NamespaceId.NamespaceId)
 }
 
+func (g *GrackleShardKeyCalculator) ListSemaphoresByLeaseIdShardKey(request *corepb.ListSemaphoresByLeaseIdRequest) []byte {
+	return ByAccountAndNamespace(request.LeaseId.AccountId, request.LeaseId.NamespaceId)
+}
+
+func (g *GrackleShardKeyCalculator) ListSemaphoreLeasesShardKey(request *corepb.ListSemaphoreLeasesRequest) []byte {
+	return ByAccountAndNamespace(request.NamespaceId.AccountId, request.NamespaceId.NamespaceId)
+}
+
+func (g *GrackleShardKeyCalculator) ListSemaphoreLeasesByProcessIdShardKey(request *corepb.ListSemaphoreLeasesByProcessIdRequest) []byte {
+	return ByAccountAndNamespace(request.NamespaceId.AccountId, request.NamespaceId.NamespaceId)
+}
+
+func (g *GrackleShardKeyCalculator) GetSemaphoreLeaseShardKey(request *corepb.GetSemaphoreLeaseRequest) []byte {
+	return ByAccountAndNamespace(request.LeaseId.AccountId, request.LeaseId.NamespaceId)
+}
+
 func (g *GrackleShardKeyCalculator) ListSemaphoreHoldersShardKey(request *corepb.ListSemaphoreHoldersRequest) []byte {
 	return ByAccountAndNamespace(request.NamespaceId.AccountId, request.NamespaceId.NamespaceId)
+}
+
+func (g *GrackleShardKeyCalculator) CreateSemaphoreLeaseShardKey(request *corepb.CreateSemaphoreLeaseRequest) []byte {
+	return ByAccountAndNamespace(request.LeaseId.AccountId, request.LeaseId.NamespaceId)
+}
+
+func (g *GrackleShardKeyCalculator) RevokeSemaphoreLeaseShardKey(request *corepb.RevokeSemaphoreLeaseRequest) []byte {
+	return ByAccountAndNamespace(request.LeaseId.AccountId, request.LeaseId.NamespaceId)
+}
+
+func (g *GrackleShardKeyCalculator) RefreshSemaphoreLeaseShardKey(request *corepb.RefreshSemaphoreLeaseRequest) []byte {
+	return ByAccountAndNamespace(request.LeaseId.AccountId, request.LeaseId.NamespaceId)
 }
 
 func (g *GrackleShardKeyCalculator) ListWaitGroupsShardKey(request *corepb.ListWaitGroupsRequest) []byte {

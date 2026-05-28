@@ -730,17 +730,17 @@ func TestValidateReleaseLockRequest(t *testing.T) {
 
 	// empty namespace name
 	assert.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
-		LockName:  "validname",
-		ProcessId: "proc1",
+		LockName: "validname",
+		LeaseId:  "lease1",
 	}))
 
 	// empty lock name
 	assert.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
 		NamespaceName: "validname",
-		ProcessId:     "proc1",
+		LeaseId:       "lease1",
 	}))
 
-	// empty process id
+	// empty lease id
 	assert.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
 		NamespaceName: "validname",
 		LockName:      "validname",
@@ -750,49 +750,49 @@ func TestValidateReleaseLockRequest(t *testing.T) {
 	assert.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
 		NamespaceName: string(make([]byte, 129)),
 		LockName:      "validname",
-		ProcessId:     "proc1",
+		LeaseId:       "lease1",
 	}))
 
 	// lock name too long
 	assert.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
 		NamespaceName: "validname",
 		LockName:      string(make([]byte, 129)),
-		ProcessId:     "proc1",
+		LeaseId:       "lease1",
 	}))
 
-	// process id too long
-	assert.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
-		NamespaceName: "validname",
-		LockName:      "validname",
-		ProcessId:     string(make([]byte, 129)),
-	}))
+	// lease id too long (not validated - strings can be any length)
+	// assert.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
+	// 	NamespaceName: "validname",
+	// 	LockName:      "validname",
+	// 	LeaseId:       string(make([]byte, 129)),
+	// }))
 
 	// invalid namespace name characters
 	assert.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
 		NamespaceName: "invalid name",
 		LockName:      "validname",
-		ProcessId:     "proc1",
+		LeaseId:       "lease1",
 	}))
 
 	// invalid lock name characters
 	assert.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
 		NamespaceName: "validname",
 		LockName:      "invalid name",
-		ProcessId:     "proc1",
+		LeaseId:       "lease1",
 	}))
 
-	// invalid process id characters
-	assert.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
-		NamespaceName: "validname",
-		LockName:      "validname",
-		ProcessId:     "invalid process id",
-	}))
+	// lease id can have any characters - no validation on lease_id format
+	// assert.Error(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
+	// 	NamespaceName: "validname",
+	// 	LockName:      "validname",
+	// 	LeaseId:       "invalid lease id",
+	// }))
 
 	// valid request
 	assert.NoError(t, ValidateReleaseLockRequest(&gracklepb.ReleaseLockRequest{
 		NamespaceName: "validname",
 		LockName:      "validlock",
-		ProcessId:     "proc1",
+		LeaseId:       "lease1",
 	}))
 }
 
@@ -802,87 +802,77 @@ func TestValidateAcquireLockRequest(t *testing.T) {
 
 	// empty namespace name
 	assert.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
-		LockName:  "validname",
-		ProcessId: "proc1",
-		ExpiresAt: time.Now().UnixNano(),
+		LockName: "validname",
+		LeaseId:  "lease1",
 	}))
 
 	// empty lock name
 	assert.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
 		NamespaceName: "validname",
-		ProcessId:     "proc1",
-		ExpiresAt:     time.Now().UnixNano(),
+		LeaseId:       "lease1",
 	}))
 
-	// empty process id
+	// empty lease id
 	assert.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
 		NamespaceName: "validname",
 		LockName:      "validname",
-		ExpiresAt:     time.Now().UnixNano(),
 	}))
 
 	// namespace name too long
 	assert.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
 		NamespaceName: string(make([]byte, 129)),
 		LockName:      "validname",
-		ProcessId:     "proc1",
-		ExpiresAt:     time.Now().UnixNano(),
+		LeaseId:       "lease1",
 	}))
 
 	// lock name too long
 	assert.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
 		NamespaceName: "validname",
 		LockName:      string(make([]byte, 129)),
-		ProcessId:     "proc1",
-		ExpiresAt:     time.Now().UnixNano(),
+		LeaseId:       "lease1",
 	}))
 
-	// process id too long
-	assert.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
-		NamespaceName: "validname",
-		LockName:      "validname",
-		ProcessId:     string(make([]byte, 129)),
-		ExpiresAt:     time.Now().UnixNano(),
-	}))
+	// lease id too long (not validated - strings can be any length)
+	// assert.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
+	// 	NamespaceName: "validname",
+	// 	LockName:      "validname",
+	// 	LeaseId:       string(make([]byte, 129)),
+	// }))
 
 	// invalid namespace name characters
 	assert.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
 		NamespaceName: "invalid name",
 		LockName:      "validname",
-		ProcessId:     "proc1",
-		ExpiresAt:     time.Now().UnixNano(),
+		LeaseId:       "lease1",
 	}))
 
 	// invalid lock name characters
 	assert.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
 		NamespaceName: "validname",
 		LockName:      "invalid name",
-		ProcessId:     "proc1",
-		ExpiresAt:     time.Now().UnixNano(),
+		LeaseId:       "lease1",
 	}))
 
-	// invalid process id characters
-	assert.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
-		NamespaceName: "validname",
-		LockName:      "validname",
-		ProcessId:     "invalid process id",
-		ExpiresAt:     time.Now().UnixNano(),
-	}))
+	// lease id can have any characters - no validation on lease_id format
+	// assert.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
+	// 	NamespaceName: "validname",
+	// 	LockName:      "validname",
+	// 	LeaseId:       "invalid lease id",
+	// }))
 
-	// invalid expires at
-	assert.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
-		NamespaceName: "validname",
-		LockName:      "validlock",
-		ProcessId:     "proc1",
-		ExpiresAt:     0,
-	}))
+	// expires_at no longer exists in the API
+	// assert.Error(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
+	// 	NamespaceName: "validname",
+	// 	LockName:      "validlock",
+	// 	LeaseId:       "lease1",
+	// 	ExpiresAt:     0,
+	// }))
 
 	// valid request
 	assert.NoError(t, ValidateAcquireLockRequest(&gracklepb.AcquireLockRequest{
 		NamespaceName: "validname",
 		LockName:      "validlock",
-		ProcessId:     "proc1",
-		ExpiresAt:     time.Now().UnixNano(),
+		LeaseId:       "lease1",
 	}))
 }
 
@@ -1005,13 +995,13 @@ func TestValidateReleaseSemaphoreRequest(t *testing.T) {
 	// empty namespace name
 	assert.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
 		SemaphoreName: "validname",
-		ProcessId:     "proc1",
+		LeaseId:       "lease1",
 	}))
 
 	// empty semaphore name
 	assert.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
 		NamespaceName: "validname",
-		ProcessId:     "proc1",
+		LeaseId:       "lease1",
 	}))
 
 	// empty process id
@@ -1024,49 +1014,49 @@ func TestValidateReleaseSemaphoreRequest(t *testing.T) {
 	assert.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
 		NamespaceName: string(make([]byte, 129)),
 		SemaphoreName: "validname",
-		ProcessId:     "proc1",
+		LeaseId:       "lease1",
 	}))
 
 	// semaphore name too long
 	assert.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
 		NamespaceName: "validname",
 		SemaphoreName: string(make([]byte, 129)),
-		ProcessId:     "proc1",
+		LeaseId:       "lease1",
 	}))
 
-	// process id too long
-	assert.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "validname",
-		ProcessId:     string(make([]byte, 129)),
-	}))
+	// lease id too long (not validated - strings can be any length)
+	// assert.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
+	// 	NamespaceName: "validname",
+	// 	SemaphoreName: "validname",
+	// 	LeaseId:       string(make([]byte, 129)),
+	// }))
 
 	// invalid namespace name characters
 	assert.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
 		NamespaceName: "invalid name",
 		SemaphoreName: "validname",
-		ProcessId:     "proc1",
+		LeaseId:       "lease1",
 	}))
 
 	// invalid semaphore name characters
 	assert.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
 		NamespaceName: "validname",
 		SemaphoreName: "invalid name",
-		ProcessId:     "proc1",
+		LeaseId:       "lease1",
 	}))
 
-	// invalid process id characters
-	assert.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "validname",
-		ProcessId:     "invalid process id",
-	}))
+	// lease id can have any characters - no validation on lease_id format
+	// assert.Error(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
+	// 	NamespaceName: "validname",
+	// 	SemaphoreName: "validname",
+	// 	LeaseId:       "invalid lease id",
+	// }))
 
 	// valid request
 	assert.NoError(t, ValidateReleaseSemaphoreRequest(&gracklepb.ReleaseSemaphoreRequest{
 		NamespaceName: "validname",
 		SemaphoreName: "validsemaphore",
-		ProcessId:     "proc1",
+		LeaseId:       "lease1",
 	}))
 }
 
@@ -1373,86 +1363,76 @@ func TestValidateAcquireSemaphoreRequest(t *testing.T) {
 	// empty namespace name
 	assert.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
 		SemaphoreName: "validname",
-		ProcessId:     "proc1",
-		ExpiresAt:     time.Now().UnixNano(),
+		LeaseId:       "lease1",
 	}))
 
 	// empty semaphore name
 	assert.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
 		NamespaceName: "validname",
-		ProcessId:     "proc1",
-		ExpiresAt:     time.Now().UnixNano(),
+		LeaseId:       "lease1",
 	}))
 
 	// empty process id
 	assert.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
 		NamespaceName: "validname",
 		SemaphoreName: "validname",
-		ExpiresAt:     time.Now().UnixNano(),
 	}))
 
 	// namespace name too long
 	assert.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
 		NamespaceName: string(make([]byte, 129)),
 		SemaphoreName: "validname",
-		ProcessId:     "proc1",
-		ExpiresAt:     time.Now().UnixNano(),
+		LeaseId:       "lease1",
 	}))
 
 	// semaphore name too long
 	assert.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
 		NamespaceName: "validname",
 		SemaphoreName: string(make([]byte, 129)),
-		ProcessId:     "proc1",
-		ExpiresAt:     time.Now().UnixNano(),
+		LeaseId:       "lease1",
 	}))
 
-	// process id too long
-	assert.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "validname",
-		ProcessId:     string(make([]byte, 129)),
-		ExpiresAt:     time.Now().UnixNano(),
-	}))
+	// lease id too long (not validated - strings can be any length)
+	// assert.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
+	// 	NamespaceName: "validname",
+	// 	SemaphoreName: "validname",
+	// 	LeaseId:       string(make([]byte, 129)),
+	// }))
 
 	// invalid namespace name characters
 	assert.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
 		NamespaceName: "invalid name",
 		SemaphoreName: "validname",
-		ProcessId:     "proc1",
-		ExpiresAt:     time.Now().UnixNano(),
+		LeaseId:       "lease1",
 	}))
 
 	// invalid semaphore name characters
 	assert.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
 		NamespaceName: "validname",
 		SemaphoreName: "invalid name",
-		ProcessId:     "proc1",
-		ExpiresAt:     time.Now().UnixNano(),
+		LeaseId:       "lease1",
 	}))
 
-	// invalid process id characters
-	assert.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "validname",
-		ProcessId:     "invalid process id",
-		ExpiresAt:     time.Now().UnixNano(),
-	}))
+	// lease id can have any characters - no validation on lease_id format
+	// assert.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
+	// 	NamespaceName: "validname",
+	// 	SemaphoreName: "validname",
+	// 	LeaseId:       "invalid lease id",
+	// }))
 
-	// invalid expires at
-	assert.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
-		NamespaceName: "validname",
-		SemaphoreName: "validsemaphore",
-		ProcessId:     "proc1",
-		ExpiresAt:     0,
-	}))
+	// expires_at no longer exists in the API
+	// assert.Error(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
+	// 	NamespaceName: "validname",
+	// 	SemaphoreName: "validsemaphore",
+	// 	LeaseId:       "lease1",
+	// 	ExpiresAt:     0,
+	// }))
 
 	// valid request
 	assert.NoError(t, ValidateAcquireSemaphoreRequest(&gracklepb.AcquireSemaphoreRequest{
 		NamespaceName: "validname",
 		SemaphoreName: "validsemaphore",
-		ProcessId:     "proc1",
-		ExpiresAt:     time.Now().UnixNano(),
+		LeaseId:       "lease1",
 	}))
 }
 

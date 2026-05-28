@@ -36,12 +36,12 @@ type waitGroupsTable struct {
 func newWaitGroupsTable(shardLowerBound []byte, shardUpperBound []byte) *waitGroupsTable {
 	return &waitGroupsTable{
 		table: monsterax.NewBinaryTable[*corepb.WaitGroup, corepb.WaitGroup](
-			tables.GrackleWaitGroupsTableId,
+			tables.Grackle["Grackle.WaitGroupsCore.WaitGroups.Table"].Bytes(),
 			shardLowerBound,
 			shardUpperBound,
 		),
 		namesIndex: monsterax.NewUint64Table(
-			tables.GrackleWaitGroupsNamesIndexId,
+			tables.Grackle["Grackle.WaitGroupsCore.WaitGroups.NamesIndex"].Bytes(),
 			shardLowerBound,
 			shardUpperBound,
 		),

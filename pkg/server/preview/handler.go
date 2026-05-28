@@ -13,6 +13,7 @@ import (
 
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/grackle"
+	"github.com/evrblk/grackle/pkg/ids"
 	"github.com/evrblk/grackle/pkg/monsteragen"
 )
 
@@ -456,15 +457,23 @@ func (s *GrackleApiServerHandler) AcquireLock(ctx context.Context, request *grac
 		return nil, monsterax.ErrorToGRPC(err)
 	}
 
+	leaseId, err := ids.DecodeLeaseId(request.LeaseId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Invalid AcquireLockRequest.LeaseId: %v", err)
+	}
+
+	if leaseId.AccountId != accountId || leaseId.NamespaceId != resp1.Namespace.Id.NamespaceId {
+		return nil, status.Errorf(codes.NotFound, "lease not found")
+	}
+
 	resp2, err := s.grackleCoreApiClient.AcquireLock(ctx, &corepb.AcquireLockRequest{
 		LockId: &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: resp1.Namespace.Id.NamespaceId,
 			LockName:    request.LockName,
 		},
+		LeaseId:                      leaseId.LeaseId,
 		Now:                          now.UnixNano(),
-		ProcessId:                    request.ProcessId,
-		ExpiresAt:                    request.ExpiresAt,
 		Exclusive:                    request.Exclusive,
 		MaxNumberOfLocksPerNamespace: limits.MaxNumberOfLocksPerNamespace,
 	})
@@ -489,14 +498,23 @@ func (s *GrackleApiServerHandler) ReleaseLock(ctx context.Context, request *grac
 		return nil, monsterax.ErrorToGRPC(err)
 	}
 
+	leaseId, err := ids.DecodeLeaseId(request.LeaseId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Invalid ReleaseLockRequest.LeaseId: %v", err)
+	}
+
+	if leaseId.AccountId != accountId || leaseId.NamespaceId != resp1.Namespace.Id.NamespaceId {
+		return nil, status.Errorf(codes.NotFound, "lease not found")
+	}
+
 	resp2, err := s.grackleCoreApiClient.ReleaseLock(ctx, &corepb.ReleaseLockRequest{
 		LockId: &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: resp1.Namespace.Id.NamespaceId,
 			LockName:    request.LockName,
 		},
-		Now:       now.UnixNano(),
-		ProcessId: request.ProcessId,
+		LeaseId: leaseId.LeaseId,
+		Now:     now.UnixNano(),
 	})
 	if err != nil {
 		return nil, monsterax.ErrorToGRPC(err)
@@ -755,13 +773,21 @@ func (s *GrackleApiServerHandler) AcquireSemaphore(ctx context.Context, request 
 		return nil, monsterax.ErrorToGRPC(err)
 	}
 
+	leaseId, err := ids.DecodeLeaseId(request.LeaseId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Invalid AcquireSemaphoreRequest.LeaseId: %v", err)
+	}
+
+	if leaseId.AccountId != accountId || leaseId.NamespaceId != resp1.Namespace.Id.NamespaceId {
+		return nil, status.Errorf(codes.NotFound, "lease not found")
+	}
+
 	resp2, err := s.grackleCoreApiClient.AcquireSemaphore(ctx, &corepb.AcquireSemaphoreRequest{
 		NamespaceId:   resp1.Namespace.Id,
 		SemaphoreName: request.SemaphoreName,
+		LeaseId:       leaseId.LeaseId,
 		Weight:        request.Weight,
 		Now:           now.UnixNano(),
-		ProcessId:     request.ProcessId,
-		ExpiresAt:     request.ExpiresAt,
 	})
 	if err != nil {
 		return nil, monsterax.ErrorToGRPC(err)
@@ -784,11 +810,20 @@ func (s *GrackleApiServerHandler) ReleaseSemaphore(ctx context.Context, request 
 		return nil, monsterax.ErrorToGRPC(err)
 	}
 
+	leaseId, err := ids.DecodeLeaseId(request.LeaseId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Invalid ReleaseSemaphoreRequest.LeaseId: %v", err)
+	}
+
+	if leaseId.AccountId != accountId || leaseId.NamespaceId != resp1.Namespace.Id.NamespaceId {
+		return nil, status.Errorf(codes.NotFound, "lease not found")
+	}
+
 	resp2, err := s.grackleCoreApiClient.ReleaseSemaphore(ctx, &corepb.ReleaseSemaphoreRequest{
 		NamespaceId:   resp1.Namespace.Id,
 		SemaphoreName: request.SemaphoreName,
+		LeaseId:       leaseId.LeaseId,
 		Now:           now.UnixNano(),
-		ProcessId:     request.ProcessId,
 	})
 	if err != nil {
 		return nil, monsterax.ErrorToGRPC(err)
@@ -1150,6 +1185,46 @@ func (s *GrackleApiServerHandler) ListBarrierParticipants(ctx context.Context, r
 		NextPaginationToken:     nextPaginationToken,
 		PreviousPaginationToken: previousPaginationToken,
 	}, nil
+}
+
+func (s *GrackleApiServerHandler) CreateSemaphoreLease(ctx context.Context, request *gracklepb.CreateSemaphoreLeaseRequest, accountId uint64, limits grackle.GrackleServiceLimits) (*gracklepb.CreateSemaphoreLeaseResponse, error) {
+
+}
+
+func (s *GrackleApiServerHandler) RevokeSemaphoreLease(ctx context.Context, request *gracklepb.RevokeSemaphoreLeaseRequest, accountId uint64, limits grackle.GrackleServiceLimits) (*gracklepb.RevokeSemaphoreLeaseResponse, error) {
+
+}
+
+func (s *GrackleApiServerHandler) RefreshSemaphoreLease(ctx context.Context, request *gracklepb.RefreshSemaphoreLeaseRequest, accountId uint64, limits grackle.GrackleServiceLimits) (*gracklepb.RefreshSemaphoreLeaseResponse, error) {
+
+}
+
+func (s *GrackleApiServerHandler) ListSemaphoreLeases(ctx context.Context, request *gracklepb.ListSemaphoreLeasesRequest, accountId uint64, limits grackle.GrackleServiceLimits) (*gracklepb.ListSemaphoreLeasesResponse, error) {
+
+}
+
+func (s *GrackleApiServerHandler) GetSemaphoreLease(ctx context.Context, request *gracklepb.GetSemaphoreLeaseRequest, accountId uint64, limits grackle.GrackleServiceLimits) (*gracklepb.GetSemaphoreLeaseResponse, error) {
+
+}
+
+func (s *GrackleApiServerHandler) CreateLockLease(ctx context.Context, request *gracklepb.CreateLockLeaseRequest, accountId uint64, limits grackle.GrackleServiceLimits) (*gracklepb.CreateLockLeaseResponse, error) {
+
+}
+
+func (s *GrackleApiServerHandler) RevokeLockLease(ctx context.Context, request *gracklepb.RevokeLockLeaseRequest, accountId uint64, limits grackle.GrackleServiceLimits) (*gracklepb.RevokeLockLeaseResponse, error) {
+
+}
+
+func (s *GrackleApiServerHandler) RefreshLockLease(ctx context.Context, request *gracklepb.RefreshLockLeaseRequest, accountId uint64, limits grackle.GrackleServiceLimits) (*gracklepb.RefreshLockLeaseResponse, error) {
+
+}
+
+func (s *GrackleApiServerHandler) ListLockLeases(ctx context.Context, request *gracklepb.ListLockLeasesRequest, accountId uint64, limits grackle.GrackleServiceLimits) (*gracklepb.ListLockLeasesResponse, error) {
+
+}
+
+func (s *GrackleApiServerHandler) GetLockLease(ctx context.Context, request *gracklepb.GetLockLeaseRequest, accountId uint64, limits grackle.GrackleServiceLimits) (*gracklepb.GetLockLeaseResponse, error) {
+
 }
 
 func NewGrackleApiServerHandler(grackleCoreApiClient monsteragen.GrackleCoreApi) *GrackleApiServerHandler {

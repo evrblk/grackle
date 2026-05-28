@@ -1,6 +1,8 @@
 package locks
 
 import (
+	"errors"
+
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
 	monsterax "github.com/evrblk/monstera/x"
@@ -20,19 +22,36 @@ import (
 //
 // Table Sort Key:
 // 1. lock name
+//
+// Lease Id Index Primary Key:
+// 1. shard key (by account id and namespace id)
+// 2. account id
+// 3. namespace id
+// 3. lease id
 type locksTable struct {
-	table *monsterax.BinaryTable[*corepb.Lock, corepb.Lock]
+	table        *monsterax.BinaryTable[*corepb.Lock, corepb.Lock]
+	leaseIdIndex *monsterax.OneToManySortedIndex
 }
 
 func newLocksTable(shardLowerBound []byte, shardUpperBound []byte) *locksTable {
 	return &locksTable{
-		table: monsterax.NewBinaryTable[*corepb.Lock, corepb.Lock](tables.GrackleLocksTableId, shardLowerBound, shardUpperBound),
+		table: monsterax.NewBinaryTable[*corepb.Lock, corepb.Lock](
+			tables.Grackle["Grackle.LocksCore.Locks.Table"].Bytes(),
+			shardLowerBound,
+			shardUpperBound,
+		),
+		leaseIdIndex: monsterax.NewOneToManySortedIndex(
+			tables.Grackle["Grackle.LocksCore.Locks.LeaseIdIndex"].Bytes(),
+			shardLowerBound,
+			shardUpperBound,
+		),
 	}
 }
 
 func (t *locksTable) GetTableKeyRanges() []monsterax.KeyRange {
 	return []monsterax.KeyRange{
 		t.table.GetTableKeyRange(),
+		t.leaseIdIndex.GetTableKeyRange(),
 	}
 }
 
@@ -57,6 +76,32 @@ func (t *locksTable) List(txn *store.Txn, namespaceId *corepb.NamespaceId, pagin
 
 }
 
+func (t *locksTable) ListByLeaseId(txn *store.Txn, leaseId *corepb.LeaseId, paginationToken *corepb.PaginationToken, limit int) (*listLocksResult, error) {
+	result, err := t.leaseIdIndex.ListPaginated(txn,
+		t.leaseIdIndexPK(leaseId.AccountId, leaseId.NamespaceId, leaseId.LeaseId), pagination.CoreToMonstera(paginationToken), limit)
+	if err != nil {
+		return nil, err
+	}
+
+	locks := make([]*corepb.Lock, len(result.Items))
+	for i, lockName := range result.Items {
+		lock, err := t.table.Get(txn,
+			utils.ConcatBytes(
+				t.tablePK(leaseId.AccountId, leaseId.NamespaceId),
+				t.tableSK(string(lockName))))
+		if err != nil {
+			return nil, err
+		}
+		locks[i] = lock
+	}
+
+	return &listLocksResult{
+		locks:                   locks,
+		nextPaginationToken:     pagination.MonsteraToCore(result.NextPaginationToken),
+		previousPaginationToken: pagination.MonsteraToCore(result.PreviousPaginationToken),
+	}, nil
+}
+
 func (t *locksTable) Get(txn *store.Txn, lockId *corepb.LockId) (*corepb.Lock, error) {
 	return t.table.Get(txn,
 		utils.ConcatBytes(
@@ -65,11 +110,59 @@ func (t *locksTable) Get(txn *store.Txn, lockId *corepb.LockId) (*corepb.Lock, e
 }
 
 func (t *locksTable) Update(txn *store.Txn, lock *corepb.Lock) error {
-	return t.table.Set(txn,
-		utils.ConcatBytes(
-			t.tablePK(lock.Id.AccountId, lock.Id.NamespaceId),
-			t.tableSK(lock.Id.LockName)),
-		lock)
+	tableKey := utils.ConcatBytes(
+		t.tablePK(lock.Id.AccountId, lock.Id.NamespaceId),
+		t.tableSK(lock.Id.LockName))
+
+	oldLock, err := t.table.Get(txn, tableKey)
+	if err != nil && !errors.Is(err, store.ErrNotFound) {
+		return err
+	}
+
+	// If lock doesn't exist, treat as a create (oldLeaseIds will be empty)
+	oldLeaseIds := make(map[uint64]struct{})
+	if err == nil {
+		// Lock exists, get old lease IDs
+		for _, holder := range oldLock.LockHolders {
+			oldLeaseIds[holder.LeaseId] = struct{}{}
+		}
+	}
+
+	newLeaseIds := make(map[uint64]struct{}, len(lock.LockHolders))
+	for _, holder := range lock.LockHolders {
+		newLeaseIds[holder.LeaseId] = struct{}{}
+	}
+
+	lockName := []byte(lock.Id.LockName)
+
+	// Delete old lease IDs that are no longer present in the new lock
+	for leaseId := range oldLeaseIds {
+		if _, ok := newLeaseIds[leaseId]; !ok {
+			err = t.leaseIdIndex.Delete(txn,
+				t.leaseIdIndexPK(lock.Id.AccountId, lock.Id.NamespaceId, leaseId),
+				lockName,
+			)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Add new lease IDs that are not present in the old lock
+	for leaseId := range newLeaseIds {
+		if _, ok := oldLeaseIds[leaseId]; !ok {
+			err = t.leaseIdIndex.Add(txn,
+				t.leaseIdIndexPK(lock.Id.AccountId, lock.Id.NamespaceId, leaseId),
+				lockName,
+			)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Update the lock in the table
+	return t.table.Set(txn, tableKey, lock)
 }
 
 func (t *locksTable) Delete(txn *store.Txn, lockId *corepb.LockId) error {
@@ -90,5 +183,14 @@ func (t *locksTable) tablePK(accountId uint64, namespaceId uint32) []byte {
 func (t *locksTable) tableSK(lockName string) []byte {
 	return utils.ConcatBytes(
 		lockName,
+	)
+}
+
+func (t *locksTable) leaseIdIndexPK(accountId uint64, namespaceId uint32, leaseId uint64) []byte {
+	return utils.ConcatBytes(
+		sharding.ByAccountAndNamespace(accountId, namespaceId),
+		accountId,
+		namespaceId,
+		leaseId,
 	)
 }

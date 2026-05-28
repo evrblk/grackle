@@ -14,7 +14,7 @@ import (
 type LockHandle struct {
 	Namespace string
 	LockName  string
-	ProcessID string
+	LeaseID   string
 	Exclusive bool
 }
 
@@ -22,7 +22,7 @@ type LockHandle struct {
 type SemaphoreHandle struct {
 	Namespace     string
 	SemaphoreName string
-	ProcessID     string
+	LeaseID       string
 	Weight        uint64
 }
 

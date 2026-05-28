@@ -32,7 +32,7 @@ func newExpirationRecordsTable(shardGlobalIndexPrefix []byte) *expirationRecords
 		shardGlobalIndexPrefix: shardGlobalIndexPrefix,
 
 		table: monsterax.NewBinaryTable[*corepb.WaitGroupsExpirationRecord, corepb.WaitGroupsExpirationRecord](
-			tables.GrackleWaitGroupsExpirationRecordsTableId,
+			tables.Grackle["Grackle.WaitGroupsCore.ExpirationRecords.Table"].Bytes(),
 			shardGlobalIndexPrefix,
 			shardGlobalIndexPrefix,
 		),

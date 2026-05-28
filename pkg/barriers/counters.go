@@ -25,7 +25,7 @@ type countersTable struct {
 func newCountersTable(shardLowerBound []byte, shardUpperBound []byte) *countersTable {
 	return &countersTable{
 		table: monsterax.NewBinaryTable[*corepb.BarriersCounter, corepb.BarriersCounter](
-			tables.GrackleBarriersCountersTableId,
+			tables.Grackle["Grackle.BarriersCore.Counters.Table"].Bytes(),
 			shardLowerBound,
 			shardUpperBound,
 		),

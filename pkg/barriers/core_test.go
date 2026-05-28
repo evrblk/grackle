@@ -8,11 +8,18 @@ import (
 	"testing"
 	"time"
 
+	"github.com/evrblk/monstera/store"
+	monsterax "github.com/evrblk/monstera/x"
 	"github.com/stretchr/testify/require"
 
 	"github.com/evrblk/grackle/pkg/corepb"
-	"github.com/evrblk/monstera/store"
+	"github.com/evrblk/grackle/pkg/tables"
 )
+
+func init() {
+	registry := monsterax.NewBaseTableRegistry(1)
+	tables.RegisterGracklePrefixes(registry)
+}
 
 func TestCore_CreateBarrier(t *testing.T) {
 	t.Run("create barrier", func(t *testing.T) {
