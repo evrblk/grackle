@@ -12,6 +12,7 @@ cmd/grackle/grackle
 .DS_Store
 .idea
 data/
+.data
 target
 .ijwb
 .intellij

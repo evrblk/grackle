@@ -1078,15 +1078,20 @@ func (m *WaitGroup) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	if m.Completed != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Completed))
 		i--
-		dAtA[i] = 0x40
+		dAtA[i] = 0x48
 	}
 	if m.Counter != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Counter))
 		i--
-		dAtA[i] = 0x38
+		dAtA[i] = 0x40
 	}
 	if m.ExpiresAt != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.ExpiresAt))
+		i--
+		dAtA[i] = 0x38
+	}
+	if m.Version != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Version))
 		i--
 		dAtA[i] = 0x30
 	}
@@ -1859,6 +1864,9 @@ func (m *WaitGroup) SizeVT() (n int) {
 	}
 	if m.UpdatedAt != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.UpdatedAt))
+	}
+	if m.Version != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.Version))
 	}
 	if m.ExpiresAt != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.ExpiresAt))
@@ -4562,6 +4570,25 @@ func (m *WaitGroup) UnmarshalVT(dAtA []byte) error {
 			}
 		case 6:
 			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Version", wireType)
+			}
+			m.Version = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Version |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ExpiresAt", wireType)
 			}
 			m.ExpiresAt = 0
@@ -4579,7 +4606,7 @@ func (m *WaitGroup) UnmarshalVT(dAtA []byte) error {
 					break
 				}
 			}
-		case 7:
+		case 8:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Counter", wireType)
 			}
@@ -4598,7 +4625,7 @@ func (m *WaitGroup) UnmarshalVT(dAtA []byte) error {
 					break
 				}
 			}
-		case 8:
+		case 9:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Completed", wireType)
 			}

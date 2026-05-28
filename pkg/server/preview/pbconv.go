@@ -21,6 +21,7 @@ func namespaceToFront(namespace *corepb.Namespace) *gracklepb.Namespace {
 		Description: namespace.Description,
 		CreatedAt:   namespace.CreatedAt,
 		UpdatedAt:   namespace.UpdatedAt,
+		Version:     namespace.Version,
 	}
 }
 
@@ -64,6 +65,7 @@ func waitGroupToFront(waitGroup *corepb.WaitGroup) *gracklepb.WaitGroup {
 		Counter:     waitGroup.Counter,
 		Completed:   waitGroup.Completed,
 		ExpiresAt:   waitGroup.ExpiresAt,
+		Version:     waitGroup.Version,
 	}
 }
 
@@ -125,12 +127,14 @@ func semaphoreToFront(semaphore *corepb.Semaphore) *gracklepb.Semaphore {
 	}
 
 	return &gracklepb.Semaphore{
-		Name:        semaphore.Name,
-		Description: semaphore.Description,
-		CreatedAt:   semaphore.CreatedAt,
-		UpdatedAt:   semaphore.UpdatedAt,
-		Permits:     semaphore.Permits,
-		// SemaphoreHolders: semaphoreHoldersToFront(semaphore.SemaphoreHolders),
+		Name:               semaphore.Name,
+		Description:        semaphore.Description,
+		CreatedAt:          semaphore.CreatedAt,
+		UpdatedAt:          semaphore.UpdatedAt,
+		Permits:            semaphore.Permits,
+		Version:            semaphore.Version,
+		ActiveHolds:        semaphore.ActiveHolds,
+		ActiveHoldersCount: semaphore.ActiveHoldersCount,
 	}
 }
 
@@ -179,6 +183,7 @@ func barrierToFront(barrier *corepb.Barrier) *gracklepb.Barrier {
 		Generation:        barrier.Generation,
 		CreatedAt:         barrier.CreatedAt,
 		UpdatedAt:         barrier.UpdatedAt,
+		Version:           barrier.Version,
 	}
 }
 

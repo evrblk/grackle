@@ -1931,20 +1931,25 @@ func (m *Semaphore) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	if m.EarliestHolderExpiresAt != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.EarliestHolderExpiresAt))
 		i--
-		dAtA[i] = 0x48
+		dAtA[i] = 0x50
 	}
 	if m.ActiveHoldersCount != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.ActiveHoldersCount))
 		i--
-		dAtA[i] = 0x40
+		dAtA[i] = 0x48
 	}
 	if m.ActiveHolds != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.ActiveHolds))
 		i--
-		dAtA[i] = 0x38
+		dAtA[i] = 0x40
 	}
 	if m.Permits != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Permits))
+		i--
+		dAtA[i] = 0x38
+	}
+	if m.Version != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Version))
 		i--
 		dAtA[i] = 0x30
 	}
@@ -3037,6 +3042,9 @@ func (m *Semaphore) SizeVT() (n int) {
 	}
 	if m.UpdatedAt != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.UpdatedAt))
+	}
+	if m.Version != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.Version))
 	}
 	if m.Permits != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.Permits))
@@ -7733,6 +7741,25 @@ func (m *Semaphore) UnmarshalVT(dAtA []byte) error {
 			}
 		case 6:
 			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Version", wireType)
+			}
+			m.Version = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Version |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Permits", wireType)
 			}
 			m.Permits = 0
@@ -7750,7 +7777,7 @@ func (m *Semaphore) UnmarshalVT(dAtA []byte) error {
 					break
 				}
 			}
-		case 7:
+		case 8:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ActiveHolds", wireType)
 			}
@@ -7769,7 +7796,7 @@ func (m *Semaphore) UnmarshalVT(dAtA []byte) error {
 					break
 				}
 			}
-		case 8:
+		case 9:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ActiveHoldersCount", wireType)
 			}
@@ -7788,7 +7815,7 @@ func (m *Semaphore) UnmarshalVT(dAtA []byte) error {
 					break
 				}
 			}
-		case 9:
+		case 10:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field EarliestHolderExpiresAt", wireType)
 			}

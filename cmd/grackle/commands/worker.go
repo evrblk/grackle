@@ -65,6 +65,8 @@ var workerCmd = &cobra.Command{
 		grackeSemaphoresGarbageCollectionWorker.Start()
 		grackeWaitGroupsGarbageCollectionWorker := workers.NewGrackleWaitGroupsGCWorker(grackleCoreApiClient)
 		grackeWaitGroupsGarbageCollectionWorker.Start()
+		grackeBarriersGarbageCollectionWorker := workers.NewGrackleBarriersGCWorker(grackleCoreApiClient)
+		grackeBarriersGarbageCollectionWorker.Start()
 
 		wg := sync.WaitGroup{}
 		wg.Add(1)
@@ -80,6 +82,7 @@ var workerCmd = &cobra.Command{
 				grackeLocksGarbageCollectionWorker.Stop()
 				grackeSemaphoresGarbageCollectionWorker.Stop()
 				grackeWaitGroupsGarbageCollectionWorker.Stop()
+				grackeBarriersGarbageCollectionWorker.Stop()
 			case <-ctx.Done():
 			}
 			wg.Done()

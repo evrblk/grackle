@@ -644,6 +644,7 @@ type Namespace struct {
 	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	CreatedAt     int64                  `protobuf:"varint,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     int64                  `protobuf:"varint,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Version       uint64                 `protobuf:"varint,6,opt,name=version,proto3" json:"version,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -709,6 +710,13 @@ func (x *Namespace) GetCreatedAt() int64 {
 func (x *Namespace) GetUpdatedAt() int64 {
 	if x != nil {
 		return x.UpdatedAt
+	}
+	return 0
+}
+
+func (x *Namespace) GetVersion() uint64 {
+	if x != nil {
+		return x.Version
 	}
 	return 0
 }
@@ -860,7 +868,7 @@ const file_pkg_corepb_namespaces_proto_rawDesc = "" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x10\n" +
 	"\x03now\x18\x03 \x01(\x03R\x03now\"]\n" +
 	"\x17UpdateNamespaceResponse\x12B\n" +
-	"\tnamespace\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.NamespaceR\tnamespace\"\xb7\x01\n" +
+	"\tnamespace\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.NamespaceR\tnamespace\"\xd1\x01\n" +
 	"\tNamespace\x126\n" +
 	"\x02id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
@@ -868,7 +876,8 @@ const file_pkg_corepb_namespaces_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x04 \x01(\x03R\tcreatedAt\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\x05 \x01(\x03R\tupdatedAt\"O\n" +
+	"updated_at\x18\x05 \x01(\x03R\tupdatedAt\x12\x18\n" +
+	"\aversion\x18\x06 \x01(\x04R\aversion\"O\n" +
 	"\vNamespaceId\x12\x1d\n" +
 	"\n" +
 	"account_id\x18\x01 \x01(\x04R\taccountId\x12!\n" +

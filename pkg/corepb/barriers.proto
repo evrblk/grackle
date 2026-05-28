@@ -132,6 +132,7 @@ message Barrier {
   uint64 expected_processes = 6;
   uint64 arrived_processes = 7;
   uint64 generation = 8;
+  uint64 version = 9;
 }
 
 message BarrierId {

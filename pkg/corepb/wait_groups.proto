@@ -117,9 +117,10 @@ message WaitGroup {
   string description = 3;
   int64 created_at = 4;
   int64 updated_at = 5;
-  int64 expires_at = 6;
-  uint64 counter = 7;
-  uint64 completed = 8;
+  uint64 version = 6;
+  int64 expires_at = 7;
+  uint64 counter = 8;
+  uint64 completed = 9;
 }
 
 message WaitGroupJob {

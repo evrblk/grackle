@@ -91,6 +91,8 @@ var nonclusteredCmd = &cobra.Command{
 		grackeSemaphoresGarbageCollectionWorker.Start()
 		grackeWaitGroupsGarbageCollectionWorker := workers.NewGrackleWaitGroupsGCWorker(grackleCoreApiClient)
 		grackeWaitGroupsGarbageCollectionWorker.Start()
+		grackeBarriersGarbageCollectionWorker := workers.NewGrackleBarriersGCWorker(grackleCoreApiClient)
+		grackeBarriersGarbageCollectionWorker.Start()
 
 		grpcServer := grpc.NewServer(
 			grpc.ChainUnaryInterceptor(unaryInterceptors...),
@@ -107,6 +109,7 @@ var nonclusteredCmd = &cobra.Command{
 				grackeLocksGarbageCollectionWorker.Stop()
 				grackeSemaphoresGarbageCollectionWorker.Stop()
 				grackeWaitGroupsGarbageCollectionWorker.Stop()
+				grackeBarriersGarbageCollectionWorker.Stop()
 				grpcServer.GracefulStop()
 				metricsSrv.Stop()
 			case <-ctx.Done():

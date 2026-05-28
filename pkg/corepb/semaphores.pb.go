@@ -2012,10 +2012,11 @@ type Semaphore struct {
 	Description             string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	CreatedAt               int64                  `protobuf:"varint,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt               int64                  `protobuf:"varint,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	Permits                 uint64                 `protobuf:"varint,6,opt,name=permits,proto3" json:"permits,omitempty"`
-	ActiveHolds             uint64                 `protobuf:"varint,7,opt,name=active_holds,json=activeHolds,proto3" json:"active_holds,omitempty"`
-	ActiveHoldersCount      uint64                 `protobuf:"varint,8,opt,name=active_holders_count,json=activeHoldersCount,proto3" json:"active_holders_count,omitempty"`
-	EarliestHolderExpiresAt int64                  `protobuf:"varint,9,opt,name=earliest_holder_expires_at,json=earliestHolderExpiresAt,proto3" json:"earliest_holder_expires_at,omitempty"`
+	Version                 uint64                 `protobuf:"varint,6,opt,name=version,proto3" json:"version,omitempty"`
+	Permits                 uint64                 `protobuf:"varint,7,opt,name=permits,proto3" json:"permits,omitempty"`
+	ActiveHolds             uint64                 `protobuf:"varint,8,opt,name=active_holds,json=activeHolds,proto3" json:"active_holds,omitempty"`
+	ActiveHoldersCount      uint64                 `protobuf:"varint,9,opt,name=active_holders_count,json=activeHoldersCount,proto3" json:"active_holders_count,omitempty"`
+	EarliestHolderExpiresAt int64                  `protobuf:"varint,10,opt,name=earliest_holder_expires_at,json=earliestHolderExpiresAt,proto3" json:"earliest_holder_expires_at,omitempty"`
 	unknownFields           protoimpl.UnknownFields
 	sizeCache               protoimpl.SizeCache
 }
@@ -2081,6 +2082,13 @@ func (x *Semaphore) GetCreatedAt() int64 {
 func (x *Semaphore) GetUpdatedAt() int64 {
 	if x != nil {
 		return x.UpdatedAt
+	}
+	return 0
+}
+
+func (x *Semaphore) GetVersion() uint64 {
+	if x != nil {
+		return x.Version
 	}
 	return 0
 }
@@ -2645,7 +2653,7 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\x14gc_records_page_size\x18\x02 \x01(\x03R\x11gcRecordsPageSize\x12B\n" +
 	"\x1egc_record_semaphores_page_size\x18\x03 \x01(\x03R\x1agcRecordSemaphoresPageSize\x124\n" +
 	"\x16max_visited_semaphores\x18\x04 \x01(\x03R\x14maxVisitedSemaphores\"(\n" +
-	"&RunSemaphoresGarbageCollectionResponse\"\xe3\x02\n" +
+	"&RunSemaphoresGarbageCollectionResponse\"\xfd\x02\n" +
 	"\tSemaphore\x126\n" +
 	"\x02id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.SemaphoreIdR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
@@ -2654,10 +2662,12 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"created_at\x18\x04 \x01(\x03R\tcreatedAt\x12\x1d\n" +
 	"\n" +
 	"updated_at\x18\x05 \x01(\x03R\tupdatedAt\x12\x18\n" +
-	"\apermits\x18\x06 \x01(\x04R\apermits\x12!\n" +
-	"\factive_holds\x18\a \x01(\x04R\vactiveHolds\x120\n" +
-	"\x14active_holders_count\x18\b \x01(\x04R\x12activeHoldersCount\x12;\n" +
-	"\x1aearliest_holder_expires_at\x18\t \x01(\x03R\x17earliestHolderExpiresAt\"\xa3\x01\n" +
+	"\aversion\x18\x06 \x01(\x04R\aversion\x12\x18\n" +
+	"\apermits\x18\a \x01(\x04R\apermits\x12!\n" +
+	"\factive_holds\x18\b \x01(\x04R\vactiveHolds\x120\n" +
+	"\x14active_holders_count\x18\t \x01(\x04R\x12activeHoldersCount\x12;\n" +
+	"\x1aearliest_holder_expires_at\x18\n" +
+	" \x01(\x03R\x17earliestHolderExpiresAt\"\xa3\x01\n" +
 	"\x0fSemaphoreHolder\x12<\n" +
 	"\x02id\x18\x01 \x01(\v2,.com.evrblk.grackle.corepb.SemaphoreHolderIdR\x02id\x12\x1b\n" +
 	"\tlocked_at\x18\x02 \x01(\x03R\blockedAt\x12\x1d\n" +

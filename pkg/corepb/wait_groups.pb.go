@@ -1124,9 +1124,10 @@ type WaitGroup struct {
 	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	CreatedAt     int64                  `protobuf:"varint,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     int64                  `protobuf:"varint,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	ExpiresAt     int64                  `protobuf:"varint,6,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	Counter       uint64                 `protobuf:"varint,7,opt,name=counter,proto3" json:"counter,omitempty"`
-	Completed     uint64                 `protobuf:"varint,8,opt,name=completed,proto3" json:"completed,omitempty"`
+	Version       uint64                 `protobuf:"varint,6,opt,name=version,proto3" json:"version,omitempty"`
+	ExpiresAt     int64                  `protobuf:"varint,7,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	Counter       uint64                 `protobuf:"varint,8,opt,name=counter,proto3" json:"counter,omitempty"`
+	Completed     uint64                 `protobuf:"varint,9,opt,name=completed,proto3" json:"completed,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1192,6 +1193,13 @@ func (x *WaitGroup) GetCreatedAt() int64 {
 func (x *WaitGroup) GetUpdatedAt() int64 {
 	if x != nil {
 		return x.UpdatedAt
+	}
+	return 0
+}
+
+func (x *WaitGroup) GetVersion() uint64 {
+	if x != nil {
+		return x.Version
 	}
 	return 0
 }
@@ -1670,7 +1678,7 @@ const file_pkg_corepb_wait_groups_proto_rawDesc = "" +
 	"\trecord_id\x18\x01 \x01(\x04R\brecordId\x12I\n" +
 	"\fnamespace_id\x18\x02 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x10\n" +
 	"\x03now\x18\x03 \x01(\x03R\x03now\"#\n" +
-	"!WaitGroupsDeleteNamespaceResponse\"\x8e\x02\n" +
+	"!WaitGroupsDeleteNamespaceResponse\"\xa8\x02\n" +
 	"\tWaitGroup\x126\n" +
 	"\x02id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.WaitGroupIdR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
@@ -1678,11 +1686,12 @@ const file_pkg_corepb_wait_groups_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x04 \x01(\x03R\tcreatedAt\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\x05 \x01(\x03R\tupdatedAt\x12\x1d\n" +
+	"updated_at\x18\x05 \x01(\x03R\tupdatedAt\x12\x18\n" +
+	"\aversion\x18\x06 \x01(\x04R\aversion\x12\x1d\n" +
 	"\n" +
-	"expires_at\x18\x06 \x01(\x03R\texpiresAt\x12\x18\n" +
-	"\acounter\x18\a \x01(\x04R\acounter\x12\x1c\n" +
-	"\tcompleted\x18\b \x01(\x04R\tcompleted\"l\n" +
+	"expires_at\x18\a \x01(\x03R\texpiresAt\x12\x18\n" +
+	"\acounter\x18\b \x01(\x04R\acounter\x12\x1c\n" +
+	"\tcompleted\x18\t \x01(\x04R\tcompleted\"l\n" +
 	"\fWaitGroupJob\x129\n" +
 	"\x02id\x18\x01 \x01(\v2).com.evrblk.grackle.corepb.WaitGroupJobIdR\x02id\x12!\n" +
 	"\fcompleted_at\x18\x02 \x01(\x03R\vcompletedAt\"\x95\x01\n" +

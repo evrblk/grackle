@@ -202,10 +202,11 @@ message Semaphore {
   string description = 3;
   int64 created_at = 4;
   int64 updated_at = 5;
-  uint64 permits = 6;
-  uint64 active_holds = 7;
-  uint64 active_holders_count = 8;
-  int64 earliest_holder_expires_at = 9;
+  uint64 version = 6;
+  uint64 permits = 7;
+  uint64 active_holds = 8;
+  uint64 active_holders_count = 9;
+  int64 earliest_holder_expires_at = 10;
 }
 
 message SemaphoreHolder {

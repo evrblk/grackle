@@ -1247,6 +1247,7 @@ type Barrier struct {
 	ExpectedProcesses uint64                 `protobuf:"varint,6,opt,name=expected_processes,json=expectedProcesses,proto3" json:"expected_processes,omitempty"`
 	ArrivedProcesses  uint64                 `protobuf:"varint,7,opt,name=arrived_processes,json=arrivedProcesses,proto3" json:"arrived_processes,omitempty"`
 	Generation        uint64                 `protobuf:"varint,8,opt,name=generation,proto3" json:"generation,omitempty"`
+	Version           uint64                 `protobuf:"varint,9,opt,name=version,proto3" json:"version,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -1333,6 +1334,13 @@ func (x *Barrier) GetArrivedProcesses() uint64 {
 func (x *Barrier) GetGeneration() uint64 {
 	if x != nil {
 		return x.Generation
+	}
+	return 0
+}
+
+func (x *Barrier) GetVersion() uint64 {
+	if x != nil {
+		return x.Version
 	}
 	return 0
 }
@@ -1701,7 +1709,7 @@ const file_pkg_corepb_barriers_proto_rawDesc = "" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x1b\n" +
 	"\trecord_id\x18\x02 \x01(\x04R\brecordId\x12\x10\n" +
 	"\x03now\x18\x03 \x01(\x03R\x03now\"!\n" +
-	"\x1fBarriersDeleteNamespaceResponse\"\xaf\x02\n" +
+	"\x1fBarriersDeleteNamespaceResponse\"\xc9\x02\n" +
 	"\aBarrier\x124\n" +
 	"\x02id\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.BarrierIdR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
@@ -1714,7 +1722,8 @@ const file_pkg_corepb_barriers_proto_rawDesc = "" +
 	"\x11arrived_processes\x18\a \x01(\x04R\x10arrivedProcesses\x12\x1e\n" +
 	"\n" +
 	"generation\x18\b \x01(\x04R\n" +
-	"generation\"l\n" +
+	"generation\x12\x18\n" +
+	"\aversion\x18\t \x01(\x04R\aversion\"l\n" +
 	"\tBarrierId\x12\x1d\n" +
 	"\n" +
 	"account_id\x18\x01 \x01(\x04R\taccountId\x12!\n" +

@@ -31,6 +31,14 @@ var (
 		NativeHistogramMaxBucketNumber:  100,
 		NativeHistogramMinResetDuration: time.Hour,
 	}, []string{"shard_id"})
+	grackleBarriersGCWorkerDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:                            "grackle_barriers_gc_worker_duration_seconds",
+		Help:                            "Grackle Barriers Garbage Collection Worker duration",
+		Buckets:                         []float64{},
+		NativeHistogramBucketFactor:     1.1,
+		NativeHistogramMaxBucketNumber:  100,
+		NativeHistogramMinResetDuration: time.Hour,
+	}, []string{"shard_id"})
 	grackleLocksGCWorkerErrorsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "grackle_locks_gc_worker_errors_total",
 		Help: "Grackle Locks Garbage Collection Worker total amount of errors",
@@ -42,6 +50,10 @@ var (
 	grackleWaitGroupsGCWorkerErrorsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "grackle_wait_groups_gc_worker_errors_total",
 		Help: "Grackle WaitGroups Garbage Collection Worker total amount of errors",
+	}, []string{"shard_id"})
+	grackleBarriersGCWorkerErrorsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "grackle_barriers_gc_worker_errors_total",
+		Help: "Grackle Barriers Garbage Collection Worker total amount of errors",
 	}, []string{"shard_id"})
 )
 
