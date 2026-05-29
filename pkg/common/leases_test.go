@@ -422,7 +422,7 @@ func TestLeasesTable_List(t *testing.T) {
 	// Create multiple leases
 	numLeases := 5
 	leases := make([]*corepb.Lease, numLeases)
-	for i := 0; i < numLeases; i++ {
+	for i := range numLeases {
 		leases[i] = &corepb.Lease{
 			Id: &corepb.LeaseId{
 				AccountId:   accountId,
@@ -488,7 +488,7 @@ func TestLeasesTable_ListWithPagination(t *testing.T) {
 	// Create 10 leases
 	numLeases := 10
 	leases := make([]*corepb.Lease, numLeases)
-	for i := 0; i < numLeases; i++ {
+	for i := range numLeases {
 		leases[i] = &corepb.Lease{
 			Id: &corepb.LeaseId{
 				AccountId:   accountId,
@@ -633,7 +633,7 @@ func TestLeasesTable_ListByExpirationEarlyStop(t *testing.T) {
 
 	// Create multiple leases
 	numLeases := 10
-	for i := 0; i < numLeases; i++ {
+	for i := range numLeases {
 		lease := &corepb.Lease{
 			Id: &corepb.LeaseId{
 				AccountId:   accountId,
@@ -786,7 +786,7 @@ func TestLeasesTable_ListByProcessIdWithPagination(t *testing.T) {
 
 	// Create 10 leases for the same process
 	numLeases := 10
-	for i := 0; i < numLeases; i++ {
+	for i := range numLeases {
 		lease := &corepb.Lease{
 			Id: &corepb.LeaseId{
 				AccountId:   accountId,

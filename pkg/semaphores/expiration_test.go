@@ -62,7 +62,7 @@ func TestExpirationRecordsTable_Add(t *testing.T) {
 
 		// Add 5 records with different timestamps and semaphore IDs
 		txn := badgerStore.Update()
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			semId := &corepb.SemaphoreId{
 				AccountId:   accountId,
 				NamespaceId: namespaceId,
@@ -85,7 +85,7 @@ func TestExpirationRecordsTable_Add(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, records, 5)
 		// Verify they are sorted by timestamp
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			require.Equal(t, int64((i+1)*1000), records[i].ExpiresAt)
 		}
 	})
@@ -224,7 +224,7 @@ func TestExpirationRecordsTable_Delete(t *testing.T) {
 		// Add 3 records
 		txn := badgerStore.Update()
 		semIds := make([]*corepb.SemaphoreId, 3)
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			semIds[i] = &corepb.SemaphoreId{
 				AccountId:   accountId,
 				NamespaceId: namespaceId,
@@ -328,7 +328,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 
 		// Add 5 records
 		txn := badgerStore.Update()
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			semId := &corepb.SemaphoreId{
 				AccountId:   accountId,
 				NamespaceId: namespaceId,
@@ -351,7 +351,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, records, 5)
 		// Verify they are in order by timestamp
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			require.Equal(t, int64((i+1)*1000), records[i].ExpiresAt)
 		}
 	})
@@ -367,7 +367,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 
 		// Add 10 records with timestamps 1000, 2000, ..., 10000
 		txn := badgerStore.Update()
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			semId := &corepb.SemaphoreId{
 				AccountId:   accountId,
 				NamespaceId: namespaceId,
@@ -404,7 +404,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 
 		// Add 5 records
 		txn := badgerStore.Update()
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			semId := &corepb.SemaphoreId{
 				AccountId:   accountId,
 				NamespaceId: namespaceId,
@@ -441,7 +441,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 
 		// Add records for different semaphores with the same timestamp
 		txn := badgerStore.Update()
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			semId := &corepb.SemaphoreId{
 				AccountId:   accountId,
 				NamespaceId: namespaceId,
@@ -464,7 +464,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, records, 3)
 		// All should have the same timestamp
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			require.Equal(t, int64(1000), records[i].ExpiresAt)
 		}
 	})
@@ -480,7 +480,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 
 		// Add records for different accounts
 		txn := badgerStore.Update()
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			semId := &corepb.SemaphoreId{
 				AccountId:   uint64(i + 1),
 				NamespaceId: namespaceId,

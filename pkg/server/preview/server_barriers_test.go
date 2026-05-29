@@ -46,7 +46,7 @@ func TestListBarriers(t *testing.T) {
 		require.NoError(t, err)
 
 		// Create 25 barriers to test pagination (3 pages with limit 10)
-		for i := 0; i < 25; i++ {
+		for i := range 25 {
 			_, err := server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
 				NamespaceName:     "test-namespace",
 				BarrierName:       fmt.Sprintf("barrier_%03d", i+1),
@@ -343,7 +343,7 @@ func TestUpdateBarrier(t *testing.T) {
 		require.NoError(t, err)
 
 		// Have 3 processes arrive at the barrier
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			_, err := server.ArriveAtBarrier(ctx, &gracklepb.ArriveAtBarrierRequest{
 				NamespaceName:      "test-namespace",
 				BarrierName:        "test-barrier",
@@ -513,7 +513,7 @@ func TestListBarrierParticipants(t *testing.T) {
 		require.NoError(t, err)
 
 		// Have 25 processes arrive at the barrier
-		for i := 0; i < 25; i++ {
+		for i := range 25 {
 			_, err := server.ArriveAtBarrier(ctx, &gracklepb.ArriveAtBarrierRequest{
 				NamespaceName:      "test-namespace",
 				BarrierName:        "test-barrier",

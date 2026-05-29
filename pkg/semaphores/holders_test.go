@@ -444,7 +444,7 @@ func TestHoldersTable_ListWithPagination(t *testing.T) {
 
 	// Create multiple holders
 	numHolders := 10
-	for i := 0; i < numHolders; i++ {
+	for i := range numHolders {
 		holder := &corepb.SemaphoreHolder{
 			Id: &corepb.SemaphoreHolderId{
 				AccountId:   accountId,
@@ -631,7 +631,7 @@ func TestHoldersTable_ListByExpirationStopEarly(t *testing.T) {
 	now := time.Now()
 
 	// Create holders with different expiration times
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		holder := &corepb.SemaphoreHolder{
 			Id: &corepb.SemaphoreHolderId{
 				AccountId:   accountId,

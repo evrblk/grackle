@@ -353,7 +353,7 @@ func TestCountersTable_IncrementDecrement(t *testing.T) {
 		namespaceId := rand.Uint32()
 
 		// Increment 5 times
-		for i := 0; i < 5; i++ {
+		for range 5 {
 			txn := badgerStore.Update()
 			counter, err := table.Get(txn, accountId, namespaceId)
 			require.NoError(t, err)
@@ -372,7 +372,7 @@ func TestCountersTable_IncrementDecrement(t *testing.T) {
 		txn.Discard()
 
 		// Decrement 2 times
-		for i := 0; i < 2; i++ {
+		for range 2 {
 			txn := badgerStore.Update()
 			counter, err := table.Get(txn, accountId, namespaceId)
 			require.NoError(t, err)

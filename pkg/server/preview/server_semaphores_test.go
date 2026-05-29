@@ -346,7 +346,7 @@ func TestListSemaphores(t *testing.T) {
 		require.NoError(t, err)
 
 		// Create 25 semaphores to test pagination (3 pages with limit 10)
-		for i := 0; i < 25; i++ {
+		for i := range 25 {
 			_, err := server.CreateSemaphore(ctx, &gracklepb.CreateSemaphoreRequest{
 				NamespaceName: "test-namespace",
 				SemaphoreName: fmt.Sprintf("semaphore_%03d", i+1),
@@ -467,7 +467,7 @@ func TestListSemaphoreHolders(t *testing.T) {
 		require.NoError(t, err)
 
 		// Acquire 25 permits from different processes
-		for i := 0; i < 25; i++ {
+		for i := range 25 {
 			// Create lease
 			resp1, err := server.CreateSemaphoreLease(ctx, &gracklepb.CreateSemaphoreLeaseRequest{
 				NamespaceName: "test-namespace",
@@ -692,7 +692,7 @@ func TestListSemaphoreLeases(t *testing.T) {
 		require.NoError(t, err)
 
 		// Create multiple leases
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			_, err := server.CreateSemaphoreLease(ctx, &gracklepb.CreateSemaphoreLeaseRequest{
 				NamespaceName: "namespace1",
 				ProcessId:     fmt.Sprintf("process%d", i+1),
@@ -727,7 +727,7 @@ func TestListSemaphoreLeases(t *testing.T) {
 		require.NoError(t, err)
 
 		// Create 25 leases to test pagination
-		for i := 0; i < 25; i++ {
+		for i := range 25 {
 			_, err := server.CreateSemaphoreLease(ctx, &gracklepb.CreateSemaphoreLeaseRequest{
 				NamespaceName: "namespace1",
 				ProcessId:     fmt.Sprintf("process%03d", i+1),

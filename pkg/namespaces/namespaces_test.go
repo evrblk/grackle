@@ -363,7 +363,7 @@ func TestNamespacesTable_List(t *testing.T) {
 
 		// Create multiple namespaces
 		numNamespaces := 5
-		for i := 0; i < numNamespaces; i++ {
+		for i := range numNamespaces {
 			namespace := &corepb.Namespace{
 				Id: &corepb.NamespaceId{
 					AccountId:   accountId,
@@ -404,7 +404,7 @@ func TestNamespacesTable_List(t *testing.T) {
 
 		// Create multiple namespaces
 		numNamespaces := 10
-		for i := 0; i < numNamespaces; i++ {
+		for i := range numNamespaces {
 			namespace := &corepb.Namespace{
 				Id: &corepb.NamespaceId{
 					AccountId:   accountId,
@@ -473,7 +473,7 @@ func TestNamespacesTable_List(t *testing.T) {
 		accountId2 := rand.Uint64()
 
 		// Create namespaces in account 1
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			namespace := &corepb.Namespace{
 				Id: &corepb.NamespaceId{
 					AccountId:   accountId1,
@@ -493,7 +493,7 @@ func TestNamespacesTable_List(t *testing.T) {
 		}
 
 		// Create namespaces in account 2
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			namespace := &corepb.Namespace{
 				Id: &corepb.NamespaceId{
 					AccountId:   accountId2,

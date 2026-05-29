@@ -136,7 +136,7 @@ func TestCore_Create(t *testing.T) {
 		namespaceId := rand.Uint32()
 
 		// Create wait groups up to the limit
-		for i := int64(0); i < maxWaitGroups; i++ {
+		for i := range maxWaitGroups {
 			_, err := waitGroupsCore.CreateWaitGroup(&corepb.CreateWaitGroupRequest{
 				WaitGroupId: &corepb.WaitGroupId{
 					AccountId:   accountId,
@@ -491,7 +491,7 @@ func TestCore_ListWaitGroupJobs(t *testing.T) {
 
 		// Complete many jobs
 		processIds := make([]string, 50)
-		for i := 0; i < 50; i++ {
+		for i := range 50 {
 			processIds[i] = fmt.Sprintf("process_%d", i)
 		}
 		_, err = waitGroupsCore.CompleteJobsFromWaitGroup(&corepb.CompleteJobsFromWaitGroupRequest{
@@ -688,7 +688,7 @@ func TestCore_DeleteWaitGroup(t *testing.T) {
 		completedJobs := uint64(0)
 
 		for completedJobs < groupSize {
-			for i := 0; i < batchSize; i++ {
+			for i := range batchSize {
 				processIds[i] = fmt.Sprintf("process_%d", completedJobs+uint64(i))
 			}
 
@@ -885,7 +885,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 	jobsPerGroup := 500 // 1500 total jobs, exceeding MaxDeletedObjects
 	waitGroupIds := make([]*corepb.WaitGroupId, numWaitGroups)
 
-	for i := 0; i < numWaitGroups; i++ {
+	for i := range numWaitGroups {
 		waitGroupName := fmt.Sprintf("test_wait_group_%d", i)
 		waitGroupIds[i] = &corepb.WaitGroupId{
 			AccountId:   namespaceId1.AccountId,
@@ -907,7 +907,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 
 		// Complete all jobs to create job records
 		processIds := make([]string, jobsPerGroup)
-		for j := 0; j < jobsPerGroup; j++ {
+		for j := range jobsPerGroup {
 			processIds[j] = fmt.Sprintf("process_%d_%d", i, j)
 		}
 
@@ -930,14 +930,14 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 	jobsPerWaitGroup := 400 // 1200 jobs per namespace
 	namespaceIds := make([]*corepb.NamespaceId, numNamespaces)
 
-	for ns := 0; ns < numNamespaces; ns++ {
+	for ns := range numNamespaces {
 		namespaceIds[ns] = &corepb.NamespaceId{
 			AccountId:   accountId2,
 			NamespaceId: rand.Uint32(),
 		}
 
 		// Create multiple wait groups for this namespace
-		for wg := 0; wg < waitGroupsPerNamespace; wg++ {
+		for wg := range waitGroupsPerNamespace {
 			waitGroupName := fmt.Sprintf("test_wait_group_%d", wg)
 			waitGroupId := &corepb.WaitGroupId{
 				AccountId:   namespaceIds[ns].AccountId,
@@ -959,7 +959,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 
 			// Complete all jobs to create job records
 			processIds := make([]string, jobsPerWaitGroup)
-			for j := 0; j < jobsPerWaitGroup; j++ {
+			for j := range jobsPerWaitGroup {
 				processIds[j] = fmt.Sprintf("process_ns%d_wg%d_%d", ns, wg, j)
 			}
 

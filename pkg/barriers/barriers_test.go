@@ -469,7 +469,7 @@ func TestBarriersTable_List(t *testing.T) {
 
 		// Create multiple barriers
 		txn := badgerStore.Update()
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			barrier := &corepb.Barrier{
 				Id: &corepb.BarrierId{
 					AccountId:   accountId,
@@ -513,7 +513,7 @@ func TestBarriersTable_List(t *testing.T) {
 
 		// Create barriers in namespace 1
 		txn := badgerStore.Update()
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			barrier := &corepb.Barrier{
 				Id: &corepb.BarrierId{
 					AccountId:   accountId,
@@ -533,7 +533,7 @@ func TestBarriersTable_List(t *testing.T) {
 		}
 
 		// Create barriers in namespace 2
-		for i := 0; i < 2; i++ {
+		for i := range 2 {
 			barrier := &corepb.Barrier{
 				Id: &corepb.BarrierId{
 					AccountId:   accountId,
@@ -579,7 +579,7 @@ func TestBarriersTable_List(t *testing.T) {
 
 		// Create 10 barriers
 		txn := badgerStore.Update()
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			barrier := &corepb.Barrier{
 				Id: &corepb.BarrierId{
 					AccountId:   accountId,

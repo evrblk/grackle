@@ -103,7 +103,7 @@ func TestGCRecordsTable_Create(t *testing.T) {
 
 		// Create multiple records (mix of namespace and semaphore)
 		txn := badgerStore.Update()
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			var record *corepb.SemaphoresGarbageCollectionRecord
 			if i%2 == 0 {
 				// Namespace record
@@ -328,7 +328,7 @@ func TestGCRecordsTable_Delete(t *testing.T) {
 		// Create 3 records
 		txn := badgerStore.Update()
 		records := make([]*corepb.SemaphoresGarbageCollectionRecord, 3)
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			records[i] = &corepb.SemaphoresGarbageCollectionRecord{
 				Id: uint64(i + 1),
 				Record: &corepb.SemaphoresGarbageCollectionRecord_NamespaceId{
@@ -425,7 +425,7 @@ func TestGCRecordsTable_List(t *testing.T) {
 
 		// Create 5 records
 		txn := badgerStore.Update()
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			record := &corepb.SemaphoresGarbageCollectionRecord{
 				Id: uint64(i + 1),
 				Record: &corepb.SemaphoresGarbageCollectionRecord_NamespaceId{
@@ -448,7 +448,7 @@ func TestGCRecordsTable_List(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, records, 5)
 		// Verify they are in order by ID
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			require.Equal(t, uint64(i+1), records[i].Id)
 		}
 	})
@@ -464,7 +464,7 @@ func TestGCRecordsTable_List(t *testing.T) {
 
 		// Create 10 records
 		txn := badgerStore.Update()
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			record := &corepb.SemaphoresGarbageCollectionRecord{
 				Id: uint64(i + 1),
 				Record: &corepb.SemaphoresGarbageCollectionRecord_NamespaceId{
@@ -487,7 +487,7 @@ func TestGCRecordsTable_List(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, records, 5)
 		// Verify we get the first 5 records
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			require.Equal(t, uint64(i+1), records[i].Id)
 		}
 	})
@@ -603,7 +603,7 @@ func TestGCRecordsTable_List(t *testing.T) {
 
 		// Create 3 records
 		txn := badgerStore.Update()
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			record := &corepb.SemaphoresGarbageCollectionRecord{
 				Id: uint64(i + 1),
 				Record: &corepb.SemaphoresGarbageCollectionRecord_NamespaceId{

@@ -90,7 +90,7 @@ func TestGCRecordsTable_Create(t *testing.T) {
 		numRecords := 5
 		recordIds := make([]uint64, numRecords)
 
-		for i := 0; i < numRecords; i++ {
+		for i := range numRecords {
 			recordIds[i] = rand.Uint64()
 			gcRecord := &corepb.WaitGroupsGarbageCollectionRecord{
 				Id: recordIds[i],
@@ -251,7 +251,7 @@ func TestGCRecordsTable_List(t *testing.T) {
 		table := newGCRecordsTable(shardPrefix)
 
 		numRecords := 5
-		for i := 0; i < numRecords; i++ {
+		for range numRecords {
 			gcRecord := &corepb.WaitGroupsGarbageCollectionRecord{
 				Id: rand.Uint64(),
 				Record: &corepb.WaitGroupsGarbageCollectionRecord_WaitGroupId{
@@ -287,7 +287,7 @@ func TestGCRecordsTable_List(t *testing.T) {
 		table := newGCRecordsTable(shardPrefix)
 
 		numRecords := 10
-		for i := 0; i < numRecords; i++ {
+		for i := range numRecords {
 			gcRecord := &corepb.WaitGroupsGarbageCollectionRecord{
 				Id: uint64(i), // Use sequential IDs for predictable ordering
 				Record: &corepb.WaitGroupsGarbageCollectionRecord_WaitGroupId{

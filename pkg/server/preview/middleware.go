@@ -42,10 +42,10 @@ type AuthenticationMiddleware struct {
 
 func (m *AuthenticationMiddleware) Unary(
 	ctx context.Context,
-	req interface{},
+	req any,
 	info *grpc.UnaryServerInfo,
 	handler grpc.UnaryHandler,
-) (interface{}, error) {
+) (any, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		//log.Println("failed to load metadata")
@@ -89,7 +89,7 @@ func (m *AuthenticationMiddleware) Unary(
 	return handler(ctx, req)
 }
 
-func (m *AuthenticationMiddleware) verifySignature(req interface{}, key *apiKey, signature string, timestamp int64, method string) error {
+func (m *AuthenticationMiddleware) verifySignature(req any, key *apiKey, signature string, timestamp int64, method string) error {
 	requestProto, ok := req.(authn.VTProtoMessage)
 	if !ok {
 		return errors.New("request does not implement VTProtoMessage")

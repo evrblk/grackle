@@ -1874,7 +1874,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		// to verify the true state of the semaphores after garbage collection
 
 		// Semaphores 0-4 should have no holders (all expired)
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			response, err := semaphoresCore.GetSemaphore(&corepb.GetSemaphoreRequest{
 				SemaphoreId: semaphoreIds[i],
 				Now:         gcTime.UnixNano(),

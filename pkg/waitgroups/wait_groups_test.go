@@ -436,7 +436,7 @@ func TestWaitGroupsTable_List(t *testing.T) {
 
 		// Create multiple wait groups
 		numWaitGroups := 5
-		for i := 0; i < numWaitGroups; i++ {
+		for i := range numWaitGroups {
 			waitGroup := &corepb.WaitGroup{
 				Id: &corepb.WaitGroupId{
 					AccountId:   accountId,
@@ -482,7 +482,7 @@ func TestWaitGroupsTable_List(t *testing.T) {
 
 		// Create multiple wait groups
 		numWaitGroups := 10
-		for i := 0; i < numWaitGroups; i++ {
+		for i := range numWaitGroups {
 			waitGroup := &corepb.WaitGroup{
 				Id: &corepb.WaitGroupId{
 					AccountId:   accountId,
@@ -556,7 +556,7 @@ func TestWaitGroupsTable_List(t *testing.T) {
 		namespaceId2 := rand.Uint32()
 
 		// Create wait groups in namespace 1
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			waitGroup := &corepb.WaitGroup{
 				Id: &corepb.WaitGroupId{
 					AccountId:   accountId,
@@ -580,7 +580,7 @@ func TestWaitGroupsTable_List(t *testing.T) {
 		}
 
 		// Create wait groups in namespace 2
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			waitGroup := &corepb.WaitGroup{
 				Id: &corepb.WaitGroupId{
 					AccountId:   accountId,

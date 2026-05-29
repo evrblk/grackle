@@ -247,7 +247,7 @@ func (p *ResourcePool) GetAndRemoveAcquiredSemaphore(workerID int) *SemaphoreHan
 // CountAcquiredLocks returns total acquired locks across all workers
 func (p *ResourcePool) CountAcquiredLocks() int {
 	count := 0
-	p.acquiredLocks.Range(func(key, value interface{}) bool {
+	p.acquiredLocks.Range(func(key, value any) bool {
 		handles := value.([]LockHandle)
 		count += len(handles)
 		return true
@@ -258,7 +258,7 @@ func (p *ResourcePool) CountAcquiredLocks() int {
 // CountAcquiredSemaphores returns total acquired semaphores across all workers
 func (p *ResourcePool) CountAcquiredSemaphores() int {
 	count := 0
-	p.acquiredSemaphores.Range(func(key, value interface{}) bool {
+	p.acquiredSemaphores.Range(func(key, value any) bool {
 		handles := value.([]SemaphoreHandle)
 		count += len(handles)
 		return true

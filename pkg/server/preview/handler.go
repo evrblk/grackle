@@ -307,10 +307,7 @@ func (s *GrackleApiServerHandler) WaitForWaitGroup(ctx context.Context, request 
 		select {
 		case <-time.After(sleepDuration):
 			// Increase poll interval with exponential backoff
-			pollInterval = pollInterval * 2
-			if pollInterval > maxPollInterval {
-				pollInterval = maxPollInterval
-			}
+			pollInterval = min(pollInterval*2, maxPollInterval)
 		case <-ctx.Done():
 			return nil, status.Errorf(codes.Canceled, "request cancelled")
 		}
@@ -1217,10 +1214,7 @@ func (s *GrackleApiServerHandler) WaitAtBarrier(ctx context.Context, request *gr
 		select {
 		case <-time.After(sleepDuration):
 			// Increase poll interval with exponential backoff
-			pollInterval = pollInterval * 2
-			if pollInterval > maxPollInterval {
-				pollInterval = maxPollInterval
-			}
+			pollInterval = min(pollInterval*2, maxPollInterval)
 		case <-ctx.Done():
 			return nil, status.Errorf(codes.Canceled, "request cancelled")
 		}

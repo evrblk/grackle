@@ -58,7 +58,7 @@ func TestJobsTable_Create(t *testing.T) {
 
 		// Create multiple jobs
 		numJobs := 5
-		for i := 0; i < numJobs; i++ {
+		for i := range numJobs {
 			waitGroupJob := &corepb.WaitGroupJob{
 				Id: &corepb.WaitGroupJobId{
 					AccountId:   accountId,
@@ -80,7 +80,7 @@ func TestJobsTable_Create(t *testing.T) {
 		txn := badgerStore.View()
 		defer txn.Discard()
 
-		for i := 0; i < numJobs; i++ {
+		for i := range numJobs {
 			jobId := &corepb.WaitGroupJobId{
 				AccountId:   accountId,
 				NamespaceId: namespaceId,
@@ -291,7 +291,7 @@ func TestJobsTable_List(t *testing.T) {
 
 		// Create multiple jobs
 		numJobs := 5
-		for i := 0; i < numJobs; i++ {
+		for i := range numJobs {
 			waitGroupJob := &corepb.WaitGroupJob{
 				Id: &corepb.WaitGroupJobId{
 					AccountId:   accountId,
@@ -333,7 +333,7 @@ func TestJobsTable_List(t *testing.T) {
 
 		// Create multiple jobs
 		numJobs := 10
-		for i := 0; i < numJobs; i++ {
+		for i := range numJobs {
 			waitGroupJob := &corepb.WaitGroupJob{
 				Id: &corepb.WaitGroupJobId{
 					AccountId:   accountId,
@@ -403,7 +403,7 @@ func TestJobsTable_List(t *testing.T) {
 		waitGroupId2 := rand.Uint64()
 
 		// Create jobs for wait group 1
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			waitGroupJob := &corepb.WaitGroupJob{
 				Id: &corepb.WaitGroupJobId{
 					AccountId:   accountId,
@@ -422,7 +422,7 @@ func TestJobsTable_List(t *testing.T) {
 		}
 
 		// Create jobs for wait group 2
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			waitGroupJob := &corepb.WaitGroupJob{
 				Id: &corepb.WaitGroupJobId{
 					AccountId:   accountId,

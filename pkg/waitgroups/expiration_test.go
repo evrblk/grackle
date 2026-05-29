@@ -60,7 +60,7 @@ func TestExpirationRecordsTable_Add(t *testing.T) {
 		waitGroupIds := make([]*corepb.WaitGroupId, numRecords)
 		expiresAts := make([]int64, numRecords)
 
-		for i := 0; i < numRecords; i++ {
+		for i := range numRecords {
 			waitGroupIds[i] = &corepb.WaitGroupId{
 				AccountId:   rand.Uint64(),
 				NamespaceId: rand.Uint32(),
@@ -79,7 +79,7 @@ func TestExpirationRecordsTable_Add(t *testing.T) {
 		txn := badgerStore.View()
 		defer txn.Discard()
 
-		for i := 0; i < numRecords; i++ {
+		for i := range numRecords {
 			record, err := table.table.Get(txn, table.tablePK(expiresAts[i], waitGroupIds[i].AccountId, waitGroupIds[i].NamespaceId, waitGroupIds[i].WaitGroupId))
 			require.NoError(t, err)
 			require.NotNil(t, record)
@@ -381,7 +381,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		now := time.Now()
 
 		// Add records with different expiration times
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			expiresAt := now.Add(time.Duration(i) * time.Hour).UnixNano()
 			waitGroupId := &corepb.WaitGroupId{
 				AccountId:   uint64(i),
@@ -428,7 +428,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		now := time.Now()
 
 		// Add records
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			expiresAt := now.Add(time.Duration(i) * time.Hour).UnixNano()
 			waitGroupId := &corepb.WaitGroupId{
 				AccountId:   uint64(i),

@@ -313,7 +313,7 @@ func TestCore_ListBarriers(t *testing.T) {
 		}
 
 		// Create multiple barriers
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			barrierId := &corepb.BarrierId{
 				AccountId:   namespaceId.AccountId,
 				NamespaceId: namespaceId.NamespaceId,
@@ -361,7 +361,7 @@ func TestCore_ListBarriers(t *testing.T) {
 		}
 
 		// Create barriers in namespace 1
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			barrierId := &corepb.BarrierId{
 				AccountId:   namespaceId1.AccountId,
 				NamespaceId: namespaceId1.NamespaceId,
@@ -382,7 +382,7 @@ func TestCore_ListBarriers(t *testing.T) {
 		}
 
 		// Create barriers in namespace 2
-		for i := 0; i < 2; i++ {
+		for i := range 2 {
 			barrierId := &corepb.BarrierId{
 				AccountId:   namespaceId2.AccountId,
 				NamespaceId: namespaceId2.NamespaceId,
@@ -500,7 +500,7 @@ func TestCore_DeleteBarrier(t *testing.T) {
 		}
 
 		// Create two barriers
-		for i := 0; i < 2; i++ {
+		for i := range 2 {
 			barrierId := &corepb.BarrierId{
 				AccountId:   namespaceId.AccountId,
 				NamespaceId: namespaceId.NamespaceId,
@@ -667,7 +667,7 @@ func TestCore_UpdateBarrier(t *testing.T) {
 		require.NotNil(t, createResponse.Barrier)
 
 		// T+1m: Have 3 processes arrive at the barrier
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			_, err := barriersCore.ArriveAtBarrier(&corepb.ArriveAtBarrierRequest{
 				NamespaceId: namespaceId,
 				BarrierName: "test_barrier",
@@ -925,7 +925,7 @@ func TestCore_ListBarrierParticipants(t *testing.T) {
 		require.NotNil(t, createResponse.Barrier)
 
 		// Have multiple processes arrive
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			arriveResponse, err := barriersCore.ArriveAtBarrier(&corepb.ArriveAtBarrierRequest{
 				NamespaceId: namespaceId,
 				BarrierName: "test_barrier",

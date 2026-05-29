@@ -253,7 +253,7 @@ func TestListWaitGroups(t *testing.T) {
 		require.NoError(t, err)
 
 		// Create 25 wait groups to test pagination (3 pages with limit 10)
-		for i := 0; i < 25; i++ {
+		for i := range 25 {
 			_, err := server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
 				NamespaceName: "test-namespace",
 				WaitGroupName: fmt.Sprintf("waitgroup_%03d", i+1),
@@ -375,7 +375,7 @@ func TestListWaitGroupJobs(t *testing.T) {
 
 		// Complete all 25 jobs
 		processIds := make([]string, 25)
-		for i := 0; i < 25; i++ {
+		for i := range 25 {
 			processIds[i] = fmt.Sprintf("process-%d", i+1)
 		}
 		_, err = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{

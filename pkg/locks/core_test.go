@@ -2477,7 +2477,7 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 		// to verify the true state of the locks after garbage collection
 
 		// Locks 0-4 should be unlocked (all holders expired)
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			response, err := locksCore.GetLock(&corepb.GetLockRequest{
 				LockId: lockIds[i],
 				Now:    gcTime.UnixNano(),
@@ -2566,7 +2566,7 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 
 		// Create some locks in the namespace
 		lockIds := make([]*corepb.LockId, 10)
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			lockIds[i] = &corepb.LockId{
 				AccountId:   namespaceId.AccountId,
 				NamespaceId: namespaceId.NamespaceId,
@@ -2576,7 +2576,7 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 
 		// Create leases for acquiring locks
 		leases := make([]*corepb.Lease, 10)
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			leases[i] = createLease(t, locksCore, namespaceId.AccountId, namespaceId.NamespaceId, fmt.Sprintf("process-%d", i), now, 60*time.Minute)
 		}
 
@@ -2697,7 +2697,7 @@ func TestCore_RevokeLockLease(t *testing.T) {
 		// Acquire 1500 locks to test pagination
 		numLocks := 1500
 		lockIds := make([]*corepb.LockId, numLocks)
-		for i := 0; i < numLocks; i++ {
+		for i := range numLocks {
 			lockIds[i] = &corepb.LockId{
 				AccountId:   accountId,
 				NamespaceId: namespaceId,
@@ -2731,7 +2731,7 @@ func TestCore_RevokeLockLease(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify that all locks are released
-		for i := 0; i < numLocks; i++ {
+		for i := range numLocks {
 			response, err := locksCore.GetLock(&corepb.GetLockRequest{
 				LockId: lockIds[i],
 				Now:    now.UnixNano(),

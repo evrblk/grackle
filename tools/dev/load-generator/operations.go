@@ -244,7 +244,7 @@ func executeCompleteWaitGroupJobs(ctx context.Context, client grackle.GrackleApi
 	// Random number of process IDs (1 to batch size)
 	numProcesses := rng.Intn(config.WaitGroupJobBatchSize) + 1
 	processIDs := make([]string, numProcesses)
-	for i := 0; i < numProcesses; i++ {
+	for i := range numProcesses {
 		processIDs[i] = fmt.Sprintf("load-worker-%d-%d-%d", workerID, time.Now().UnixNano(), i)
 	}
 

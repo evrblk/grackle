@@ -457,7 +457,7 @@ func TestSemaphoresTable_List(t *testing.T) {
 
 		// Create multiple semaphores
 		numSemaphores := 10
-		for i := 0; i < numSemaphores; i++ {
+		for i := range numSemaphores {
 			semaphore := &corepb.Semaphore{
 				Id: &corepb.SemaphoreId{
 					AccountId:   accountId,

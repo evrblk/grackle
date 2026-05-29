@@ -180,7 +180,7 @@ func TestListLocks(t *testing.T) {
 		require.NoError(t, err)
 
 		// Create 25 locks to test pagination (3 pages with limit 10)
-		for i := 0; i < 25; i++ {
+		for i := range 25 {
 			_, err := server.AcquireLock(ctx, &gracklepb.AcquireLockRequest{
 				NamespaceName: "test-namespace",
 				LockName:      fmt.Sprintf("lock_%03d", i+1),
@@ -389,7 +389,7 @@ func TestListLockLeases(t *testing.T) {
 		require.NoError(t, err)
 
 		// Create multiple leases
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			_, err := server.CreateLockLease(ctx, &gracklepb.CreateLockLeaseRequest{
 				NamespaceName: "namespace1",
 				ProcessId:     fmt.Sprintf("process%d", i+1),
@@ -424,7 +424,7 @@ func TestListLockLeases(t *testing.T) {
 		require.NoError(t, err)
 
 		// Create 25 leases to test pagination
-		for i := 0; i < 25; i++ {
+		for i := range 25 {
 			_, err := server.CreateLockLease(ctx, &gracklepb.CreateLockLeaseRequest{
 				NamespaceName: "namespace1",
 				ProcessId:     fmt.Sprintf("process%03d", i+1),

@@ -465,7 +465,7 @@ func TestLocksTable_List(t *testing.T) {
 		namespaceId := rand.Uint32()
 
 		// Create multiple locks
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			lock := &corepb.Lock{
 				Id: &corepb.LockId{
 					AccountId:   accountId,
@@ -508,7 +508,7 @@ func TestLocksTable_List(t *testing.T) {
 		namespaceId := rand.Uint32()
 
 		// Create 10 locks
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			lock := &corepb.Lock{
 				Id: &corepb.LockId{
 					AccountId:   accountId,
@@ -595,7 +595,7 @@ func TestLocksTable_ListByLeaseId(t *testing.T) {
 		leaseId := rand.Uint64()
 
 		// Create 5 locks with the same lease
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			lock := &corepb.Lock{
 				Id: &corepb.LockId{
 					AccountId:   accountId,
@@ -640,7 +640,7 @@ func TestLocksTable_ListByLeaseId(t *testing.T) {
 		leaseId := rand.Uint64()
 
 		// Create 10 locks with the same lease
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			lock := &corepb.Lock{
 				Id: &corepb.LockId{
 					AccountId:   accountId,
@@ -739,7 +739,7 @@ func TestLocksTable_ListByLeaseId(t *testing.T) {
 
 		// Create 50 locks to test multi-page iteration
 		numLocks := 50
-		for i := 0; i < numLocks; i++ {
+		for i := range numLocks {
 			lock := &corepb.Lock{
 				Id: &corepb.LockId{
 					AccountId:   accountId,
@@ -805,7 +805,7 @@ func TestLocksTable_ListByLeaseId(t *testing.T) {
 		leaseId2 := rand.Uint64()
 
 		// Create 3 locks with lease1
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			lock := &corepb.Lock{
 				Id: &corepb.LockId{
 					AccountId:   accountId,
@@ -826,7 +826,7 @@ func TestLocksTable_ListByLeaseId(t *testing.T) {
 		}
 
 		// Create 2 locks with lease2
-		for i := 0; i < 2; i++ {
+		for i := range 2 {
 			lock := &corepb.Lock{
 				Id: &corepb.LockId{
 					AccountId:   accountId,

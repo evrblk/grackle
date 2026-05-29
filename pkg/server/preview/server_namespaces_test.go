@@ -127,7 +127,7 @@ func TestListNamespaces(t *testing.T) {
 
 		// Create 25 namespaces to test pagination (3 pages with limit 10)
 		namespaceNames := make([]string, 25)
-		for i := 0; i < 25; i++ {
+		for i := range 25 {
 			namespaceNames[i] = fmt.Sprintf("namespace_%03d", i+1)
 			_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
 				Name:        namespaceNames[i],
