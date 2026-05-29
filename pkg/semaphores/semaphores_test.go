@@ -683,9 +683,10 @@ func TestSemaphoresTable_GetTableKeyRanges(t *testing.T) {
 
 	keyRanges := table.GetTableKeyRanges()
 
-	require.Len(t, keyRanges, 2)
+	require.Len(t, keyRanges, 3)
 	require.NotNil(t, keyRanges[0])
 	require.NotNil(t, keyRanges[1])
+	require.NotNil(t, keyRanges[2])
 }
 
 func TestSemaphoresTable_NameIndexConsistency(t *testing.T) {

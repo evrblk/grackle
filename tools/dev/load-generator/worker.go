@@ -46,6 +46,9 @@ func NewWorker(id int, client grackle.GrackleApi, config *Config, pool *Resource
 
 // Run executes the worker loop
 func (w *Worker) Run(ctx context.Context) {
+	// Start lease refresh background task
+	go w.runLeaseRefresh(ctx)
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -61,6 +64,41 @@ func (w *Worker) Run(ctx context.Context) {
 			// Select and execute operation
 			opType := w.selectOperation()
 			w.executeOperation(ctx, opType)
+		}
+	}
+}
+
+// runLeaseRefresh periodically refreshes all leases for this worker
+func (w *Worker) runLeaseRefresh(ctx context.Context) {
+	ticker := time.NewTicker(w.config.LeaseRefreshInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			ttlSeconds := uint64(w.config.LeaseTTL.Seconds())
+
+			// Refresh all lock leases
+			lockLeases := w.resourcePool.GetAllLeases(w.id, "lock")
+			for _, lease := range lockLeases {
+				_, _ = w.client.RefreshLockLease(ctx, &grackle.RefreshLockLeaseRequest{
+					NamespaceName: lease.Namespace,
+					LeaseId:       lease.LeaseID,
+					TtlSeconds:    ttlSeconds,
+				})
+			}
+
+			// Refresh all semaphore leases
+			semLeases := w.resourcePool.GetAllLeases(w.id, "semaphore")
+			for _, lease := range semLeases {
+				_, _ = w.client.RefreshSemaphoreLease(ctx, &grackle.RefreshSemaphoreLeaseRequest{
+					NamespaceName: lease.Namespace,
+					LeaseId:       lease.LeaseID,
+					TtlSeconds:    ttlSeconds,
+				})
+			}
 		}
 	}
 }
@@ -131,18 +169,40 @@ func (w *Worker) executeOperation(ctx context.Context, opType OperationType) {
 		err = executeReleaseLock(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
 	case OpGetLock:
 		err = executeGetLock(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
+	case OpListLocks:
+		err = executeListLocks(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
+	case OpCreateLockLease:
+		err = executeCreateLockLease(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
+	case OpRefreshLockLease:
+		err = executeRefreshLockLease(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
+	case OpRevokeLockLease:
+		err = executeRevokeLockLease(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
+	case OpListLockLeases:
+		err = executeListLockLeases(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
 	case OpAcquireSemaphore:
 		err = executeAcquireSemaphore(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
 	case OpReleaseSemaphore:
 		err = executeReleaseSemaphore(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
 	case OpGetSemaphore:
 		err = executeGetSemaphore(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
+	case OpListSemaphores:
+		err = executeListSemaphores(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
+	case OpCreateSemaphoreLease:
+		err = executeCreateSemaphoreLease(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
+	case OpRefreshSemaphoreLease:
+		err = executeRefreshSemaphoreLease(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
+	case OpRevokeSemaphoreLease:
+		err = executeRevokeSemaphoreLease(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
+	case OpListSemaphoreLeases:
+		err = executeListSemaphoreLeases(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
 	case OpAddWaitGroupJobs:
 		err = executeAddWaitGroupJobs(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
 	case OpCompleteWaitGroupJobs:
 		err = executeCompleteWaitGroupJobs(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
 	case OpGetWaitGroup:
 		err = executeGetWaitGroup(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
+	case OpListWaitGroups:
+		err = executeListWaitGroups(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
 	}
 
 	duration := time.Since(startTime).Seconds()

@@ -27,10 +27,20 @@ import (
 // 1. shard key (by account id and namespace id)
 // 2. account id
 // 3. namespace id
-// 4. semaphore id
+// 4. semaphore name
+//
+// Lease Id Index Primary Key:
+// 1. shard key (by account id and namespace id)
+// 2. account id
+// 3. namespace id
+// 4. lease id
+//
+// Lease Id Index Sort Key:
+// 1. semaphore id
 type semaphoresTable struct {
-	table      *monsterax.BinaryTable[*corepb.Semaphore, corepb.Semaphore]
-	namesIndex *monsterax.Uint64Table
+	table        *monsterax.BinaryTable[*corepb.Semaphore, corepb.Semaphore]
+	namesIndex   *monsterax.Uint64Table
+	leaseIdIndex *monsterax.OneToManySortedIndex
 }
 
 func newSemaphoresTable(shardLowerBound []byte, shardUpperBound []byte) *semaphoresTable {
@@ -45,6 +55,11 @@ func newSemaphoresTable(shardLowerBound []byte, shardUpperBound []byte) *semapho
 			shardLowerBound,
 			shardUpperBound,
 		),
+		leaseIdIndex: monsterax.NewOneToManySortedIndex(
+			tables.Grackle["Grackle.SemaphoresCore.Semaphores.LeaseIdIndex"].Bytes(),
+			shardLowerBound,
+			shardUpperBound,
+		),
 	}
 }
 
@@ -52,6 +67,7 @@ func (t *semaphoresTable) GetTableKeyRanges() []monsterax.KeyRange {
 	return []monsterax.KeyRange{
 		t.table.GetTableKeyRange(),
 		t.namesIndex.GetTableKeyRange(),
+		t.leaseIdIndex.GetTableKeyRange(),
 	}
 }
 
@@ -156,5 +172,58 @@ func (t *semaphoresTable) namesIndexPK(accountId uint64, namespaceId uint32, sem
 		accountId,
 		namespaceId,
 		semaphoreName,
+	)
+}
+
+func (t *semaphoresTable) leaseIdIndexPK(accountId uint64, namespaceId uint32, leaseId uint64) []byte {
+	return utils.ConcatBytes(
+		sharding.ByAccountAndNamespace(accountId, namespaceId),
+		accountId,
+		namespaceId,
+		leaseId,
+	)
+}
+
+func (t *semaphoresTable) ListByLeaseId(txn *store.Txn, leaseId *corepb.LeaseId, paginationToken *corepb.PaginationToken, limit int) (*listSemaphoresResult, error) {
+	result, err := t.leaseIdIndex.ListPaginated(txn,
+		t.leaseIdIndexPK(leaseId.AccountId, leaseId.NamespaceId, leaseId.LeaseId), pagination.CoreToMonstera(paginationToken), limit)
+	if err != nil {
+		return nil, err
+	}
+
+	semaphores := make([]*corepb.Semaphore, len(result.Items))
+	for i, semaphoreIdBytes := range result.Items {
+		semaphoreId := utils.BytesToUint64(semaphoreIdBytes)
+		semaphore, err := t.Get(txn, &corepb.SemaphoreId{
+			AccountId:   leaseId.AccountId,
+			NamespaceId: leaseId.NamespaceId,
+			SemaphoreId: semaphoreId,
+		})
+		if err != nil {
+			return nil, err
+		}
+		semaphores[i] = semaphore
+	}
+
+	return &listSemaphoresResult{
+		semaphores:              semaphores,
+		nextPaginationToken:     pagination.MonsteraToCore(result.NextPaginationToken),
+		previousPaginationToken: pagination.MonsteraToCore(result.PreviousPaginationToken),
+	}, nil
+}
+
+// AddLeaseToIndex adds a lease ID to the semaphore's lease index
+func (t *semaphoresTable) AddLeaseToIndex(txn *store.Txn, semaphoreId *corepb.SemaphoreId, leaseId uint64) error {
+	return t.leaseIdIndex.Add(txn,
+		t.leaseIdIndexPK(semaphoreId.AccountId, semaphoreId.NamespaceId, leaseId),
+		utils.Uint64ToBytes(semaphoreId.SemaphoreId),
+	)
+}
+
+// RemoveLeaseFromIndex removes a lease ID from the semaphore's lease index
+func (t *semaphoresTable) RemoveLeaseFromIndex(txn *store.Txn, semaphoreId *corepb.SemaphoreId, leaseId uint64) error {
+	return t.leaseIdIndex.Delete(txn,
+		t.leaseIdIndexPK(semaphoreId.AccountId, semaphoreId.NamespaceId, leaseId),
+		utils.Uint64ToBytes(semaphoreId.SemaphoreId),
 	)
 }

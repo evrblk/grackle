@@ -20,6 +20,7 @@ import (
 	"github.com/evrblk/monstera/transport/grpc"
 	"github.com/evrblk/monstera/transport/local"
 	"github.com/evrblk/monstera/utils"
+	monsterax "github.com/evrblk/monstera/x"
 	"github.com/evrblk/yellowstone-common/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	grpc_server "google.golang.org/grpc"
@@ -32,6 +33,7 @@ import (
 	"github.com/evrblk/grackle/pkg/semaphores"
 	grackle_preview "github.com/evrblk/grackle/pkg/server/preview"
 	"github.com/evrblk/grackle/pkg/sharding"
+	"github.com/evrblk/grackle/pkg/tables"
 	"github.com/evrblk/grackle/pkg/waitgroups"
 )
 
@@ -236,6 +238,10 @@ func main() {
 	metricsSrv := metrics.NewMetricsServer(*prometheusPort)
 	metricsSrv.Start()
 	defer metricsSrv.Stop()
+
+	// Register table prefixes
+	registry := monsterax.NewBaseTableRegistry(1)
+	tables.RegisterGracklePrefixes(registry)
 
 	// Validate and configure transport
 	useGrpc := true

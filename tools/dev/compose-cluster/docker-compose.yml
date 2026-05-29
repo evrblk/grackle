@@ -41,6 +41,13 @@ services:
     ports:
       - 9000:9000
 
+  worker:
+    build:
+      context: .
+      dockerfile: dev.dockerfile
+    image: grackle
+    command: ["sh", "-c", "exec ./grackle run worker --monstera-config=./cluster_config.json"]
+
   prometheus:
     image: prom/prometheus:latest
     command:

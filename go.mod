@@ -3,7 +3,7 @@ module github.com/evrblk/grackle
 go 1.26.0
 
 require (
-	github.com/evrblk/evrblk-go v0.0.0-20260522182145-fd80b9737c7c
+	github.com/evrblk/evrblk-go v0.0.0-20260529161512-a5e94a1108ac
 	github.com/evrblk/monstera v0.0.0-20260529160934-968a07b3db33
 	github.com/evrblk/yellowstone-common v0.0.0-20260317193758-e5d4f0d6d632
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10
@@ -64,6 +64,6 @@ require (
 
 tool github.com/evrblk/monstera/cmd/monstera
 
-replace github.com/evrblk/evrblk-go v0.0.0-20260522182145-fd80b9737c7c => ../evrblk-go
+replace github.com/evrblk/evrblk-go v0.0.0-20260529161512-a5e94a1108ac => ../evrblk-go
 
 replace github.com/evrblk/monstera v0.0.0-20260529160934-968a07b3db33 => ../monstera

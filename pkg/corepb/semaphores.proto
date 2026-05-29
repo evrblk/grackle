@@ -123,6 +123,7 @@ message ListSemaphoreLeasesRequest {
   NamespaceId namespace_id = 1;
   PaginationToken pagination_token = 2;
   int32 limit = 3;
+  int64 now = 4;
 }
 
 message ListSemaphoreLeasesResponse {
@@ -136,6 +137,7 @@ message ListSemaphoreLeasesByProcessIdRequest {
   string process_id = 2;
   PaginationToken pagination_token = 3;
   int32 limit = 4;
+  int64 now = 5;
 }
 
 message ListSemaphoreLeasesByProcessIdResponse {

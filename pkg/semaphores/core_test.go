@@ -2,6 +2,7 @@ package semaphores
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"math/rand/v2"
@@ -2056,6 +2057,197 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 	})
 }
 
+func TestCore_RevokeSemaphoreLease(t *testing.T) {
+	t.Run("revokes all semaphores with pagination", func(t *testing.T) {
+		semaphoresCore := newSemaphoresCore(t)
+
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		// Create a lease
+		lease := createLease(t, semaphoresCore, accountId, namespaceId, "process-1", now, 60*time.Minute)
+
+		// Acquire 1500 semaphores to test pagination
+		numSemaphores := 1500
+		semaphoreIds := make([]*corepb.SemaphoreId, numSemaphores)
+		for i := range numSemaphores {
+			semaphoreIds[i] = &corepb.SemaphoreId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId,
+				SemaphoreId: rand.Uint64(),
+			}
+
+			// Create the semaphore
+			_, err := semaphoresCore.CreateSemaphore(&corepb.CreateSemaphoreRequest{
+				SemaphoreId:                       semaphoreIds[i],
+				Name:                              fmt.Sprintf("test_semaphore_%d", i),
+				Description:                       "test semaphore",
+				Permits:                           10,
+				Now:                               now.UnixNano(),
+				MaxNumberOfSemaphoresPerNamespace: 10000,
+			})
+			require.NoError(t, err)
+
+			// Acquire the semaphore
+			response, err := semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
+				NamespaceId: &corepb.NamespaceId{
+					AccountId:   accountId,
+					NamespaceId: namespaceId,
+				},
+				SemaphoreName: fmt.Sprintf("test_semaphore_%d", i),
+				LeaseId:       lease.Id.LeaseId,
+				Weight:        1,
+				Now:           now.UnixNano(),
+			})
+			require.NoError(t, err)
+			require.True(t, response.Success)
+			require.EqualValues(t, 1, response.Semaphore.ActiveHoldersCount)
+		}
+
+		// Verify that counters show the correct number of semaphores and leases
+		counters, err := semaphoresCore.counters.Get(semaphoresCore.badgerStore.View(), accountId, namespaceId)
+		require.NoError(t, err)
+		require.EqualValues(t, numSemaphores, counters.NumberOfSemaphores)
+		require.EqualValues(t, 1, counters.NumberOfLeases)
+
+		// Revoke the lease
+		_, err = semaphoresCore.RevokeSemaphoreLease(&corepb.RevokeSemaphoreLeaseRequest{
+			LeaseId: lease.Id,
+			Now:     now.UnixNano(),
+		})
+		require.NoError(t, err)
+
+		// Verify that all semaphores are released
+		for i := range numSemaphores {
+			response, err := semaphoresCore.GetSemaphoreByName(&corepb.GetSemaphoreByNameRequest{
+				NamespaceId: &corepb.NamespaceId{
+					AccountId:   accountId,
+					NamespaceId: namespaceId,
+				},
+				SemaphoreName: fmt.Sprintf("test_semaphore_%d", i),
+				Now:           now.UnixNano(),
+			})
+			require.NoError(t, err)
+			require.EqualValues(t, 0, response.Semaphore.ActiveHoldersCount)
+			require.EqualValues(t, 0, response.Semaphore.ActiveHolds)
+		}
+
+		// Verify that counters are updated correctly
+		counters, err = semaphoresCore.counters.Get(semaphoresCore.badgerStore.View(), accountId, namespaceId)
+		require.NoError(t, err)
+		require.EqualValues(t, numSemaphores, counters.NumberOfSemaphores) // Semaphores still exist
+		require.EqualValues(t, 0, counters.NumberOfLeases)
+
+		// Verify the lease is deleted
+		_, err = semaphoresCore.GetSemaphoreLease(&corepb.GetSemaphoreLeaseRequest{
+			LeaseId: lease.Id,
+		})
+		require.Error(t, err)
+	})
+}
+
+func TestCore_RevokeSemaphoreLease_ReleasesMultipleHolders(t *testing.T) {
+	semaphoresCore := newSemaphoresCore(t)
+
+	now := time.Now()
+	accountId := rand.Uint64()
+	namespaceId := rand.Uint32()
+
+	// Create two leases
+	lease1 := createLease(t, semaphoresCore, accountId, namespaceId, "process-1", now, 60*time.Minute)
+	lease2 := createLease(t, semaphoresCore, accountId, namespaceId, "process-2", now, 60*time.Minute)
+
+	semaphoreId := &corepb.SemaphoreId{
+		AccountId:   accountId,
+		NamespaceId: namespaceId,
+		SemaphoreId: rand.Uint64(),
+	}
+
+	// Create the semaphore with 10 permits
+	_, err := semaphoresCore.CreateSemaphore(&corepb.CreateSemaphoreRequest{
+		SemaphoreId:                       semaphoreId,
+		Name:                              "shared_semaphore",
+		Description:                       "test semaphore",
+		Permits:                           10,
+		Now:                               now.UnixNano(),
+		MaxNumberOfSemaphoresPerNamespace: 10000,
+	})
+	require.NoError(t, err)
+
+	// Acquire semaphore with lease1 (5 permits)
+	response1, err := semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
+		NamespaceId: &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+		},
+		SemaphoreName: "shared_semaphore",
+		LeaseId:       lease1.Id.LeaseId,
+		Weight:        5,
+		Now:           now.UnixNano(),
+	})
+	require.NoError(t, err)
+	require.True(t, response1.Success)
+	require.EqualValues(t, 1, response1.Semaphore.ActiveHoldersCount)
+	require.EqualValues(t, 5, response1.Semaphore.ActiveHolds)
+
+	// Acquire semaphore with lease2 (3 permits)
+	response2, err := semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
+		NamespaceId: &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+		},
+		SemaphoreName: "shared_semaphore",
+		LeaseId:       lease2.Id.LeaseId,
+		Weight:        3,
+		Now:           now.UnixNano(),
+	})
+	require.NoError(t, err)
+	require.True(t, response2.Success)
+	require.EqualValues(t, 2, response2.Semaphore.ActiveHoldersCount)
+	require.EqualValues(t, 8, response2.Semaphore.ActiveHolds)
+
+	// Revoke lease1
+	_, err = semaphoresCore.RevokeSemaphoreLease(&corepb.RevokeSemaphoreLeaseRequest{
+		LeaseId: lease1.Id,
+		Now:     now.UnixNano(),
+	})
+	require.NoError(t, err)
+
+	// Verify that the semaphore is still held by lease2
+	response3, err := semaphoresCore.GetSemaphoreByName(&corepb.GetSemaphoreByNameRequest{
+		NamespaceId: &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+		},
+		SemaphoreName: "shared_semaphore",
+		Now:           now.UnixNano(),
+	})
+	require.NoError(t, err)
+	require.EqualValues(t, 1, response3.Semaphore.ActiveHoldersCount)
+	require.EqualValues(t, 3, response3.Semaphore.ActiveHolds)
+
+	// Revoke lease2
+	_, err = semaphoresCore.RevokeSemaphoreLease(&corepb.RevokeSemaphoreLeaseRequest{
+		LeaseId: lease2.Id,
+		Now:     now.UnixNano(),
+	})
+	require.NoError(t, err)
+
+	// Verify that the semaphore is now released
+	response4, err := semaphoresCore.GetSemaphoreByName(&corepb.GetSemaphoreByNameRequest{
+		NamespaceId: &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+		},
+		SemaphoreName: "shared_semaphore",
+		Now:           now.UnixNano(),
+	})
+	require.NoError(t, err)
+	require.EqualValues(t, 0, response4.Semaphore.ActiveHoldersCount)
+	require.EqualValues(t, 0, response4.Semaphore.ActiveHolds)
+}
+
 func newSemaphoresCore(t *testing.T) *Core {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
@@ -2071,10 +2263,493 @@ func createLease(t *testing.T, core *Core, accountId uint64, namespaceId uint32,
 			NamespaceId: namespaceId,
 			LeaseId:     leaseId,
 		},
-		ProcessId:  processId,
-		TtlSeconds: uint64(ttl.Seconds()),
-		Now:        now.UnixNano(),
+		ProcessId:                  processId,
+		TtlSeconds:                 uint64(ttl.Seconds()),
+		Now:                        now.UnixNano(),
+		MaxNumberOfSemaphoreLeases: 100,
 	})
 	require.NoError(t, err)
 	return resp.Lease
+}
+
+func TestCore_RefreshSemaphoreLease_ExpiredLease(t *testing.T) {
+	semaphoresCore := newSemaphoresCore(t)
+
+	now := time.Now()
+	accountId := rand.Uint64()
+	namespaceId := rand.Uint32()
+
+	// Create a lease with 1 minute TTL
+	lease := createLease(t, semaphoresCore, accountId, namespaceId, "process-1", now, 1*time.Minute)
+
+	// Create and acquire multiple semaphores
+	numSemaphores := 10
+	for i := range numSemaphores {
+		semaphoreId := &corepb.SemaphoreId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			SemaphoreId: rand.Uint64(),
+		}
+
+		// Create the semaphore
+		_, err := semaphoresCore.CreateSemaphore(&corepb.CreateSemaphoreRequest{
+			SemaphoreId:                        semaphoreId,
+			Name:                               fmt.Sprintf("test_semaphore_%d", i),
+			Description:                        "test semaphore",
+			Permits:                            10,
+			Now:                                now.UnixNano(),
+			MaxNumberOfSemaphoresPerNamespace:  10000,
+		})
+		require.NoError(t, err)
+
+		// Acquire the semaphore
+		response, err := semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
+			NamespaceId: &corepb.NamespaceId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId,
+			},
+			SemaphoreName: fmt.Sprintf("test_semaphore_%d", i),
+			LeaseId:       lease.Id.LeaseId,
+			Weight:        2,
+			Now:           now.UnixNano(),
+		})
+		require.NoError(t, err)
+		require.True(t, response.Success)
+	}
+
+	// Verify counters before refresh
+	counters, err := semaphoresCore.counters.Get(semaphoresCore.badgerStore.View(), accountId, namespaceId)
+	require.NoError(t, err)
+	require.EqualValues(t, numSemaphores, counters.NumberOfSemaphores)
+	require.EqualValues(t, 1, counters.NumberOfLeases)
+
+	// Try to refresh the lease after it has expired (2 minutes later)
+	futureTime := now.Add(2 * time.Minute)
+	_, err = semaphoresCore.RefreshSemaphoreLease(&corepb.RefreshSemaphoreLeaseRequest{
+		LeaseId:    lease.Id,
+		TtlSeconds: 60,
+		Now:        futureTime.UnixNano(),
+	})
+	require.Error(t, err)
+
+	// Verify the error is "not found"
+	var merr *monsterax.Error
+	require.True(t, errors.As(err, &merr))
+	require.Equal(t, monsterax.NotFound, merr.Code)
+
+	// Verify that all semaphores are released
+	for i := range numSemaphores {
+		response, err := semaphoresCore.GetSemaphoreByName(&corepb.GetSemaphoreByNameRequest{
+			NamespaceId: &corepb.NamespaceId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId,
+			},
+			SemaphoreName: fmt.Sprintf("test_semaphore_%d", i),
+			Now:           futureTime.UnixNano(),
+		})
+		require.NoError(t, err)
+		require.EqualValues(t, 0, response.Semaphore.ActiveHoldersCount)
+		require.EqualValues(t, 0, response.Semaphore.ActiveHolds)
+	}
+
+	// Verify that counters are updated correctly (semaphores still exist, but lease is gone)
+	counters, err = semaphoresCore.counters.Get(semaphoresCore.badgerStore.View(), accountId, namespaceId)
+	require.NoError(t, err)
+	require.EqualValues(t, numSemaphores, counters.NumberOfSemaphores)
+	require.EqualValues(t, 0, counters.NumberOfLeases)
+
+	// Verify the lease is deleted
+	_, err = semaphoresCore.GetSemaphoreLease(&corepb.GetSemaphoreLeaseRequest{
+		LeaseId: lease.Id,
+	})
+	require.Error(t, err)
+}
+
+func TestCore_RefreshSemaphoreLease_ValidLease(t *testing.T) {
+	semaphoresCore := newSemaphoresCore(t)
+
+	now := time.Now()
+	accountId := rand.Uint64()
+	namespaceId := rand.Uint32()
+
+	// Create a lease with 1 minute TTL
+	lease := createLease(t, semaphoresCore, accountId, namespaceId, "process-1", now, 1*time.Minute)
+	originalExpiresAt := lease.ExpiresAt
+
+	// Refresh the lease before it expires (30 seconds later)
+	futureTime := now.Add(30 * time.Second)
+	response, err := semaphoresCore.RefreshSemaphoreLease(&corepb.RefreshSemaphoreLeaseRequest{
+		LeaseId:    lease.Id,
+		TtlSeconds: 120, // 2 minutes
+		Now:        futureTime.UnixNano(),
+	})
+	require.NoError(t, err)
+	require.NotNil(t, response.Lease)
+
+	// Verify the lease expiration was updated
+	require.Greater(t, response.Lease.ExpiresAt, originalExpiresAt)
+	expectedExpiresAt := futureTime.UnixNano() + int64(120*time.Second)
+	require.Equal(t, expectedExpiresAt, response.Lease.ExpiresAt)
+
+	// Verify the lease still exists and can be retrieved
+	getResponse, err := semaphoresCore.GetSemaphoreLease(&corepb.GetSemaphoreLeaseRequest{
+		LeaseId: lease.Id,
+	})
+	require.NoError(t, err)
+	require.Equal(t, response.Lease.ExpiresAt, getResponse.Lease.ExpiresAt)
+}
+
+func TestCore_ListSemaphoreLeases(t *testing.T) {
+	t.Run("lists multiple leases", func(t *testing.T) {
+		semaphoresCore := newSemaphoresCore(t)
+
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		// Create multiple leases
+		lease1 := createLease(t, semaphoresCore, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease2 := createLease(t, semaphoresCore, accountId, namespaceId, "process-2", now, 60*time.Minute)
+		lease3 := createLease(t, semaphoresCore, accountId, namespaceId, "process-3", now, 60*time.Minute)
+
+		// List leases
+		response, err := semaphoresCore.ListSemaphoreLeases(&corepb.ListSemaphoreLeasesRequest{
+			NamespaceId: &corepb.NamespaceId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId,
+			},
+			Now: now.UnixNano(),
+		})
+		require.NoError(t, err)
+		require.Len(t, response.Leases, 3)
+
+		// Verify lease IDs
+		leaseIds := make(map[uint64]bool)
+		for _, lease := range response.Leases {
+			leaseIds[lease.Id.LeaseId] = true
+		}
+		require.True(t, leaseIds[lease1.Id.LeaseId])
+		require.True(t, leaseIds[lease2.Id.LeaseId])
+		require.True(t, leaseIds[lease3.Id.LeaseId])
+	})
+
+	t.Run("filters out expired leases", func(t *testing.T) {
+		semaphoresCore := newSemaphoresCore(t)
+
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		// Create leases with different TTLs
+		lease1 := createLease(t, semaphoresCore, accountId, namespaceId, "process-1", now, 1*time.Minute)
+		lease2 := createLease(t, semaphoresCore, accountId, namespaceId, "process-2", now, 5*time.Minute)
+		lease3 := createLease(t, semaphoresCore, accountId, namespaceId, "process-3", now, 10*time.Minute)
+
+		// List leases 2 minutes later (lease1 expired, lease2 and lease3 still valid)
+		futureTime := now.Add(2 * time.Minute)
+		response, err := semaphoresCore.ListSemaphoreLeases(&corepb.ListSemaphoreLeasesRequest{
+			NamespaceId: &corepb.NamespaceId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId,
+			},
+			Now: futureTime.UnixNano(),
+		})
+		require.NoError(t, err)
+		require.Len(t, response.Leases, 2)
+
+		// Verify only non-expired leases are returned
+		leaseIds := make(map[uint64]bool)
+		for _, lease := range response.Leases {
+			leaseIds[lease.Id.LeaseId] = true
+		}
+		require.False(t, leaseIds[lease1.Id.LeaseId])
+		require.True(t, leaseIds[lease2.Id.LeaseId])
+		require.True(t, leaseIds[lease3.Id.LeaseId])
+	})
+
+	t.Run("returns empty list for namespace with no leases", func(t *testing.T) {
+		semaphoresCore := newSemaphoresCore(t)
+
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		response, err := semaphoresCore.ListSemaphoreLeases(&corepb.ListSemaphoreLeasesRequest{
+			NamespaceId: &corepb.NamespaceId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId,
+			},
+			Now: now.UnixNano(),
+		})
+		require.NoError(t, err)
+		require.Len(t, response.Leases, 0)
+	})
+}
+
+func TestCore_ListSemaphoreLeasesByProcessId(t *testing.T) {
+	t.Run("lists leases for specific process", func(t *testing.T) {
+		semaphoresCore := newSemaphoresCore(t)
+
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		// Create leases for different processes
+		lease1 := createLease(t, semaphoresCore, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease2 := createLease(t, semaphoresCore, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease3 := createLease(t, semaphoresCore, accountId, namespaceId, "process-2", now, 60*time.Minute)
+
+		// List leases for process-1
+		response, err := semaphoresCore.ListSemaphoreLeasesByProcessId(&corepb.ListSemaphoreLeasesByProcessIdRequest{
+			NamespaceId: &corepb.NamespaceId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId,
+			},
+			ProcessId: "process-1",
+			Now:       now.UnixNano(),
+		})
+		require.NoError(t, err)
+		require.Len(t, response.Leases, 2)
+
+		// Verify lease IDs
+		leaseIds := make(map[uint64]bool)
+		for _, lease := range response.Leases {
+			leaseIds[lease.Id.LeaseId] = true
+			require.Equal(t, "process-1", lease.ProcessId)
+		}
+		require.True(t, leaseIds[lease1.Id.LeaseId])
+		require.True(t, leaseIds[lease2.Id.LeaseId])
+		require.False(t, leaseIds[lease3.Id.LeaseId])
+	})
+
+	t.Run("filters out expired leases", func(t *testing.T) {
+		semaphoresCore := newSemaphoresCore(t)
+
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		// Create leases for the same process with different TTLs
+		_ = createLease(t, semaphoresCore, accountId, namespaceId, "process-1", now, 1*time.Minute) // Will expire
+		lease2 := createLease(t, semaphoresCore, accountId, namespaceId, "process-1", now, 5*time.Minute)
+
+		// List leases 2 minutes later (lease1 expired, lease2 still valid)
+		futureTime := now.Add(2 * time.Minute)
+		response, err := semaphoresCore.ListSemaphoreLeasesByProcessId(&corepb.ListSemaphoreLeasesByProcessIdRequest{
+			NamespaceId: &corepb.NamespaceId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId,
+			},
+			ProcessId: "process-1",
+			Now:       futureTime.UnixNano(),
+		})
+		require.NoError(t, err)
+		require.Len(t, response.Leases, 1)
+		require.Equal(t, lease2.Id.LeaseId, response.Leases[0].Id.LeaseId)
+	})
+
+	t.Run("returns empty list for process with no leases", func(t *testing.T) {
+		semaphoresCore := newSemaphoresCore(t)
+
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		// Create lease for a different process
+		createLease(t, semaphoresCore, accountId, namespaceId, "process-1", now, 60*time.Minute)
+
+		response, err := semaphoresCore.ListSemaphoreLeasesByProcessId(&corepb.ListSemaphoreLeasesByProcessIdRequest{
+			NamespaceId: &corepb.NamespaceId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId,
+			},
+			ProcessId: "process-2",
+			Now:       now.UnixNano(),
+		})
+		require.NoError(t, err)
+		require.Len(t, response.Leases, 0)
+	})
+}
+
+func TestCore_ListSemaphoresByLeaseId(t *testing.T) {
+	t.Run("lists semaphores held by lease", func(t *testing.T) {
+		semaphoresCore := newSemaphoresCore(t)
+
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		// Create leases
+		lease1 := createLease(t, semaphoresCore, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease2 := createLease(t, semaphoresCore, accountId, namespaceId, "process-2", now, 60*time.Minute)
+
+		// Create semaphores
+		var semaphoreIds []*corepb.SemaphoreId
+		for i := 0; i < 5; i++ {
+			semaphoreId := &corepb.SemaphoreId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId,
+				SemaphoreId: rand.Uint64(),
+			}
+			semaphoreIds = append(semaphoreIds, semaphoreId)
+
+			_, err := semaphoresCore.CreateSemaphore(&corepb.CreateSemaphoreRequest{
+				SemaphoreId:                        semaphoreId,
+				Name:                               fmt.Sprintf("test_semaphore_%d", i),
+				Description:                        "test semaphore",
+				Permits:                            10,
+				Now:                                now.UnixNano(),
+				MaxNumberOfSemaphoresPerNamespace:  10000,
+			})
+			require.NoError(t, err)
+		}
+
+		// Acquire first 3 semaphores with lease1
+		for i := 0; i < 3; i++ {
+			response, err := semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
+				NamespaceId: &corepb.NamespaceId{
+					AccountId:   accountId,
+					NamespaceId: namespaceId,
+				},
+				SemaphoreName: fmt.Sprintf("test_semaphore_%d", i),
+				LeaseId:       lease1.Id.LeaseId,
+				Weight:        1,
+				Now:           now.UnixNano(),
+			})
+			require.NoError(t, err)
+			require.True(t, response.Success)
+		}
+
+		// Acquire last 2 semaphores with lease2
+		for i := 3; i < 5; i++ {
+			response, err := semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
+				NamespaceId: &corepb.NamespaceId{
+					AccountId:   accountId,
+					NamespaceId: namespaceId,
+				},
+				SemaphoreName: fmt.Sprintf("test_semaphore_%d", i),
+				LeaseId:       lease2.Id.LeaseId,
+				Weight:        1,
+				Now:           now.UnixNano(),
+			})
+			require.NoError(t, err)
+			require.True(t, response.Success)
+		}
+
+		// List semaphores for lease1
+		response, err := semaphoresCore.ListSemaphoresByLeaseId(&corepb.ListSemaphoresByLeaseIdRequest{
+			LeaseId: lease1.Id,
+		})
+		require.NoError(t, err)
+		require.Len(t, response.Semaphores, 3)
+
+		// Verify semaphore IDs
+		semIds := make(map[uint64]bool)
+		for _, sem := range response.Semaphores {
+			semIds[sem.Id.SemaphoreId] = true
+		}
+		require.True(t, semIds[semaphoreIds[0].SemaphoreId])
+		require.True(t, semIds[semaphoreIds[1].SemaphoreId])
+		require.True(t, semIds[semaphoreIds[2].SemaphoreId])
+		require.False(t, semIds[semaphoreIds[3].SemaphoreId])
+		require.False(t, semIds[semaphoreIds[4].SemaphoreId])
+	})
+
+	t.Run("returns empty list for lease with no semaphores", func(t *testing.T) {
+		semaphoresCore := newSemaphoresCore(t)
+
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		// Create lease without acquiring any semaphores
+		lease := createLease(t, semaphoresCore, accountId, namespaceId, "process-1", now, 60*time.Minute)
+
+		response, err := semaphoresCore.ListSemaphoresByLeaseId(&corepb.ListSemaphoresByLeaseIdRequest{
+			LeaseId: lease.Id,
+		})
+		require.NoError(t, err)
+		require.Len(t, response.Semaphores, 0)
+	})
+
+	t.Run("returns semaphores after other lease releases", func(t *testing.T) {
+		semaphoresCore := newSemaphoresCore(t)
+
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		// Create leases
+		lease1 := createLease(t, semaphoresCore, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease2 := createLease(t, semaphoresCore, accountId, namespaceId, "process-2", now, 60*time.Minute)
+
+		// Create semaphore
+		semaphoreId := &corepb.SemaphoreId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			SemaphoreId: rand.Uint64(),
+		}
+
+		_, err := semaphoresCore.CreateSemaphore(&corepb.CreateSemaphoreRequest{
+			SemaphoreId:                        semaphoreId,
+			Name:                               "shared_semaphore",
+			Description:                        "test semaphore",
+			Permits:                            10,
+			Now:                                now.UnixNano(),
+			MaxNumberOfSemaphoresPerNamespace:  10000,
+		})
+		require.NoError(t, err)
+
+		// Acquire with both leases
+		_, err = semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
+			NamespaceId: &corepb.NamespaceId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId,
+			},
+			SemaphoreName: "shared_semaphore",
+			LeaseId:       lease1.Id.LeaseId,
+			Weight:        3,
+			Now:           now.UnixNano(),
+		})
+		require.NoError(t, err)
+
+		_, err = semaphoresCore.AcquireSemaphore(&corepb.AcquireSemaphoreRequest{
+			NamespaceId: &corepb.NamespaceId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId,
+			},
+			SemaphoreName: "shared_semaphore",
+			LeaseId:       lease2.Id.LeaseId,
+			Weight:        2,
+			Now:           now.UnixNano(),
+		})
+		require.NoError(t, err)
+
+		// List semaphores for lease1 (should still show the semaphore)
+		response, err := semaphoresCore.ListSemaphoresByLeaseId(&corepb.ListSemaphoresByLeaseIdRequest{
+			LeaseId: lease1.Id,
+		})
+		require.NoError(t, err)
+		require.Len(t, response.Semaphores, 1)
+
+		// Release lease2
+		_, err = semaphoresCore.ReleaseSemaphore(&corepb.ReleaseSemaphoreRequest{
+			NamespaceId: &corepb.NamespaceId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId,
+			},
+			SemaphoreName: "shared_semaphore",
+			LeaseId:       lease2.Id.LeaseId,
+			Now:           now.UnixNano(),
+		})
+		require.NoError(t, err)
+
+		// List semaphores for lease1 (should still show the semaphore)
+		response, err = semaphoresCore.ListSemaphoresByLeaseId(&corepb.ListSemaphoresByLeaseIdRequest{
+			LeaseId: lease1.Id,
+		})
+		require.NoError(t, err)
+		require.Len(t, response.Semaphores, 1)
+		require.Equal(t, semaphoreId.SemaphoreId, response.Semaphores[0].Id.SemaphoreId)
+	})
 }

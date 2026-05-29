@@ -18,12 +18,23 @@ const (
 	OpAcquireLock OperationType = iota
 	OpReleaseLock
 	OpGetLock
+	OpListLocks
+	OpCreateLockLease
+	OpRefreshLockLease
+	OpRevokeLockLease
+	OpListLockLeases
 	OpAcquireSemaphore
 	OpReleaseSemaphore
 	OpGetSemaphore
+	OpListSemaphores
+	OpCreateSemaphoreLease
+	OpRefreshSemaphoreLease
+	OpRevokeSemaphoreLease
+	OpListSemaphoreLeases
 	OpAddWaitGroupJobs
 	OpCompleteWaitGroupJobs
 	OpGetWaitGroup
+	OpListWaitGroups
 )
 
 // String returns the string representation of an operation type
@@ -35,18 +46,40 @@ func (o OperationType) String() string {
 		return "release_lock"
 	case OpGetLock:
 		return "get_lock"
+	case OpListLocks:
+		return "list_locks"
+	case OpCreateLockLease:
+		return "create_lock_lease"
+	case OpRefreshLockLease:
+		return "refresh_lock_lease"
+	case OpRevokeLockLease:
+		return "revoke_lock_lease"
+	case OpListLockLeases:
+		return "list_lock_leases"
 	case OpAcquireSemaphore:
 		return "acquire_semaphore"
 	case OpReleaseSemaphore:
 		return "release_semaphore"
 	case OpGetSemaphore:
 		return "get_semaphore"
+	case OpListSemaphores:
+		return "list_semaphores"
+	case OpCreateSemaphoreLease:
+		return "create_semaphore_lease"
+	case OpRefreshSemaphoreLease:
+		return "refresh_semaphore_lease"
+	case OpRevokeSemaphoreLease:
+		return "revoke_semaphore_lease"
+	case OpListSemaphoreLeases:
+		return "list_semaphore_leases"
 	case OpAddWaitGroupJobs:
 		return "add_waitgroup_jobs"
 	case OpCompleteWaitGroupJobs:
 		return "complete_waitgroup_jobs"
 	case OpGetWaitGroup:
 		return "get_waitgroup"
+	case OpListWaitGroups:
+		return "list_waitgroups"
 	default:
 		return "unknown"
 	}
@@ -54,27 +87,29 @@ func (o OperationType) String() string {
 
 // executeAcquireLock executes a lock acquisition
 func executeAcquireLock(ctx context.Context, client grackle.GrackleApi, pool *ResourcePool, workerID int, rng *rand.Rand, config *Config) error {
-	// Pick random namespace
-	ns := pool.namespaces[rng.Intn(len(pool.namespaces))]
+	// Get a lock lease for this worker
+	lease := pool.GetRandomLease(workerID, "lock")
+	if lease == nil {
+		// No leases available, create one first
+		return executeCreateLockLease(ctx, client, pool, workerID, rng, config)
+	}
 
-	// Pick random lock
-	locks := pool.locks[ns]
+	// Pick random lock in the same namespace as the lease
+	locks := pool.locks[lease.Namespace]
 	if len(locks) == 0 {
-		return fmt.Errorf("no locks available in namespace %s", ns)
+		return fmt.Errorf("no locks available in namespace %s", lease.Namespace)
 	}
 	lockName := locks[rng.Intn(len(locks))]
-
-	// Generate lease ID
-	leaseID := fmt.Sprintf("lease-worker-%d-%d", workerID, time.Now().UnixNano())
 
 	// Determine if exclusive or shared
 	exclusive := rng.Intn(100) < config.ExclusiveLockPct
 
 	resp, err := client.AcquireLock(ctx, &grackle.AcquireLockRequest{
-		NamespaceName: ns,
-		LockName:      lockName,
-		LeaseId:       leaseID,
-		Exclusive:     exclusive,
+		NamespaceName:  lease.Namespace,
+		LockName:       lockName,
+		LeaseId:        lease.LeaseID,
+		Exclusive:      exclusive,
+		TimeoutSeconds: 10,
 	})
 	if err != nil {
 		return err
@@ -83,9 +118,9 @@ func executeAcquireLock(ctx context.Context, client grackle.GrackleApi, pool *Re
 	// Track if acquisition was successful
 	if resp.Success {
 		pool.TrackAcquiredLock(workerID, LockHandle{
-			Namespace: ns,
+			Namespace: lease.Namespace,
 			LockName:  lockName,
-			LeaseID:   leaseID,
+			LeaseID:   lease.LeaseID,
 			Exclusive: exclusive,
 		})
 	}
@@ -131,27 +166,29 @@ func executeGetLock(ctx context.Context, client grackle.GrackleApi, pool *Resour
 
 // executeAcquireSemaphore executes a semaphore acquisition
 func executeAcquireSemaphore(ctx context.Context, client grackle.GrackleApi, pool *ResourcePool, workerID int, rng *rand.Rand, config *Config) error {
-	// Pick random namespace
-	ns := pool.namespaces[rng.Intn(len(pool.namespaces))]
+	// Get a semaphore lease for this worker
+	lease := pool.GetRandomLease(workerID, "semaphore")
+	if lease == nil {
+		// No leases available, create one first
+		return executeCreateSemaphoreLease(ctx, client, pool, workerID, rng, config)
+	}
 
-	// Pick random semaphore
-	semaphores := pool.semaphores[ns]
+	// Pick random semaphore in the same namespace as the lease
+	semaphores := pool.semaphores[lease.Namespace]
 	if len(semaphores) == 0 {
-		return fmt.Errorf("no semaphores available in namespace %s", ns)
+		return fmt.Errorf("no semaphores available in namespace %s", lease.Namespace)
 	}
 	semName := semaphores[rng.Intn(len(semaphores))]
-
-	// Generate lease ID
-	leaseID := fmt.Sprintf("lease-worker-%d-%d", workerID, time.Now().UnixNano())
 
 	// Random weight (1 to max)
 	weight := uint64(rng.Intn(config.SemaphoreWeightMax) + 1)
 
 	resp, err := client.AcquireSemaphore(ctx, &grackle.AcquireSemaphoreRequest{
-		NamespaceName: ns,
-		SemaphoreName: semName,
-		LeaseId:       leaseID,
-		Weight:        weight,
+		NamespaceName:  lease.Namespace,
+		SemaphoreName:  semName,
+		LeaseId:        lease.LeaseID,
+		Weight:         weight,
+		TimeoutSeconds: 10,
 	})
 	if err != nil {
 		return err
@@ -160,9 +197,9 @@ func executeAcquireSemaphore(ctx context.Context, client grackle.GrackleApi, poo
 	// Track if acquisition was successful
 	if resp.Success {
 		pool.TrackAcquiredSemaphore(workerID, SemaphoreHandle{
-			Namespace:     ns,
+			Namespace:     lease.Namespace,
 			SemaphoreName: semName,
-			LeaseID:       leaseID,
+			LeaseID:       lease.LeaseID,
 			Weight:        weight,
 		})
 	}
@@ -271,6 +308,204 @@ func executeGetWaitGroup(ctx context.Context, client grackle.GrackleApi, pool *R
 	_, err := client.GetWaitGroup(ctx, &grackle.GetWaitGroupRequest{
 		NamespaceName: ns,
 		WaitGroupName: wgName,
+	})
+	return err
+}
+
+// executeCreateLockLease creates a new lock lease
+func executeCreateLockLease(ctx context.Context, client grackle.GrackleApi, pool *ResourcePool, workerID int, rng *rand.Rand, config *Config) error {
+	// Pick random namespace
+	ns := pool.namespaces[rng.Intn(len(pool.namespaces))]
+
+	// Generate process ID
+	processID := fmt.Sprintf("load-worker-%d", workerID)
+
+	// Calculate TTL in seconds
+	ttl := config.LeaseTTL
+	ttlSeconds := uint64(ttl.Seconds())
+
+	resp, err := client.CreateLockLease(ctx, &grackle.CreateLockLeaseRequest{
+		NamespaceName: ns,
+		ProcessId:     processID,
+		TtlSeconds:    ttlSeconds,
+	})
+	if err != nil {
+		return err
+	}
+
+	// Track the lease
+	pool.TrackLease(workerID, LeaseHandle{
+		Namespace: ns,
+		LeaseID:   resp.Lease.LeaseId,
+		CreatedAt: time.Now(),
+		TTL:       ttl,
+		Type:      "lock",
+	})
+
+	return nil
+}
+
+// executeCreateSemaphoreLease creates a new semaphore lease
+func executeCreateSemaphoreLease(ctx context.Context, client grackle.GrackleApi, pool *ResourcePool, workerID int, rng *rand.Rand, config *Config) error {
+	// Pick random namespace
+	ns := pool.namespaces[rng.Intn(len(pool.namespaces))]
+
+	// Generate process ID
+	processID := fmt.Sprintf("load-worker-%d", workerID)
+
+	// Calculate TTL in seconds
+	ttl := config.LeaseTTL
+	ttlSeconds := uint64(ttl.Seconds())
+
+	resp, err := client.CreateSemaphoreLease(ctx, &grackle.CreateSemaphoreLeaseRequest{
+		NamespaceName: ns,
+		ProcessId:     processID,
+		TtlSeconds:    ttlSeconds,
+	})
+	if err != nil {
+		return err
+	}
+
+	// Track the lease
+	pool.TrackLease(workerID, LeaseHandle{
+		Namespace: ns,
+		LeaseID:   resp.Lease.LeaseId,
+		CreatedAt: time.Now(),
+		TTL:       ttl,
+		Type:      "semaphore",
+	})
+
+	return nil
+}
+
+// executeRefreshLockLease refreshes an existing lock lease
+func executeRefreshLockLease(ctx context.Context, client grackle.GrackleApi, pool *ResourcePool, workerID int, rng *rand.Rand, config *Config) error {
+	// Get a random lock lease to refresh
+	lease := pool.GetRandomLease(workerID, "lock")
+	if lease == nil {
+		// No leases to refresh, create one instead
+		return executeCreateLockLease(ctx, client, pool, workerID, rng, config)
+	}
+
+	// Calculate TTL in seconds
+	ttlSeconds := uint64(config.LeaseTTL.Seconds())
+
+	_, err := client.RefreshLockLease(ctx, &grackle.RefreshLockLeaseRequest{
+		NamespaceName: lease.Namespace,
+		LeaseId:       lease.LeaseID,
+		TtlSeconds:    ttlSeconds,
+	})
+	return err
+}
+
+// executeRefreshSemaphoreLease refreshes an existing semaphore lease
+func executeRefreshSemaphoreLease(ctx context.Context, client grackle.GrackleApi, pool *ResourcePool, workerID int, rng *rand.Rand, config *Config) error {
+	// Get a random semaphore lease to refresh
+	lease := pool.GetRandomLease(workerID, "semaphore")
+	if lease == nil {
+		// No leases to refresh, create one instead
+		return executeCreateSemaphoreLease(ctx, client, pool, workerID, rng, config)
+	}
+
+	// Calculate TTL in seconds
+	ttlSeconds := uint64(config.LeaseTTL.Seconds())
+
+	_, err := client.RefreshSemaphoreLease(ctx, &grackle.RefreshSemaphoreLeaseRequest{
+		NamespaceName: lease.Namespace,
+		LeaseId:       lease.LeaseID,
+		TtlSeconds:    ttlSeconds,
+	})
+	return err
+}
+
+// executeRevokeLockLease revokes an existing lock lease
+func executeRevokeLockLease(ctx context.Context, client grackle.GrackleApi, pool *ResourcePool, workerID int, rng *rand.Rand, config *Config) error {
+	// Get a random lock lease to revoke
+	lease := pool.GetAndRemoveLease(workerID, "lock")
+	if lease == nil {
+		// No leases to revoke, create one instead
+		return executeCreateLockLease(ctx, client, pool, workerID, rng, config)
+	}
+
+	_, err := client.RevokeLockLease(ctx, &grackle.RevokeLockLeaseRequest{
+		NamespaceName: lease.Namespace,
+		LeaseId:       lease.LeaseID,
+	})
+	return err
+}
+
+// executeRevokeSemaphoreLease revokes an existing semaphore lease
+func executeRevokeSemaphoreLease(ctx context.Context, client grackle.GrackleApi, pool *ResourcePool, workerID int, rng *rand.Rand, config *Config) error {
+	// Get a random semaphore lease to revoke
+	lease := pool.GetAndRemoveLease(workerID, "semaphore")
+	if lease == nil {
+		// No leases to revoke, create one instead
+		return executeCreateSemaphoreLease(ctx, client, pool, workerID, rng, config)
+	}
+
+	_, err := client.RevokeSemaphoreLease(ctx, &grackle.RevokeSemaphoreLeaseRequest{
+		NamespaceName: lease.Namespace,
+		LeaseId:       lease.LeaseID,
+	})
+	return err
+}
+
+// executeListLocks lists locks in a namespace
+func executeListLocks(ctx context.Context, client grackle.GrackleApi, pool *ResourcePool, workerID int, rng *rand.Rand, config *Config) error {
+	// Pick random namespace
+	ns := pool.namespaces[rng.Intn(len(pool.namespaces))]
+
+	_, err := client.ListLocks(ctx, &grackle.ListLocksRequest{
+		NamespaceName: ns,
+		Limit:         100,
+	})
+	return err
+}
+
+// executeListSemaphores lists semaphores in a namespace
+func executeListSemaphores(ctx context.Context, client grackle.GrackleApi, pool *ResourcePool, workerID int, rng *rand.Rand, config *Config) error {
+	// Pick random namespace
+	ns := pool.namespaces[rng.Intn(len(pool.namespaces))]
+
+	_, err := client.ListSemaphores(ctx, &grackle.ListSemaphoresRequest{
+		NamespaceName: ns,
+		Limit:         100,
+	})
+	return err
+}
+
+// executeListWaitGroups lists wait groups in a namespace
+func executeListWaitGroups(ctx context.Context, client grackle.GrackleApi, pool *ResourcePool, workerID int, rng *rand.Rand, config *Config) error {
+	// Pick random namespace
+	ns := pool.namespaces[rng.Intn(len(pool.namespaces))]
+
+	_, err := client.ListWaitGroups(ctx, &grackle.ListWaitGroupsRequest{
+		NamespaceName: ns,
+		Limit:         100,
+	})
+	return err
+}
+
+// executeListLockLeases lists lock leases in a namespace
+func executeListLockLeases(ctx context.Context, client grackle.GrackleApi, pool *ResourcePool, workerID int, rng *rand.Rand, config *Config) error {
+	// Pick random namespace
+	ns := pool.namespaces[rng.Intn(len(pool.namespaces))]
+
+	_, err := client.ListLockLeases(ctx, &grackle.ListLockLeasesRequest{
+		NamespaceName: ns,
+		Limit:         100,
+	})
+	return err
+}
+
+// executeListSemaphoreLeases lists semaphore leases in a namespace
+func executeListSemaphoreLeases(ctx context.Context, client grackle.GrackleApi, pool *ResourcePool, workerID int, rng *rand.Rand, config *Config) error {
+	// Pick random namespace
+	ns := pool.namespaces[rng.Intn(len(pool.namespaces))]
+
+	_, err := client.ListSemaphoreLeases(ctx, &grackle.ListSemaphoreLeasesRequest{
+		NamespaceName: ns,
+		Limit:         100,
 	})
 	return err
 }

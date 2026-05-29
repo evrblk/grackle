@@ -10,6 +10,15 @@ import (
 	grackle "github.com/evrblk/evrblk-go/grackle/preview"
 )
 
+// LeaseHandle represents a created lease
+type LeaseHandle struct {
+	Namespace string
+	LeaseID   string
+	CreatedAt time.Time
+	TTL       time.Duration
+	Type      string // "lock" or "semaphore"
+}
+
 // LockHandle represents an acquired lock
 type LockHandle struct {
 	Namespace string
@@ -33,6 +42,10 @@ type ResourcePool struct {
 	locks      map[string][]string // namespace -> lock names
 	semaphores map[string][]string // namespace -> semaphore names
 	waitGroups map[string][]string // namespace -> waitgroup names
+
+	// Tracking leases per worker
+	lockLeases      sync.Map // workerID -> []LeaseHandle (Type="lock")
+	semaphoreLeases sync.Map // workerID -> []LeaseHandle (Type="semaphore")
 
 	// Tracking acquired resources per worker
 	acquiredLocks      sync.Map // workerID -> []LockHandle
@@ -133,6 +146,36 @@ func SetupResources(ctx context.Context, client grackle.GrackleApi, config *Conf
 // CleanupResources deletes all created resources
 func CleanupResources(ctx context.Context, client grackle.GrackleApi, pool *ResourcePool) {
 	log.Println("Cleaning up resources...")
+
+	// Revoke all lock leases
+	pool.lockLeases.Range(func(key, value any) bool {
+		leases := value.([]LeaseHandle)
+		for _, lease := range leases {
+			_, err := client.RevokeLockLease(ctx, &grackle.RevokeLockLeaseRequest{
+				NamespaceName: lease.Namespace,
+				LeaseId:       lease.LeaseID,
+			})
+			if err != nil {
+				log.Printf("Warning: failed to revoke lock lease %s/%s: %v", lease.Namespace, lease.LeaseID, err)
+			}
+		}
+		return true
+	})
+
+	// Revoke all semaphore leases
+	pool.semaphoreLeases.Range(func(key, value any) bool {
+		leases := value.([]LeaseHandle)
+		for _, lease := range leases {
+			_, err := client.RevokeSemaphoreLease(ctx, &grackle.RevokeSemaphoreLeaseRequest{
+				NamespaceName: lease.Namespace,
+				LeaseId:       lease.LeaseID,
+			})
+			if err != nil {
+				log.Printf("Warning: failed to revoke semaphore lease %s/%s: %v", lease.Namespace, lease.LeaseID, err)
+			}
+		}
+		return true
+	})
 
 	// Delete wait groups
 	for ns, wgNames := range pool.waitGroups {
@@ -264,4 +307,86 @@ func (p *ResourcePool) CountAcquiredSemaphores() int {
 		return true
 	})
 	return count
+}
+
+// TrackLease tracks a lease for a worker
+func (p *ResourcePool) TrackLease(workerID int, lease LeaseHandle) {
+	var leaseMap *sync.Map
+	if lease.Type == "lock" {
+		leaseMap = &p.lockLeases
+	} else {
+		leaseMap = &p.semaphoreLeases
+	}
+
+	val, _ := leaseMap.LoadOrStore(workerID, []LeaseHandle{})
+	leases := val.([]LeaseHandle)
+	leases = append(leases, lease)
+	leaseMap.Store(workerID, leases)
+}
+
+// GetRandomLease returns a random lease for a worker of the specified type
+func (p *ResourcePool) GetRandomLease(workerID int, leaseType string) *LeaseHandle {
+	var leaseMap *sync.Map
+	if leaseType == "lock" {
+		leaseMap = &p.lockLeases
+	} else {
+		leaseMap = &p.semaphoreLeases
+	}
+
+	val, ok := leaseMap.Load(workerID)
+	if !ok {
+		return nil
+	}
+	leases := val.([]LeaseHandle)
+	if len(leases) == 0 {
+		return nil
+	}
+	// Return a random lease
+	lease := leases[len(leases)/2]
+	return &lease
+}
+
+// GetAndRemoveLease retrieves and removes a random lease for a worker of the specified type
+func (p *ResourcePool) GetAndRemoveLease(workerID int, leaseType string) *LeaseHandle {
+	var leaseMap *sync.Map
+	if leaseType == "lock" {
+		leaseMap = &p.lockLeases
+	} else {
+		leaseMap = &p.semaphoreLeases
+	}
+
+	val, ok := leaseMap.Load(workerID)
+	if !ok {
+		return nil
+	}
+	leases := val.([]LeaseHandle)
+	if len(leases) == 0 {
+		return nil
+	}
+	// Remove the first lease
+	lease := leases[0]
+	remaining := leases[1:]
+	if len(remaining) == 0 {
+		leaseMap.Delete(workerID)
+	} else {
+		leaseMap.Store(workerID, remaining)
+	}
+	return &lease
+}
+
+// GetAllLeases returns all leases for a worker of the specified type
+func (p *ResourcePool) GetAllLeases(workerID int, leaseType string) []LeaseHandle {
+	var leaseMap *sync.Map
+	if leaseType == "lock" {
+		leaseMap = &p.lockLeases
+	} else {
+		leaseMap = &p.semaphoreLeases
+	}
+
+	val, ok := leaseMap.Load(workerID)
+	if !ok {
+		return nil
+	}
+	leases := val.([]LeaseHandle)
+	return leases
 }

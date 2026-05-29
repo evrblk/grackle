@@ -13,6 +13,7 @@ import (
 	gracklepb "github.com/evrblk/evrblk-go/grackle/preview"
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
+	monsterax "github.com/evrblk/monstera/x"
 	"github.com/evrblk/yellowstone-common/metrics"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -24,6 +25,7 @@ import (
 	"github.com/evrblk/grackle/pkg/semaphores"
 	grackle_preview "github.com/evrblk/grackle/pkg/server/preview"
 	"github.com/evrblk/grackle/pkg/sharding"
+	"github.com/evrblk/grackle/pkg/tables"
 	"github.com/evrblk/grackle/pkg/waitgroups"
 	"github.com/evrblk/grackle/pkg/workers"
 )
@@ -51,6 +53,10 @@ var nonclusteredCmd = &cobra.Command{
 		grackle_preview.RegisterMetrics()
 		metricsSrv := metrics.NewMetricsServer(nonclusteredCmdCfg.prometheusPort)
 		metricsSrv.Start()
+
+		// Register table prefixes
+		registry := monsterax.NewBaseTableRegistry(1)
+		tables.RegisterGracklePrefixes(registry)
 
 		// Create shared Badger store for application cores
 		dataStore, err := store.NewBadgerStore(filepath.Join(nonclusteredCmdCfg.dataDir, "data"))

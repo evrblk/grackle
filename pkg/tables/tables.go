@@ -21,14 +21,15 @@ func RegisterGracklePrefixes(registry monsterax.TableRegistry) {
 		// Semaphores
 		"Grackle.SemaphoresCore.Semaphores.Table":               registry.RegisterPrefix([]byte{0x20}),
 		"Grackle.SemaphoresCore.Semaphores.NamesIndex":          registry.RegisterPrefix([]byte{0x21}),
-		"Grackle.SemaphoresCore.Counters.Table":                 registry.RegisterPrefix([]byte{0x22}),
-		"Grackle.SemaphoresCore.GarbageCollectionRecords.Table": registry.RegisterPrefix([]byte{0x23}),
-		"Grackle.SemaphoresCore.ExpirationRecords.Table":        registry.RegisterPrefix([]byte{0x24}),
-		"Grackle.SemaphoresCore.Holders.Table":                  registry.RegisterPrefix([]byte{0x25}),
-		"Grackle.SemaphoresCore.Holders.ExpirationIndex":        registry.RegisterPrefix([]byte{0x26}),
-		"Grackle.SemaphoresCore.Leases.Table":                   registry.RegisterPrefix([]byte{0x27}),
-		"Grackle.SemaphoresCore.Leases.ProcessIdIndex":          registry.RegisterPrefix([]byte{0x28}),
-		"Grackle.SemaphoresCore.Leases.ExpirationIndex":         registry.RegisterPrefix([]byte{0x29}),
+		"Grackle.SemaphoresCore.Semaphores.LeaseIdIndex":        registry.RegisterPrefix([]byte{0x22}),
+		"Grackle.SemaphoresCore.Counters.Table":                 registry.RegisterPrefix([]byte{0x23}),
+		"Grackle.SemaphoresCore.GarbageCollectionRecords.Table": registry.RegisterPrefix([]byte{0x24}),
+		"Grackle.SemaphoresCore.ExpirationRecords.Table":        registry.RegisterPrefix([]byte{0x25}),
+		"Grackle.SemaphoresCore.Holders.Table":                  registry.RegisterPrefix([]byte{0x26}),
+		"Grackle.SemaphoresCore.Holders.ExpirationIndex":        registry.RegisterPrefix([]byte{0x27}),
+		"Grackle.SemaphoresCore.Leases.Table":                   registry.RegisterPrefix([]byte{0x28}),
+		"Grackle.SemaphoresCore.Leases.ProcessIdIndex":          registry.RegisterPrefix([]byte{0x29}),
+		"Grackle.SemaphoresCore.Leases.ExpirationIndex":         registry.RegisterPrefix([]byte{0x2a}),
 
 		// WaitGroups
 		"Grackle.WaitGroupsCore.WaitGroups.Table":               registry.RegisterPrefix([]byte{0x40}),

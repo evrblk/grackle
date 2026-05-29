@@ -38,6 +38,10 @@ type Config struct {
 	WaitGroupInitialCounter int
 	WaitGroupJobBatchSize   int
 
+	// Lease-specific
+	LeaseTTL            time.Duration
+	LeaseRefreshInterval time.Duration
+
 	// General
 	PrometheusPort int
 	LogInterval    time.Duration
@@ -77,6 +81,10 @@ func parseFlags() *Config {
 	// Wait group-specific
 	flag.IntVar(&config.WaitGroupInitialCounter, "waitgroup-initial-counter", 100, "Initial counter for wait groups")
 	flag.IntVar(&config.WaitGroupJobBatchSize, "waitgroup-job-batch-size", 5, "Jobs to add/complete at once")
+
+	// Lease-specific
+	flag.DurationVar(&config.LeaseTTL, "lease-ttl", 30*time.Second, "Lease time-to-live")
+	flag.DurationVar(&config.LeaseRefreshInterval, "lease-refresh-interval", 10*time.Second, "Lease refresh interval")
 
 	// General
 	flag.IntVar(&config.PrometheusPort, "prometheus-port", 2113, "Prometheus metrics port")
@@ -145,6 +153,15 @@ func (c *Config) Validate() error {
 	}
 	if c.WaitGroupJobBatchSize <= 0 {
 		return fmt.Errorf("waitgroup-job-batch-size must be positive, got %d", c.WaitGroupJobBatchSize)
+	}
+	if c.LeaseTTL <= 0 {
+		return fmt.Errorf("lease-ttl must be positive, got %v", c.LeaseTTL)
+	}
+	if c.LeaseRefreshInterval <= 0 {
+		return fmt.Errorf("lease-refresh-interval must be positive, got %v", c.LeaseRefreshInterval)
+	}
+	if c.LeaseRefreshInterval >= c.LeaseTTL {
+		return fmt.Errorf("lease-refresh-interval must be less than lease-ttl, got refresh=%v ttl=%v", c.LeaseRefreshInterval, c.LeaseTTL)
 	}
 
 	// Check that at least one operation type is enabled

@@ -14,6 +14,7 @@ import (
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/transport/grpc"
 	"github.com/evrblk/monstera/utils"
+	monsterax "github.com/evrblk/monstera/x"
 	"github.com/evrblk/yellowstone-common/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
@@ -23,6 +24,7 @@ import (
 	"github.com/evrblk/grackle/pkg/monsteragen"
 	"github.com/evrblk/grackle/pkg/namespaces"
 	"github.com/evrblk/grackle/pkg/semaphores"
+	"github.com/evrblk/grackle/pkg/tables"
 	"github.com/evrblk/grackle/pkg/waitgroups"
 )
 
@@ -42,6 +44,10 @@ var nodeCmd = &cobra.Command{
 		// Metrics
 		metricsSrv := metrics.NewMetricsServer(nodeCmdCfg.prometheusPort)
 		metricsSrv.Start()
+
+		// Register table prefixes
+		registry := monsterax.NewBaseTableRegistry(1)
+		tables.RegisterGracklePrefixes(registry)
 
 		// Load monstera cluster config
 		clusterConfig, err := cluster.LoadConfigFromFile(nodeCmdCfg.monsteraConfigPath)
