@@ -784,7 +784,9 @@ func (c *Core) RefreshSemaphoreLease(request *corepb.RefreshSemaphoreLeaseReques
 	err = txn.Commit()
 	panicIfNotNil(err)
 
-	return &corepb.RefreshSemaphoreLeaseResponse{}, nil
+	return &corepb.RefreshSemaphoreLeaseResponse{
+		Lease: lease,
+	}, nil
 }
 
 func (c *Core) RevokeSemaphoreLease(request *corepb.RevokeSemaphoreLeaseRequest) (*corepb.RevokeSemaphoreLeaseResponse, error) {

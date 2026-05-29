@@ -1771,6 +1771,7 @@ func (x *RefreshSemaphoreLeaseRequest) GetNow() int64 {
 
 type RefreshSemaphoreLeaseResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Lease         *Lease                 `protobuf:"bytes,1,opt,name=lease,proto3" json:"lease,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1803,6 +1804,13 @@ func (x *RefreshSemaphoreLeaseResponse) ProtoReflect() protoreflect.Message {
 // Deprecated: Use RefreshSemaphoreLeaseResponse.ProtoReflect.Descriptor instead.
 func (*RefreshSemaphoreLeaseResponse) Descriptor() ([]byte, []int) {
 	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *RefreshSemaphoreLeaseResponse) GetLease() *Lease {
+	if x != nil {
+		return x.Lease
+	}
+	return nil
 }
 
 type SemaphoresDeleteNamespaceRequest struct {
@@ -2641,8 +2649,9 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\x12\x1f\n" +
 	"\vttl_seconds\x18\x02 \x01(\x04R\n" +
 	"ttlSeconds\x12\x10\n" +
-	"\x03now\x18\x03 \x01(\x03R\x03now\"\x1f\n" +
-	"\x1dRefreshSemaphoreLeaseResponse\"\x9c\x01\n" +
+	"\x03now\x18\x03 \x01(\x03R\x03now\"W\n" +
+	"\x1dRefreshSemaphoreLeaseResponse\x126\n" +
+	"\x05lease\x18\x01 \x01(\v2 .com.evrblk.grackle.corepb.LeaseR\x05lease\"\x9c\x01\n" +
 	" SemaphoresDeleteNamespaceRequest\x12\x1b\n" +
 	"\trecord_id\x18\x01 \x01(\x04R\brecordId\x12I\n" +
 	"\fnamespace_id\x18\x02 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x10\n" +
@@ -2806,18 +2815,19 @@ var file_pkg_corepb_semaphores_proto_depIdxs = []int32{
 	46, // 41: com.evrblk.grackle.corepb.CreateSemaphoreLeaseResponse.lease:type_name -> com.evrblk.grackle.corepb.Lease
 	45, // 42: com.evrblk.grackle.corepb.RevokeSemaphoreLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
 	45, // 43: com.evrblk.grackle.corepb.RefreshSemaphoreLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
-	43, // 44: com.evrblk.grackle.corepb.SemaphoresDeleteNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	39, // 45: com.evrblk.grackle.corepb.Semaphore.id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
-	38, // 46: com.evrblk.grackle.corepb.SemaphoreHolder.id:type_name -> com.evrblk.grackle.corepb.SemaphoreHolderId
-	43, // 47: com.evrblk.grackle.corepb.SemaphoresGarbageCollectionRecord.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	39, // 48: com.evrblk.grackle.corepb.SemaphoresGarbageCollectionRecord.semaphore_id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
-	43, // 49: com.evrblk.grackle.corepb.SemaphoresCounter.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	39, // 50: com.evrblk.grackle.corepb.SemaphoresExpirationRecord.semaphore_id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
-	51, // [51:51] is the sub-list for method output_type
-	51, // [51:51] is the sub-list for method input_type
-	51, // [51:51] is the sub-list for extension type_name
-	51, // [51:51] is the sub-list for extension extendee
-	0,  // [0:51] is the sub-list for field type_name
+	46, // 44: com.evrblk.grackle.corepb.RefreshSemaphoreLeaseResponse.lease:type_name -> com.evrblk.grackle.corepb.Lease
+	43, // 45: com.evrblk.grackle.corepb.SemaphoresDeleteNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	39, // 46: com.evrblk.grackle.corepb.Semaphore.id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
+	38, // 47: com.evrblk.grackle.corepb.SemaphoreHolder.id:type_name -> com.evrblk.grackle.corepb.SemaphoreHolderId
+	43, // 48: com.evrblk.grackle.corepb.SemaphoresGarbageCollectionRecord.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	39, // 49: com.evrblk.grackle.corepb.SemaphoresGarbageCollectionRecord.semaphore_id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
+	43, // 50: com.evrblk.grackle.corepb.SemaphoresCounter.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	39, // 51: com.evrblk.grackle.corepb.SemaphoresExpirationRecord.semaphore_id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
+	52, // [52:52] is the sub-list for method output_type
+	52, // [52:52] is the sub-list for method input_type
+	52, // [52:52] is the sub-list for extension type_name
+	52, // [52:52] is the sub-list for extension extendee
+	0,  // [0:52] is the sub-list for field type_name
 }
 
 func init() { file_pkg_corepb_semaphores_proto_init() }

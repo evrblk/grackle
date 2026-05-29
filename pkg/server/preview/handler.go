@@ -1137,22 +1137,12 @@ func (s *GrackleApiServerHandler) ArriveAtBarrier(ctx context.Context, request *
 	}
 
 	// Mark process as arrived at barrier
-	_, err = s.grackleCoreApiClient.ArriveAtBarrier(ctx, &corepb.ArriveAtBarrierRequest{
+	resp2, err := s.grackleCoreApiClient.ArriveAtBarrier(ctx, &corepb.ArriveAtBarrierRequest{
 		NamespaceId: resp1.Namespace.Id,
 		BarrierName: request.BarrierName,
 		ProcessId:   request.ProcessId,
 		Generation:  request.ExpectedGeneration,
 		Now:         now.UnixNano(),
-	})
-	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
-	}
-
-	// TODO return the barrier directly from ArriveAtBarrier
-	// Retrieve updated barrier state
-	resp2, err := s.grackleCoreApiClient.GetBarrierByName(ctx, &corepb.GetBarrierByNameRequest{
-		NamespaceId: resp1.Namespace.Id,
-		BarrierName: request.BarrierName,
 	})
 	if err != nil {
 		return nil, monsterax.ErrorToGRPC(err)
@@ -1374,18 +1364,10 @@ func (s *GrackleApiServerHandler) RefreshSemaphoreLease(ctx context.Context, req
 	}
 
 	// Refresh the semaphore lease TTL
-	_, err = s.grackleCoreApiClient.RefreshSemaphoreLease(ctx, &corepb.RefreshSemaphoreLeaseRequest{
+	resp2, err := s.grackleCoreApiClient.RefreshSemaphoreLease(ctx, &corepb.RefreshSemaphoreLeaseRequest{
 		LeaseId:    leaseId,
 		TtlSeconds: request.TtlSeconds,
 		Now:        now.UnixNano(),
-	})
-	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
-	}
-
-	// Retrieve updated lease information
-	resp2, err := s.grackleCoreApiClient.GetSemaphoreLease(ctx, &corepb.GetSemaphoreLeaseRequest{
-		LeaseId: leaseId,
 	})
 	if err != nil {
 		return nil, monsterax.ErrorToGRPC(err)
@@ -1565,19 +1547,10 @@ func (s *GrackleApiServerHandler) RefreshLockLease(ctx context.Context, request 
 	}
 
 	// Refresh the lock lease TTL
-	_, err = s.grackleCoreApiClient.RefreshLockLease(ctx, &corepb.RefreshLockLeaseRequest{
+	resp2, err := s.grackleCoreApiClient.RefreshLockLease(ctx, &corepb.RefreshLockLeaseRequest{
 		LeaseId:    leaseId,
 		TtlSeconds: request.TtlSeconds,
 		Now:        now.UnixNano(),
-	})
-	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
-	}
-
-	// TODO return the lock lease directly from RefreshLockLease
-	// Retrieve updated lease information
-	resp2, err := s.grackleCoreApiClient.GetLockLease(ctx, &corepb.GetLockLeaseRequest{
-		LeaseId: leaseId,
 	})
 	if err != nil {
 		return nil, monsterax.ErrorToGRPC(err)
@@ -1635,6 +1608,8 @@ func (s *GrackleApiServerHandler) ListLockLeases(ctx context.Context, request *g
 }
 
 func (s *GrackleApiServerHandler) GetLockLease(ctx context.Context, request *gracklepb.GetLockLeaseRequest, accountId uint64, limits grackle.GrackleServiceLimits) (*gracklepb.GetLockLeaseResponse, error) {
+	now := time.Now()
+
 	// Resolve namespace by name to get its ID
 	resp1, err := s.grackleCoreApiClient.GetNamespaceByName(ctx, &corepb.GetNamespaceByNameRequest{
 		AccountId:     accountId,
@@ -1658,6 +1633,7 @@ func (s *GrackleApiServerHandler) GetLockLease(ctx context.Context, request *gra
 	// Retrieve lock lease by ID
 	resp2, err := s.grackleCoreApiClient.GetLockLease(ctx, &corepb.GetLockLeaseRequest{
 		LeaseId: leaseId,
+		Now:     now.UnixNano(),
 	})
 	if err != nil {
 		return nil, monsterax.ErrorToGRPC(err)

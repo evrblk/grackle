@@ -1,6 +1,6 @@
 # Hierarchical Lock Semantics
 
-This document defines the expected behavior for hierarchical shared/exclusive locks.
+This document defines the behavior for hierarchical shared/exclusive locks.
 
 ## Lock Types
 

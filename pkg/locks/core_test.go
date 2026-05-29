@@ -2683,6 +2683,152 @@ func TestCore_LockAncestorNames(t *testing.T) {
 	require.Equal(t, []string{"a", "a/b", "a/b/c"}, locksCore.lockAncestorNames("a/b/c/d"))
 }
 
+func TestCore_RevokeLockLease(t *testing.T) {
+	t.Run("revokes all locks with pagination", func(t *testing.T) {
+		locksCore := newLocksCore(t)
+
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		// Create a lease
+		lease := createLease(t, locksCore, accountId, namespaceId, "process-1", now, 60*time.Minute)
+
+		// Acquire 1500 locks to test pagination
+		numLocks := 1500
+		lockIds := make([]*corepb.LockId, numLocks)
+		for i := 0; i < numLocks; i++ {
+			lockIds[i] = &corepb.LockId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId,
+				LockName:    fmt.Sprintf("test_lock_%d", i),
+			}
+
+			// Acquire the lock
+			response, err := locksCore.AcquireLock(&corepb.AcquireLockRequest{
+				LockId:                       lockIds[i],
+				LeaseId:                      lease.Id.LeaseId,
+				Now:                          now.UnixNano(),
+				Exclusive:                    true,
+				MaxNumberOfLocksPerNamespace: 10000,
+			})
+			require.NoError(t, err)
+			require.True(t, response.Success)
+			require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, response.Lock.State)
+		}
+
+		// Verify that counters show the correct number of locks and leases
+		counters, err := locksCore.counters.Get(locksCore.badgerStore.View(), accountId, namespaceId)
+		require.NoError(t, err)
+		require.EqualValues(t, numLocks, counters.NumberOfLocks)
+		require.EqualValues(t, 1, counters.NumberOfLeases)
+
+		// Revoke the lease
+		_, err = locksCore.RevokeLockLease(&corepb.RevokeLockLeaseRequest{
+			LeaseId: lease.Id,
+			Now:     now.UnixNano(),
+		})
+		require.NoError(t, err)
+
+		// Verify that all locks are released
+		for i := 0; i < numLocks; i++ {
+			response, err := locksCore.GetLock(&corepb.GetLockRequest{
+				LockId: lockIds[i],
+				Now:    now.UnixNano(),
+			})
+			require.NoError(t, err)
+			require.Equal(t, corepb.LockState_UNLOCKED, response.Lock.State)
+		}
+
+		// Verify that counters are updated correctly
+		counters, err = locksCore.counters.Get(locksCore.badgerStore.View(), accountId, namespaceId)
+		require.NoError(t, err)
+		require.EqualValues(t, 0, counters.NumberOfLocks)
+		require.EqualValues(t, 0, counters.NumberOfLeases)
+
+		// Verify the lease is deleted
+		_, err = locksCore.GetLockLease(&corepb.GetLockLeaseRequest{
+			LeaseId: lease.Id,
+		})
+		require.Error(t, err)
+	})
+}
+
+func TestCore_RevokeLockLease_ReleasesSharedLocks(t *testing.T) {
+	locksCore := newLocksCore(t)
+
+	now := time.Now()
+	accountId := rand.Uint64()
+	namespaceId := rand.Uint32()
+
+	// Create two leases
+	lease1 := createLease(t, locksCore, accountId, namespaceId, "process-1", now, 60*time.Minute)
+	lease2 := createLease(t, locksCore, accountId, namespaceId, "process-2", now, 60*time.Minute)
+
+	lockId := &corepb.LockId{
+		AccountId:   accountId,
+		NamespaceId: namespaceId,
+		LockName:    "shared_lock",
+	}
+
+	// Acquire shared lock with lease1
+	response1, err := locksCore.AcquireLock(&corepb.AcquireLockRequest{
+		LockId:                       lockId,
+		LeaseId:                      lease1.Id.LeaseId,
+		Now:                          now.UnixNano(),
+		Exclusive:                    false,
+		MaxNumberOfLocksPerNamespace: 10000,
+	})
+	require.NoError(t, err)
+	require.True(t, response1.Success)
+	require.Equal(t, corepb.LockState_SHARED_LOCKED, response1.Lock.State)
+
+	// Acquire shared lock with lease2
+	response2, err := locksCore.AcquireLock(&corepb.AcquireLockRequest{
+		LockId:                       lockId,
+		LeaseId:                      lease2.Id.LeaseId,
+		Now:                          now.UnixNano(),
+		Exclusive:                    false,
+		MaxNumberOfLocksPerNamespace: 10000,
+	})
+	require.NoError(t, err)
+	require.True(t, response2.Success)
+	require.Equal(t, corepb.LockState_SHARED_LOCKED, response2.Lock.State)
+	require.Len(t, response2.Lock.LockHolders, 2)
+
+	// Revoke lease1
+	_, err = locksCore.RevokeLockLease(&corepb.RevokeLockLeaseRequest{
+		LeaseId: lease1.Id,
+		Now:     now.UnixNano(),
+	})
+	require.NoError(t, err)
+
+	// Verify that the lock is still held by lease2
+	response3, err := locksCore.GetLock(&corepb.GetLockRequest{
+		LockId: lockId,
+		Now:    now.UnixNano(),
+	})
+	require.NoError(t, err)
+	require.Equal(t, corepb.LockState_SHARED_LOCKED, response3.Lock.State)
+	require.Len(t, response3.Lock.LockHolders, 1)
+	require.EqualValues(t, lease2.Id.LeaseId, response3.Lock.LockHolders[0].LeaseId)
+
+	// Revoke lease2
+	_, err = locksCore.RevokeLockLease(&corepb.RevokeLockLeaseRequest{
+		LeaseId: lease2.Id,
+		Now:     now.UnixNano(),
+	})
+	require.NoError(t, err)
+
+	// Verify that the lock is now unlocked
+	response4, err := locksCore.GetLock(&corepb.GetLockRequest{
+		LockId: lockId,
+		Now:    now.UnixNano(),
+	})
+	require.NoError(t, err)
+	require.Equal(t, corepb.LockState_UNLOCKED, response4.Lock.State)
+}
+
 func newLocksCore(t *testing.T) *Core {
 	badgerStore, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
@@ -2699,9 +2845,10 @@ func createLease(t *testing.T, core *Core, accountId uint64, namespaceId uint32,
 			NamespaceId: namespaceId,
 			LeaseId:     leaseId,
 		},
-		ProcessId:  processId,
-		TtlSeconds: uint64(ttl.Seconds()),
-		Now:        now.UnixNano(),
+		ProcessId:             processId,
+		TtlSeconds:            uint64(ttl.Seconds()),
+		Now:                   now.UnixNano(),
+		MaxNumberOfLockLeases: 100,
 	})
 	require.NoError(t, err)
 	return resp.Lease

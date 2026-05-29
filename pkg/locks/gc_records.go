@@ -9,6 +9,9 @@ import (
 	"github.com/evrblk/grackle/pkg/tables"
 )
 
+// gcRecordsTable
+//
+// Table Primary Key:
 // 1. shard id
 // 2. gc record id
 type gcRecordsTable struct {

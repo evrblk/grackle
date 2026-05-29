@@ -114,10 +114,13 @@ message RefreshLockLeaseRequest {
   int64 now = 3;
 }
 
-message RefreshLockLeaseResponse {}
+message RefreshLockLeaseResponse {
+  Lease lease = 1;
+}
 
 message GetLockLeaseRequest {
   LeaseId lease_id = 1;
+  int64 now = 2;
 }
 
 message GetLockLeaseResponse {

@@ -281,12 +281,11 @@ func (c *Core) AcquireLock(request *corepb.AcquireLockRequest) (*corepb.AcquireL
 		if request.Exclusive {
 			// Lock for writes
 			updatedLock.State = corepb.LockState_EXCLUSIVE_LOCKED
-			updatedLock.LockHolders = []*corepb.LockHolder{lockHolder}
 		} else {
 			// Lock for reads only
 			updatedLock.State = corepb.LockState_SHARED_LOCKED
-			updatedLock.LockHolders = []*corepb.LockHolder{lockHolder}
 		}
+		updatedLock.LockHolders = []*corepb.LockHolder{lockHolder}
 		updatedLock.LockedAt = request.Now
 	case corepb.LockState_SHARED_LOCKED:
 		if request.Exclusive {
@@ -558,9 +557,14 @@ func (c *Core) RunLocksGarbageCollection(request *corepb.RunLocksGarbageCollecti
 
 			// Delete the expired lease
 			err = c.leases.Delete(txn, lease)
-			if err != nil && !errors.Is(err, store.ErrNotFound) {
-				return false, err
-			}
+			panicIfNotNil(err)
+
+			// Decrement lease counter
+			counters, err := c.counters.Get(txn, lease.Id.AccountId, lease.Id.NamespaceId)
+			panicIfNotNil(err)
+			counters.NumberOfLeases -= 1
+			err = c.counters.Set(txn, lease.Id.AccountId, lease.Id.NamespaceId, counters)
+			panicIfNotNil(err)
 
 			// Continue if we haven't reached the limit
 			return visitedLocks < request.MaxVisitedLocks, nil
@@ -599,7 +603,22 @@ func (c *Core) CreateLockLease(request *corepb.CreateLockLeaseRequest) (*corepb.
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
-	// TODO: check max number of lock leases
+	// Get counters for that namespace
+	counters, err := c.counters.Get(txn, request.LeaseId.AccountId, request.LeaseId.NamespaceId)
+	panicIfNotNil(err)
+
+	// Increment lease counter
+	counters.NumberOfLeases += 1
+
+	// Check the total number of leases
+	if counters.NumberOfLeases > request.MaxNumberOfLockLeases {
+		return nil, monsterax.NewErrorWithContext(
+			monsterax.ResourceExhausted,
+			"max number of lock leases per namespace reached",
+			map[string]string{
+				"limit": fmt.Sprintf("%d", request.MaxNumberOfLockLeases),
+			})
+	}
 
 	// Calculate expiration time
 	expiresAt := request.Now + int64(request.TtlSeconds)*1e9
@@ -612,10 +631,12 @@ func (c *Core) CreateLockLease(request *corepb.CreateLockLeaseRequest) (*corepb.
 		ExpiresAt: expiresAt,
 	}
 
-	err := c.leases.Create(txn, lease)
+	err = c.leases.Create(txn, lease)
 	panicIfNotNil(err)
 
-	// TODO: add to expiration index
+	// Update counters
+	err = c.counters.Set(txn, request.LeaseId.AccountId, request.LeaseId.NamespaceId, counters)
+	panicIfNotNil(err)
 
 	err = txn.Commit()
 	panicIfNotNil(err)
@@ -640,6 +661,15 @@ func (c *Core) GetLockLease(request *corepb.GetLockLeaseRequest) (*corepb.GetLoc
 				})
 		}
 		panic(err)
+	}
+
+	if lease.ExpiresAt <= request.Now {
+		return nil, monsterax.NewErrorWithContext(
+			monsterax.NotFound,
+			"lease not found",
+			map[string]string{
+				"lease_id": ids.EncodeLeaseId(request.LeaseId),
+			})
 	}
 
 	return &corepb.GetLockLeaseResponse{
@@ -695,7 +725,9 @@ func (c *Core) RefreshLockLease(request *corepb.RefreshLockLeaseRequest) (*corep
 	err = txn.Commit()
 	panicIfNotNil(err)
 
-	return &corepb.RefreshLockLeaseResponse{}, nil
+	return &corepb.RefreshLockLeaseResponse{
+		Lease: lease,
+	}, nil
 }
 
 func (c *Core) RevokeLockLease(request *corepb.RevokeLockLeaseRequest) (*corepb.RevokeLockLeaseResponse, error) {
@@ -712,11 +744,83 @@ func (c *Core) RevokeLockLease(request *corepb.RevokeLockLeaseRequest) (*corepb.
 		panic(err)
 	}
 
+	// Get counters for that namespace
+	counters, err := c.counters.Get(txn, request.LeaseId.AccountId, request.LeaseId.NamespaceId)
+	panicIfNotNil(err)
+
+	// Release all locks held by this lease, paginating through all pages
+	var paginationToken *corepb.PaginationToken
+	for {
+		// List locks held by this lease
+		locksResult, err := c.locks.ListByLeaseId(txn, request.LeaseId, paginationToken, 1000)
+		panicIfNotNil(err)
+
+		// If no locks found, we're done
+		if len(locksResult.locks) == 0 && locksResult.nextPaginationToken == nil {
+			break
+		}
+
+		// Release locks on this page
+		for _, lock := range locksResult.locks {
+			switch lock.State {
+			case corepb.LockState_UNLOCKED:
+				// Already unlocked, nothing to do
+				continue
+			case corepb.LockState_SHARED_LOCKED:
+				// Remove the holder
+				lock.LockHolders = lo.Filter(lock.LockHolders, func(h *corepb.LockHolder, _ int) bool {
+					return h.LeaseId != request.LeaseId.LeaseId
+				})
+
+				// If no read lock holders left
+				if len(lock.LockHolders) == 0 {
+					// Unlock and delete
+					err = c.locks.Delete(txn, lock.Id)
+					panicIfNotNil(err)
+
+					// Update ancestor entries
+					c.decrementAncestors(txn, lock.Id, false)
+
+					counters.NumberOfLocks -= 1
+				} else {
+					// Update lock
+					err = c.locks.Update(txn, lock)
+					panicIfNotNil(err)
+				}
+			case corepb.LockState_EXCLUSIVE_LOCKED:
+				if lock.LockHolders[0].LeaseId == request.LeaseId.LeaseId {
+					// This lease holds the exclusive lock, delete it
+					err = c.locks.Delete(txn, lock.Id)
+					panicIfNotNil(err)
+
+					// Update ancestor entries
+					c.decrementAncestors(txn, lock.Id, true)
+
+					counters.NumberOfLocks -= 1
+				} else {
+					// ListByLeaseId returned a lock that is not held by the lease, this should not happen
+					panic("list locks by lease id returned a lock that is not held by the lease")
+				}
+			}
+		}
+
+		// Check if there are more pages
+		if locksResult.nextPaginationToken == nil {
+			break
+		}
+		paginationToken = locksResult.nextPaginationToken
+	}
+
 	// Delete the lease
 	err = c.leases.Delete(txn, lease)
 	panicIfNotNil(err)
 
-	// TODO: When lease-lock integration is added, release all locks attached to this lease here
+	// Decrement lease counter
+	counters.NumberOfLeases -= 1
+
+	// Update counters
+	err = c.counters.Set(txn, request.LeaseId.AccountId, request.LeaseId.NamespaceId, counters)
+	panicIfNotNil(err)
 
 	err = txn.Commit()
 	panicIfNotNil(err)

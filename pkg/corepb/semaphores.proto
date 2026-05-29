@@ -177,7 +177,9 @@ message RefreshSemaphoreLeaseRequest {
   int64 now = 3;
 }
 
-message RefreshSemaphoreLeaseResponse {}
+message RefreshSemaphoreLeaseResponse {
+  Lease lease = 1;
+}
 
 message SemaphoresDeleteNamespaceRequest {
   uint64 record_id = 1;

@@ -28,6 +28,9 @@ import (
 // 2. account id
 // 3. namespace id
 // 3. lease id
+//
+// Lease Id Index Sort Key:
+// 1. lock name
 type locksTable struct {
 	table        *monsterax.BinaryTable[*corepb.Lock, corepb.Lock]
 	leaseIdIndex *monsterax.OneToManySortedIndex
@@ -119,7 +122,7 @@ func (t *locksTable) Update(txn *store.Txn, lock *corepb.Lock) error {
 		return err
 	}
 
-	// If lock doesn't exist, treat as a create (oldLeaseIds will be empty)
+	// If lock doesn't exist, treat as a creation (oldLeaseIds will be empty)
 	oldLeaseIds := make(map[uint64]struct{})
 	if err == nil {
 		// Lock exists, get old lease IDs
@@ -166,10 +169,34 @@ func (t *locksTable) Update(txn *store.Txn, lock *corepb.Lock) error {
 }
 
 func (t *locksTable) Delete(txn *store.Txn, lockId *corepb.LockId) error {
-	return t.table.Delete(txn,
-		utils.ConcatBytes(
-			t.tablePK(lockId.AccountId, lockId.NamespaceId),
-			t.tableSK(lockId.LockName)))
+	// First, get the lock to find its lease IDs for index cleanup
+	tableKey := utils.ConcatBytes(
+		t.tablePK(lockId.AccountId, lockId.NamespaceId),
+		t.tableSK(lockId.LockName))
+
+	lock, err := t.table.Get(txn, tableKey)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			// Lock doesn't exist, nothing to delete
+			return nil
+		}
+		return err
+	}
+
+	// Remove all lease ID index entries for this lock
+	lockName := []byte(lockId.LockName)
+	for _, holder := range lock.LockHolders {
+		err = t.leaseIdIndex.Delete(txn,
+			t.leaseIdIndexPK(lockId.AccountId, lockId.NamespaceId, holder.LeaseId),
+			lockName,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Delete the lock from the main table
+	return t.table.Delete(txn, tableKey)
 }
 
 func (t *locksTable) tablePK(accountId uint64, namespaceId uint32) []byte {

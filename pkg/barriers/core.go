@@ -328,7 +328,9 @@ func (c *Core) ArriveAtBarrier(request *corepb.ArriveAtBarrierRequest) (*corepb.
 	err = txn.Commit()
 	panicIfNotNil(err)
 
-	return &corepb.ArriveAtBarrierResponse{}, nil
+	return &corepb.ArriveAtBarrierResponse{
+		Barrier: barrier,
+	}, nil
 }
 
 func (c *Core) RunBarriersGarbageCollection(request *corepb.RunBarriersGarbageCollectionRequest) (*corepb.RunBarriersGarbageCollectionResponse, error) {
