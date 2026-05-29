@@ -77,9 +77,9 @@ func (c *Core) GetWaitGroup(request *corepb.GetWaitGroupRequest) (*corepb.GetWai
 				map[string]string{
 					"wait_group_id": ids.EncodeWaitGroupId(request.WaitGroupId),
 				})
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	return &corepb.GetWaitGroupResponse{
@@ -100,9 +100,9 @@ func (c *Core) GetWaitGroupByName(request *corepb.GetWaitGroupByNameRequest) (*c
 				map[string]string{
 					"wait_group_name": request.WaitGroupName,
 				})
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	return &corepb.GetWaitGroupByNameResponse{
@@ -137,9 +137,9 @@ func (c *Core) ListWaitGroupJobs(request *corepb.ListWaitGroupJobsRequest) (*cor
 				map[string]string{
 					"wait_group_name": request.WaitGroupName,
 				})
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	result, err := c.jobs.List(txn, request.NamespaceId.AccountId, request.NamespaceId.NamespaceId, waitGroup.Id.WaitGroupId, request.PaginationToken, pagination.GetLimitWithDefaults(int(request.Limit)))
@@ -222,9 +222,9 @@ func (c *Core) DeleteWaitGroup(request *corepb.DeleteWaitGroupRequest) (*corepb.
 		if errors.Is(err, store.ErrNotFound) {
 			// No wait group exists, do nothing
 			return &corepb.DeleteWaitGroupResponse{}, nil
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	// Get counters for this namespace
@@ -267,9 +267,9 @@ func (c *Core) AddJobsToWaitGroup(request *corepb.AddJobsToWaitGroupRequest) (*c
 				map[string]string{
 					"wait_group_name": request.WaitGroupName,
 				})
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	// Check if wait group is too big
@@ -307,9 +307,9 @@ func (c *Core) CompleteJobsFromWaitGroup(request *corepb.CompleteJobsFromWaitGro
 				map[string]string{
 					"wait_group_name": request.WaitGroupName,
 				})
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	for _, processId := range request.ProcessIds {

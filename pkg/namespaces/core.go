@@ -125,9 +125,9 @@ func (c *Core) UpdateNamespace(request *corepb.UpdateNamespaceRequest) (*corepb.
 				monsterax.NotFound,
 				"namespace not found",
 				map[string]string{"namespace_id": ids.EncodeNamespaceId(request.NamespaceId)})
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	namespace.Description = request.Description
@@ -152,9 +152,9 @@ func (c *Core) DeleteNamespace(request *corepb.DeleteNamespaceRequest) (*corepb.
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &corepb.DeleteNamespaceResponse{}, nil
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	// Get counters for that account
@@ -186,9 +186,9 @@ func (c *Core) GetNamespace(request *corepb.GetNamespaceRequest) (*corepb.GetNam
 				monsterax.NotFound,
 				"namespace not found",
 				map[string]string{"namespace_id": ids.EncodeNamespaceId(request.NamespaceId)})
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	return &corepb.GetNamespaceResponse{
@@ -207,9 +207,9 @@ func (c *Core) GetNamespaceByName(request *corepb.GetNamespaceByNameRequest) (*c
 				monsterax.NotFound,
 				"namespace not found",
 				map[string]string{"namespace_name": request.NamespaceName})
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	return &corepb.GetNamespaceByNameResponse{

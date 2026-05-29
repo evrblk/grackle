@@ -56,7 +56,7 @@ func (w *GrackleBarriersGCWorker) handler() {
 }
 
 func (w *GrackleBarriersGCWorker) runGarbageCollection(shardId string, now time.Time) {
-	defer monsterax.MeasureSince(grackleWaitGroupsGCWorkerDuration.WithLabelValues(shardId), time.Now())
+	defer monsterax.MeasureSince(grackleBarriersGCWorkerDuration.WithLabelValues(shardId), time.Now())
 
 	_, err := w.coreApiClient.RunBarriersGarbageCollection(context.TODO(), &corepb.RunBarriersGarbageCollectionRequest{
 		Now: now.UnixNano(),

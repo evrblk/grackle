@@ -141,9 +141,9 @@ func (c *Core) UpdateSemaphore(request *corepb.UpdateSemaphoreRequest) (*corepb.
 				map[string]string{
 					"semaphore_name": request.SemaphoreName,
 				})
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	// Check expired holders
@@ -181,9 +181,9 @@ func (c *Core) DeleteSemaphore(request *corepb.DeleteSemaphoreRequest) (*corepb.
 		if errors.Is(err, store.ErrNotFound) {
 			// No semaphore exists, do nothing
 			return &corepb.DeleteSemaphoreResponse{}, nil
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	// Get counters for this namespace
@@ -225,9 +225,9 @@ func (c *Core) GetSemaphore(request *corepb.GetSemaphoreRequest) (*corepb.GetSem
 				map[string]string{
 					"semaphore_id": ids.EncodeSemaphoreId(request.SemaphoreId),
 				})
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	// Check expired holders
@@ -272,9 +272,9 @@ func (c *Core) GetSemaphoreByName(request *corepb.GetSemaphoreByNameRequest) (*c
 				map[string]string{
 					"semaphore_name": request.SemaphoreName,
 				})
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	// Check expired holders
@@ -319,9 +319,9 @@ func (c *Core) ListSemaphoreHolders(request *corepb.ListSemaphoreHoldersRequest)
 				map[string]string{
 					"semaphore_name": request.SemaphoreName,
 				})
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	result, err := c.holders.List(txn, request.NamespaceId.AccountId, request.NamespaceId.NamespaceId, semaphore.Id.SemaphoreId, request.PaginationToken, pagination.GetLimitWithDefaults(int(request.Limit)))
@@ -377,6 +377,7 @@ func (c *Core) AcquireSemaphore(request *corepb.AcquireSemaphoreRequest) (*corep
 					"lease_id": fmt.Sprintf("%d", request.LeaseId),
 				})
 		}
+
 		panic(err)
 	}
 
@@ -399,9 +400,9 @@ func (c *Core) AcquireSemaphore(request *corepb.AcquireSemaphoreRequest) (*corep
 				map[string]string{
 					"semaphore_name": request.SemaphoreName,
 				})
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	// Check expired holders
@@ -508,6 +509,7 @@ func (c *Core) ReleaseSemaphore(request *corepb.ReleaseSemaphoreRequest) (*corep
 					"lease_id": fmt.Sprintf("%d", request.LeaseId),
 				})
 		}
+
 		panic(err)
 	}
 
@@ -520,9 +522,9 @@ func (c *Core) ReleaseSemaphore(request *corepb.ReleaseSemaphoreRequest) (*corep
 				map[string]string{
 					"semaphore_name": request.SemaphoreName,
 				})
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	// Remove the holder by process_id (if exists)
@@ -538,9 +540,9 @@ func (c *Core) ReleaseSemaphore(request *corepb.ReleaseSemaphoreRequest) (*corep
 			return &corepb.ReleaseSemaphoreResponse{
 				Semaphore: semaphore,
 			}, nil
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	err = c.holders.Delete(txn, holderId)
@@ -733,6 +735,7 @@ func (c *Core) GetSemaphoreLease(request *corepb.GetSemaphoreLeaseRequest) (*cor
 					"lease_id": ids.EncodeLeaseId(request.LeaseId),
 				})
 		}
+
 		panic(err)
 	}
 
@@ -771,6 +774,7 @@ func (c *Core) RefreshSemaphoreLease(request *corepb.RefreshSemaphoreLeaseReques
 					"lease_id": ids.EncodeLeaseId(request.LeaseId),
 				})
 		}
+
 		panic(err)
 	}
 

@@ -92,9 +92,15 @@ func (t *holdersTable) Update(txn *store.Txn, updatedHolder *corepb.SemaphoreHol
 	if existingHolder.ExpiresAt != updatedHolder.ExpiresAt {
 		indexPK := t.expirationIndexPK(updatedHolder.Id.AccountId, updatedHolder.Id.NamespaceId, updatedHolder.Id.SemaphoreId)
 
-		t.expirationIndex.Delete(txn, utils.ConcatBytes(indexPK, t.expirationIndexSK(existingHolder.ExpiresAt, updatedHolder.Id.LeaseId)))
+		err = t.expirationIndex.Delete(txn, utils.ConcatBytes(indexPK, t.expirationIndexSK(existingHolder.ExpiresAt, updatedHolder.Id.LeaseId)))
+		if err != nil {
+			return err
+		}
 
-		t.expirationIndex.Add(txn, utils.ConcatBytes(indexPK, t.expirationIndexSK(updatedHolder.ExpiresAt, updatedHolder.Id.LeaseId)))
+		err = t.expirationIndex.Add(txn, utils.ConcatBytes(indexPK, t.expirationIndexSK(updatedHolder.ExpiresAt, updatedHolder.Id.LeaseId)))
+		if err != nil {
+			return err
+		}
 	}
 
 	return t.table.Set(txn, key, updatedHolder)

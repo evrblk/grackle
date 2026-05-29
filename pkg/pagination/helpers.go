@@ -14,9 +14,9 @@ func GetLimitWithDefaults(requestedLimit int) int {
 		return requestedLimit
 	} else if requestedLimit <= 0 {
 		return defaultLimit
-	} else {
-		return maxLimit
 	}
+
+	return maxLimit
 }
 
 func CoreToMonstera(paginationToken *corepb.PaginationToken) *monsterax.PaginationToken {

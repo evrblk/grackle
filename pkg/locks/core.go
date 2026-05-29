@@ -92,9 +92,9 @@ func (c *Core) GetLock(request *corepb.GetLockRequest) (*corepb.GetLockResponse,
 					LockedAt: 0,
 				},
 			}, nil
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	// Check expiration
@@ -111,7 +111,8 @@ func (c *Core) GetLock(request *corepb.GetLockRequest) (*corepb.GetLockResponse,
 		panicIfNotNil(err)
 
 		// Update ancestor entries
-		c.decrementAncestors(txn, lock.Id, lock.State == corepb.LockState_EXCLUSIVE_LOCKED)
+		err = c.decrementAncestors(txn, lock.Id, lock.State == corepb.LockState_EXCLUSIVE_LOCKED)
+		panicIfNotNil(err)
 
 		// Update counters
 		counters.NumberOfLocks -= 1
@@ -164,9 +165,9 @@ func (c *Core) DeleteLock(request *corepb.DeleteLockRequest) (*corepb.DeleteLock
 		if errors.Is(err, store.ErrNotFound) {
 			// No lock exists, do nothing
 			return &corepb.DeleteLockResponse{}, nil
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	// Get counters for that namespace
@@ -177,7 +178,8 @@ func (c *Core) DeleteLock(request *corepb.DeleteLockRequest) (*corepb.DeleteLock
 	panicIfNotNil(err)
 
 	// Update ancestor entries
-	c.decrementAncestors(txn, lock.Id, lock.State == corepb.LockState_EXCLUSIVE_LOCKED)
+	err = c.decrementAncestors(txn, lock.Id, lock.State == corepb.LockState_EXCLUSIVE_LOCKED)
+	panicIfNotNil(err)
 
 	// Update counters
 	counters.NumberOfLocks -= 1
@@ -209,6 +211,7 @@ func (c *Core) AcquireLock(request *corepb.AcquireLockRequest) (*corepb.AcquireL
 					"lease_id": fmt.Sprintf("%d", request.LeaseId),
 				})
 		}
+
 		panic(err)
 	}
 
@@ -293,19 +296,19 @@ func (c *Core) AcquireLock(request *corepb.AcquireLockRequest) (*corepb.AcquireL
 				Lock:    updatedLock,
 				Success: false, // Already locked for reads, cannot be locked for writes.
 			}, nil
+		}
+
+		// Already locked for reads.
+		// Check if the same lease_id already holds the lock here.
+		existingHolder, ok := lo.Find(updatedLock.LockHolders, func(h *corepb.LockHolder) bool {
+			return h.LeaseId == request.LeaseId
+		})
+		if ok {
+			// Update locked_at time (refresh lock acquisition time)
+			existingHolder.LockedAt = request.Now
 		} else {
-			// Already locked for reads.
-			// Check if the same lease_id already holds the lock here.
-			existingHolder, ok := lo.Find(updatedLock.LockHolders, func(h *corepb.LockHolder) bool {
-				return h.LeaseId == request.LeaseId
-			})
-			if ok {
-				// Update locked_at time (refresh lock acquisition time)
-				existingHolder.LockedAt = request.Now
-			} else {
-				// Add the new lock holder
-				updatedLock.LockHolders = append(updatedLock.LockHolders, lockHolder)
-			}
+			// Add the new lock holder
+			updatedLock.LockHolders = append(updatedLock.LockHolders, lockHolder)
 		}
 	case corepb.LockState_EXCLUSIVE_LOCKED:
 		if request.Exclusive {
@@ -341,12 +344,14 @@ func (c *Core) AcquireLock(request *corepb.AcquireLockRequest) (*corepb.AcquireL
 	// updatedLock.State is the final acquired state.
 	if prevState == corepb.LockState_UNLOCKED && updatedLock.State != corepb.LockState_UNLOCKED {
 		// New lock record: increment ancestor counters
-		c.incrementAncestors(txn, request.LockId, updatedLock.State == corepb.LockState_EXCLUSIVE_LOCKED)
+		err = c.incrementAncestors(txn, request.LockId, updatedLock.State == corepb.LockState_EXCLUSIVE_LOCKED)
+		panicIfNotNil(err)
 	} else if prevState != corepb.LockState_UNLOCKED && updatedLock.State != corepb.LockState_UNLOCKED && prevState != updatedLock.State {
 		// Lock was expired and re-acquired with a different mode: swap ancestor mode
-		c.swapAncestorMode(txn, request.LockId,
+		err = c.swapAncestorMode(txn, request.LockId,
 			prevState == corepb.LockState_EXCLUSIVE_LOCKED,
 			updatedLock.State == corepb.LockState_EXCLUSIVE_LOCKED)
+		panicIfNotNil(err)
 	}
 
 	// Update counters
@@ -381,9 +386,9 @@ func (c *Core) ReleaseLock(request *corepb.ReleaseLockRequest) (*corepb.ReleaseL
 					LockedAt: 0,
 				},
 			}, nil
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	// Lock exists, lets check if it expired
@@ -397,7 +402,8 @@ func (c *Core) ReleaseLock(request *corepb.ReleaseLockRequest) (*corepb.ReleaseL
 		panicIfNotNil(err)
 
 		// Update ancestor entries
-		c.decrementAncestors(txn, lock.Id, lock.State == corepb.LockState_EXCLUSIVE_LOCKED)
+		err = c.decrementAncestors(txn, lock.Id, lock.State == corepb.LockState_EXCLUSIVE_LOCKED)
+		panicIfNotNil(err)
 
 		counters.NumberOfLocks -= 1
 	case corepb.LockState_SHARED_LOCKED:
@@ -418,7 +424,8 @@ func (c *Core) ReleaseLock(request *corepb.ReleaseLockRequest) (*corepb.ReleaseL
 			panicIfNotNil(err)
 
 			// Update ancestor entries
-			c.decrementAncestors(txn, lock.Id, false)
+			err = c.decrementAncestors(txn, lock.Id, false)
+			panicIfNotNil(err)
 
 			counters.NumberOfLocks -= 1
 		} else {
@@ -438,7 +445,8 @@ func (c *Core) ReleaseLock(request *corepb.ReleaseLockRequest) (*corepb.ReleaseL
 			panicIfNotNil(err)
 
 			// Update ancestor entries
-			c.decrementAncestors(txn, lock.Id, true)
+			err = c.decrementAncestors(txn, lock.Id, true)
+			panicIfNotNil(err)
 
 			counters.NumberOfLocks -= 1
 		}
@@ -486,7 +494,8 @@ func (c *Core) RunLocksGarbageCollection(request *corepb.RunLocksGarbageCollecti
 			panicIfNotNil(err)
 
 			// Update ancestor entries
-			c.decrementAncestors(txn, lock.Id, lock.State == corepb.LockState_EXCLUSIVE_LOCKED)
+			err = c.decrementAncestors(txn, lock.Id, lock.State == corepb.LockState_EXCLUSIVE_LOCKED)
+			panicIfNotNil(err)
 
 			if visitedLocks >= request.MaxVisitedLocks {
 				goto commit
@@ -532,7 +541,8 @@ func (c *Core) RunLocksGarbageCollection(request *corepb.RunLocksGarbageCollecti
 					}
 
 					// Update ancestor entries
-					c.decrementAncestors(txn, lock.Id, lock.State == corepb.LockState_EXCLUSIVE_LOCKED)
+					err = c.decrementAncestors(txn, lock.Id, lock.State == corepb.LockState_EXCLUSIVE_LOCKED)
+					panicIfNotNil(err)
 
 					// Update counters only if they exist
 					if !counterNotFound {
@@ -660,6 +670,7 @@ func (c *Core) GetLockLease(request *corepb.GetLockLeaseRequest) (*corepb.GetLoc
 					"lease_id": ids.EncodeLeaseId(request.LeaseId),
 				})
 		}
+
 		panic(err)
 	}
 
@@ -712,6 +723,7 @@ func (c *Core) RefreshLockLease(request *corepb.RefreshLockLeaseRequest) (*corep
 					"lease_id": ids.EncodeLeaseId(request.LeaseId),
 				})
 		}
+
 		panic(err)
 	}
 
@@ -779,7 +791,8 @@ func (c *Core) RevokeLockLease(request *corepb.RevokeLockLeaseRequest) (*corepb.
 					panicIfNotNil(err)
 
 					// Update ancestor entries
-					c.decrementAncestors(txn, lock.Id, false)
+					err = c.decrementAncestors(txn, lock.Id, false)
+					panicIfNotNil(err)
 
 					counters.NumberOfLocks -= 1
 				} else {
@@ -794,7 +807,8 @@ func (c *Core) RevokeLockLease(request *corepb.RevokeLockLeaseRequest) (*corepb.
 					panicIfNotNil(err)
 
 					// Update ancestor entries
-					c.decrementAncestors(txn, lock.Id, true)
+					err = c.decrementAncestors(txn, lock.Id, true)
+					panicIfNotNil(err)
 
 					counters.NumberOfLocks -= 1
 				} else {

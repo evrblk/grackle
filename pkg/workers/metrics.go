@@ -61,7 +61,9 @@ func init() {
 	prometheus.MustRegister(grackleLocksGCWorkerDuration)
 	prometheus.MustRegister(grackleSemaphoresGCWorkerDuration)
 	prometheus.MustRegister(grackleWaitGroupsGCWorkerDuration)
+	prometheus.MustRegister(grackleBarriersGCWorkerDuration)
 	prometheus.MustRegister(grackleLocksGCWorkerErrorsTotal)
 	prometheus.MustRegister(grackleSemaphoresGCWorkerErrorsTotal)
 	prometheus.MustRegister(grackleWaitGroupsGCWorkerErrorsTotal)
+	prometheus.MustRegister(grackleBarriersGCWorkerErrorsTotal)
 }

@@ -77,9 +77,9 @@ func (c *Core) GetBarrier(request *corepb.GetBarrierRequest) (*corepb.GetBarrier
 				map[string]string{
 					"barrier_id": ids.EncodeBarrierId(request.BarrierId),
 				})
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	return &corepb.GetBarrierResponse{
@@ -100,9 +100,9 @@ func (c *Core) GetBarrierByName(request *corepb.GetBarrierByNameRequest) (*corep
 				map[string]string{
 					"barrier_name": request.BarrierName,
 				})
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	return &corepb.GetBarrierByNameResponse{
@@ -137,9 +137,9 @@ func (c *Core) ListBarrierParticipants(request *corepb.ListBarrierParticipantsRe
 				map[string]string{
 					"barrier_name": request.BarrierName,
 				})
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	result, err := c.participants.List(txn, request.NamespaceId.AccountId, request.NamespaceId.NamespaceId, barrier.Id.BarrierId, request.PaginationToken, pagination.GetLimitWithDefaults(int(request.Limit)))
@@ -211,9 +211,9 @@ func (c *Core) DeleteBarrier(request *corepb.DeleteBarrierRequest) (*corepb.Dele
 		if errors.Is(err, store.ErrNotFound) {
 			// No barrier exists, do nothing
 			return &corepb.DeleteBarrierResponse{}, nil
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	// Get counters for this namespace
@@ -249,9 +249,9 @@ func (c *Core) UpdateBarrier(request *corepb.UpdateBarrierRequest) (*corepb.Upda
 				map[string]string{
 					"barrier_id": ids.EncodeBarrierId(request.BarrierId),
 				})
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	// If there are currently more arrived processes than the new expected processes
@@ -290,9 +290,9 @@ func (c *Core) ArriveAtBarrier(request *corepb.ArriveAtBarrierRequest) (*corepb.
 				map[string]string{
 					"barrier_name": request.BarrierName,
 				})
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 
 	_, err = c.participants.Get(txn, barrier.Id.AccountId, barrier.Id.NamespaceId, barrier.Id.BarrierId, request.Generation, request.ProcessId)
