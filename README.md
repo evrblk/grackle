@@ -10,12 +10,12 @@ Everblack Grackle is a distributed-synchronization-primitives-as-a-service:
 * __wait groups__ (merge or fan-in of millions of tasks, similar to `sync.WaitGroup` in Go)
 * __barriers__ (wait for millions of processes to reach a certain point)
 
-Grackle state is durable. All holds have a set expiration time. Process crash will not cause dangling locks. 
-Long-running processes can extend their holds. All operations are atomic and safe to retry.
+Grackle state is durable. All holds are lease-based, with a set expiration time. Process crash will not cause dangling locks. 
+Long-running processes can extend their leases. All operations are atomic and safe to retry.
 
 Grackle can operate in a clustered mode (with replication and sharding), or it can run in a single-process nonclustered 
-mode (full state on disk, no replication, no sharding). It has no external dependencies (no databases, no kafka, no redis, no zookeeper, 
-or whatever) and it stores all its state on disk.
+mode (full state on disk, no replication, no sharding). It has no external dependencies (no databases, no kafka, no redis, 
+no zookeeper, or whatever) and it stores all its state on disk (on embedded BadgerDB).
 
 Go to [official documentation](https://everblack.dev/docs/grackle) to learn more.
 
@@ -48,7 +48,7 @@ $ ./grackle run nonclustered --port=8000 --data-dir=./data
 There are 3 components: 
 
 * `gateway` stateless API gateway
-* `node` stateful node with data persisted on the disk
+* `node` stateful node with data persisted on disk
 * `worker` stateless async worker
 
 Running in the clustered mode requires Monstera cluster config file. To generate a simple config run:
@@ -137,19 +137,23 @@ Example in Go:
 
 ```go
 import (
-	"time"
     evrblk "github.com/evrblk/evrblk-go"
     grackle "github.com/evrblk/evrblk-go/grackle/preview"
 )
 
 grackleClient := grackle.NewGrackleGrpcClient("localhost:8000", evrblk.NewNoOpSigner())
 
+createLeaseResp, err := grackleClient.CreateLockLease(context.Background(), &grackle.CreateLockLeaseRequest{
+	NamespaceName: "my_namespace",
+	ProcessId:     "process1",
+	TtlSeconds:     30,
+})
+
 acquireLockResp, err := grackleClient.AcquireLock(context.Background(), &grackle.AcquireLockRequest{
-    NamespaceName: "my_namespace"
-	LockName: "lock1",
-	WriteLock: true,
-    ProcessId: "process1",
-	ExpiresAt: time.Now().Add(5 * time.Minute).UnixNano()
+	NamespaceName: "my_namespace",
+	LockName:      "lock1",
+	WriteLock:     true,
+	LeaseId:       createLeaseResp.Lease.Id,
 })
 ```
 
