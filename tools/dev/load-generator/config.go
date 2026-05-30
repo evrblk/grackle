@@ -39,7 +39,7 @@ type Config struct {
 	WaitGroupJobBatchSize   int
 
 	// Lease-specific
-	LeaseTTL            time.Duration
+	LeaseTTL             time.Duration
 	LeaseRefreshInterval time.Duration
 
 	// General

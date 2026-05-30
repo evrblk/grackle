@@ -2293,12 +2293,12 @@ func TestCore_RefreshSemaphoreLease_ExpiredLease(t *testing.T) {
 
 		// Create the semaphore
 		_, err := semaphoresCore.CreateSemaphore(&corepb.CreateSemaphoreRequest{
-			SemaphoreId:                        semaphoreId,
-			Name:                               fmt.Sprintf("test_semaphore_%d", i),
-			Description:                        "test semaphore",
-			Permits:                            10,
-			Now:                                now.UnixNano(),
-			MaxNumberOfSemaphoresPerNamespace:  10000,
+			SemaphoreId:                       semaphoreId,
+			Name:                              fmt.Sprintf("test_semaphore_%d", i),
+			Description:                       "test semaphore",
+			Permits:                           10,
+			Now:                               now.UnixNano(),
+			MaxNumberOfSemaphoresPerNamespace: 10000,
 		})
 		require.NoError(t, err)
 
@@ -2594,12 +2594,12 @@ func TestCore_ListSemaphoresByLeaseId(t *testing.T) {
 			semaphoreIds = append(semaphoreIds, semaphoreId)
 
 			_, err := semaphoresCore.CreateSemaphore(&corepb.CreateSemaphoreRequest{
-				SemaphoreId:                        semaphoreId,
-				Name:                               fmt.Sprintf("test_semaphore_%d", i),
-				Description:                        "test semaphore",
-				Permits:                            10,
-				Now:                                now.UnixNano(),
-				MaxNumberOfSemaphoresPerNamespace:  10000,
+				SemaphoreId:                       semaphoreId,
+				Name:                              fmt.Sprintf("test_semaphore_%d", i),
+				Description:                       "test semaphore",
+				Permits:                           10,
+				Now:                               now.UnixNano(),
+				MaxNumberOfSemaphoresPerNamespace: 10000,
 			})
 			require.NoError(t, err)
 		}
@@ -2691,12 +2691,12 @@ func TestCore_ListSemaphoresByLeaseId(t *testing.T) {
 		}
 
 		_, err := semaphoresCore.CreateSemaphore(&corepb.CreateSemaphoreRequest{
-			SemaphoreId:                        semaphoreId,
-			Name:                               "shared_semaphore",
-			Description:                        "test semaphore",
-			Permits:                            10,
-			Now:                                now.UnixNano(),
-			MaxNumberOfSemaphoresPerNamespace:  10000,
+			SemaphoreId:                       semaphoreId,
+			Name:                              "shared_semaphore",
+			Description:                       "test semaphore",
+			Permits:                           10,
+			Now:                               now.UnixNano(),
+			MaxNumberOfSemaphoresPerNamespace: 10000,
 		})
 		require.NoError(t, err)
 
