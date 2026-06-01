@@ -1,4 +1,4 @@
-package common
+package tables
 
 import (
 	"github.com/evrblk/monstera/store"
@@ -10,7 +10,8 @@ import (
 	"github.com/evrblk/grackle/pkg/sharding"
 )
 
-// LeasesTable
+// LeasesTable is a table that stores leases for accounts and namespaces. This is a
+// common implementation that is shared by both locks and semaphores.
 //
 // Table Primary Key:
 // 1. shard key (by account id and namespace id)

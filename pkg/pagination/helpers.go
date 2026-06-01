@@ -6,10 +6,12 @@ import (
 	"github.com/evrblk/grackle/pkg/corepb"
 )
 
-func GetLimitWithDefaults(requestedLimit int) int {
-	maxLimit := 250
-	defaultLimit := 100
+const (
+	maxLimit     = 250
+	defaultLimit = 100
+)
 
+func GetLimitWithDefaults(requestedLimit int) int {
 	if requestedLimit > 0 && requestedLimit < maxLimit {
 		return requestedLimit
 	} else if requestedLimit <= 0 {

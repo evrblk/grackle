@@ -13,7 +13,6 @@ import (
 	"github.com/evrblk/monstera/store"
 	monsterax "github.com/evrblk/monstera/x"
 
-	"github.com/evrblk/grackle/pkg/common"
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/ids"
 	"github.com/evrblk/grackle/pkg/monsteragen"
@@ -28,7 +27,7 @@ type Core struct {
 	ancestors *lockAncestorsTable
 	counters  *countersTable
 	gcRecords *gcRecordsTable
-	leases    *common.LeasesTable
+	leases    *tables.LeasesTable
 }
 
 var _ monsteragen.GrackleLocksCoreApi = &Core{}
@@ -41,7 +40,7 @@ func NewCore(badgerStore *store.BadgerStore, shardGlobalIndexPrefix []byte, shar
 		ancestors: newLockAncestorsTable(shardLowerBound, shardUpperBound),
 		counters:  newCountersTable(shardLowerBound, shardUpperBound),
 		gcRecords: newGCRecordsTable(shardGlobalIndexPrefix),
-		leases: common.NewLeasesTable(
+		leases: tables.NewLeasesTable(
 			shardLowerBound,
 			shardUpperBound,
 			shardGlobalIndexPrefix,

@@ -12,7 +12,6 @@ import (
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/evrblk/grackle/pkg/common"
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/ids"
 	"github.com/evrblk/grackle/pkg/monsteragen"
@@ -28,7 +27,7 @@ type Core struct {
 	counters          *countersTable
 	gcRecords         *gcRecordsTable
 	expirationRecords *expirationRecordsTable
-	leases            *common.LeasesTable
+	leases            *tables.LeasesTable
 }
 
 var _ monsteragen.GrackleSemaphoresCoreApi = &Core{}
@@ -42,7 +41,7 @@ func NewCore(badgerStore *store.BadgerStore, shardGlobalIndexPrefix []byte, shar
 		counters:          newCountersTable(shardLowerBound, shardUpperBound),
 		gcRecords:         newGCRecordsTable(shardGlobalIndexPrefix),
 		expirationRecords: newExpirationRecordsTable(shardGlobalIndexPrefix),
-		leases: common.NewLeasesTable(
+		leases: tables.NewLeasesTable(
 			shardLowerBound,
 			shardUpperBound,
 			shardGlobalIndexPrefix,

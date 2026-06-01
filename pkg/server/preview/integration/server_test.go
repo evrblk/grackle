@@ -13,6 +13,7 @@ import (
 	"github.com/evrblk/grackle/pkg/monsteragen"
 	"github.com/evrblk/grackle/pkg/namespaces"
 	"github.com/evrblk/grackle/pkg/semaphores"
+	"github.com/evrblk/grackle/pkg/server/preview"
 	"github.com/evrblk/grackle/pkg/sharding"
 	"github.com/evrblk/grackle/pkg/tables"
 	"github.com/evrblk/grackle/pkg/waitgroups"
@@ -23,7 +24,7 @@ func init() {
 	tables.RegisterGracklePrefixes(registry)
 }
 
-func setupGrackleApiServer(t *testing.T) *GrackleApiServer {
+func setupGrackleApiServer(t *testing.T) *preview.GrackleApiServer {
 	dataStore, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
@@ -46,7 +47,7 @@ func setupGrackleApiServer(t *testing.T) *GrackleApiServer {
 	}
 	grackleCoreApiClient := monsteragen.NewGrackleCoreApiNonclusteredStub(8, coresFactory, &sharding.GrackleShardKeyCalculator{})
 
-	grackleApiGatewayServer := NewGrackleApiServer(grackleCoreApiClient)
+	grackleApiGatewayServer := preview.NewGrackleApiServer(grackleCoreApiClient)
 
 	return grackleApiGatewayServer
 }
