@@ -9,9 +9,9 @@ import (
 	"github.com/evrblk/monstera/store"
 	monsterax "github.com/evrblk/monstera/x"
 
+	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/ids"
-	"github.com/evrblk/grackle/pkg/monsteragen"
 	"github.com/evrblk/grackle/pkg/pagination"
 )
 
@@ -25,7 +25,7 @@ type Core struct {
 	expirationRecords *expirationRecordsTable
 }
 
-var _ monsteragen.GrackleBarriersCoreApi = &Core{}
+var _ coreapis.GrackleBarriersCoreApi = &Core{}
 
 func NewCore(badgerStore *store.BadgerStore, globalIndexPrefix []byte, shardLowerBound []byte, shardUpperBound []byte) *Core {
 	return &Core{
@@ -64,119 +64,133 @@ func (c *Core) Close() {
 
 }
 
-func (c *Core) GetBarrier(request *corepb.GetBarrierRequest) (*corepb.GetBarrierResponse, error) {
+func (c *Core) GetBarrier(req *coreapis.GetBarrierRequest) (*coreapis.GetBarrierResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
-	barrier, err := c.barriers.Get(txn, request.BarrierId)
+	barrier, err := c.barriers.Get(txn, req.Payload.BarrierId)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return nil, monsterax.NewErrorWithContext(
 				monsterax.NotFound,
 				"barrier not found",
 				map[string]string{
-					"barrier_id": ids.EncodeBarrierId(request.BarrierId),
+					"barrier_id": ids.EncodeBarrierId(req.Payload.BarrierId),
 				})
 		}
 
-		panic(err)
+		return nil, err
 	}
 
-	return &corepb.GetBarrierResponse{
-		Barrier: barrier,
+	return &coreapis.GetBarrierResponse{
+		Payload: &corepb.GetBarrierResponse{
+			Barrier: barrier,
+		},
 	}, nil
 }
 
-func (c *Core) GetBarrierByName(request *corepb.GetBarrierByNameRequest) (*corepb.GetBarrierByNameResponse, error) {
+func (c *Core) GetBarrierByName(req *coreapis.GetBarrierByNameRequest) (*coreapis.GetBarrierByNameResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
-	barrier, err := c.barriers.GetByName(txn, request.NamespaceId.AccountId, request.NamespaceId.NamespaceId, request.BarrierName)
+	barrier, err := c.barriers.GetByName(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, req.Payload.BarrierName)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return nil, monsterax.NewErrorWithContext(
 				monsterax.NotFound,
 				"barrier not found",
 				map[string]string{
-					"barrier_name": request.BarrierName,
+					"barrier_name": req.Payload.BarrierName,
 				})
 		}
 
-		panic(err)
+		return nil, err
 	}
 
-	return &corepb.GetBarrierByNameResponse{
-		Barrier: barrier,
+	return &coreapis.GetBarrierByNameResponse{
+		Payload: &corepb.GetBarrierByNameResponse{
+			Barrier: barrier,
+		},
 	}, nil
 }
 
-func (c *Core) ListBarriers(request *corepb.ListBarriersRequest) (*corepb.ListBarriersResponse, error) {
+func (c *Core) ListBarriers(req *coreapis.ListBarriersRequest) (*coreapis.ListBarriersResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
-	result, err := c.barriers.List(txn, request.NamespaceId.AccountId, request.NamespaceId.NamespaceId, request.PaginationToken, pagination.GetLimitWithDefaults(int(request.Limit)))
-	panicIfNotNil(err)
+	result, err := c.barriers.List(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, req.Payload.PaginationToken, pagination.GetLimitWithDefaults(int(req.Payload.Limit)))
+	if err != nil {
+		return nil, err
+	}
 
-	return &corepb.ListBarriersResponse{
-		Barriers:                result.barriers,
-		NextPaginationToken:     result.nextPaginationToken,
-		PreviousPaginationToken: result.previousPaginationToken,
+	return &coreapis.ListBarriersResponse{
+		Payload: &corepb.ListBarriersResponse{
+			Barriers:                result.barriers,
+			NextPaginationToken:     result.nextPaginationToken,
+			PreviousPaginationToken: result.previousPaginationToken,
+		},
 	}, nil
 }
 
-func (c *Core) ListBarrierParticipants(request *corepb.ListBarrierParticipantsRequest) (*corepb.ListBarrierParticipantsResponse, error) {
+func (c *Core) ListBarrierParticipants(req *coreapis.ListBarrierParticipantsRequest) (*coreapis.ListBarrierParticipantsResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
-	barrier, err := c.barriers.GetByName(txn, request.NamespaceId.AccountId, request.NamespaceId.NamespaceId, request.BarrierName)
+	barrier, err := c.barriers.GetByName(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, req.Payload.BarrierName)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return nil, monsterax.NewErrorWithContext(
 				monsterax.NotFound,
 				"barrier not found",
 				map[string]string{
-					"barrier_name": request.BarrierName,
+					"barrier_name": req.Payload.BarrierName,
 				})
 		}
 
-		panic(err)
+		return nil, err
 	}
 
-	result, err := c.participants.List(txn, request.NamespaceId.AccountId, request.NamespaceId.NamespaceId, barrier.Id.BarrierId, request.PaginationToken, pagination.GetLimitWithDefaults(int(request.Limit)))
-	panicIfNotNil(err)
+	result, err := c.participants.List(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, barrier.Id.BarrierId, req.Payload.PaginationToken, pagination.GetLimitWithDefaults(int(req.Payload.Limit)))
+	if err != nil {
+		return nil, err
+	}
 
-	return &corepb.ListBarrierParticipantsResponse{
-		Participants:            result.participants,
-		NextPaginationToken:     result.nextPaginationToken,
-		PreviousPaginationToken: result.previousPaginationToken,
+	return &coreapis.ListBarrierParticipantsResponse{
+		Payload: &corepb.ListBarrierParticipantsResponse{
+			Participants:            result.participants,
+			NextPaginationToken:     result.nextPaginationToken,
+			PreviousPaginationToken: result.previousPaginationToken,
+		},
 	}, nil
 }
 
-func (c *Core) CreateBarrier(request *corepb.CreateBarrierRequest) (*corepb.CreateBarrierResponse, error) {
+func (c *Core) CreateBarrier(req *coreapis.CreateBarrierRequest) (*coreapis.CreateBarrierResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
 	// Get counters for that namespace
-	counters, err := c.counters.Get(txn, request.BarrierId.AccountId, request.BarrierId.NamespaceId)
-	panicIfNotNil(err)
+	counters, err := c.counters.Get(txn, req.Payload.BarrierId.AccountId, req.Payload.BarrierId.NamespaceId)
+	if err != nil {
+		return nil, err
+	}
 
 	// Checking max number of barriers
-	if counters.NumberOfBarriers >= request.MaxNumberOfBarriersPerNamespace {
+	if counters.NumberOfBarriers >= req.Payload.MaxNumberOfBarriersPerNamespace {
 		return nil, monsterax.NewErrorWithContext(
 			monsterax.ResourceExhausted,
 			"max number of barriers per namespace reached",
-			map[string]string{"limit": fmt.Sprintf("%d", request.MaxNumberOfBarriersPerNamespace)})
+			map[string]string{"limit": fmt.Sprintf("%d", req.Payload.MaxNumberOfBarriersPerNamespace)})
 	}
 
 	barrier := &corepb.Barrier{
-		Id:                request.BarrierId,
-		Name:              request.Name,
-		Description:       request.Description,
-		ExpectedProcesses: request.ExpectedProcesses,
+		Id:                req.Payload.BarrierId,
+		Name:              req.Payload.Name,
+		Description:       req.Payload.Description,
+		ExpectedProcesses: req.Payload.ExpectedProcesses,
 		ArrivedProcesses:  0,
 		Generation:        1,
-		CreatedAt:         request.Now,
-		UpdatedAt:         request.Now,
+		CreatedAt:         req.Payload.Now,
+		UpdatedAt:         req.Payload.Now,
 	}
 
 	err = c.barriers.Create(txn, barrier)
@@ -191,131 +205,159 @@ func (c *Core) CreateBarrier(request *corepb.CreateBarrierRequest) (*corepb.Crea
 
 	// Update counters
 	counters.NumberOfBarriers += 1
-	err = c.counters.Set(txn, request.BarrierId.AccountId, request.BarrierId.NamespaceId, counters)
-	panicIfNotNil(err)
+	err = c.counters.Set(txn, req.Payload.BarrierId.AccountId, req.Payload.BarrierId.NamespaceId, counters)
+	if err != nil {
+		return nil, err
+	}
 
 	err = txn.Commit()
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return &corepb.CreateBarrierResponse{
-		Barrier: barrier,
+	return &coreapis.CreateBarrierResponse{
+		Payload: &corepb.CreateBarrierResponse{
+			Barrier: barrier,
+		},
 	}, nil
 }
 
-func (c *Core) DeleteBarrier(request *corepb.DeleteBarrierRequest) (*corepb.DeleteBarrierResponse, error) {
+func (c *Core) DeleteBarrier(req *coreapis.DeleteBarrierRequest) (*coreapis.DeleteBarrierResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
-	barrier, err := c.barriers.GetByName(txn, request.NamespaceId.AccountId, request.NamespaceId.NamespaceId, request.BarrierName)
+	barrier, err := c.barriers.GetByName(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, req.Payload.BarrierName)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			// No barrier exists, do nothing
-			return &corepb.DeleteBarrierResponse{}, nil
+			return &coreapis.DeleteBarrierResponse{
+				Payload: &corepb.DeleteBarrierResponse{},
+			}, nil
 		}
 
 		panic(err)
 	}
 
 	// Get counters for this namespace
-	counters, err := c.counters.Get(txn, request.NamespaceId.AccountId, request.NamespaceId.NamespaceId)
-	panicIfNotNil(err)
+	counters, err := c.counters.Get(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId)
+	if err != nil {
+		return nil, err
+	}
 
 	err = c.barriers.Delete(txn, barrier.Id)
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
 	// TODO put gc record for barrier
 
 	// Update counters
 	counters.NumberOfBarriers -= 1
-	err = c.counters.Set(txn, request.NamespaceId.AccountId, request.NamespaceId.NamespaceId, counters)
-	panicIfNotNil(err)
+	err = c.counters.Set(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, counters)
+	if err != nil {
+		return nil, err
+	}
 
 	err = txn.Commit()
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return &corepb.DeleteBarrierResponse{}, nil
+	return &coreapis.DeleteBarrierResponse{
+		Payload: &corepb.DeleteBarrierResponse{},
+	}, nil
 }
 
-func (c *Core) UpdateBarrier(request *corepb.UpdateBarrierRequest) (*corepb.UpdateBarrierResponse, error) {
+func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest) (*coreapis.UpdateBarrierResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
-	barrier, err := c.barriers.Get(txn, request.BarrierId)
+	barrier, err := c.barriers.Get(txn, req.Payload.BarrierId)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return nil, monsterax.NewErrorWithContext(
 				monsterax.NotFound,
 				"barrier not found",
 				map[string]string{
-					"barrier_id": ids.EncodeBarrierId(request.BarrierId),
+					"barrier_id": ids.EncodeBarrierId(req.Payload.BarrierId),
 				})
 		}
 
-		panic(err)
+		return nil, err
 	}
 
 	// If there are currently more arrived processes than the new expected processes
-	if barrier.ArrivedProcesses > request.ExpectedProcesses {
+	if barrier.ArrivedProcesses > req.Payload.ExpectedProcesses {
 		return nil, monsterax.NewErrorWithContext(
 			monsterax.InvalidArgument,
 			"there are currently more arrived processes than the new expected processes",
 			map[string]string{})
 	}
 
-	barrier.Description = request.Description
-	barrier.ExpectedProcesses = request.ExpectedProcesses
-	barrier.UpdatedAt = request.Now
+	barrier.Description = req.Payload.Description
+	barrier.ExpectedProcesses = req.Payload.ExpectedProcesses
+	barrier.UpdatedAt = req.Payload.Now
 
 	err = c.barriers.Update(txn, barrier)
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
 	err = txn.Commit()
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return &corepb.UpdateBarrierResponse{
-		Barrier: barrier,
+	return &coreapis.UpdateBarrierResponse{
+		Payload: &corepb.UpdateBarrierResponse{
+			Barrier: barrier,
+		},
 	}, nil
 }
 
-func (c *Core) ArriveAtBarrier(request *corepb.ArriveAtBarrierRequest) (*corepb.ArriveAtBarrierResponse, error) {
+func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest) (*coreapis.ArriveAtBarrierResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
-	barrier, err := c.barriers.GetByName(txn, request.NamespaceId.AccountId, request.NamespaceId.NamespaceId, request.BarrierName)
+	barrier, err := c.barriers.GetByName(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, req.Payload.BarrierName)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return nil, monsterax.NewErrorWithContext(
 				monsterax.NotFound,
 				"barrier not found",
 				map[string]string{
-					"barrier_name": request.BarrierName,
+					"barrier_name": req.Payload.BarrierName,
 				})
 		}
 
-		panic(err)
+		return nil, err
 	}
 
-	_, err = c.participants.Get(txn, barrier.Id.AccountId, barrier.Id.NamespaceId, barrier.Id.BarrierId, request.Generation, request.ProcessId)
+	_, err = c.participants.Get(txn, barrier.Id.AccountId, barrier.Id.NamespaceId, barrier.Id.BarrierId, req.Payload.Generation, req.Payload.ProcessId)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			// Not arrived yet
 		} else {
-			panic(err)
+			return nil, err
 		}
 	} else {
 		// This process has already arrived, nothing to do
 		// TODO
-		return &corepb.ArriveAtBarrierResponse{}, nil
+		return &coreapis.ArriveAtBarrierResponse{
+			Payload: &corepb.ArriveAtBarrierResponse{},
+		}, nil
 	}
 
 	participant := &corepb.BarrierParticipant{
-		ProcessId:  request.ProcessId,
-		Generation: request.Generation,
-		ArrivedAt:  request.Now,
+		ProcessId:  req.Payload.ProcessId,
+		Generation: req.Payload.Generation,
+		ArrivedAt:  req.Payload.Now,
 	}
 
 	err = c.participants.Create(txn, barrier.Id.AccountId, barrier.Id.NamespaceId, barrier.Id.BarrierId, participant)
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
 	// Increment the counter of arrived processes
 	barrier.ArrivedProcesses += 1
@@ -323,26 +365,32 @@ func (c *Core) ArriveAtBarrier(request *corepb.ArriveAtBarrierRequest) (*corepb.
 	// TODO check if barrier is reached, so we should not accept new participants
 
 	err = c.barriers.Update(txn, barrier)
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
 	err = txn.Commit()
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return &corepb.ArriveAtBarrierResponse{
-		Barrier: barrier,
+	return &coreapis.ArriveAtBarrierResponse{
+		Payload: &corepb.ArriveAtBarrierResponse{
+			Barrier: barrier,
+		},
 	}, nil
 }
 
-func (c *Core) RunBarriersGarbageCollection(request *corepb.RunBarriersGarbageCollectionRequest) (*corepb.RunBarriersGarbageCollectionResponse, error) {
-	return &corepb.RunBarriersGarbageCollectionResponse{}, nil
+func (c *Core) RunBarriersGarbageCollection(req *coreapis.RunBarriersGarbageCollectionRequest) (*coreapis.RunBarriersGarbageCollectionResponse, error) {
+	// TODO: implement
+	return &coreapis.RunBarriersGarbageCollectionResponse{
+		Payload: &corepb.RunBarriersGarbageCollectionResponse{},
+	}, nil
 }
 
-func (c *Core) BarriersDeleteNamespace(request *corepb.BarriersDeleteNamespaceRequest) (*corepb.BarriersDeleteNamespaceResponse, error) {
-	return &corepb.BarriersDeleteNamespaceResponse{}, nil
-}
-
-func panicIfNotNil(err error) {
-	if err != nil {
-		panic(err)
-	}
+func (c *Core) BarriersDeleteNamespace(req *coreapis.BarriersDeleteNamespaceRequest) (*coreapis.BarriersDeleteNamespaceResponse, error) {
+	// TODO: implement
+	return &coreapis.BarriersDeleteNamespaceResponse{
+		Payload: &corepb.BarriersDeleteNamespaceResponse{},
+	}, nil
 }

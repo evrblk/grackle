@@ -63,3 +63,5 @@ require (
 )
 
 tool github.com/evrblk/monstera/cmd/monstera
+
+replace github.com/evrblk/monstera v0.0.0-20260529160934-968a07b3db33 => ../monstera

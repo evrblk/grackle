@@ -9,9 +9,9 @@ import (
 	"github.com/evrblk/monstera/store"
 	monsterax "github.com/evrblk/monstera/x"
 
+	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/ids"
-	"github.com/evrblk/grackle/pkg/monsteragen"
 	"github.com/evrblk/grackle/pkg/pagination"
 )
 
@@ -25,7 +25,7 @@ type Core struct {
 	expirationRecords *expirationRecordsTable
 }
 
-var _ monsteragen.GrackleWaitGroupsCoreApi = &Core{}
+var _ coreapis.GrackleWaitGroupsCoreApi = &Core{}
 
 func NewCore(badgerStore *store.BadgerStore, shardGlobalIndexPrefix []byte, shardLowerBound []byte, shardUpperBound []byte) *Core {
 	return &Core{
@@ -64,258 +64,302 @@ func (c *Core) Close() {
 
 }
 
-func (c *Core) GetWaitGroup(request *corepb.GetWaitGroupRequest) (*corepb.GetWaitGroupResponse, error) {
+func (c *Core) GetWaitGroup(req *coreapis.GetWaitGroupRequest) (*coreapis.GetWaitGroupResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
-	waitGroup, err := c.waitGroups.Get(txn, request.WaitGroupId)
+	waitGroup, err := c.waitGroups.Get(txn, req.Payload.WaitGroupId)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return nil, monsterax.NewErrorWithContext(
 				monsterax.NotFound,
 				"wait group not found",
 				map[string]string{
-					"wait_group_id": ids.EncodeWaitGroupId(request.WaitGroupId),
+					"wait_group_id": ids.EncodeWaitGroupId(req.Payload.WaitGroupId),
 				})
 		}
 
-		panic(err)
+		return nil, err
 	}
 
-	return &corepb.GetWaitGroupResponse{
-		WaitGroup: waitGroup,
+	return &coreapis.GetWaitGroupResponse{
+		Payload: &corepb.GetWaitGroupResponse{
+			WaitGroup: waitGroup,
+		},
 	}, nil
 }
 
-func (c *Core) GetWaitGroupByName(request *corepb.GetWaitGroupByNameRequest) (*corepb.GetWaitGroupByNameResponse, error) {
+func (c *Core) GetWaitGroupByName(req *coreapis.GetWaitGroupByNameRequest) (*coreapis.GetWaitGroupByNameResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
-	waitGroup, err := c.waitGroups.GetByName(txn, request.NamespaceId.AccountId, request.NamespaceId.NamespaceId, request.WaitGroupName)
+	waitGroup, err := c.waitGroups.GetByName(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, req.Payload.WaitGroupName)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return nil, monsterax.NewErrorWithContext(
 				monsterax.NotFound,
 				"wait group not found",
 				map[string]string{
-					"wait_group_name": request.WaitGroupName,
+					"wait_group_name": req.Payload.WaitGroupName,
 				})
 		}
 
-		panic(err)
+		return nil, err
 	}
 
-	return &corepb.GetWaitGroupByNameResponse{
-		WaitGroup: waitGroup,
+	return &coreapis.GetWaitGroupByNameResponse{
+		Payload: &corepb.GetWaitGroupByNameResponse{
+			WaitGroup: waitGroup,
+		},
 	}, nil
 }
 
-func (c *Core) ListWaitGroups(request *corepb.ListWaitGroupsRequest) (*corepb.ListWaitGroupsResponse, error) {
+func (c *Core) ListWaitGroups(req *coreapis.ListWaitGroupsRequest) (*coreapis.ListWaitGroupsResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
-	result, err := c.waitGroups.List(txn, request.NamespaceId.AccountId, request.NamespaceId.NamespaceId, request.PaginationToken, pagination.GetLimitWithDefaults(int(request.Limit)))
-	panicIfNotNil(err)
+	result, err := c.waitGroups.List(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, req.Payload.PaginationToken, pagination.GetLimitWithDefaults(int(req.Payload.Limit)))
+	if err != nil {
+		return nil, err
+	}
 
-	return &corepb.ListWaitGroupsResponse{
-		WaitGroups:              result.waitGroups,
-		NextPaginationToken:     result.nextPaginationToken,
-		PreviousPaginationToken: result.previousPaginationToken,
+	return &coreapis.ListWaitGroupsResponse{
+		Payload: &corepb.ListWaitGroupsResponse{
+			WaitGroups:              result.waitGroups,
+			NextPaginationToken:     result.nextPaginationToken,
+			PreviousPaginationToken: result.previousPaginationToken,
+		},
 	}, nil
 }
 
-func (c *Core) ListWaitGroupJobs(request *corepb.ListWaitGroupJobsRequest) (*corepb.ListWaitGroupJobsResponse, error) {
+func (c *Core) ListWaitGroupJobs(req *coreapis.ListWaitGroupJobsRequest) (*coreapis.ListWaitGroupJobsResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
-	waitGroup, err := c.waitGroups.GetByName(txn, request.NamespaceId.AccountId, request.NamespaceId.NamespaceId, request.WaitGroupName)
+	waitGroup, err := c.waitGroups.GetByName(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, req.Payload.WaitGroupName)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return nil, monsterax.NewErrorWithContext(
 				monsterax.NotFound,
 				"wait group not found",
 				map[string]string{
-					"wait_group_name": request.WaitGroupName,
+					"wait_group_name": req.Payload.WaitGroupName,
 				})
 		}
 
-		panic(err)
+		return nil, err
 	}
 
-	result, err := c.jobs.List(txn, request.NamespaceId.AccountId, request.NamespaceId.NamespaceId, waitGroup.Id.WaitGroupId, request.PaginationToken, pagination.GetLimitWithDefaults(int(request.Limit)))
-	panicIfNotNil(err)
+	result, err := c.jobs.List(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, waitGroup.Id.WaitGroupId, req.Payload.PaginationToken, pagination.GetLimitWithDefaults(int(req.Payload.Limit)))
+	if err != nil {
+		return nil, err
+	}
 
-	return &corepb.ListWaitGroupJobsResponse{
-		Jobs:                    result.jobs,
-		NextPaginationToken:     result.nextPaginationToken,
-		PreviousPaginationToken: result.previousPaginationToken,
+	return &coreapis.ListWaitGroupJobsResponse{
+		Payload: &corepb.ListWaitGroupJobsResponse{
+			Jobs:                    result.jobs,
+			NextPaginationToken:     result.nextPaginationToken,
+			PreviousPaginationToken: result.previousPaginationToken,
+		},
 	}, nil
 }
 
-func (c *Core) CreateWaitGroup(request *corepb.CreateWaitGroupRequest) (*corepb.CreateWaitGroupResponse, error) {
+func (c *Core) CreateWaitGroup(req *coreapis.CreateWaitGroupRequest) (*coreapis.CreateWaitGroupResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
 	// Check name uniqueness
-	_, err := c.waitGroups.GetByName(txn, request.WaitGroupId.AccountId, request.WaitGroupId.NamespaceId, request.Name)
+	_, err := c.waitGroups.GetByName(txn, req.Payload.WaitGroupId.AccountId, req.Payload.WaitGroupId.NamespaceId, req.Payload.Name)
 	if err != nil {
 		if !errors.Is(err, store.ErrNotFound) {
-			panic(err)
+			return nil, err
 		}
 	} else {
 		return nil, monsterax.NewErrorWithContext(
 			monsterax.AlreadyExists,
 			"wait group with this name already exists",
 			map[string]string{
-				"wait_group_name": request.Name,
+				"wait_group_name": req.Payload.Name,
 			})
 	}
 
 	// Get counters for that namespace
-	counters, err := c.counters.Get(txn, request.WaitGroupId.AccountId, request.WaitGroupId.NamespaceId)
-	panicIfNotNil(err)
+	counters, err := c.counters.Get(txn, req.Payload.WaitGroupId.AccountId, req.Payload.WaitGroupId.NamespaceId)
+	if err != nil {
+		return nil, err
+	}
 
 	// Checking max number of wait groups
-	if counters.NumberOfWaitGroups >= request.MaxNumberOfWaitGroupsPerNamespace {
+	if counters.NumberOfWaitGroups >= req.Payload.MaxNumberOfWaitGroupsPerNamespace {
 		return nil, monsterax.NewErrorWithContext(
 			monsterax.ResourceExhausted,
 			"max number of wait groups per namespace reached",
-			map[string]string{"limit": fmt.Sprintf("%d", request.MaxNumberOfWaitGroupsPerNamespace)})
+			map[string]string{"limit": fmt.Sprintf("%d", req.Payload.MaxNumberOfWaitGroupsPerNamespace)})
 	}
 
 	waitGroup := &corepb.WaitGroup{
-		Id:          request.WaitGroupId,
-		Name:        request.Name,
-		Description: request.Description,
-		Counter:     request.Counter,
+		Id:          req.Payload.WaitGroupId,
+		Name:        req.Payload.Name,
+		Description: req.Payload.Description,
+		Counter:     req.Payload.Counter,
 		Completed:   0,
-		CreatedAt:   request.Now,
-		UpdatedAt:   request.Now,
-		ExpiresAt:   request.ExpiresAt,
+		CreatedAt:   req.Payload.Now,
+		UpdatedAt:   req.Payload.Now,
+		ExpiresAt:   req.Payload.ExpiresAt,
 	}
 
 	err = c.waitGroups.Create(txn, waitGroup)
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
 	// Update counters
 	counters.NumberOfWaitGroups += 1
-	err = c.counters.Set(txn, request.WaitGroupId.AccountId, request.WaitGroupId.NamespaceId, counters)
-	panicIfNotNil(err)
+	err = c.counters.Set(txn, req.Payload.WaitGroupId.AccountId, req.Payload.WaitGroupId.NamespaceId, counters)
+	if err != nil {
+		return nil, err
+	}
 
-	err = c.expirationRecords.Add(txn, waitGroup.ExpiresAt, request.WaitGroupId)
-	panicIfNotNil(err)
+	err = c.expirationRecords.Add(txn, waitGroup.ExpiresAt, req.Payload.WaitGroupId)
+	if err != nil {
+		return nil, err
+	}
 
 	err = txn.Commit()
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return &corepb.CreateWaitGroupResponse{
-		WaitGroup: waitGroup,
+	return &coreapis.CreateWaitGroupResponse{
+		Payload: &corepb.CreateWaitGroupResponse{
+			WaitGroup: waitGroup,
+		},
 	}, nil
 }
 
-func (c *Core) DeleteWaitGroup(request *corepb.DeleteWaitGroupRequest) (*corepb.DeleteWaitGroupResponse, error) {
+func (c *Core) DeleteWaitGroup(req *coreapis.DeleteWaitGroupRequest) (*coreapis.DeleteWaitGroupResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
-	waitGroup, err := c.waitGroups.GetByName(txn, request.NamespaceId.AccountId, request.NamespaceId.NamespaceId, request.WaitGroupName)
+	waitGroup, err := c.waitGroups.GetByName(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, req.Payload.WaitGroupName)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			// No wait group exists, do nothing
-			return &corepb.DeleteWaitGroupResponse{}, nil
+			return &coreapis.DeleteWaitGroupResponse{
+				Payload: &corepb.DeleteWaitGroupResponse{},
+			}, nil
 		}
 
-		panic(err)
+		return nil, err
 	}
 
 	// Get counters for this namespace
-	counters, err := c.counters.Get(txn, request.NamespaceId.AccountId, request.NamespaceId.NamespaceId)
-	panicIfNotNil(err)
+	counters, err := c.counters.Get(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId)
+	if err != nil {
+		return nil, err
+	}
 
 	err = c.waitGroups.Delete(txn, waitGroup.Id)
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
 	// Mark the wait group's jobs for deletion
 	err = c.gcRecords.Create(txn, &corepb.WaitGroupsGarbageCollectionRecord{
-		Id: request.RecordId,
+		Id: req.Payload.RecordId,
 		Record: &corepb.WaitGroupsGarbageCollectionRecord_WaitGroupId{
 			WaitGroupId: waitGroup.Id,
 		},
 	})
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
 	// Update counters
 	counters.NumberOfWaitGroups -= 1
-	err = c.counters.Set(txn, request.NamespaceId.AccountId, request.NamespaceId.NamespaceId, counters)
-	panicIfNotNil(err)
-
-	err = txn.Commit()
-	panicIfNotNil(err)
-
-	return &corepb.DeleteWaitGroupResponse{}, nil
-}
-
-func (c *Core) AddJobsToWaitGroup(request *corepb.AddJobsToWaitGroupRequest) (*corepb.AddJobsToWaitGroupResponse, error) {
-	txn := c.badgerStore.Update()
-	defer txn.Discard()
-
-	waitGroup, err := c.waitGroups.GetByName(txn, request.NamespaceId.AccountId, request.NamespaceId.NamespaceId, request.WaitGroupName)
+	err = c.counters.Set(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, counters)
 	if err != nil {
-		if errors.Is(err, store.ErrNotFound) {
-			return nil, monsterax.NewErrorWithContext(
-				monsterax.NotFound,
-				"wait group not found",
-				map[string]string{
-					"wait_group_name": request.WaitGroupName,
-				})
-		}
-
-		panic(err)
+		return nil, err
 	}
-
-	// Check if wait group is too big
-	if waitGroup.Counter+request.Counter > uint64(request.MaxWaitGroupSize) {
-		return nil, monsterax.NewErrorWithContext(
-			monsterax.ResourceExhausted,
-			"wait group counter is too big",
-			map[string]string{"limit": fmt.Sprintf("%d", request.MaxWaitGroupSize)})
-	}
-
-	waitGroup.Counter += request.Counter
-	waitGroup.UpdatedAt = request.Now
-
-	err = c.waitGroups.Update(txn, waitGroup)
-	panicIfNotNil(err)
 
 	err = txn.Commit()
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return &corepb.AddJobsToWaitGroupResponse{
-		WaitGroup: waitGroup,
+	return &coreapis.DeleteWaitGroupResponse{
+		Payload: &corepb.DeleteWaitGroupResponse{},
 	}, nil
 }
 
-func (c *Core) CompleteJobsFromWaitGroup(request *corepb.CompleteJobsFromWaitGroupRequest) (*corepb.CompleteJobsFromWaitGroupResponse, error) {
+func (c *Core) AddJobsToWaitGroup(req *coreapis.AddJobsToWaitGroupRequest) (*coreapis.AddJobsToWaitGroupResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
-	waitGroup, err := c.waitGroups.GetByName(txn, request.NamespaceId.AccountId, request.NamespaceId.NamespaceId, request.WaitGroupName)
+	waitGroup, err := c.waitGroups.GetByName(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, req.Payload.WaitGroupName)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return nil, monsterax.NewErrorWithContext(
 				monsterax.NotFound,
 				"wait group not found",
 				map[string]string{
-					"wait_group_name": request.WaitGroupName,
+					"wait_group_name": req.Payload.WaitGroupName,
 				})
 		}
 
-		panic(err)
+		return nil, err
 	}
 
-	for _, processId := range request.ProcessIds {
+	// Check if wait group is too big
+	if waitGroup.Counter+req.Payload.Counter > uint64(req.Payload.MaxWaitGroupSize) {
+		return nil, monsterax.NewErrorWithContext(
+			monsterax.ResourceExhausted,
+			"wait group counter is too big",
+			map[string]string{"limit": fmt.Sprintf("%d", req.Payload.MaxWaitGroupSize)})
+	}
+
+	waitGroup.Counter += req.Payload.Counter
+	waitGroup.UpdatedAt = req.Payload.Now
+
+	err = c.waitGroups.Update(txn, waitGroup)
+	if err != nil {
+		return nil, err
+	}
+
+	err = txn.Commit()
+	if err != nil {
+		return nil, err
+	}
+
+	return &coreapis.AddJobsToWaitGroupResponse{
+		Payload: &corepb.AddJobsToWaitGroupResponse{
+			WaitGroup: waitGroup,
+		},
+	}, nil
+}
+
+func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroupRequest) (*coreapis.CompleteJobsFromWaitGroupResponse, error) {
+	txn := c.badgerStore.Update()
+	defer txn.Discard()
+
+	waitGroup, err := c.waitGroups.GetByName(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, req.Payload.WaitGroupName)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			return nil, monsterax.NewErrorWithContext(
+				monsterax.NotFound,
+				"wait group not found",
+				map[string]string{
+					"wait_group_name": req.Payload.WaitGroupName,
+				})
+		}
+
+		return nil, err
+	}
+
+	for _, processId := range req.Payload.ProcessIds {
 		waitGroupJobId := &corepb.WaitGroupJobId{
-			AccountId:   request.NamespaceId.AccountId,
-			NamespaceId: request.NamespaceId.NamespaceId,
+			AccountId:   req.Payload.NamespaceId.AccountId,
+			NamespaceId: req.Payload.NamespaceId.NamespaceId,
 			WaitGroupId: waitGroup.Id.WaitGroupId,
 			ProcessId:   processId,
 		}
@@ -324,54 +368,68 @@ func (c *Core) CompleteJobsFromWaitGroup(request *corepb.CompleteJobsFromWaitGro
 			if errors.Is(err, store.ErrNotFound) {
 				waitGroupJob := &corepb.WaitGroupJob{
 					Id:          waitGroupJobId,
-					CompletedAt: request.Now,
+					CompletedAt: req.Payload.Now,
 				}
 				err := c.jobs.Create(txn, waitGroupJob)
-				panicIfNotNil(err)
+				if err != nil {
+					return nil, err
+				}
 
 				// Increment counter only if we haven't seen this process_id before
 				waitGroup.Completed++
 			} else {
-				panic(err)
+				return nil, err
 			}
 		}
 	}
 
-	waitGroup.UpdatedAt = request.Now
+	waitGroup.UpdatedAt = req.Payload.Now
 
 	err = c.waitGroups.Update(txn, waitGroup)
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
 	err = txn.Commit()
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return &corepb.CompleteJobsFromWaitGroupResponse{
-		WaitGroup: waitGroup,
+	return &coreapis.CompleteJobsFromWaitGroupResponse{
+		Payload: &corepb.CompleteJobsFromWaitGroupResponse{
+			WaitGroup: waitGroup,
+		},
 	}, nil
 }
 
-func (c *Core) RunWaitGroupsGarbageCollection(request *corepb.RunWaitGroupsGarbageCollectionRequest) (*corepb.RunWaitGroupsGarbageCollectionResponse, error) {
+func (c *Core) RunWaitGroupsGarbageCollection(req *coreapis.RunWaitGroupsGarbageCollectionRequest) (*coreapis.RunWaitGroupsGarbageCollectionResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
 	totalDeletedObjects := 0
 
 	// List one page of GC records
-	gcRecords, err := c.gcRecords.List(txn, int(request.GcRecordsPageSize))
-	panicIfNotNil(err)
+	gcRecords, err := c.gcRecords.List(txn, int(req.Payload.GcRecordsPageSize))
+	if err != nil {
+		return nil, err
+	}
 
 	for _, gcRecord := range gcRecords {
-		limit := int(request.MaxDeletedObjects) - totalDeletedObjects
+		limit := int(req.Payload.MaxDeletedObjects) - totalDeletedObjects
 		deletedObjects := 0
 
 		switch r := gcRecord.Record.(type) {
 		case *corepb.WaitGroupsGarbageCollectionRecord_NamespaceId:
-			deletedObjects, err = c.deleteNamespace(txn, r.NamespaceId, int(request.GcRecordWaitGroupsPageSize), limit)
-			panicIfNotNil(err)
+			deletedObjects, err = c.deleteNamespace(txn, r.NamespaceId, int(req.Payload.GcRecordWaitGroupsPageSize), limit)
+			if err != nil {
+				return nil, err
+			}
 
 		case *corepb.WaitGroupsGarbageCollectionRecord_WaitGroupId:
 			deletedObjects, err = c.deleteWaitGroupJobs(txn, r.WaitGroupId, limit)
-			panicIfNotNil(err)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		totalDeletedObjects = totalDeletedObjects + deletedObjects
@@ -381,33 +439,45 @@ func (c *Core) RunWaitGroupsGarbageCollection(request *corepb.RunWaitGroupsGarba
 		if deletedObjects < limit {
 			// Remove this GC record since it is completed
 			err := c.gcRecords.Delete(txn, gcRecord)
-			panicIfNotNil(err)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
 	err = txn.Commit()
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return &corepb.RunWaitGroupsGarbageCollectionResponse{}, nil
+	return &coreapis.RunWaitGroupsGarbageCollectionResponse{
+		Payload: &corepb.RunWaitGroupsGarbageCollectionResponse{},
+	}, nil
 }
 
-func (c *Core) WaitGroupsDeleteNamespace(request *corepb.WaitGroupsDeleteNamespaceRequest) (*corepb.WaitGroupsDeleteNamespaceResponse, error) {
+func (c *Core) WaitGroupsDeleteNamespace(req *coreapis.WaitGroupsDeleteNamespaceRequest) (*coreapis.WaitGroupsDeleteNamespaceResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
 	// Mark the namespace as deleted
 	err := c.gcRecords.Create(txn, &corepb.WaitGroupsGarbageCollectionRecord{
-		Id: request.RecordId,
+		Id: req.Payload.RecordId,
 		Record: &corepb.WaitGroupsGarbageCollectionRecord_NamespaceId{
-			NamespaceId: request.NamespaceId,
+			NamespaceId: req.Payload.NamespaceId,
 		},
 	})
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
 	err = txn.Commit()
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return &corepb.WaitGroupsDeleteNamespaceResponse{}, nil
+	return &coreapis.WaitGroupsDeleteNamespaceResponse{
+		Payload: &corepb.WaitGroupsDeleteNamespaceResponse{},
+	}, nil
 }
 
 func (c *Core) deleteWaitGroupJobs(txn *store.Txn, waitGroupId *corepb.WaitGroupId, waitGroupJobsPageSize int) (int, error) {
@@ -478,10 +548,4 @@ func (c *Core) deleteNamespace(txn *store.Txn, namespaceId *corepb.NamespaceId, 
 	deletedObjects++
 
 	return deletedObjects, nil
-}
-
-func panicIfNotNil(err error) {
-	if err != nil {
-		panic(err)
-	}
 }

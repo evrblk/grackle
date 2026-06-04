@@ -9,12 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/evrblk/grackle/pkg/barriers"
+	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/locks"
-	"github.com/evrblk/grackle/pkg/monsteragen"
 	"github.com/evrblk/grackle/pkg/namespaces"
 	"github.com/evrblk/grackle/pkg/semaphores"
 	"github.com/evrblk/grackle/pkg/server/preview"
-	"github.com/evrblk/grackle/pkg/sharding"
 	"github.com/evrblk/grackle/pkg/tables"
 	"github.com/evrblk/grackle/pkg/waitgroups"
 )
@@ -28,24 +27,24 @@ func setupGrackleApiServer(t *testing.T) *preview.GrackleApiServer {
 	dataStore, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	coresFactory := &monsteragen.GrackleNonclusteredApplicationCoresFactory{
-		GrackleWaitGroupsCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) monsteragen.GrackleWaitGroupsCoreApi {
+	coresFactory := &coreapis.GrackleNonclusteredApplicationCoresFactory{
+		GrackleWaitGroupsCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) coreapis.GrackleWaitGroupsCoreApi {
 			return waitgroups.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
 		},
-		GrackleSemaphoresCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) monsteragen.GrackleSemaphoresCoreApi {
+		GrackleSemaphoresCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) coreapis.GrackleSemaphoresCoreApi {
 			return semaphores.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
 		},
-		GrackleNamespacesCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) monsteragen.GrackleNamespacesCoreApi {
+		GrackleNamespacesCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) coreapis.GrackleNamespacesCoreApi {
 			return namespaces.NewCore(dataStore, lowerBound, upperBound)
 		},
-		GrackleLocksCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) monsteragen.GrackleLocksCoreApi {
+		GrackleLocksCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) coreapis.GrackleLocksCoreApi {
 			return locks.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
 		},
-		GrackleBarriersCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) monsteragen.GrackleBarriersCoreApi {
+		GrackleBarriersCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) coreapis.GrackleBarriersCoreApi {
 			return barriers.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
 		},
 	}
-	grackleCoreApiClient := monsteragen.NewGrackleCoreApiNonclusteredStub(8, coresFactory, &sharding.GrackleShardKeyCalculator{})
+	grackleCoreApiClient := coreapis.NewGrackleNonclusteredStub(8, coresFactory)
 
 	grackleApiGatewayServer := preview.NewGrackleApiServer(grackleCoreApiClient)
 

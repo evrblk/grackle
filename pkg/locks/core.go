@@ -13,9 +13,9 @@ import (
 	"github.com/evrblk/monstera/store"
 	monsterax "github.com/evrblk/monstera/x"
 
+	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/ids"
-	"github.com/evrblk/grackle/pkg/monsteragen"
 	"github.com/evrblk/grackle/pkg/pagination"
 	"github.com/evrblk/grackle/pkg/tables"
 )
@@ -30,7 +30,7 @@ type Core struct {
 	leases    *tables.LeasesTable
 }
 
-var _ monsteragen.GrackleLocksCoreApi = &Core{}
+var _ coreapis.GrackleLocksCoreApi = &Core{}
 
 func NewCore(badgerStore *store.BadgerStore, shardGlobalIndexPrefix []byte, shardLowerBound []byte, shardUpperBound []byte) *Core {
 	return &Core{
@@ -76,130 +76,168 @@ func (c *Core) Close() {
 
 }
 
-func (c *Core) GetLock(request *corepb.GetLockRequest) (*corepb.GetLockResponse, error) {
+func (c *Core) GetLock(req *coreapis.GetLockRequest) (*coreapis.GetLockResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
-	lock, err := c.locks.Get(txn, request.LockId)
+	lock, err := c.locks.Get(txn, req.Payload.LockId)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			// No lock exists, return an unlocked lock
-			return &corepb.GetLockResponse{
-				Lock: &corepb.Lock{
-					Id:       request.LockId,
-					State:    corepb.LockState_UNLOCKED,
-					LockedAt: 0,
+			return &coreapis.GetLockResponse{
+				Payload: &corepb.GetLockResponse{
+					Lock: &corepb.Lock{
+						Id:       req.Payload.LockId,
+						State:    corepb.LockState_UNLOCKED,
+						LockedAt: 0,
+					},
 				},
 			}, nil
 		}
 
-		panic(err)
+		return nil, err
 	}
 
 	// Check expiration
-	updatedLock, err := c.checkLockExpiration(txn, lock, request.Now)
-	panicIfNotNil(err)
+	updatedLock, err := c.checkLockExpiration(txn, lock, req.Payload.Now)
+	if err != nil {
+		return nil, err
+	}
 
 	if updatedLock.State == corepb.LockState_UNLOCKED {
 		// Get counters for that namespace
-		counters, err := c.counters.Get(txn, request.LockId.AccountId, request.LockId.NamespaceId)
-		panicIfNotNil(err)
+		counters, err := c.counters.Get(txn, req.Payload.LockId.AccountId, req.Payload.LockId.NamespaceId)
+		if err != nil {
+			return nil, err
+		}
 
 		// Lock is expired, delete it
 		err = c.locks.Delete(txn, lock.Id)
-		panicIfNotNil(err)
+		if err != nil {
+			return nil, err
+		}
 
 		// Update ancestor entries
 		err = c.decrementAncestors(txn, lock.Id, lock.State == corepb.LockState_EXCLUSIVE_LOCKED)
-		panicIfNotNil(err)
+		if err != nil {
+			return nil, err
+		}
 
 		// Update counters
 		counters.NumberOfLocks -= 1
-		err = c.counters.Set(txn, request.LockId.AccountId, request.LockId.NamespaceId, counters)
-		panicIfNotNil(err)
+		err = c.counters.Set(txn, req.Payload.LockId.AccountId, req.Payload.LockId.NamespaceId, counters)
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		// Lock is still held, update unexpired holders
 		err = c.locks.Update(txn, updatedLock)
-		panicIfNotNil(err)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	err = txn.Commit()
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return &corepb.GetLockResponse{
-		Lock: updatedLock,
+	return &coreapis.GetLockResponse{
+		Payload: &corepb.GetLockResponse{
+			Lock: updatedLock,
+		},
 	}, nil
 }
 
-func (c *Core) ListLocks(request *corepb.ListLocksRequest) (*corepb.ListLocksResponse, error) {
+func (c *Core) ListLocks(req *coreapis.ListLocksRequest) (*coreapis.ListLocksResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
-	result, err := c.locks.List(txn, request.NamespaceId, request.PaginationToken, pagination.GetLimitWithDefaults(int(request.Limit)))
-	panicIfNotNil(err)
+	result, err := c.locks.List(txn, req.Payload.NamespaceId, req.Payload.PaginationToken, pagination.GetLimitWithDefaults(int(req.Payload.Limit)))
+	if err != nil {
+		return nil, err
+	}
 
 	// Check expiration
 	lockedLocks := make([]*corepb.Lock, 0, len(result.locks))
 	for _, lock := range result.locks {
-		refreshedLock, err := c.checkLockExpiration(txn, lock, request.Now)
-		panicIfNotNil(err)
+		refreshedLock, err := c.checkLockExpiration(txn, lock, req.Payload.Now)
+		if err != nil {
+			return nil, err
+		}
 		if refreshedLock.State != corepb.LockState_UNLOCKED {
 			lockedLocks = append(lockedLocks, refreshedLock)
 		}
 	}
 
-	return &corepb.ListLocksResponse{
-		Locks:                   lockedLocks,
-		NextPaginationToken:     result.nextPaginationToken,
-		PreviousPaginationToken: result.previousPaginationToken,
+	return &coreapis.ListLocksResponse{
+		Payload: &corepb.ListLocksResponse{
+			Locks:                   lockedLocks,
+			NextPaginationToken:     result.nextPaginationToken,
+			PreviousPaginationToken: result.previousPaginationToken,
+		},
 	}, nil
 }
 
-func (c *Core) DeleteLock(request *corepb.DeleteLockRequest) (*corepb.DeleteLockResponse, error) {
+func (c *Core) DeleteLock(req *coreapis.DeleteLockRequest) (*coreapis.DeleteLockResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
-	lock, err := c.locks.Get(txn, request.LockId)
+	lock, err := c.locks.Get(txn, req.Payload.LockId)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			// No lock exists, do nothing
-			return &corepb.DeleteLockResponse{}, nil
+			return &coreapis.DeleteLockResponse{
+				Payload: &corepb.DeleteLockResponse{},
+			}, nil
 		}
 
-		panic(err)
+		return nil, err
 	}
 
 	// Get counters for that namespace
-	counters, err := c.counters.Get(txn, request.LockId.AccountId, request.LockId.NamespaceId)
-	panicIfNotNil(err)
+	counters, err := c.counters.Get(txn, req.Payload.LockId.AccountId, req.Payload.LockId.NamespaceId)
+	if err != nil {
+		return nil, err
+	}
 
 	err = c.locks.Delete(txn, lock.Id)
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
 	// Update ancestor entries
 	err = c.decrementAncestors(txn, lock.Id, lock.State == corepb.LockState_EXCLUSIVE_LOCKED)
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
 	// Update counters
 	counters.NumberOfLocks -= 1
-	err = c.counters.Set(txn, request.LockId.AccountId, request.LockId.NamespaceId, counters)
-	panicIfNotNil(err)
+	err = c.counters.Set(txn, req.Payload.LockId.AccountId, req.Payload.LockId.NamespaceId, counters)
+	if err != nil {
+		return nil, err
+	}
 
 	err = txn.Commit()
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return &corepb.DeleteLockResponse{}, nil
+	return &coreapis.DeleteLockResponse{
+		Payload: &corepb.DeleteLockResponse{},
+	}, nil
 }
 
-func (c *Core) AcquireLock(request *corepb.AcquireLockRequest) (*corepb.AcquireLockResponse, error) {
+func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest) (*coreapis.AcquireLockResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
 	// Validate and get the lease
 	lease, err := c.leases.Get(txn, &corepb.LeaseId{
-		AccountId:   request.LockId.AccountId,
-		NamespaceId: request.LockId.NamespaceId,
-		LeaseId:     request.LeaseId,
+		AccountId:   req.Payload.LockId.AccountId,
+		NamespaceId: req.Payload.LockId.NamespaceId,
+		LeaseId:     req.Payload.LeaseId,
 	})
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
@@ -207,34 +245,36 @@ func (c *Core) AcquireLock(request *corepb.AcquireLockRequest) (*corepb.AcquireL
 				monsterax.NotFound,
 				"lease not found",
 				map[string]string{
-					"lease_id": fmt.Sprintf("%d", request.LeaseId),
+					"lease_id": fmt.Sprintf("%d", req.Payload.LeaseId),
 				})
 		}
 
-		panic(err)
+		return nil, err
 	}
 
 	// Check if lease has expired
-	if lease.ExpiresAt <= request.Now {
+	if lease.ExpiresAt <= req.Payload.Now {
 		// On return, the transaction will be discarded, and the expired lease will be deleted later by the garbage collector.
 		return nil, monsterax.NewErrorWithContext(
 			monsterax.NotFound,
 			"lease not found",
 			map[string]string{
-				"lease_id": fmt.Sprintf("%d", request.LeaseId),
+				"lease_id": fmt.Sprintf("%d", req.Payload.LeaseId),
 			})
 	}
 
 	// Get counters for that namespace
-	counters, err := c.counters.Get(txn, request.LockId.AccountId, request.LockId.NamespaceId)
-	panicIfNotNil(err)
+	counters, err := c.counters.Get(txn, req.Payload.LockId.AccountId, req.Payload.LockId.NamespaceId)
+	if err != nil {
+		return nil, err
+	}
 
-	lock, err := c.locks.Get(txn, request.LockId)
+	lock, err := c.locks.Get(txn, req.Payload.LockId)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			// No lock exists, create a new one
 			lock = &corepb.Lock{
-				Id:       request.LockId,
+				Id:       req.Payload.LockId,
 				State:    corepb.LockState_UNLOCKED,
 				LockedAt: 0,
 			}
@@ -242,16 +282,16 @@ func (c *Core) AcquireLock(request *corepb.AcquireLockRequest) (*corepb.AcquireL
 			counters.NumberOfLocks += 1
 
 			// Check the total number of locks
-			if counters.NumberOfLocks > request.MaxNumberOfLocksPerNamespace {
+			if counters.NumberOfLocks > req.Payload.MaxNumberOfLocksPerNamespace {
 				return nil, monsterax.NewErrorWithContext(
 					monsterax.ResourceExhausted,
 					"max number of locks per namespace reached",
 					map[string]string{
-						"limit": fmt.Sprintf("%d", request.MaxNumberOfLocksPerNamespace),
+						"limit": fmt.Sprintf("%d", req.Payload.MaxNumberOfLocksPerNamespace),
 					})
 			}
 		} else {
-			panic(err)
+			return nil, err
 		}
 	}
 
@@ -259,28 +299,34 @@ func (c *Core) AcquireLock(request *corepb.AcquireLockRequest) (*corepb.AcquireL
 	prevState := lock.State
 
 	// Remove expired holders
-	updatedLock, err := c.checkLockExpiration(txn, lock, request.Now)
-	panicIfNotNil(err)
+	updatedLock, err := c.checkLockExpiration(txn, lock, req.Payload.Now)
+	if err != nil {
+		return nil, err
+	}
 
 	// Check hierarchical conflicts before attempting acquisition
-	canAcquire, err := c.checkHierarchicalConflicts(txn, request.LockId, request.Exclusive)
-	panicIfNotNil(err)
+	canAcquire, err := c.checkHierarchicalConflicts(txn, req.Payload.LockId, req.Payload.Exclusive)
+	if err != nil {
+		return nil, err
+	}
 	if !canAcquire {
 		// Hierarchical conflict detected - return failure
-		return &corepb.AcquireLockResponse{
-			Lock:    updatedLock,
-			Success: false,
+		return &coreapis.AcquireLockResponse{
+			Payload: &corepb.AcquireLockResponse{
+				Lock:    updatedLock,
+				Success: false,
+			},
 		}, nil
 	}
 
 	lockHolder := &corepb.LockHolder{
-		LeaseId:  request.LeaseId,
-		LockedAt: request.Now,
+		LeaseId:  req.Payload.LeaseId,
+		LockedAt: req.Payload.Now,
 	}
 
 	switch updatedLock.State {
 	case corepb.LockState_UNLOCKED:
-		if request.Exclusive {
+		if req.Payload.Exclusive {
 			// Lock for writes
 			updatedLock.State = corepb.LockState_EXCLUSIVE_LOCKED
 		} else {
@@ -288,127 +334,155 @@ func (c *Core) AcquireLock(request *corepb.AcquireLockRequest) (*corepb.AcquireL
 			updatedLock.State = corepb.LockState_SHARED_LOCKED
 		}
 		updatedLock.LockHolders = []*corepb.LockHolder{lockHolder}
-		updatedLock.LockedAt = request.Now
+		updatedLock.LockedAt = req.Payload.Now
 	case corepb.LockState_SHARED_LOCKED:
-		if request.Exclusive {
-			return &corepb.AcquireLockResponse{
-				Lock:    updatedLock,
-				Success: false, // Already locked for reads, cannot be locked for writes.
+		if req.Payload.Exclusive {
+			return &coreapis.AcquireLockResponse{
+				Payload: &corepb.AcquireLockResponse{
+					Lock:    updatedLock,
+					Success: false, // Already locked for reads, cannot be locked for writes.
+				},
 			}, nil
 		}
 
 		// Already locked for reads.
 		// Check if the same lease_id already holds the lock here.
 		existingHolder, ok := lo.Find(updatedLock.LockHolders, func(h *corepb.LockHolder) bool {
-			return h.LeaseId == request.LeaseId
+			return h.LeaseId == req.Payload.LeaseId
 		})
 		if ok {
 			// Update locked_at time (refresh lock acquisition time)
-			existingHolder.LockedAt = request.Now
+			existingHolder.LockedAt = req.Payload.Now
 		} else {
 			// Add the new lock holder
 			updatedLock.LockHolders = append(updatedLock.LockHolders, lockHolder)
 		}
 	case corepb.LockState_EXCLUSIVE_LOCKED:
-		if request.Exclusive {
+		if req.Payload.Exclusive {
 			// Already locked for writes. Check if the same lease_id already holds the lock here.
-			if updatedLock.LockHolders[0].LeaseId == request.LeaseId {
+			if updatedLock.LockHolders[0].LeaseId == req.Payload.LeaseId {
 				// This lease already holds the lock, repeated locks are considered successful
 				// Update locked_at time (refresh lock acquisition time)
-				updatedLock.LockHolders[0].LockedAt = request.Now
+				updatedLock.LockHolders[0].LockedAt = req.Payload.Now
 			} else {
-				return &corepb.AcquireLockResponse{
-					Lock:    updatedLock,
-					Success: false, // The lock is held by another lease
+				return &coreapis.AcquireLockResponse{
+					Payload: &corepb.AcquireLockResponse{
+						Lock:    updatedLock,
+						Success: false, // The lock is held by another lease
+					},
 				}, nil
 			}
 
 		} else {
-			return &corepb.AcquireLockResponse{
-				Lock:    updatedLock,
-				Success: false, // Already locked for writes, cannot be locked for reads.
+			return &coreapis.AcquireLockResponse{
+				Payload: &corepb.AcquireLockResponse{
+					Lock:    updatedLock,
+					Success: false, // Already locked for writes, cannot be locked for reads.
+				},
 			}, nil
 
 		}
 	default:
-		panic("invalid lock state")
+		return nil, fmt.Errorf("invalid lock state")
 	}
 
 	// Update lock
 	err = c.locks.Update(txn, updatedLock)
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
 	// Update ancestor entries based on lock state transition.
 	// prevState is the state from DB (UNLOCKED for a brand new lock).
 	// updatedLock.State is the final acquired state.
 	if prevState == corepb.LockState_UNLOCKED && updatedLock.State != corepb.LockState_UNLOCKED {
 		// New lock record: increment ancestor counters
-		err = c.incrementAncestors(txn, request.LockId, updatedLock.State == corepb.LockState_EXCLUSIVE_LOCKED)
-		panicIfNotNil(err)
+		err = c.incrementAncestors(txn, req.Payload.LockId, updatedLock.State == corepb.LockState_EXCLUSIVE_LOCKED)
+		if err != nil {
+			return nil, err
+		}
 	} else if prevState != corepb.LockState_UNLOCKED && updatedLock.State != corepb.LockState_UNLOCKED && prevState != updatedLock.State {
 		// Lock was expired and re-acquired with a different mode: swap ancestor mode
-		err = c.swapAncestorMode(txn, request.LockId,
+		err = c.swapAncestorMode(txn, req.Payload.LockId,
 			prevState == corepb.LockState_EXCLUSIVE_LOCKED,
 			updatedLock.State == corepb.LockState_EXCLUSIVE_LOCKED)
-		panicIfNotNil(err)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Update counters
-	err = c.counters.Set(txn, request.LockId.AccountId, request.LockId.NamespaceId, counters)
-	panicIfNotNil(err)
+	err = c.counters.Set(txn, req.Payload.LockId.AccountId, req.Payload.LockId.NamespaceId, counters)
+	if err != nil {
+		return nil, err
+	}
 
 	err = txn.Commit()
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return &corepb.AcquireLockResponse{
-		Lock:    updatedLock,
-		Success: true, // Locked successfully by the given lease
+	return &coreapis.AcquireLockResponse{
+		Payload: &corepb.AcquireLockResponse{
+			Lock:    updatedLock,
+			Success: true, // Locked successfully by the given lease
+		},
 	}, nil
 }
 
-func (c *Core) ReleaseLock(request *corepb.ReleaseLockRequest) (*corepb.ReleaseLockResponse, error) {
+func (c *Core) ReleaseLock(req *coreapis.ReleaseLockRequest) (*coreapis.ReleaseLockResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
 	// Get counters for that namespace
-	counters, err := c.counters.Get(txn, request.LockId.AccountId, request.LockId.NamespaceId)
-	panicIfNotNil(err)
+	counters, err := c.counters.Get(txn, req.Payload.LockId.AccountId, req.Payload.LockId.NamespaceId)
+	if err != nil {
+		return nil, err
+	}
 
-	lock, err := c.locks.Get(txn, request.LockId)
+	lock, err := c.locks.Get(txn, req.Payload.LockId)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			// No lock exists, return an unlocked lock
-			return &corepb.ReleaseLockResponse{
-				Lock: &corepb.Lock{
-					Id:       request.LockId,
-					State:    corepb.LockState_UNLOCKED,
-					LockedAt: 0,
+			return &coreapis.ReleaseLockResponse{
+				Payload: &corepb.ReleaseLockResponse{
+					Lock: &corepb.Lock{
+						Id:       req.Payload.LockId,
+						State:    corepb.LockState_UNLOCKED,
+						LockedAt: 0,
+					},
 				},
 			}, nil
 		}
 
-		panic(err)
+		return nil, err
 	}
 
 	// Lock exists, lets check if it expired
-	updatedLock, err := c.checkLockExpiration(txn, lock, request.Now)
-	panicIfNotNil(err)
+	updatedLock, err := c.checkLockExpiration(txn, lock, req.Payload.Now)
+	if err != nil {
+		return nil, err
+	}
 
 	switch updatedLock.State {
 	case corepb.LockState_UNLOCKED:
 		// Lock has expired, delete it
 		err = c.locks.Delete(txn, updatedLock.Id)
-		panicIfNotNil(err)
+		if err != nil {
+			return nil, err
+		}
 
 		// Update ancestor entries
 		err = c.decrementAncestors(txn, lock.Id, lock.State == corepb.LockState_EXCLUSIVE_LOCKED)
-		panicIfNotNil(err)
+		if err != nil {
+			return nil, err
+		}
 
 		counters.NumberOfLocks -= 1
 	case corepb.LockState_SHARED_LOCKED:
 		// Remove the holder
 		updatedLock.LockHolders = lo.Filter(updatedLock.LockHolders, func(h *corepb.LockHolder, _ int) bool {
-			return h.LeaseId != request.LeaseId
+			return h.LeaseId != req.Payload.LeaseId
 		})
 
 		// If no read lock holders left
@@ -420,20 +494,26 @@ func (c *Core) ReleaseLock(request *corepb.ReleaseLockRequest) (*corepb.ReleaseL
 
 			// Delete lock
 			err = c.locks.Delete(txn, updatedLock.Id)
-			panicIfNotNil(err)
+			if err != nil {
+				return nil, err
+			}
 
 			// Update ancestor entries
 			err = c.decrementAncestors(txn, lock.Id, false)
-			panicIfNotNil(err)
+			if err != nil {
+				return nil, err
+			}
 
 			counters.NumberOfLocks -= 1
 		} else {
 			// Update lock
 			err = c.locks.Update(txn, updatedLock)
-			panicIfNotNil(err)
+			if err != nil {
+				return nil, err
+			}
 		}
 	case corepb.LockState_EXCLUSIVE_LOCKED:
-		if updatedLock.LockHolders[0].LeaseId == request.LeaseId {
+		if updatedLock.LockHolders[0].LeaseId == req.Payload.LeaseId {
 			// Unlock
 			updatedLock.State = corepb.LockState_UNLOCKED
 			updatedLock.LockedAt = 0
@@ -441,48 +521,64 @@ func (c *Core) ReleaseLock(request *corepb.ReleaseLockRequest) (*corepb.ReleaseL
 
 			// Delete it
 			err = c.locks.Delete(txn, updatedLock.Id)
-			panicIfNotNil(err)
+			if err != nil {
+				return nil, err
+			}
 
 			// Update ancestor entries
 			err = c.decrementAncestors(txn, lock.Id, true)
-			panicIfNotNil(err)
+			if err != nil {
+				return nil, err
+			}
 
 			counters.NumberOfLocks -= 1
 		}
 	default:
-		panic("invalid lock state")
+		return nil, fmt.Errorf("invalid lock state")
 	}
 
 	// Update counters
-	err = c.counters.Set(txn, request.LockId.AccountId, request.LockId.NamespaceId, counters)
-	panicIfNotNil(err)
+	err = c.counters.Set(txn, req.Payload.LockId.AccountId, req.Payload.LockId.NamespaceId, counters)
+	if err != nil {
+		return nil, err
+	}
 
 	err = txn.Commit()
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return &corepb.ReleaseLockResponse{
-		Lock: updatedLock,
+	return &coreapis.ReleaseLockResponse{
+		Payload: &corepb.ReleaseLockResponse{
+			Lock: updatedLock,
+		},
 	}, nil
 }
 
-func (c *Core) RunLocksGarbageCollection(request *corepb.RunLocksGarbageCollectionRequest) (*corepb.RunLocksGarbageCollectionResponse, error) {
+func (c *Core) RunLocksGarbageCollection(req *coreapis.RunLocksGarbageCollectionRequest) (*coreapis.RunLocksGarbageCollectionResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
 	visitedLocks := int64(0)
 
 	// List one page of GC records
-	gcRecords, err := c.gcRecords.List(txn, int(request.GcRecordsPageSize))
-	panicIfNotNil(err)
+	gcRecords, err := c.gcRecords.List(txn, int(req.Payload.GcRecordsPageSize))
+	if err != nil {
+		return nil, err
+	}
 
 	for _, gcRecord := range gcRecords {
 		// Delete counters for that namespace. Will not fail if counters do not exist.
 		err := c.counters.Delete(txn, gcRecord.NamespaceId.AccountId, gcRecord.NamespaceId.NamespaceId)
-		panicIfNotNil(err)
+		if err != nil {
+			return nil, err
+		}
 
 		// List one page of locks for that namespace
-		result, err := c.locks.List(txn, gcRecord.NamespaceId, nil, int(request.GcRecordLocksPageSize))
-		panicIfNotNil(err)
+		result, err := c.locks.List(txn, gcRecord.NamespaceId, nil, int(req.Payload.GcRecordLocksPageSize))
+		if err != nil {
+			return nil, err
+		}
 
 		// Delete those locks
 		for _, lock := range result.locks {
@@ -490,13 +586,17 @@ func (c *Core) RunLocksGarbageCollection(request *corepb.RunLocksGarbageCollecti
 
 			// Remove from the main table
 			err := c.locks.Delete(txn, lock.Id)
-			panicIfNotNil(err)
+			if err != nil {
+				return nil, err
+			}
 
 			// Update ancestor entries
 			err = c.decrementAncestors(txn, lock.Id, lock.State == corepb.LockState_EXCLUSIVE_LOCKED)
-			panicIfNotNil(err)
+			if err != nil {
+				return nil, err
+			}
 
-			if visitedLocks >= request.MaxVisitedLocks {
+			if visitedLocks >= req.Payload.MaxVisitedLocks {
 				goto commit
 			}
 		}
@@ -504,13 +604,15 @@ func (c *Core) RunLocksGarbageCollection(request *corepb.RunLocksGarbageCollecti
 		// Delete the deleted namespace if that was the last page of locks
 		if result.nextPaginationToken == nil {
 			err := c.gcRecords.Delete(txn, gcRecord)
-			panicIfNotNil(err)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
-	if visitedLocks < request.MaxVisitedLocks {
+	if visitedLocks < req.Payload.MaxVisitedLocks {
 		// Clean up expired leases and their associated locks
-		err = c.leases.ListByExpiration(txn, 0, request.Now, func(lease *corepb.Lease) (bool, error) {
+		err = c.leases.ListByExpiration(txn, 0, req.Payload.Now, func(lease *corepb.Lease) (bool, error) {
 			// List all locks held by this expired lease
 			locksResult, err := c.locks.ListByLeaseId(txn, lease.Id, nil, 1000)
 			if err != nil {
@@ -522,8 +624,10 @@ func (c *Core) RunLocksGarbageCollection(request *corepb.RunLocksGarbageCollecti
 				visitedLocks++
 
 				// Get the lock to update it
-				updatedLock, err := c.checkLockExpiration(txn, lock, request.Now)
-				panicIfNotNil(err)
+				updatedLock, err := c.checkLockExpiration(txn, lock, req.Payload.Now)
+				if err != nil {
+					return false, err
+				}
 
 				if updatedLock.State == corepb.LockState_UNLOCKED {
 					// Get counters for lock's namespace
@@ -541,7 +645,9 @@ func (c *Core) RunLocksGarbageCollection(request *corepb.RunLocksGarbageCollecti
 
 					// Update ancestor entries
 					err = c.decrementAncestors(txn, lock.Id, lock.State == corepb.LockState_EXCLUSIVE_LOCKED)
-					panicIfNotNil(err)
+					if err != nil {
+						return false, err
+					}
 
 					// Update counters only if they exist
 					if !counterNotFound {
@@ -559,212 +665,258 @@ func (c *Core) RunLocksGarbageCollection(request *corepb.RunLocksGarbageCollecti
 					}
 				}
 
-				if visitedLocks >= request.MaxVisitedLocks {
+				if visitedLocks >= req.Payload.MaxVisitedLocks {
 					return false, nil // Stop processing
 				}
 			}
 
 			// Delete the expired lease
 			err = c.leases.Delete(txn, lease)
-			panicIfNotNil(err)
+			if err != nil {
+				return false, err
+			}
 
 			// Decrement lease counter
 			counters, err := c.counters.Get(txn, lease.Id.AccountId, lease.Id.NamespaceId)
-			panicIfNotNil(err)
+			if err != nil {
+				return false, err
+			}
+
 			counters.NumberOfLeases -= 1
 			err = c.counters.Set(txn, lease.Id.AccountId, lease.Id.NamespaceId, counters)
-			panicIfNotNil(err)
+			if err != nil {
+				return false, err
+			}
 
 			// Continue if we haven't reached the limit
-			return visitedLocks < request.MaxVisitedLocks, nil
+			return visitedLocks < req.Payload.MaxVisitedLocks, nil
 		})
 		if err != nil && !errors.Is(err, store.ErrNotFound) {
-			panic(err)
+			return nil, err
 		}
 	}
 
 commit:
 
 	err = txn.Commit()
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return &corepb.RunLocksGarbageCollectionResponse{}, nil
+	return &coreapis.RunLocksGarbageCollectionResponse{
+		Payload: &corepb.RunLocksGarbageCollectionResponse{},
+	}, nil
 }
 
-func (c *Core) LocksDeleteNamespace(request *corepb.LocksDeleteNamespaceRequest) (*corepb.LocksDeleteNamespaceResponse, error) {
+func (c *Core) LocksDeleteNamespace(req *coreapis.LocksDeleteNamespaceRequest) (*coreapis.LocksDeleteNamespaceResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
 	// Mark the namespace as deleted
 	err := c.gcRecords.Create(txn, &corepb.LocksGarbageCollectionRecord{
-		Id:          request.RecordId,
-		NamespaceId: request.NamespaceId,
+		Id:          req.Payload.RecordId,
+		NamespaceId: req.Payload.NamespaceId,
 	})
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
 	err = txn.Commit()
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return &corepb.LocksDeleteNamespaceResponse{}, nil
+	return &coreapis.LocksDeleteNamespaceResponse{
+		Payload: &corepb.LocksDeleteNamespaceResponse{},
+	}, nil
 }
 
-func (c *Core) CreateLockLease(request *corepb.CreateLockLeaseRequest) (*corepb.CreateLockLeaseResponse, error) {
+func (c *Core) CreateLockLease(req *coreapis.CreateLockLeaseRequest) (*coreapis.CreateLockLeaseResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
 	// Get counters for that namespace
-	counters, err := c.counters.Get(txn, request.LeaseId.AccountId, request.LeaseId.NamespaceId)
-	panicIfNotNil(err)
+	counters, err := c.counters.Get(txn, req.Payload.LeaseId.AccountId, req.Payload.LeaseId.NamespaceId)
+	if err != nil {
+		return nil, err
+	}
 
 	// Increment lease counter
 	counters.NumberOfLeases += 1
 
 	// Check the total number of leases
-	if counters.NumberOfLeases > request.MaxNumberOfLockLeases {
+	if counters.NumberOfLeases > req.Payload.MaxNumberOfLockLeases {
 		return nil, monsterax.NewErrorWithContext(
 			monsterax.ResourceExhausted,
 			"max number of lock leases per namespace reached",
 			map[string]string{
-				"limit": fmt.Sprintf("%d", request.MaxNumberOfLockLeases),
+				"limit": fmt.Sprintf("%d", req.Payload.MaxNumberOfLockLeases),
 			})
 	}
 
 	// Calculate expiration time
-	expiresAt := request.Now + int64(request.TtlSeconds)*1e9
+	expiresAt := req.Payload.Now + int64(req.Payload.TtlSeconds)*1e9
 
 	// Create the lease
 	lease := &corepb.Lease{
-		Id:        request.LeaseId,
-		ProcessId: request.ProcessId,
-		CreatedAt: request.Now,
+		Id:        req.Payload.LeaseId,
+		ProcessId: req.Payload.ProcessId,
+		CreatedAt: req.Payload.Now,
 		ExpiresAt: expiresAt,
 	}
 
 	err = c.leases.Create(txn, lease)
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
 	// Update counters
-	err = c.counters.Set(txn, request.LeaseId.AccountId, request.LeaseId.NamespaceId, counters)
-	panicIfNotNil(err)
+	err = c.counters.Set(txn, req.Payload.LeaseId.AccountId, req.Payload.LeaseId.NamespaceId, counters)
+	if err != nil {
+		return nil, err
+	}
 
 	err = txn.Commit()
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return &corepb.CreateLockLeaseResponse{
-		Lease: lease,
+	return &coreapis.CreateLockLeaseResponse{
+		Payload: &corepb.CreateLockLeaseResponse{
+			Lease: lease,
+		},
 	}, nil
 }
 
-func (c *Core) GetLockLease(request *corepb.GetLockLeaseRequest) (*corepb.GetLockLeaseResponse, error) {
+func (c *Core) GetLockLease(req *coreapis.GetLockLeaseRequest) (*coreapis.GetLockLeaseResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
-	lease, err := c.leases.Get(txn, request.LeaseId)
+	lease, err := c.leases.Get(txn, req.Payload.LeaseId)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return nil, monsterax.NewErrorWithContext(
 				monsterax.NotFound,
 				"lease not found",
 				map[string]string{
-					"lease_id": ids.EncodeLeaseId(request.LeaseId),
+					"lease_id": ids.EncodeLeaseId(req.Payload.LeaseId),
 				})
 		}
 
-		panic(err)
+		return nil, err
 	}
 
-	if lease.ExpiresAt <= request.Now {
+	if lease.ExpiresAt <= req.Payload.Now {
 		return nil, monsterax.NewErrorWithContext(
 			monsterax.NotFound,
 			"lease not found",
 			map[string]string{
-				"lease_id": ids.EncodeLeaseId(request.LeaseId),
+				"lease_id": ids.EncodeLeaseId(req.Payload.LeaseId),
 			})
 	}
 
-	return &corepb.GetLockLeaseResponse{
-		Lease: lease,
+	return &coreapis.GetLockLeaseResponse{
+		Payload: &corepb.GetLockLeaseResponse{
+			Lease: lease,
+		},
 	}, nil
 }
 
-func (c *Core) ListLockLeases(request *corepb.ListLockLeasesRequest) (*corepb.ListLockLeasesResponse, error) {
+func (c *Core) ListLockLeases(req *coreapis.ListLockLeasesRequest) (*coreapis.ListLockLeasesResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
-	result, err := c.leases.List(txn, request.NamespaceId, request.PaginationToken, pagination.GetLimitWithDefaults(int(request.Limit)))
-	panicIfNotNil(err)
+	result, err := c.leases.List(txn, req.Payload.NamespaceId, req.Payload.PaginationToken, pagination.GetLimitWithDefaults(int(req.Payload.Limit)))
+	if err != nil {
+		return nil, err
+	}
 
 	// Filter out expired leases
 	activeLease := lo.Filter(result.Leases, func(lease *corepb.Lease, _ int) bool {
-		return lease.ExpiresAt > request.Now
+		return lease.ExpiresAt > req.Payload.Now
 	})
 
-	return &corepb.ListLockLeasesResponse{
-		Leases:                  activeLease,
-		NextPaginationToken:     result.NextPaginationToken,
-		PreviousPaginationToken: result.PreviousPaginationToken,
+	return &coreapis.ListLockLeasesResponse{
+		Payload: &corepb.ListLockLeasesResponse{
+			Leases:                  activeLease,
+			NextPaginationToken:     result.NextPaginationToken,
+			PreviousPaginationToken: result.PreviousPaginationToken,
+		},
 	}, nil
 }
 
-func (c *Core) RefreshLockLease(request *corepb.RefreshLockLeaseRequest) (*corepb.RefreshLockLeaseResponse, error) {
+func (c *Core) RefreshLockLease(req *coreapis.RefreshLockLeaseRequest) (*coreapis.RefreshLockLeaseResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
 	// TODO: revoke if expired
 
-	lease, err := c.leases.Get(txn, request.LeaseId)
+	lease, err := c.leases.Get(txn, req.Payload.LeaseId)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return nil, monsterax.NewErrorWithContext(
 				monsterax.NotFound,
 				"lease not found",
 				map[string]string{
-					"lease_id": ids.EncodeLeaseId(request.LeaseId),
+					"lease_id": ids.EncodeLeaseId(req.Payload.LeaseId),
 				})
 		}
 
-		panic(err)
+		return nil, err
 	}
 
 	// Update the expiration time
-	lease.ExpiresAt = request.Now + int64(request.TtlSeconds)*1e9
+	lease.ExpiresAt = req.Payload.Now + int64(req.Payload.TtlSeconds)*1e9
 
 	// Save the updated lease
 	err = c.leases.Update(txn, lease)
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
 	err = txn.Commit()
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return &corepb.RefreshLockLeaseResponse{
-		Lease: lease,
+	return &coreapis.RefreshLockLeaseResponse{
+		Payload: &corepb.RefreshLockLeaseResponse{
+			Lease: lease,
+		},
 	}, nil
 }
 
-func (c *Core) RevokeLockLease(request *corepb.RevokeLockLeaseRequest) (*corepb.RevokeLockLeaseResponse, error) {
+func (c *Core) RevokeLockLease(req *coreapis.RevokeLockLeaseRequest) (*coreapis.RevokeLockLeaseResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
 	// Check if the lease exists
-	lease, err := c.leases.Get(txn, request.LeaseId)
+	lease, err := c.leases.Get(txn, req.Payload.LeaseId)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			// Lease doesn't exist, nothing to do
-			return &corepb.RevokeLockLeaseResponse{}, nil
+			return &coreapis.RevokeLockLeaseResponse{
+				Payload: &corepb.RevokeLockLeaseResponse{},
+			}, nil
 		}
-		panic(err)
+
+		return nil, err
 	}
 
 	// Get counters for that namespace
-	counters, err := c.counters.Get(txn, request.LeaseId.AccountId, request.LeaseId.NamespaceId)
-	panicIfNotNil(err)
+	counters, err := c.counters.Get(txn, req.Payload.LeaseId.AccountId, req.Payload.LeaseId.NamespaceId)
+	if err != nil {
+		return nil, err
+	}
 
 	// Release all locks held by this lease, paginating through all pages
 	var paginationToken *corepb.PaginationToken
 	for {
 		// List locks held by this lease
-		locksResult, err := c.locks.ListByLeaseId(txn, request.LeaseId, paginationToken, 1000)
-		panicIfNotNil(err)
+		locksResult, err := c.locks.ListByLeaseId(txn, req.Payload.LeaseId, paginationToken, 1000)
+		if err != nil {
+			return nil, err
+		}
 
 		// If no locks found, we're done
 		if len(locksResult.locks) == 0 && locksResult.nextPaginationToken == nil {
@@ -780,39 +932,49 @@ func (c *Core) RevokeLockLease(request *corepb.RevokeLockLeaseRequest) (*corepb.
 			case corepb.LockState_SHARED_LOCKED:
 				// Remove the holder
 				lock.LockHolders = lo.Filter(lock.LockHolders, func(h *corepb.LockHolder, _ int) bool {
-					return h.LeaseId != request.LeaseId.LeaseId
+					return h.LeaseId != req.Payload.LeaseId.LeaseId
 				})
 
 				// If no read lock holders left
 				if len(lock.LockHolders) == 0 {
 					// Unlock and delete
 					err = c.locks.Delete(txn, lock.Id)
-					panicIfNotNil(err)
+					if err != nil {
+						return nil, err
+					}
 
 					// Update ancestor entries
 					err = c.decrementAncestors(txn, lock.Id, false)
-					panicIfNotNil(err)
+					if err != nil {
+						return nil, err
+					}
 
 					counters.NumberOfLocks -= 1
 				} else {
 					// Update lock
 					err = c.locks.Update(txn, lock)
-					panicIfNotNil(err)
+					if err != nil {
+						return nil, err
+					}
 				}
 			case corepb.LockState_EXCLUSIVE_LOCKED:
-				if lock.LockHolders[0].LeaseId == request.LeaseId.LeaseId {
+				if lock.LockHolders[0].LeaseId == req.Payload.LeaseId.LeaseId {
 					// This lease holds the exclusive lock, delete it
 					err = c.locks.Delete(txn, lock.Id)
-					panicIfNotNil(err)
+					if err != nil {
+						return nil, err
+					}
 
 					// Update ancestor entries
 					err = c.decrementAncestors(txn, lock.Id, true)
-					panicIfNotNil(err)
+					if err != nil {
+						return nil, err
+					}
 
 					counters.NumberOfLocks -= 1
 				} else {
 					// ListByLeaseId returned a lock that is not held by the lease, this should not happen
-					panic("list locks by lease id returned a lock that is not held by the lease")
+					return nil, fmt.Errorf("list locks by lease id returned a lock that is not held by the lease")
 				}
 			}
 		}
@@ -826,51 +988,65 @@ func (c *Core) RevokeLockLease(request *corepb.RevokeLockLeaseRequest) (*corepb.
 
 	// Delete the lease
 	err = c.leases.Delete(txn, lease)
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
 	// Decrement lease counter
 	counters.NumberOfLeases -= 1
 
 	// Update counters
-	err = c.counters.Set(txn, request.LeaseId.AccountId, request.LeaseId.NamespaceId, counters)
-	panicIfNotNil(err)
+	err = c.counters.Set(txn, req.Payload.LeaseId.AccountId, req.Payload.LeaseId.NamespaceId, counters)
+	if err != nil {
+		return nil, err
+	}
 
 	err = txn.Commit()
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return &corepb.RevokeLockLeaseResponse{}, nil
-}
-
-func (c *Core) ListLockLeasesByProcessId(request *corepb.ListLockLeasesByProcessIdRequest) (*corepb.ListLockLeasesByProcessIdResponse, error) {
-	txn := c.badgerStore.View()
-	defer txn.Discard()
-
-	result, err := c.leases.ListByProcessId(txn, request.NamespaceId, request.ProcessId, request.PaginationToken, pagination.GetLimitWithDefaults(int(request.Limit)))
-	panicIfNotNil(err)
-
-	// Filter out expired leases
-	activeLeases := lo.Filter(result.Leases, func(lease *corepb.Lease, _ int) bool {
-		return lease.ExpiresAt > request.Now
-	})
-
-	return &corepb.ListLockLeasesByProcessIdResponse{
-		Leases:                  activeLeases,
-		NextPaginationToken:     result.NextPaginationToken,
-		PreviousPaginationToken: result.PreviousPaginationToken,
+	return &coreapis.RevokeLockLeaseResponse{
+		Payload: &corepb.RevokeLockLeaseResponse{},
 	}, nil
 }
 
-func (c *Core) ListLocksByLeaseId(request *corepb.ListLocksByLeaseIdRequest) (*corepb.ListLocksByLeaseIdResponse, error) {
+func (c *Core) ListLockLeasesByProcessId(req *coreapis.ListLockLeasesByProcessIdRequest) (*coreapis.ListLockLeasesByProcessIdResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
-	result, err := c.locks.ListByLeaseId(txn, request.LeaseId, request.PaginationToken, pagination.GetLimitWithDefaults(int(request.Limit)))
-	panicIfNotNil(err)
+	result, err := c.leases.ListByProcessId(txn, req.Payload.NamespaceId, req.Payload.ProcessId, req.Payload.PaginationToken, pagination.GetLimitWithDefaults(int(req.Payload.Limit)))
+	if err != nil {
+		return nil, err
+	}
+
+	// Filter out expired leases
+	activeLeases := lo.Filter(result.Leases, func(lease *corepb.Lease, _ int) bool {
+		return lease.ExpiresAt > req.Payload.Now
+	})
+
+	return &coreapis.ListLockLeasesByProcessIdResponse{
+		Payload: &corepb.ListLockLeasesByProcessIdResponse{
+			Leases:                  activeLeases,
+			NextPaginationToken:     result.NextPaginationToken,
+			PreviousPaginationToken: result.PreviousPaginationToken,
+		},
+	}, nil
+}
+
+func (c *Core) ListLocksByLeaseId(req *coreapis.ListLocksByLeaseIdRequest) (*coreapis.ListLocksByLeaseIdResponse, error) {
+	txn := c.badgerStore.View()
+	defer txn.Discard()
+
+	result, err := c.locks.ListByLeaseId(txn, req.Payload.LeaseId, req.Payload.PaginationToken, pagination.GetLimitWithDefaults(int(req.Payload.Limit)))
+	if err != nil {
+		return nil, err
+	}
 
 	// Check expiration
 	lockedLocks := make([]*corepb.Lock, 0, len(result.locks))
 	for _, lock := range result.locks {
-		refreshedLock, err := c.checkLockExpiration(txn, lock, request.Now)
+		refreshedLock, err := c.checkLockExpiration(txn, lock, req.Payload.Now)
 		if err != nil {
 			return nil, err
 		}
@@ -879,10 +1055,12 @@ func (c *Core) ListLocksByLeaseId(request *corepb.ListLocksByLeaseIdRequest) (*c
 		}
 	}
 
-	return &corepb.ListLocksByLeaseIdResponse{
-		Locks:                   lockedLocks,
-		NextPaginationToken:     result.nextPaginationToken,
-		PreviousPaginationToken: result.previousPaginationToken,
+	return &coreapis.ListLocksByLeaseIdResponse{
+		Payload: &corepb.ListLocksByLeaseIdResponse{
+			Locks:                   lockedLocks,
+			NextPaginationToken:     result.nextPaginationToken,
+			PreviousPaginationToken: result.previousPaginationToken,
+		},
 	}, nil
 }
 
@@ -1111,10 +1289,4 @@ func (c *Core) lockAncestorNames(lockName string) []string {
 		ancestors = append(ancestors, strings.Join(parts[:i], "/"))
 	}
 	return ancestors
-}
-
-func panicIfNotNil(err error) {
-	if err != nil {
-		panic(err)
-	}
 }

@@ -30,7 +30,7 @@ import (
 	"github.com/evrblk/grackle/pkg/workers"
 )
 
-var nonclusteredCmdCfg struct {
+var singleNodeCmdCfg struct {
 	port           int
 	prometheusPort int
 	authKeysPath   string
@@ -38,20 +38,20 @@ var nonclusteredCmdCfg struct {
 	dataDir        string
 }
 
-var nonclusteredCmd = &cobra.Command{
-	Use:   "nonclustered",
-	Short: "Run Grackle in all-in-one nonclustered mode",
+var singleNodeCmd = &cobra.Command{
+	Use:   "single-node",
+	Short: "Run Grackle in single-node mode",
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Println("Initializing Grackle...")
 
-		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", nonclusteredCmdCfg.port))
+		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", singleNodeCmdCfg.port))
 		if err != nil {
 			log.Fatalf("failed to listen: %v", err)
 		}
 
 		// Metrics
 		grackle_preview.RegisterMetrics()
-		metricsSrv := metrics.NewMetricsServer(nonclusteredCmdCfg.prometheusPort)
+		metricsSrv := metrics.NewMetricsServer(singleNodeCmdCfg.prometheusPort)
 		metricsSrv.Start()
 
 		// Register table prefixes
@@ -59,18 +59,18 @@ var nonclusteredCmd = &cobra.Command{
 		tables.RegisterGracklePrefixes(registry)
 
 		// Create shared Badger store for application cores
-		dataStore, err := store.NewBadgerStore(filepath.Join(nonclusteredCmdCfg.dataDir, "data"))
+		dataStore, err := store.NewBadgerStore(filepath.Join(singleNodeCmdCfg.dataDir, "data"))
 		if err != nil {
 			log.Fatalf("failed to create data store: %v", err)
 		}
 
 		// Middleware
 		unaryInterceptors := make([]grpc.UnaryServerInterceptor, 0)
-		if nonclusteredCmdCfg.authKeysPath != "" {
-			unaryInterceptors = append(unaryInterceptors, grackle_preview.NewAuthenticationMiddleware(nonclusteredCmdCfg.authKeysPath).Unary)
+		if singleNodeCmdCfg.authKeysPath != "" {
+			unaryInterceptors = append(unaryInterceptors, grackle_preview.NewAuthenticationMiddleware(singleNodeCmdCfg.authKeysPath).Unary)
 		}
 
-		// Grackle nonclustered client
+		// Grackle single node client
 		coresFactory := &monsteragen.GrackleNonclusteredApplicationCoresFactory{
 			GrackleLocksCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) monsteragen.GrackleLocksCoreApi {
 				return locks.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
@@ -88,7 +88,7 @@ var nonclusteredCmd = &cobra.Command{
 				return barriers.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
 			},
 		}
-		grackleCoreApiClient := monsteragen.NewGrackleCoreApiNonclusteredStub(nonclusteredCmdCfg.shardsCount, coresFactory, &sharding.GrackleShardKeyCalculator{})
+		grackleCoreApiClient := monsteragen.NewGrackleCoreApiNonclusteredStub(singleNodeCmdCfg.shardsCount, coresFactory, &sharding.GrackleShardKeyCalculator{})
 
 		// Grackle workers
 		grackeLocksGarbageCollectionWorker := workers.NewGrackleLocksGCWorker(grackleCoreApiClient)
@@ -137,23 +137,23 @@ var nonclusteredCmd = &cobra.Command{
 }
 
 func init() {
-	runCmd.AddCommand(nonclusteredCmd)
+	runCmd.AddCommand(singleNodeCmd)
 
-	nonclusteredCmd.PersistentFlags().IntVarP(&nonclusteredCmdCfg.port, "port", "", 0, "Server port")
-	err := nonclusteredCmd.MarkPersistentFlagRequired("port")
+	singleNodeCmd.PersistentFlags().IntVarP(&singleNodeCmdCfg.port, "port", "", 0, "Server port")
+	err := singleNodeCmd.MarkPersistentFlagRequired("port")
 	if err != nil {
 		panic(err)
 	}
 
-	nonclusteredCmd.PersistentFlags().IntVarP(&nonclusteredCmdCfg.prometheusPort, "prometheus-port", "", 2112, "Prometheus metrics port")
+	singleNodeCmd.PersistentFlags().IntVarP(&singleNodeCmdCfg.prometheusPort, "prometheus-port", "", 2112, "Prometheus metrics port")
 
-	nonclusteredCmd.PersistentFlags().IntVarP(&nonclusteredCmdCfg.shardsCount, "shards", "", 64, "Number of internal shards")
+	singleNodeCmd.PersistentFlags().IntVarP(&singleNodeCmdCfg.shardsCount, "shards", "", 64, "Number of internal shards")
 
-	nonclusteredCmd.PersistentFlags().StringVarP(&nonclusteredCmdCfg.dataDir, "data-dir", "", "", "Base directory for data")
-	err = nonclusteredCmd.MarkPersistentFlagRequired("data-dir")
+	singleNodeCmd.PersistentFlags().StringVarP(&singleNodeCmdCfg.dataDir, "data-dir", "", "", "Base directory for data")
+	err = singleNodeCmd.MarkPersistentFlagRequired("data-dir")
 	if err != nil {
 		panic(err)
 	}
 
-	nonclusteredCmd.PersistentFlags().StringVarP(&nonclusteredCmdCfg.authKeysPath, "auth-keys-path", "", "", "Path to the directory with auth keys. No authn if empty.")
+	singleNodeCmd.PersistentFlags().StringVarP(&singleNodeCmdCfg.authKeysPath, "auth-keys-path", "", "", "Path to the directory with auth keys. No authn if empty.")
 }

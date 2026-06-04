@@ -10,8 +10,8 @@ import (
 
 	gracklepb "github.com/evrblk/evrblk-go/grackle/preview"
 
+	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/grackle"
-	"github.com/evrblk/grackle/pkg/monsteragen"
 )
 
 var (
@@ -67,399 +67,399 @@ func (s *GrackleApiServer) Close() {
 	s.handler.Stop()
 }
 
-func (s *GrackleApiServer) CreateNamespace(ctx context.Context, request *gracklepb.CreateNamespaceRequest) (*gracklepb.CreateNamespaceResponse, error) {
-	if err := ValidateCreateNamespaceRequest(request); err != nil {
+func (s *GrackleApiServer) CreateNamespace(ctx context.Context, req *gracklepb.CreateNamespaceRequest) (*gracklepb.CreateNamespaceResponse, error) {
+	if err := ValidateCreateNamespaceRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.CreateNamespace(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.CreateNamespace(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) GetNamespace(ctx context.Context, request *gracklepb.GetNamespaceRequest) (*gracklepb.GetNamespaceResponse, error) {
-	if err := ValidateGetNamespaceRequest(request); err != nil {
+func (s *GrackleApiServer) GetNamespace(ctx context.Context, req *gracklepb.GetNamespaceRequest) (*gracklepb.GetNamespaceResponse, error) {
+	if err := ValidateGetNamespaceRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.GetNamespace(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.GetNamespace(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) UpdateNamespace(ctx context.Context, request *gracklepb.UpdateNamespaceRequest) (*gracklepb.UpdateNamespaceResponse, error) {
-	if err := ValidateUpdateNamespaceRequest(request); err != nil {
+func (s *GrackleApiServer) UpdateNamespace(ctx context.Context, req *gracklepb.UpdateNamespaceRequest) (*gracklepb.UpdateNamespaceResponse, error) {
+	if err := ValidateUpdateNamespaceRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.UpdateNamespace(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.UpdateNamespace(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) DeleteNamespace(ctx context.Context, request *gracklepb.DeleteNamespaceRequest) (*gracklepb.DeleteNamespaceResponse, error) {
-	if err := ValidateDeleteNamespaceRequest(request); err != nil {
+func (s *GrackleApiServer) DeleteNamespace(ctx context.Context, req *gracklepb.DeleteNamespaceRequest) (*gracklepb.DeleteNamespaceResponse, error) {
+	if err := ValidateDeleteNamespaceRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.DeleteNamespace(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.DeleteNamespace(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) ListNamespaces(ctx context.Context, request *gracklepb.ListNamespacesRequest) (*gracklepb.ListNamespacesResponse, error) {
-	if err := ValidateListNamespacesRequest(request); err != nil {
+func (s *GrackleApiServer) ListNamespaces(ctx context.Context, req *gracklepb.ListNamespacesRequest) (*gracklepb.ListNamespacesResponse, error) {
+	if err := ValidateListNamespacesRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.ListNamespaces(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.ListNamespaces(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) CreateWaitGroup(ctx context.Context, request *gracklepb.CreateWaitGroupRequest) (*gracklepb.CreateWaitGroupResponse, error) {
-	if err := ValidateCreateWaitGroupRequest(request); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
-	}
-
-	// Increment counter of total wait groups operations
-	waitGroupsOperationsTotal.Inc()
-
-	return s.handler.CreateWaitGroup(ctx, request, 0, DefaultServiceLimits)
-}
-
-func (s *GrackleApiServer) GetWaitGroup(ctx context.Context, request *gracklepb.GetWaitGroupRequest) (*gracklepb.GetWaitGroupResponse, error) {
-	if err := ValidateGetWaitGroupRequest(request); err != nil {
+func (s *GrackleApiServer) CreateWaitGroup(ctx context.Context, req *gracklepb.CreateWaitGroupRequest) (*gracklepb.CreateWaitGroupResponse, error) {
+	if err := ValidateCreateWaitGroupRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
 	// Increment counter of total wait groups operations
 	waitGroupsOperationsTotal.Inc()
 
-	return s.handler.GetWaitGroup(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.CreateWaitGroup(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) WaitForWaitGroup(ctx context.Context, request *gracklepb.WaitForWaitGroupRequest) (*gracklepb.WaitForWaitGroupResponse, error) {
-	if err := ValidateWaitForWaitGroupRequest(request); err != nil {
+func (s *GrackleApiServer) GetWaitGroup(ctx context.Context, req *gracklepb.GetWaitGroupRequest) (*gracklepb.GetWaitGroupResponse, error) {
+	if err := ValidateGetWaitGroupRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
 	// Increment counter of total wait groups operations
 	waitGroupsOperationsTotal.Inc()
 
-	return s.handler.WaitForWaitGroup(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.GetWaitGroup(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) AddJobsToWaitGroup(ctx context.Context, request *gracklepb.AddJobsToWaitGroupRequest) (*gracklepb.AddJobsToWaitGroupResponse, error) {
-	if err := ValidateAddJobsToWaitGroupRequest(request); err != nil {
+func (s *GrackleApiServer) WaitForWaitGroup(ctx context.Context, req *gracklepb.WaitForWaitGroupRequest) (*gracklepb.WaitForWaitGroupResponse, error) {
+	if err := ValidateWaitForWaitGroupRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
 	// Increment counter of total wait groups operations
 	waitGroupsOperationsTotal.Inc()
 
-	return s.handler.AddJobsToWaitGroup(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.WaitForWaitGroup(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) CompleteJobsFromWaitGroup(ctx context.Context, request *gracklepb.CompleteJobsFromWaitGroupRequest) (*gracklepb.CompleteJobsFromWaitGroupResponse, error) {
-	if err := ValidateCompleteJobsFromWaitGroupRequest(request); err != nil {
+func (s *GrackleApiServer) AddJobsToWaitGroup(ctx context.Context, req *gracklepb.AddJobsToWaitGroupRequest) (*gracklepb.AddJobsToWaitGroupResponse, error) {
+	if err := ValidateAddJobsToWaitGroupRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
 	// Increment counter of total wait groups operations
 	waitGroupsOperationsTotal.Inc()
 
-	return s.handler.CompleteJobsFromWaitGroup(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.AddJobsToWaitGroup(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) DeleteWaitGroup(ctx context.Context, request *gracklepb.DeleteWaitGroupRequest) (*gracklepb.DeleteWaitGroupResponse, error) {
-	if err := ValidateDeleteWaitGroupRequest(request); err != nil {
+func (s *GrackleApiServer) CompleteJobsFromWaitGroup(ctx context.Context, req *gracklepb.CompleteJobsFromWaitGroupRequest) (*gracklepb.CompleteJobsFromWaitGroupResponse, error) {
+	if err := ValidateCompleteJobsFromWaitGroupRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
 	// Increment counter of total wait groups operations
 	waitGroupsOperationsTotal.Inc()
 
-	return s.handler.DeleteWaitGroup(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.CompleteJobsFromWaitGroup(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) ListWaitGroups(ctx context.Context, request *gracklepb.ListWaitGroupsRequest) (*gracklepb.ListWaitGroupsResponse, error) {
-	if err := ValidateListWaitGroupsRequest(request); err != nil {
+func (s *GrackleApiServer) DeleteWaitGroup(ctx context.Context, req *gracklepb.DeleteWaitGroupRequest) (*gracklepb.DeleteWaitGroupResponse, error) {
+	if err := ValidateDeleteWaitGroupRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.ListWaitGroups(ctx, request, 0, DefaultServiceLimits)
+	// Increment counter of total wait groups operations
+	waitGroupsOperationsTotal.Inc()
+
+	return s.handler.DeleteWaitGroup(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) ListWaitGroupJobs(ctx context.Context, request *gracklepb.ListWaitGroupJobsRequest) (*gracklepb.ListWaitGroupJobsResponse, error) {
-	if err := ValidateListWaitGroupJobsRequest(request); err != nil {
+func (s *GrackleApiServer) ListWaitGroups(ctx context.Context, req *gracklepb.ListWaitGroupsRequest) (*gracklepb.ListWaitGroupsResponse, error) {
+	if err := ValidateListWaitGroupsRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.ListWaitGroupJobs(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.ListWaitGroups(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) AcquireLock(ctx context.Context, request *gracklepb.AcquireLockRequest) (*gracklepb.AcquireLockResponse, error) {
-	if err := ValidateAcquireLockRequest(request); err != nil {
+func (s *GrackleApiServer) ListWaitGroupJobs(ctx context.Context, req *gracklepb.ListWaitGroupJobsRequest) (*gracklepb.ListWaitGroupJobsResponse, error) {
+	if err := ValidateListWaitGroupJobsRequest(req); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
+	}
+
+	return s.handler.ListWaitGroupJobs(ctx, req, 0, DefaultServiceLimits)
+}
+
+func (s *GrackleApiServer) AcquireLock(ctx context.Context, req *gracklepb.AcquireLockRequest) (*gracklepb.AcquireLockResponse, error) {
+	if err := ValidateAcquireLockRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
 	// Increment counter of total locks operations
 	locksOperationsTotal.Inc()
 
-	return s.handler.AcquireLock(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.AcquireLock(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) ReleaseLock(ctx context.Context, request *gracklepb.ReleaseLockRequest) (*gracklepb.ReleaseLockResponse, error) {
-	if err := ValidateReleaseLockRequest(request); err != nil {
+func (s *GrackleApiServer) ReleaseLock(ctx context.Context, req *gracklepb.ReleaseLockRequest) (*gracklepb.ReleaseLockResponse, error) {
+	if err := ValidateReleaseLockRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
 	// Increment counter of total locks operations
 	locksOperationsTotal.Inc()
 
-	return s.handler.ReleaseLock(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.ReleaseLock(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) GetLock(ctx context.Context, request *gracklepb.GetLockRequest) (*gracklepb.GetLockResponse, error) {
-	if err := ValidateGetLockRequest(request); err != nil {
+func (s *GrackleApiServer) GetLock(ctx context.Context, req *gracklepb.GetLockRequest) (*gracklepb.GetLockResponse, error) {
+	if err := ValidateGetLockRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
 	// Increment counter of total locks operations
 	locksOperationsTotal.Inc()
 
-	return s.handler.GetLock(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.GetLock(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) DeleteLock(ctx context.Context, request *gracklepb.DeleteLockRequest) (*gracklepb.DeleteLockResponse, error) {
-	if err := ValidateDeleteLockRequest(request); err != nil {
+func (s *GrackleApiServer) DeleteLock(ctx context.Context, req *gracklepb.DeleteLockRequest) (*gracklepb.DeleteLockResponse, error) {
+	if err := ValidateDeleteLockRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
 	// Increment counter of total locks operations
 	locksOperationsTotal.Inc()
 
-	return s.handler.DeleteLock(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.DeleteLock(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) ListLocks(ctx context.Context, request *gracklepb.ListLocksRequest) (*gracklepb.ListLocksResponse, error) {
-	if err := ValidateListLocksRequest(request); err != nil {
+func (s *GrackleApiServer) ListLocks(ctx context.Context, req *gracklepb.ListLocksRequest) (*gracklepb.ListLocksResponse, error) {
+	if err := ValidateListLocksRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.ListLocks(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.ListLocks(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) CreateSemaphore(ctx context.Context, request *gracklepb.CreateSemaphoreRequest) (*gracklepb.CreateSemaphoreResponse, error) {
-	if err := ValidateCreateSemaphoreRequest(request); err != nil {
+func (s *GrackleApiServer) CreateSemaphore(ctx context.Context, req *gracklepb.CreateSemaphoreRequest) (*gracklepb.CreateSemaphoreResponse, error) {
+	if err := ValidateCreateSemaphoreRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.CreateSemaphore(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.CreateSemaphore(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) ListSemaphores(ctx context.Context, request *gracklepb.ListSemaphoresRequest) (*gracklepb.ListSemaphoresResponse, error) {
-	if err := ValidateListSemaphoresRequest(request); err != nil {
+func (s *GrackleApiServer) ListSemaphores(ctx context.Context, req *gracklepb.ListSemaphoresRequest) (*gracklepb.ListSemaphoresResponse, error) {
+	if err := ValidateListSemaphoresRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.ListSemaphores(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.ListSemaphores(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) ListSemaphoreHolders(ctx context.Context, request *gracklepb.ListSemaphoreHoldersRequest) (*gracklepb.ListSemaphoreHoldersResponse, error) {
-	if err := ValidateListSemaphoreHoldersRequest(request); err != nil {
+func (s *GrackleApiServer) ListSemaphoreHolders(ctx context.Context, req *gracklepb.ListSemaphoreHoldersRequest) (*gracklepb.ListSemaphoreHoldersResponse, error) {
+	if err := ValidateListSemaphoreHoldersRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.ListSemaphoreHolders(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.ListSemaphoreHolders(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) GetSemaphore(ctx context.Context, request *gracklepb.GetSemaphoreRequest) (*gracklepb.GetSemaphoreResponse, error) {
-	if err := ValidateGetSemaphoreRequest(request); err != nil {
+func (s *GrackleApiServer) GetSemaphore(ctx context.Context, req *gracklepb.GetSemaphoreRequest) (*gracklepb.GetSemaphoreResponse, error) {
+	if err := ValidateGetSemaphoreRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
 	// Increment counter of total semaphore operations
 	semaphoresOperationsTotal.Inc()
 
-	return s.handler.GetSemaphore(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.GetSemaphore(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) AcquireSemaphore(ctx context.Context, request *gracklepb.AcquireSemaphoreRequest) (*gracklepb.AcquireSemaphoreResponse, error) {
-	if err := ValidateAcquireSemaphoreRequest(request); err != nil {
+func (s *GrackleApiServer) AcquireSemaphore(ctx context.Context, req *gracklepb.AcquireSemaphoreRequest) (*gracklepb.AcquireSemaphoreResponse, error) {
+	if err := ValidateAcquireSemaphoreRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
 	// Increment counter of total semaphore operations
 	semaphoresOperationsTotal.Inc()
 
-	return s.handler.AcquireSemaphore(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.AcquireSemaphore(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) ReleaseSemaphore(ctx context.Context, request *gracklepb.ReleaseSemaphoreRequest) (*gracklepb.ReleaseSemaphoreResponse, error) {
-	if err := ValidateReleaseSemaphoreRequest(request); err != nil {
+func (s *GrackleApiServer) ReleaseSemaphore(ctx context.Context, req *gracklepb.ReleaseSemaphoreRequest) (*gracklepb.ReleaseSemaphoreResponse, error) {
+	if err := ValidateReleaseSemaphoreRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
 	// Increment counter of total semaphore operations
 	semaphoresOperationsTotal.Inc()
 
-	return s.handler.ReleaseSemaphore(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.ReleaseSemaphore(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) UpdateSemaphore(ctx context.Context, request *gracklepb.UpdateSemaphoreRequest) (*gracklepb.UpdateSemaphoreResponse, error) {
-	if err := ValidateUpdateSemaphoreRequest(request); err != nil {
+func (s *GrackleApiServer) UpdateSemaphore(ctx context.Context, req *gracklepb.UpdateSemaphoreRequest) (*gracklepb.UpdateSemaphoreResponse, error) {
+	if err := ValidateUpdateSemaphoreRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.UpdateSemaphore(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.UpdateSemaphore(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) DeleteSemaphore(ctx context.Context, request *gracklepb.DeleteSemaphoreRequest) (*gracklepb.DeleteSemaphoreResponse, error) {
-	if err := ValidateDeleteSemaphoreRequest(request); err != nil {
+func (s *GrackleApiServer) DeleteSemaphore(ctx context.Context, req *gracklepb.DeleteSemaphoreRequest) (*gracklepb.DeleteSemaphoreResponse, error) {
+	if err := ValidateDeleteSemaphoreRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.DeleteSemaphore(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.DeleteSemaphore(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) CreateBarrier(ctx context.Context, request *gracklepb.CreateBarrierRequest) (*gracklepb.CreateBarrierResponse, error) {
-	if err := ValidateCreateBarrierRequest(request); err != nil {
+func (s *GrackleApiServer) CreateBarrier(ctx context.Context, req *gracklepb.CreateBarrierRequest) (*gracklepb.CreateBarrierResponse, error) {
+	if err := ValidateCreateBarrierRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.CreateBarrier(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.CreateBarrier(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) ListBarriers(ctx context.Context, request *gracklepb.ListBarriersRequest) (*gracklepb.ListBarriersResponse, error) {
-	if err := ValidateListBarriersRequest(request); err != nil {
+func (s *GrackleApiServer) ListBarriers(ctx context.Context, req *gracklepb.ListBarriersRequest) (*gracklepb.ListBarriersResponse, error) {
+	if err := ValidateListBarriersRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.ListBarriers(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.ListBarriers(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) GetBarrier(ctx context.Context, request *gracklepb.GetBarrierRequest) (*gracklepb.GetBarrierResponse, error) {
-	if err := ValidateGetBarrierRequest(request); err != nil {
+func (s *GrackleApiServer) GetBarrier(ctx context.Context, req *gracklepb.GetBarrierRequest) (*gracklepb.GetBarrierResponse, error) {
+	if err := ValidateGetBarrierRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.GetBarrier(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.GetBarrier(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) DeleteBarrier(ctx context.Context, request *gracklepb.DeleteBarrierRequest) (*gracklepb.DeleteBarrierResponse, error) {
-	if err := ValidateDeleteBarrierRequest(request); err != nil {
+func (s *GrackleApiServer) DeleteBarrier(ctx context.Context, req *gracklepb.DeleteBarrierRequest) (*gracklepb.DeleteBarrierResponse, error) {
+	if err := ValidateDeleteBarrierRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.DeleteBarrier(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.DeleteBarrier(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) UpdateBarrier(ctx context.Context, request *gracklepb.UpdateBarrierRequest) (*gracklepb.UpdateBarrierResponse, error) {
-	if err := ValidateUpdateBarrierRequest(request); err != nil {
+func (s *GrackleApiServer) UpdateBarrier(ctx context.Context, req *gracklepb.UpdateBarrierRequest) (*gracklepb.UpdateBarrierResponse, error) {
+	if err := ValidateUpdateBarrierRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.UpdateBarrier(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.UpdateBarrier(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) ArriveAtBarrier(ctx context.Context, request *gracklepb.ArriveAtBarrierRequest) (*gracklepb.ArriveAtBarrierResponse, error) {
-	if err := ValidateArriveAtBarrierRequest(request); err != nil {
+func (s *GrackleApiServer) ArriveAtBarrier(ctx context.Context, req *gracklepb.ArriveAtBarrierRequest) (*gracklepb.ArriveAtBarrierResponse, error) {
+	if err := ValidateArriveAtBarrierRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.ArriveAtBarrier(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.ArriveAtBarrier(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) WaitAtBarrier(ctx context.Context, request *gracklepb.WaitAtBarrierRequest) (*gracklepb.WaitAtBarrierResponse, error) {
-	if err := ValidateWaitAtBarrierRequest(request); err != nil {
+func (s *GrackleApiServer) WaitAtBarrier(ctx context.Context, req *gracklepb.WaitAtBarrierRequest) (*gracklepb.WaitAtBarrierResponse, error) {
+	if err := ValidateWaitAtBarrierRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.WaitAtBarrier(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.WaitAtBarrier(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) ListBarrierParticipants(ctx context.Context, request *gracklepb.ListBarrierParticipantsRequest) (*gracklepb.ListBarrierParticipantsResponse, error) {
-	if err := ValidateListBarrierParticipantsRequest(request); err != nil {
+func (s *GrackleApiServer) ListBarrierParticipants(ctx context.Context, req *gracklepb.ListBarrierParticipantsRequest) (*gracklepb.ListBarrierParticipantsResponse, error) {
+	if err := ValidateListBarrierParticipantsRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.ListBarrierParticipants(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.ListBarrierParticipants(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) CreateSemaphoreLease(ctx context.Context, request *gracklepb.CreateSemaphoreLeaseRequest) (*gracklepb.CreateSemaphoreLeaseResponse, error) {
-	if err := ValidateCreateSemaphoreLeaseRequest(request); err != nil {
+func (s *GrackleApiServer) CreateSemaphoreLease(ctx context.Context, req *gracklepb.CreateSemaphoreLeaseRequest) (*gracklepb.CreateSemaphoreLeaseResponse, error) {
+	if err := ValidateCreateSemaphoreLeaseRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.CreateSemaphoreLease(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.CreateSemaphoreLease(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) RevokeSemaphoreLease(ctx context.Context, request *gracklepb.RevokeSemaphoreLeaseRequest) (*gracklepb.RevokeSemaphoreLeaseResponse, error) {
-	if err := ValidateRevokeSemaphoreLeaseRequest(request); err != nil {
+func (s *GrackleApiServer) RevokeSemaphoreLease(ctx context.Context, req *gracklepb.RevokeSemaphoreLeaseRequest) (*gracklepb.RevokeSemaphoreLeaseResponse, error) {
+	if err := ValidateRevokeSemaphoreLeaseRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.RevokeSemaphoreLease(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.RevokeSemaphoreLease(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) RefreshSemaphoreLease(ctx context.Context, request *gracklepb.RefreshSemaphoreLeaseRequest) (*gracklepb.RefreshSemaphoreLeaseResponse, error) {
-	if err := ValidateRefreshSemaphoreLeaseRequest(request); err != nil {
+func (s *GrackleApiServer) RefreshSemaphoreLease(ctx context.Context, req *gracklepb.RefreshSemaphoreLeaseRequest) (*gracklepb.RefreshSemaphoreLeaseResponse, error) {
+	if err := ValidateRefreshSemaphoreLeaseRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.RefreshSemaphoreLease(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.RefreshSemaphoreLease(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) ListSemaphoreLeases(ctx context.Context, request *gracklepb.ListSemaphoreLeasesRequest) (*gracklepb.ListSemaphoreLeasesResponse, error) {
-	if err := ValidateListSemaphoreLeasesRequest(request); err != nil {
+func (s *GrackleApiServer) ListSemaphoreLeases(ctx context.Context, req *gracklepb.ListSemaphoreLeasesRequest) (*gracklepb.ListSemaphoreLeasesResponse, error) {
+	if err := ValidateListSemaphoreLeasesRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.ListSemaphoreLeases(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.ListSemaphoreLeases(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) GetSemaphoreLease(ctx context.Context, request *gracklepb.GetSemaphoreLeaseRequest) (*gracklepb.GetSemaphoreLeaseResponse, error) {
-	if err := ValidateGetSemaphoreLeaseRequest(request); err != nil {
+func (s *GrackleApiServer) GetSemaphoreLease(ctx context.Context, req *gracklepb.GetSemaphoreLeaseRequest) (*gracklepb.GetSemaphoreLeaseResponse, error) {
+	if err := ValidateGetSemaphoreLeaseRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.GetSemaphoreLease(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.GetSemaphoreLease(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) CreateLockLease(ctx context.Context, request *gracklepb.CreateLockLeaseRequest) (*gracklepb.CreateLockLeaseResponse, error) {
-	if err := ValidateCreateLockLeaseRequest(request); err != nil {
+func (s *GrackleApiServer) CreateLockLease(ctx context.Context, req *gracklepb.CreateLockLeaseRequest) (*gracklepb.CreateLockLeaseResponse, error) {
+	if err := ValidateCreateLockLeaseRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.CreateLockLease(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.CreateLockLease(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) RevokeLockLease(ctx context.Context, request *gracklepb.RevokeLockLeaseRequest) (*gracklepb.RevokeLockLeaseResponse, error) {
-	if err := ValidateRevokeLockLeaseRequest(request); err != nil {
+func (s *GrackleApiServer) RevokeLockLease(ctx context.Context, req *gracklepb.RevokeLockLeaseRequest) (*gracklepb.RevokeLockLeaseResponse, error) {
+	if err := ValidateRevokeLockLeaseRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.RevokeLockLease(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.RevokeLockLease(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) RefreshLockLease(ctx context.Context, request *gracklepb.RefreshLockLeaseRequest) (*gracklepb.RefreshLockLeaseResponse, error) {
-	if err := ValidateRefreshLockLeaseRequest(request); err != nil {
+func (s *GrackleApiServer) RefreshLockLease(ctx context.Context, req *gracklepb.RefreshLockLeaseRequest) (*gracklepb.RefreshLockLeaseResponse, error) {
+	if err := ValidateRefreshLockLeaseRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.RefreshLockLease(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.RefreshLockLease(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) ListLockLeases(ctx context.Context, request *gracklepb.ListLockLeasesRequest) (*gracklepb.ListLockLeasesResponse, error) {
-	if err := ValidateListLockLeasesRequest(request); err != nil {
+func (s *GrackleApiServer) ListLockLeases(ctx context.Context, req *gracklepb.ListLockLeasesRequest) (*gracklepb.ListLockLeasesResponse, error) {
+	if err := ValidateListLockLeasesRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.ListLockLeases(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.ListLockLeases(ctx, req, 0, DefaultServiceLimits)
 }
 
-func (s *GrackleApiServer) GetLockLease(ctx context.Context, request *gracklepb.GetLockLeaseRequest) (*gracklepb.GetLockLeaseResponse, error) {
-	if err := ValidateGetLockLeaseRequest(request); err != nil {
+func (s *GrackleApiServer) GetLockLease(ctx context.Context, req *gracklepb.GetLockLeaseRequest) (*gracklepb.GetLockLeaseResponse, error) {
+	if err := ValidateGetLockLeaseRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	return s.handler.GetLockLease(ctx, request, 0, DefaultServiceLimits)
+	return s.handler.GetLockLease(ctx, req, 0, DefaultServiceLimits)
 }
 
-func NewGrackleApiServer(grackleCoreApiClient monsteragen.GrackleCoreApi) *GrackleApiServer {
+func NewGrackleApiServer(grackleClient coreapis.GrackleClientApi) *GrackleApiServer {
 	return &GrackleApiServer{
-		handler: NewGrackleApiServerHandler(grackleCoreApiClient),
+		handler: NewGrackleApiServerHandler(grackleClient),
 	}
 }

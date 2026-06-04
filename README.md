@@ -13,7 +13,7 @@ Everblack Grackle is a distributed-synchronization-primitives-as-a-service:
 Grackle state is durable. All holds are lease-based, with a set expiration time. Process crash will not cause dangling locks. 
 Long-running processes can extend their leases. All operations are atomic and safe to retry.
 
-Grackle can operate in a clustered mode (with replication and sharding), or it can run in a single-process nonclustered 
+Grackle can operate in a cluster mode (with replication and sharding), or it can run in a single-node nonclustered 
 mode (full state on disk, no replication, no sharding). It has no external dependencies (no databases, no kafka, no redis, 
 no zookeeper, or whatever) and it stores all its state on disk (on embedded BadgerDB).
 
@@ -37,13 +37,13 @@ $ make grackle
 
 ## Running
 
-### Nonclustered mode
+### Single-node mode
 
 ```shell
-$ ./grackle run nonclustered --port=8000 --data-dir=./data
+$ ./grackle run single-node --port=8000 --data-dir=./data
 ```
 
-### Clustered mode
+### Cluster mode
 
 There are 3 components: 
 
@@ -51,7 +51,7 @@ There are 3 components:
 * `node` stateful node with data persisted on disk
 * `worker` stateless async worker
 
-Running in the clustered mode requires Monstera cluster config file. To generate a simple config run:
+Running in the cluster mode requires Monstera cluster config file. To generate a simple config run:
 
 ```shell
 $ go tool github.com/evrblk/monstera/cmd/monstera config init \
@@ -160,7 +160,7 @@ acquireLockResp, err := grackleClient.AcquireLock(context.Background(), &grackle
 ## Authentication
 
 By default, API calls are unauthenticated. To use request signing add `--auth-keys-path=` argument to 
-`./grackle run gateway` or `./grackle run nonclustered`. It should point to a directory with API keys where each file 
+`./grackle run gateway` or `./grackle run single-node`. It should point to a directory with API keys where each file 
 name is an API key ID, and corresponding file content is an API secret key.
 
 Generate keys with `evrblk` [CLI tool](https://github.com/evrblk/evrblk-cli):

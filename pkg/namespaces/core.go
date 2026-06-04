@@ -9,9 +9,9 @@ import (
 	"github.com/evrblk/monstera/store"
 	monsterax "github.com/evrblk/monstera/x"
 
+	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/ids"
-	"github.com/evrblk/grackle/pkg/monsteragen"
 	"github.com/evrblk/grackle/pkg/pagination"
 )
 
@@ -22,7 +22,7 @@ type Core struct {
 	counters   *countersTable
 }
 
-var _ monsteragen.GrackleNamespacesCoreApi = &Core{}
+var _ coreapis.GrackleNamespacesCoreApi = &Core{}
 
 func NewCore(badgerStore *store.BadgerStore, shardLowerBound []byte, shardUpperBound []byte) *Core {
 	return &Core{
@@ -53,186 +53,232 @@ func (c *Core) Close() {
 
 }
 
-func (c *Core) CreateNamespace(request *corepb.CreateNamespaceRequest) (*corepb.CreateNamespaceResponse, error) {
+func (c *Core) CreateNamespace(req *coreapis.CreateNamespaceRequest) (*coreapis.CreateNamespaceResponse, error) {
 	// Validations
-	if request.Name == "" {
-		return nil, monsterax.NewErrorWithContext(
-			monsterax.InvalidArgument,
-			"Name should not be empty",
-			map[string]string{})
+	if req.Payload.Name == "" {
+		return &coreapis.CreateNamespaceResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.InvalidArgument,
+				"Name should not be empty",
+				map[string]string{}),
+		}, nil
 	}
 
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
 	// Get counters for that account
-	counters, err := c.counters.Get(txn, request.NamespaceId.AccountId)
-	panicIfNotNil(err)
+	counters, err := c.counters.Get(txn, req.Payload.NamespaceId.AccountId)
+	if err != nil {
+		return nil, err
+	}
 
 	// Checking name uniqueness
-	_, err = c.namespaces.GetByName(txn, request.NamespaceId.AccountId, request.Name)
+	_, err = c.namespaces.GetByName(txn, req.Payload.NamespaceId.AccountId, req.Payload.Name)
 	if err != nil {
 		if !errors.Is(err, store.ErrNotFound) {
 			return nil, err
 		}
 	} else {
-		return nil, monsterax.NewErrorWithContext(
-			monsterax.AlreadyExists,
-			"namespace with this name already exists",
-			map[string]string{"namespace_name": request.Name})
+		return &coreapis.CreateNamespaceResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.AlreadyExists,
+				"namespace with this name already exists",
+				map[string]string{"namespace_name": req.Payload.Name}),
+		}, nil
 	}
 
 	// Checking max number of namespaces
-	if counters.NumberOfNamespaces >= request.MaxNumberOfNamespaces {
-		return nil, monsterax.NewErrorWithContext(
-			monsterax.ResourceExhausted,
-			"max number of namespaces reached",
-			map[string]string{"limit": fmt.Sprintf("%d", request.MaxNumberOfNamespaces)})
+	if counters.NumberOfNamespaces >= req.Payload.MaxNumberOfNamespaces {
+		return &coreapis.CreateNamespaceResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.ResourceExhausted,
+				"max number of namespaces reached",
+				map[string]string{"limit": fmt.Sprintf("%d", req.Payload.MaxNumberOfNamespaces)},
+			),
+		}, nil
 	}
 
 	namespace := &corepb.Namespace{
-		Id:          request.NamespaceId,
-		Name:        request.Name,
-		Description: request.Description,
-		CreatedAt:   request.Now,
-		UpdatedAt:   request.Now,
+		Id:          req.Payload.NamespaceId,
+		Name:        req.Payload.Name,
+		Description: req.Payload.Description,
+		CreatedAt:   req.Payload.Now,
+		UpdatedAt:   req.Payload.Now,
 	}
 
 	err = c.namespaces.Create(txn, namespace)
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
 	// Update counters
 	counters.NumberOfNamespaces = counters.NumberOfNamespaces + 1
-	err = c.counters.Set(txn, request.NamespaceId.AccountId, counters)
-	panicIfNotNil(err)
-
-	err = txn.Commit()
-	panicIfNotNil(err)
-
-	return &corepb.CreateNamespaceResponse{
-		Namespace: namespace,
-	}, nil
-}
-
-func (c *Core) UpdateNamespace(request *corepb.UpdateNamespaceRequest) (*corepb.UpdateNamespaceResponse, error) {
-	txn := c.badgerStore.Update()
-	defer txn.Discard()
-
-	namespace, err := c.namespaces.Get(txn, request.NamespaceId)
+	err = c.counters.Set(txn, req.Payload.NamespaceId.AccountId, counters)
 	if err != nil {
-		if errors.Is(err, store.ErrNotFound) {
-			return nil, monsterax.NewErrorWithContext(
-				monsterax.NotFound,
-				"namespace not found",
-				map[string]string{"namespace_id": ids.EncodeNamespaceId(request.NamespaceId)})
-		}
-
-		panic(err)
+		return nil, err
 	}
 
-	namespace.Description = request.Description
-	namespace.UpdatedAt = request.Now
-
-	err = c.namespaces.Update(txn, namespace)
-	panicIfNotNil(err)
-
 	err = txn.Commit()
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return &corepb.UpdateNamespaceResponse{
-		Namespace: namespace,
+	return &coreapis.CreateNamespaceResponse{
+		Payload: &corepb.CreateNamespaceResponse{
+			Namespace: namespace,
+		},
 	}, nil
 }
 
-func (c *Core) DeleteNamespace(request *corepb.DeleteNamespaceRequest) (*corepb.DeleteNamespaceResponse, error) {
+func (c *Core) UpdateNamespace(req *coreapis.UpdateNamespaceRequest) (*coreapis.UpdateNamespaceResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
-	namespace, err := c.namespaces.Get(txn, request.NamespaceId)
+	namespace, err := c.namespaces.Get(txn, req.Payload.NamespaceId)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return &corepb.DeleteNamespaceResponse{}, nil
+			return &coreapis.UpdateNamespaceResponse{
+				ApplicationError: monsterax.NewErrorWithContext(
+					monsterax.NotFound,
+					"namespace not found",
+					map[string]string{"namespace_id": ids.EncodeNamespaceId(req.Payload.NamespaceId)},
+				),
+			}, nil
 		}
 
-		panic(err)
+		return nil, err
+	}
+
+	namespace.Description = req.Payload.Description
+	namespace.UpdatedAt = req.Payload.Now
+
+	err = c.namespaces.Update(txn, namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	err = txn.Commit()
+	if err != nil {
+		return nil, err
+	}
+
+	return &coreapis.UpdateNamespaceResponse{
+		Payload: &corepb.UpdateNamespaceResponse{
+			Namespace: namespace,
+		},
+	}, nil
+}
+
+func (c *Core) DeleteNamespace(req *coreapis.DeleteNamespaceRequest) (*coreapis.DeleteNamespaceResponse, error) {
+	txn := c.badgerStore.Update()
+	defer txn.Discard()
+
+	namespace, err := c.namespaces.Get(txn, req.Payload.NamespaceId)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			return &coreapis.DeleteNamespaceResponse{
+				Payload: &corepb.DeleteNamespaceResponse{},
+			}, nil
+		}
+
+		return nil, err
 	}
 
 	// Get counters for that account
-	counters, err := c.counters.Get(txn, request.NamespaceId.AccountId)
-	panicIfNotNil(err)
+	counters, err := c.counters.Get(txn, req.Payload.NamespaceId.AccountId)
+	if err != nil {
+		return nil, err
+	}
 
 	err = c.namespaces.Delete(txn, namespace)
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
 	// Update counters
 	counters.NumberOfNamespaces = counters.NumberOfNamespaces - 1
-	err = c.counters.Set(txn, request.NamespaceId.AccountId, counters)
-	panicIfNotNil(err)
+	err = c.counters.Set(txn, req.Payload.NamespaceId.AccountId, counters)
+	if err != nil {
+		return nil, err
+	}
 
 	err = txn.Commit()
-	panicIfNotNil(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return &corepb.DeleteNamespaceResponse{}, nil
+	return &coreapis.DeleteNamespaceResponse{
+		Payload: &corepb.DeleteNamespaceResponse{},
+	}, nil
 }
 
-func (c *Core) GetNamespace(request *corepb.GetNamespaceRequest) (*corepb.GetNamespaceResponse, error) {
+func (c *Core) GetNamespace(req *coreapis.GetNamespaceRequest) (*coreapis.GetNamespaceResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
-	namespace, err := c.namespaces.Get(txn, request.NamespaceId)
+	namespace, err := c.namespaces.Get(txn, req.Payload.NamespaceId)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return nil, monsterax.NewErrorWithContext(
-				monsterax.NotFound,
-				"namespace not found",
-				map[string]string{"namespace_id": ids.EncodeNamespaceId(request.NamespaceId)})
+			return &coreapis.GetNamespaceResponse{
+				ApplicationError: monsterax.NewErrorWithContext(
+					monsterax.NotFound,
+					"namespace not found",
+					map[string]string{"namespace_id": ids.EncodeNamespaceId(req.Payload.NamespaceId)},
+				),
+			}, nil
 		}
 
-		panic(err)
+		return nil, err
 	}
 
-	return &corepb.GetNamespaceResponse{
-		Namespace: namespace,
+	return &coreapis.GetNamespaceResponse{
+		Payload: &corepb.GetNamespaceResponse{
+			Namespace: namespace,
+		},
 	}, nil
 }
 
-func (c *Core) GetNamespaceByName(request *corepb.GetNamespaceByNameRequest) (*corepb.GetNamespaceByNameResponse, error) {
+func (c *Core) GetNamespaceByName(req *coreapis.GetNamespaceByNameRequest) (*coreapis.GetNamespaceByNameResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
-	namespace, err := c.namespaces.GetByName(txn, request.AccountId, request.NamespaceName)
+	namespace, err := c.namespaces.GetByName(txn, req.Payload.AccountId, req.Payload.NamespaceName)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return nil, monsterax.NewErrorWithContext(
-				monsterax.NotFound,
-				"namespace not found",
-				map[string]string{"namespace_name": request.NamespaceName})
+			return &coreapis.GetNamespaceByNameResponse{
+				ApplicationError: monsterax.NewErrorWithContext(
+					monsterax.NotFound,
+					"namespace not found",
+					map[string]string{"namespace_name": req.Payload.NamespaceName},
+				),
+			}, nil
 		}
 
-		panic(err)
+		return nil, err
 	}
 
-	return &corepb.GetNamespaceByNameResponse{
-		Namespace: namespace,
+	return &coreapis.GetNamespaceByNameResponse{
+		Payload: &corepb.GetNamespaceByNameResponse{
+			Namespace: namespace,
+		},
 	}, nil
 }
 
-func (c *Core) ListNamespaces(request *corepb.ListNamespacesRequest) (*corepb.ListNamespacesResponse, error) {
+func (c *Core) ListNamespaces(req *coreapis.ListNamespacesRequest) (*coreapis.ListNamespacesResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
-	result, err := c.namespaces.List(txn, request.AccountId, request.PaginationToken, pagination.GetLimitWithDefaults(int(request.Limit)))
-	panicIfNotNil(err)
-
-	return &corepb.ListNamespacesResponse{
-		Namespaces:              result.Namespaces,
-		NextPaginationToken:     result.NextPaginationToken,
-		PreviousPaginationToken: result.PreviousPaginationToken,
-	}, nil
-}
-
-func panicIfNotNil(err error) {
+	result, err := c.namespaces.List(txn, req.Payload.AccountId, req.Payload.PaginationToken, pagination.GetLimitWithDefaults(int(req.Payload.Limit)))
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
+
+	return &coreapis.ListNamespacesResponse{
+		Payload: &corepb.ListNamespacesResponse{
+			Namespaces:              result.Namespaces,
+			NextPaginationToken:     result.NextPaginationToken,
+			PreviousPaginationToken: result.PreviousPaginationToken,
+		},
+	}, nil
 }

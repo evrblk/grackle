@@ -28,175 +28,175 @@ const (
 	lockNameRegex = "^[-_0-9a-zA-Z//]*$"
 )
 
-func ValidateCreateNamespaceRequest(request *gracklepb.CreateNamespaceRequest) error {
-	if err := validateNamespaceName(request.Name, "CreateNamespaceRequest.Name"); err != nil {
+func ValidateCreateNamespaceRequest(req *gracklepb.CreateNamespaceRequest) error {
+	if err := validateNamespaceName(req.Name, "CreateNamespaceRequest.Name"); err != nil {
 		return err
 	}
 
-	if err := validateDescription(request.Description, "CreateNamespaceRequest.Description"); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func ValidateGetNamespaceRequest(request *gracklepb.GetNamespaceRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "GetNamespaceRequest.NamespaceName"); err != nil {
+	if err := validateDescription(req.Description, "CreateNamespaceRequest.Description"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ValidateUpdateNamespaceRequest(request *gracklepb.UpdateNamespaceRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "UpdateNamespaceRequest.NamespaceName"); err != nil {
-		return err
-	}
-
-	if err := validateDescription(request.Description, "UpdateNamespaceRequest.Description"); err != nil {
+func ValidateGetNamespaceRequest(req *gracklepb.GetNamespaceRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "GetNamespaceRequest.NamespaceName"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ValidateDeleteNamespaceRequest(request *gracklepb.DeleteNamespaceRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "DeleteNamespaceRequest.NamespaceName"); err != nil {
+func ValidateUpdateNamespaceRequest(req *gracklepb.UpdateNamespaceRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "UpdateNamespaceRequest.NamespaceName"); err != nil {
+		return err
+	}
+
+	if err := validateDescription(req.Description, "UpdateNamespaceRequest.Description"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ValidateListNamespacesRequest(request *gracklepb.ListNamespacesRequest) error {
-	if err := validatePaginationToken(request.PaginationToken, "ListNamespacesRequest.PaginationToken"); err != nil {
-		return err
-	}
-
-	if err := validateLimit(request.Limit, "ListNamespacesRequest.Limit"); err != nil {
+func ValidateDeleteNamespaceRequest(req *gracklepb.DeleteNamespaceRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "DeleteNamespaceRequest.NamespaceName"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ValidateCreateWaitGroupRequest(request *gracklepb.CreateWaitGroupRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "CreateWaitGroupRequest.NamespaceName"); err != nil {
+func ValidateListNamespacesRequest(req *gracklepb.ListNamespacesRequest) error {
+	if err := validatePaginationToken(req.PaginationToken, "ListNamespacesRequest.PaginationToken"); err != nil {
 		return err
 	}
 
-	if err := validateWaitGroupName(request.WaitGroupName, "CreateWaitGroupRequest.WaitGroupName"); err != nil {
+	if err := validateLimit(req.Limit, "ListNamespacesRequest.Limit"); err != nil {
 		return err
 	}
 
-	if request.Counter <= 0 {
+	return nil
+}
+
+func ValidateCreateWaitGroupRequest(req *gracklepb.CreateWaitGroupRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "CreateWaitGroupRequest.NamespaceName"); err != nil {
+		return err
+	}
+
+	if err := validateWaitGroupName(req.WaitGroupName, "CreateWaitGroupRequest.WaitGroupName"); err != nil {
+		return err
+	}
+
+	if req.Counter <= 0 {
 		return invalid("CreateWaitGroupRequest.Counter", "must be greater than 0")
 	}
 
 	return nil
 }
 
-func ValidateGetWaitGroupRequest(request *gracklepb.GetWaitGroupRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "GetWaitGroupRequest.NamespaceName"); err != nil {
+func ValidateGetWaitGroupRequest(req *gracklepb.GetWaitGroupRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "GetWaitGroupRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validateWaitGroupName(request.WaitGroupName, "GetWaitGroupRequest.WaitGroupName"); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func ValidateWaitForWaitGroupRequest(request *gracklepb.WaitForWaitGroupRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "WaitForWaitGroupRequest.NamespaceName"); err != nil {
-		return err
-	}
-
-	if err := validateWaitGroupName(request.WaitGroupName, "WaitForWaitGroupRequest.WaitGroupName"); err != nil {
-		return err
-	}
-
-	if err := validateTimeOutSeconds(request.TimeoutSeconds, "WaitForWaitGroupRequest.TimeoutSeconds"); err != nil {
+	if err := validateWaitGroupName(req.WaitGroupName, "GetWaitGroupRequest.WaitGroupName"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ValidateAddJobsToWaitGroupRequest(request *gracklepb.AddJobsToWaitGroupRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "AddJobsToWaitGroupRequest.NamespaceName"); err != nil {
+func ValidateWaitForWaitGroupRequest(req *gracklepb.WaitForWaitGroupRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "WaitForWaitGroupRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validateWaitGroupName(request.WaitGroupName, "AddJobsToWaitGroupRequest.WaitGroupName"); err != nil {
+	if err := validateWaitGroupName(req.WaitGroupName, "WaitForWaitGroupRequest.WaitGroupName"); err != nil {
 		return err
 	}
 
-	return nil
-}
-
-func ValidateDeleteWaitGroupRequest(request *gracklepb.DeleteWaitGroupRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "DeleteWaitGroupRequest.NamespaceName"); err != nil {
-		return err
-	}
-
-	if err := validateWaitGroupName(request.WaitGroupName, "DeleteWaitGroupRequest.WaitGroupName"); err != nil {
+	if err := validateTimeOutSeconds(req.TimeoutSeconds, "WaitForWaitGroupRequest.TimeoutSeconds"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ValidateListWaitGroupsRequest(request *gracklepb.ListWaitGroupsRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "ListWaitGroupsRequest.NamespaceName"); err != nil {
+func ValidateAddJobsToWaitGroupRequest(req *gracklepb.AddJobsToWaitGroupRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "AddJobsToWaitGroupRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validatePaginationToken(request.PaginationToken, "ListWaitGroupsRequest.PaginationToken"); err != nil {
-		return err
-	}
-
-	if err := validateLimit(request.Limit, "ListWaitGroupsRequest.Limit"); err != nil {
+	if err := validateWaitGroupName(req.WaitGroupName, "AddJobsToWaitGroupRequest.WaitGroupName"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ValidateListWaitGroupJobsRequest(request *gracklepb.ListWaitGroupJobsRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "ListWaitGroupJobsRequest.NamespaceName"); err != nil {
+func ValidateDeleteWaitGroupRequest(req *gracklepb.DeleteWaitGroupRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "DeleteWaitGroupRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validateWaitGroupName(request.WaitGroupName, "ListWaitGroupJobsRequest.WaitGroupName"); err != nil {
-		return err
-	}
-
-	if err := validatePaginationToken(request.PaginationToken, "ListWaitGroupJobsRequest.PaginationToken"); err != nil {
-		return err
-	}
-
-	if err := validateLimit(request.Limit, "ListWaitGroupJobsRequest.Limit"); err != nil {
+	if err := validateWaitGroupName(req.WaitGroupName, "DeleteWaitGroupRequest.WaitGroupName"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ValidateCompleteJobsFromWaitGroupRequest(request *gracklepb.CompleteJobsFromWaitGroupRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "CompleteJobsFromWaitGroupRequest.NamespaceName"); err != nil {
+func ValidateListWaitGroupsRequest(req *gracklepb.ListWaitGroupsRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "ListWaitGroupsRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validateWaitGroupName(request.WaitGroupName, "CompleteJobsFromWaitGroupRequest.WaitGroupName"); err != nil {
+	if err := validatePaginationToken(req.PaginationToken, "ListWaitGroupsRequest.PaginationToken"); err != nil {
 		return err
 	}
 
-	if len(request.ProcessIds) > maxCompleteJobBatchSize {
+	if err := validateLimit(req.Limit, "ListWaitGroupsRequest.Limit"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ValidateListWaitGroupJobsRequest(req *gracklepb.ListWaitGroupJobsRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "ListWaitGroupJobsRequest.NamespaceName"); err != nil {
+		return err
+	}
+
+	if err := validateWaitGroupName(req.WaitGroupName, "ListWaitGroupJobsRequest.WaitGroupName"); err != nil {
+		return err
+	}
+
+	if err := validatePaginationToken(req.PaginationToken, "ListWaitGroupJobsRequest.PaginationToken"); err != nil {
+		return err
+	}
+
+	if err := validateLimit(req.Limit, "ListWaitGroupJobsRequest.Limit"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ValidateCompleteJobsFromWaitGroupRequest(req *gracklepb.CompleteJobsFromWaitGroupRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "CompleteJobsFromWaitGroupRequest.NamespaceName"); err != nil {
+		return err
+	}
+
+	if err := validateWaitGroupName(req.WaitGroupName, "CompleteJobsFromWaitGroupRequest.WaitGroupName"); err != nil {
+		return err
+	}
+
+	if len(req.ProcessIds) > maxCompleteJobBatchSize {
 		return invalid("CompleteJobFromWaitGroupRequest.ProcessIds", fmt.Sprintf("exceeds max batch size (%d)", maxCompleteJobBatchSize))
 	}
-	for i, processId := range request.ProcessIds {
+	for i, processId := range req.ProcessIds {
 		if err := validateProcessId(processId, fmt.Sprintf("CompleteJobFromWaitGroupRequest.ProcessIds[%d]", i)); err != nil {
 			return err
 		}
@@ -205,492 +205,492 @@ func ValidateCompleteJobsFromWaitGroupRequest(request *gracklepb.CompleteJobsFro
 	return nil
 }
 
-func ValidateListLocksRequest(request *gracklepb.ListLocksRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "ListLocksRequest.NamespaceName"); err != nil {
+func ValidateListLocksRequest(req *gracklepb.ListLocksRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "ListLocksRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validatePaginationToken(request.PaginationToken, "ListLocksRequest.PaginationToken"); err != nil {
+	if err := validatePaginationToken(req.PaginationToken, "ListLocksRequest.PaginationToken"); err != nil {
 		return err
 	}
 
-	if err := validateLimit(request.Limit, "ListLocksRequest.Limit"); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func ValidateDeleteLockRequest(request *gracklepb.DeleteLockRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "DeleteLockRequest.NamespaceName"); err != nil {
-		return err
-	}
-
-	if err := validateLockName(request.LockName, "DeleteLockRequest.LockName"); err != nil {
+	if err := validateLimit(req.Limit, "ListLocksRequest.Limit"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ValidateGetLockRequest(request *gracklepb.GetLockRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "GetLockRequest.NamespaceName"); err != nil {
+func ValidateDeleteLockRequest(req *gracklepb.DeleteLockRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "DeleteLockRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validateLockName(request.LockName, "GetLockRequest.LockName"); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func ValidateReleaseLockRequest(request *gracklepb.ReleaseLockRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "ReleaseLockRequest.NamespaceName"); err != nil {
-		return err
-	}
-
-	if err := validateLockName(request.LockName, "ReleaseLockRequest.LockName"); err != nil {
-		return err
-	}
-
-	if err := validateLeaseId(request.LeaseId, "ReleaseLockRequest.LeaseId"); err != nil {
+	if err := validateLockName(req.LockName, "DeleteLockRequest.LockName"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ValidateAcquireLockRequest(request *gracklepb.AcquireLockRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "AcquireLockRequest.NamespaceName"); err != nil {
+func ValidateGetLockRequest(req *gracklepb.GetLockRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "GetLockRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validateLockName(request.LockName, "AcquireLockRequest.LockName"); err != nil {
-		return err
-	}
-
-	if err := validateLeaseId(request.LeaseId, "AcquireLockRequest.LeaseId"); err != nil {
+	if err := validateLockName(req.LockName, "GetLockRequest.LockName"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ValidateCreateSemaphoreRequest(request *gracklepb.CreateSemaphoreRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "CreateSemaphoreRequest.NamespaceName"); err != nil {
+func ValidateReleaseLockRequest(req *gracklepb.ReleaseLockRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "ReleaseLockRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validateSemaphoreName(request.SemaphoreName, "CreateSemaphoreRequest.SemaphoreName"); err != nil {
+	if err := validateLockName(req.LockName, "ReleaseLockRequest.LockName"); err != nil {
 		return err
 	}
 
-	if request.Permits <= 0 {
+	if err := validateLeaseId(req.LeaseId, "ReleaseLockRequest.LeaseId"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ValidateAcquireLockRequest(req *gracklepb.AcquireLockRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "AcquireLockRequest.NamespaceName"); err != nil {
+		return err
+	}
+
+	if err := validateLockName(req.LockName, "AcquireLockRequest.LockName"); err != nil {
+		return err
+	}
+
+	if err := validateLeaseId(req.LeaseId, "AcquireLockRequest.LeaseId"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ValidateCreateSemaphoreRequest(req *gracklepb.CreateSemaphoreRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "CreateSemaphoreRequest.NamespaceName"); err != nil {
+		return err
+	}
+
+	if err := validateSemaphoreName(req.SemaphoreName, "CreateSemaphoreRequest.SemaphoreName"); err != nil {
+		return err
+	}
+
+	if req.Permits <= 0 {
 		return invalid("CreateSemaphoreRequest.Permits", "must be greater than 0")
 	}
 
 	return nil
 }
 
-func ValidateGetSemaphoreRequest(request *gracklepb.GetSemaphoreRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "GetSemaphoreRequest.NamespaceName"); err != nil {
+func ValidateGetSemaphoreRequest(req *gracklepb.GetSemaphoreRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "GetSemaphoreRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validateSemaphoreName(request.SemaphoreName, "GetSemaphoreRequest.SemaphoreName"); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func ValidateReleaseSemaphoreRequest(request *gracklepb.ReleaseSemaphoreRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "ReleaseSemaphoreRequest.NamespaceName"); err != nil {
-		return err
-	}
-
-	if err := validateSemaphoreName(request.SemaphoreName, "ReleaseSemaphoreRequest.SemaphoreName"); err != nil {
-		return err
-	}
-
-	if err := validateLeaseId(request.LeaseId, "ReleaseSemaphoreRequest.LeaseId"); err != nil {
+	if err := validateSemaphoreName(req.SemaphoreName, "GetSemaphoreRequest.SemaphoreName"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ValidateUpdateSemaphoreRequest(request *gracklepb.UpdateSemaphoreRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "UpdateSemaphoreRequest.NamespaceName"); err != nil {
+func ValidateReleaseSemaphoreRequest(req *gracklepb.ReleaseSemaphoreRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "ReleaseSemaphoreRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validateSemaphoreName(request.SemaphoreName, "UpdateSemaphoreRequest.SemaphoreName"); err != nil {
+	if err := validateSemaphoreName(req.SemaphoreName, "ReleaseSemaphoreRequest.SemaphoreName"); err != nil {
 		return err
 	}
 
-	if request.Permits <= 0 {
+	if err := validateLeaseId(req.LeaseId, "ReleaseSemaphoreRequest.LeaseId"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ValidateUpdateSemaphoreRequest(req *gracklepb.UpdateSemaphoreRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "UpdateSemaphoreRequest.NamespaceName"); err != nil {
+		return err
+	}
+
+	if err := validateSemaphoreName(req.SemaphoreName, "UpdateSemaphoreRequest.SemaphoreName"); err != nil {
+		return err
+	}
+
+	if req.Permits <= 0 {
 		return invalid("UpdateSemaphoreRequest.Permits", "must be greater than 0")
 	}
 
 	return nil
 }
 
-func ValidateDeleteSemaphoreRequest(request *gracklepb.DeleteSemaphoreRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "DeleteSemaphoreRequest.NamespaceName"); err != nil {
+func ValidateDeleteSemaphoreRequest(req *gracklepb.DeleteSemaphoreRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "DeleteSemaphoreRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validateSemaphoreName(request.SemaphoreName, "DeleteSemaphoreRequest.SemaphoreName"); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func ValidateListSemaphoresRequest(request *gracklepb.ListSemaphoresRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "ListSemaphoresRequest.NamespaceName"); err != nil {
-		return err
-	}
-
-	if err := validatePaginationToken(request.PaginationToken, "ListSemaphoresRequest.PaginationToken"); err != nil {
-		return err
-	}
-
-	if err := validateLimit(request.Limit, "ListSemaphoresRequest.Limit"); err != nil {
+	if err := validateSemaphoreName(req.SemaphoreName, "DeleteSemaphoreRequest.SemaphoreName"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ValidateListSemaphoreHoldersRequest(request *gracklepb.ListSemaphoreHoldersRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "ListSemaphoreHoldersRequest.NamespaceName"); err != nil {
+func ValidateListSemaphoresRequest(req *gracklepb.ListSemaphoresRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "ListSemaphoresRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validateSemaphoreName(request.SemaphoreName, "ListSemaphoreHoldersRequest.SemaphoreName"); err != nil {
+	if err := validatePaginationToken(req.PaginationToken, "ListSemaphoresRequest.PaginationToken"); err != nil {
 		return err
 	}
 
-	if err := validatePaginationToken(request.PaginationToken, "ListSemaphoreHoldersRequest.PaginationToken"); err != nil {
-		return err
-	}
-
-	if err := validateLimit(request.Limit, "ListSemaphoreHoldersRequest.Limit"); err != nil {
+	if err := validateLimit(req.Limit, "ListSemaphoresRequest.Limit"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ValidateAcquireSemaphoreRequest(request *gracklepb.AcquireSemaphoreRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "AcquireSemaphoreRequest.NamespaceName"); err != nil {
+func ValidateListSemaphoreHoldersRequest(req *gracklepb.ListSemaphoreHoldersRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "ListSemaphoreHoldersRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validateSemaphoreName(request.SemaphoreName, "AcquireSemaphoreRequest.SemaphoreName"); err != nil {
+	if err := validateSemaphoreName(req.SemaphoreName, "ListSemaphoreHoldersRequest.SemaphoreName"); err != nil {
 		return err
 	}
 
-	if err := validateLeaseId(request.LeaseId, "AcquireSemaphoreRequest.LeaseId"); err != nil {
+	if err := validatePaginationToken(req.PaginationToken, "ListSemaphoreHoldersRequest.PaginationToken"); err != nil {
 		return err
 	}
 
-	if err := validateTimeOutSeconds(request.TimeoutSeconds, "AcquireSemaphoreRequest.TimeoutSeconds"); err != nil {
+	if err := validateLimit(req.Limit, "ListSemaphoreHoldersRequest.Limit"); err != nil {
 		return err
 	}
 
-	if request.Weight <= 0 {
+	return nil
+}
+
+func ValidateAcquireSemaphoreRequest(req *gracklepb.AcquireSemaphoreRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "AcquireSemaphoreRequest.NamespaceName"); err != nil {
+		return err
+	}
+
+	if err := validateSemaphoreName(req.SemaphoreName, "AcquireSemaphoreRequest.SemaphoreName"); err != nil {
+		return err
+	}
+
+	if err := validateLeaseId(req.LeaseId, "AcquireSemaphoreRequest.LeaseId"); err != nil {
+		return err
+	}
+
+	if err := validateTimeOutSeconds(req.TimeoutSeconds, "AcquireSemaphoreRequest.TimeoutSeconds"); err != nil {
+		return err
+	}
+
+	if req.Weight <= 0 {
 		return invalid("AcquireSemaphoreRequest.Weight", "must be greater than 0")
 	}
 
 	return nil
 }
 
-func ValidateCreateBarrierRequest(request *gracklepb.CreateBarrierRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "CreateBarrierRequest.NamespaceName"); err != nil {
+func ValidateCreateBarrierRequest(req *gracklepb.CreateBarrierRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "CreateBarrierRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validateBarrierName(request.BarrierName, "CreateBarrierRequest.BarrierName"); err != nil {
+	if err := validateBarrierName(req.BarrierName, "CreateBarrierRequest.BarrierName"); err != nil {
 		return err
 	}
 
-	if err := validateDescription(request.Description, "CreateBarrierRequest.Description"); err != nil {
+	if err := validateDescription(req.Description, "CreateBarrierRequest.Description"); err != nil {
 		return err
 	}
 
-	if request.ExpectedProcesses <= 0 {
+	if req.ExpectedProcesses <= 0 {
 		return invalid("CreateBarrierRequest.ExpectedProcesses", "must be greater than 0")
 	}
 
-	if request.ExpiresAt <= 0 {
+	if req.ExpiresAt <= 0 {
 		return invalid("CreateBarrierRequest.ExpiresAt", "must be greater than 0")
 	}
 
 	return nil
 }
 
-func ValidateListBarriersRequest(request *gracklepb.ListBarriersRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "ListBarriersRequest.NamespaceName"); err != nil {
+func ValidateListBarriersRequest(req *gracklepb.ListBarriersRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "ListBarriersRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validatePaginationToken(request.PaginationToken, "ListBarriersRequest.PaginationToken"); err != nil {
+	if err := validatePaginationToken(req.PaginationToken, "ListBarriersRequest.PaginationToken"); err != nil {
 		return err
 	}
 
-	if err := validateLimit(request.Limit, "ListBarriersRequest.Limit"); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func ValidateGetBarrierRequest(request *gracklepb.GetBarrierRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "GetBarrierRequest.NamespaceName"); err != nil {
-		return err
-	}
-
-	if err := validateBarrierName(request.BarrierName, "GetBarrierRequest.BarrierName"); err != nil {
+	if err := validateLimit(req.Limit, "ListBarriersRequest.Limit"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ValidateDeleteBarrierRequest(request *gracklepb.DeleteBarrierRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "DeleteBarrierRequest.NamespaceName"); err != nil {
+func ValidateGetBarrierRequest(req *gracklepb.GetBarrierRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "GetBarrierRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validateBarrierName(request.BarrierName, "DeleteBarrierRequest.BarrierName"); err != nil {
+	if err := validateBarrierName(req.BarrierName, "GetBarrierRequest.BarrierName"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ValidateUpdateBarrierRequest(request *gracklepb.UpdateBarrierRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "UpdateBarrierRequest.NamespaceName"); err != nil {
+func ValidateDeleteBarrierRequest(req *gracklepb.DeleteBarrierRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "DeleteBarrierRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validateBarrierName(request.BarrierName, "UpdateBarrierRequest.BarrierName"); err != nil {
+	if err := validateBarrierName(req.BarrierName, "DeleteBarrierRequest.BarrierName"); err != nil {
 		return err
 	}
 
-	if err := validateDescription(request.Description, "UpdateBarrierRequest.Description"); err != nil {
+	return nil
+}
+
+func ValidateUpdateBarrierRequest(req *gracklepb.UpdateBarrierRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "UpdateBarrierRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if request.ExpectedProcesses <= 0 {
+	if err := validateBarrierName(req.BarrierName, "UpdateBarrierRequest.BarrierName"); err != nil {
+		return err
+	}
+
+	if err := validateDescription(req.Description, "UpdateBarrierRequest.Description"); err != nil {
+		return err
+	}
+
+	if req.ExpectedProcesses <= 0 {
 		return invalid("UpdateBarrierRequest.ExpectedProcesses", "must be greater than 0")
 	}
 
 	return nil
 }
 
-func ValidateArriveAtBarrierRequest(request *gracklepb.ArriveAtBarrierRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "ArriveAtBarrierRequest.NamespaceName"); err != nil {
+func ValidateArriveAtBarrierRequest(req *gracklepb.ArriveAtBarrierRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "ArriveAtBarrierRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validateBarrierName(request.BarrierName, "ArriveAtBarrierRequest.BarrierName"); err != nil {
+	if err := validateBarrierName(req.BarrierName, "ArriveAtBarrierRequest.BarrierName"); err != nil {
 		return err
 	}
 
-	if err := validateProcessId(request.ProcessId, "ArriveAtBarrierRequest.ProcessId"); err != nil {
+	if err := validateProcessId(req.ProcessId, "ArriveAtBarrierRequest.ProcessId"); err != nil {
 		return err
 	}
 
-	if request.ExpectedGeneration <= 0 {
+	if req.ExpectedGeneration <= 0 {
 		return invalid("ArriveAtBarrierRequest.ExpectedGeneration", "must be greater than 0")
 	}
 
 	return nil
 }
 
-func ValidateWaitAtBarrierRequest(request *gracklepb.WaitAtBarrierRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "WaitAtBarrierRequest.NamespaceName"); err != nil {
+func ValidateWaitAtBarrierRequest(req *gracklepb.WaitAtBarrierRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "WaitAtBarrierRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validateBarrierName(request.BarrierName, "WaitAtBarrierRequest.BarrierName"); err != nil {
+	if err := validateBarrierName(req.BarrierName, "WaitAtBarrierRequest.BarrierName"); err != nil {
 		return err
 	}
 
-	if request.ExpectedGeneration <= 0 {
+	if req.ExpectedGeneration <= 0 {
 		return invalid("WaitAtBarrierRequest.ExpectedGeneration", "must be greater than 0")
 	}
 
-	if err := validateTimeOutSeconds(request.TimeoutSeconds, "WaitAtBarrierRequest.TimeoutSeconds"); err != nil {
+	if err := validateTimeOutSeconds(req.TimeoutSeconds, "WaitAtBarrierRequest.TimeoutSeconds"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ValidateListBarrierParticipantsRequest(request *gracklepb.ListBarrierParticipantsRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "ListBarrierParticipantsRequest.NamespaceName"); err != nil {
+func ValidateListBarrierParticipantsRequest(req *gracklepb.ListBarrierParticipantsRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "ListBarrierParticipantsRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validateBarrierName(request.BarrierName, "ListBarrierParticipantsRequest.BarrierName"); err != nil {
+	if err := validateBarrierName(req.BarrierName, "ListBarrierParticipantsRequest.BarrierName"); err != nil {
 		return err
 	}
 
-	if err := validatePaginationToken(request.PaginationToken, "ListBarrierParticipantsRequest.PaginationToken"); err != nil {
+	if err := validatePaginationToken(req.PaginationToken, "ListBarrierParticipantsRequest.PaginationToken"); err != nil {
 		return err
 	}
 
-	if err := validateLimit(request.Limit, "ListBarrierParticipantsRequest.Limit"); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func ValidateCreateSemaphoreLeaseRequest(request *gracklepb.CreateSemaphoreLeaseRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "CreateSemaphoreLeaseRequest.NamespaceName"); err != nil {
-		return err
-	}
-
-	if err := validateProcessId(request.ProcessId, "CreateSemaphoreLeaseRequest.ProcessId"); err != nil {
-		return err
-	}
-
-	if err := validateLeaseTtlSeconds(request.TtlSeconds, "CreateSemaphoreLeaseRequest.TtlSeconds"); err != nil {
+	if err := validateLimit(req.Limit, "ListBarrierParticipantsRequest.Limit"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ValidateRevokeSemaphoreLeaseRequest(request *gracklepb.RevokeSemaphoreLeaseRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "RevokeSemaphoreLeaseRequest.NamespaceName"); err != nil {
+func ValidateCreateSemaphoreLeaseRequest(req *gracklepb.CreateSemaphoreLeaseRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "CreateSemaphoreLeaseRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validateLeaseId(request.LeaseId, "RevokeSemaphoreLeaseRequest.LeaseId"); err != nil {
+	if err := validateProcessId(req.ProcessId, "CreateSemaphoreLeaseRequest.ProcessId"); err != nil {
 		return err
 	}
 
-	return nil
-}
-
-func ValidateRefreshSemaphoreLeaseRequest(request *gracklepb.RefreshSemaphoreLeaseRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "RefreshSemaphoreLeaseRequest.NamespaceName"); err != nil {
-		return err
-	}
-
-	if err := validateLeaseId(request.LeaseId, "RefreshSemaphoreLeaseRequest.LeaseId"); err != nil {
-		return err
-	}
-
-	if err := validateLeaseTtlSeconds(request.TtlSeconds, "RefreshSemaphoreLeaseRequest.TtlSeconds"); err != nil {
+	if err := validateLeaseTtlSeconds(req.TtlSeconds, "CreateSemaphoreLeaseRequest.TtlSeconds"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ValidateListSemaphoreLeasesRequest(request *gracklepb.ListSemaphoreLeasesRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "ListSemaphoreLeasesRequest.NamespaceName"); err != nil {
+func ValidateRevokeSemaphoreLeaseRequest(req *gracklepb.RevokeSemaphoreLeaseRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "RevokeSemaphoreLeaseRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validatePaginationToken(request.PaginationToken, "ListSemaphoreLeasesRequest.PaginationToken"); err != nil {
-		return err
-	}
-
-	if err := validateLimit(request.Limit, "ListSemaphoreLeasesRequest.Limit"); err != nil {
+	if err := validateLeaseId(req.LeaseId, "RevokeSemaphoreLeaseRequest.LeaseId"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ValidateGetSemaphoreLeaseRequest(request *gracklepb.GetSemaphoreLeaseRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "GetSemaphoreLeaseRequest.NamespaceName"); err != nil {
+func ValidateRefreshSemaphoreLeaseRequest(req *gracklepb.RefreshSemaphoreLeaseRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "RefreshSemaphoreLeaseRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validateLeaseId(request.LeaseId, "GetSemaphoreLeaseRequest.LeaseId"); err != nil {
+	if err := validateLeaseId(req.LeaseId, "RefreshSemaphoreLeaseRequest.LeaseId"); err != nil {
 		return err
 	}
 
-	return nil
-}
-
-func ValidateCreateLockLeaseRequest(request *gracklepb.CreateLockLeaseRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "CreateLockLeaseRequest.NamespaceName"); err != nil {
-		return err
-	}
-
-	if err := validateProcessId(request.ProcessId, "CreateLockLeaseRequest.ProcessId"); err != nil {
-		return err
-	}
-
-	if err := validateLeaseTtlSeconds(request.TtlSeconds, "CreateLockLeaseRequest.TtlSeconds"); err != nil {
+	if err := validateLeaseTtlSeconds(req.TtlSeconds, "RefreshSemaphoreLeaseRequest.TtlSeconds"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ValidateRevokeLockLeaseRequest(request *gracklepb.RevokeLockLeaseRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "RevokeLockLeaseRequest.NamespaceName"); err != nil {
+func ValidateListSemaphoreLeasesRequest(req *gracklepb.ListSemaphoreLeasesRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "ListSemaphoreLeasesRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validateLeaseId(request.LeaseId, "RevokeLockLeaseRequest.LeaseId"); err != nil {
+	if err := validatePaginationToken(req.PaginationToken, "ListSemaphoreLeasesRequest.PaginationToken"); err != nil {
 		return err
 	}
 
-	return nil
-}
-
-func ValidateRefreshLockLeaseRequest(request *gracklepb.RefreshLockLeaseRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "RefreshLockLeaseRequest.NamespaceName"); err != nil {
-		return err
-	}
-
-	if err := validateLeaseId(request.LeaseId, "RefreshLockLeaseRequest.LeaseId"); err != nil {
-		return err
-	}
-
-	if err := validateLeaseTtlSeconds(request.TtlSeconds, "RefreshLockLeaseRequest.TtlSeconds"); err != nil {
+	if err := validateLimit(req.Limit, "ListSemaphoreLeasesRequest.Limit"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ValidateListLockLeasesRequest(request *gracklepb.ListLockLeasesRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "ListLockLeasesRequest.NamespaceName"); err != nil {
+func ValidateGetSemaphoreLeaseRequest(req *gracklepb.GetSemaphoreLeaseRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "GetSemaphoreLeaseRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validatePaginationToken(request.PaginationToken, "ListLockLeasesRequest.PaginationToken"); err != nil {
-		return err
-	}
-
-	if err := validateLimit(request.Limit, "ListLockLeasesRequest.Limit"); err != nil {
+	if err := validateLeaseId(req.LeaseId, "GetSemaphoreLeaseRequest.LeaseId"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ValidateGetLockLeaseRequest(request *gracklepb.GetLockLeaseRequest) error {
-	if err := validateNamespaceName(request.NamespaceName, "GetLockLeaseRequest.NamespaceName"); err != nil {
+func ValidateCreateLockLeaseRequest(req *gracklepb.CreateLockLeaseRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "CreateLockLeaseRequest.NamespaceName"); err != nil {
 		return err
 	}
 
-	if err := validateLeaseId(request.LeaseId, "GetLockLeaseRequest.LeaseId"); err != nil {
+	if err := validateProcessId(req.ProcessId, "CreateLockLeaseRequest.ProcessId"); err != nil {
+		return err
+	}
+
+	if err := validateLeaseTtlSeconds(req.TtlSeconds, "CreateLockLeaseRequest.TtlSeconds"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ValidateRevokeLockLeaseRequest(req *gracklepb.RevokeLockLeaseRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "RevokeLockLeaseRequest.NamespaceName"); err != nil {
+		return err
+	}
+
+	if err := validateLeaseId(req.LeaseId, "RevokeLockLeaseRequest.LeaseId"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ValidateRefreshLockLeaseRequest(req *gracklepb.RefreshLockLeaseRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "RefreshLockLeaseRequest.NamespaceName"); err != nil {
+		return err
+	}
+
+	if err := validateLeaseId(req.LeaseId, "RefreshLockLeaseRequest.LeaseId"); err != nil {
+		return err
+	}
+
+	if err := validateLeaseTtlSeconds(req.TtlSeconds, "RefreshLockLeaseRequest.TtlSeconds"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ValidateListLockLeasesRequest(req *gracklepb.ListLockLeasesRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "ListLockLeasesRequest.NamespaceName"); err != nil {
+		return err
+	}
+
+	if err := validatePaginationToken(req.PaginationToken, "ListLockLeasesRequest.PaginationToken"); err != nil {
+		return err
+	}
+
+	if err := validateLimit(req.Limit, "ListLockLeasesRequest.Limit"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ValidateGetLockLeaseRequest(req *gracklepb.GetLockLeaseRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "GetLockLeaseRequest.NamespaceName"); err != nil {
+		return err
+	}
+
+	if err := validateLeaseId(req.LeaseId, "GetLockLeaseRequest.LeaseId"); err != nil {
 		return err
 	}
 

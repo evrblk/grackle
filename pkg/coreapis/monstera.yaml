@@ -1,0 +1,214 @@
+go_code:
+  output_package: github.com/evrblk/grackle/pkg/coreapis
+  core_types_package: github.com/evrblk/grackle/pkg/corepb
+cores:
+  - name: GrackleLocks
+    events:
+      - name: LockAcquired
+      - name: LockReleased
+      - name: LockDeleted
+    read_methods:
+      - name: ListLocks
+        method_number: 1
+        sharded: true
+      - name: ListLocksByLeaseId
+        method_number: 2
+        sharded: true
+      - name: ListLockLeases
+        method_number: 3
+        sharded: true
+      - name: ListLockLeasesByProcessId
+        method_number: 4
+        sharded: true
+      - name: GetLockLease
+        method_number: 5
+        sharded: true
+    update_methods:
+      - name: AcquireLock
+        method_number: 1
+        sharded: true
+      - name: ReleaseLock
+        method_number: 2
+        sharded: true
+      - name: DeleteLock
+        method_number: 3
+        sharded: true
+      - name: GetLock
+        method_number: 4
+        sharded: true
+      - name: RunLocksGarbageCollection
+        method_number: 5
+        sharded: false
+      - name: LocksDeleteNamespace
+        method_number: 6
+        sharded: true
+      - name: CreateLockLease
+        method_number: 7
+        sharded: true
+      - name: RefreshLockLease
+        method_number: 8
+        sharded: true
+      - name: RevokeLockLease
+        method_number: 9
+        sharded: true
+
+  - name: GrackleSemaphores
+    read_methods:
+      - name: GetSemaphore
+        method_number: 1
+        sharded: true
+      - name: GetSemaphoreByName
+        method_number: 2
+        sharded: true
+      - name: ListSemaphores
+        method_number: 3
+        sharded: true
+      - name: ListSemaphoresByLeaseId
+        method_number: 4
+        sharded: true
+      - name: ListSemaphoreHolders
+        method_number: 5
+        sharded: true
+      - name: ListSemaphoreLeases
+        method_number: 6
+        sharded: true
+      - name: ListSemaphoreLeasesByProcessId
+        method_number: 7
+        sharded: true
+      - name: GetSemaphoreLease
+        method_number: 8
+        sharded: true
+    update_methods:
+      - name: AcquireSemaphore
+        method_number: 1
+        sharded: true
+      - name: ReleaseSemaphore
+        method_number: 2
+        sharded: true
+      - name: CreateSemaphore
+        method_number: 3
+        sharded: true
+      - name: UpdateSemaphore
+        method_number: 4
+        sharded: true
+      - name: DeleteSemaphore
+        method_number: 5
+        sharded: true
+      - name: RunSemaphoresGarbageCollection
+        method_number: 6
+        sharded: false
+      - name: SemaphoresDeleteNamespace
+        method_number: 7
+        sharded: true
+      - name: CreateSemaphoreLease
+        method_number: 8
+        sharded: true
+      - name: RevokeSemaphoreLease
+        method_number: 9
+        sharded: true
+      - name: RefreshSemaphoreLease
+        method_number: 10
+        sharded: true
+
+  - name: GrackleNamespaces
+    read_methods:
+      - name: GetNamespace
+        method_number: 1
+        sharded: true
+      - name: GetNamespaceByName
+        method_number: 2
+        sharded: true
+      - name: ListNamespaces
+        method_number: 3
+        sharded: true
+    update_methods:
+      - name: CreateNamespace
+        method_number: 1
+        sharded: true
+      - name: UpdateNamespace
+        method_number: 2
+        sharded: true
+      - name: DeleteNamespace
+        method_number: 3
+        sharded: true
+
+  - name: GrackleWaitGroups
+    read_methods:
+      - name: GetWaitGroup
+        method_number: 1
+        sharded: true
+      - name: GetWaitGroupByName
+        method_number: 2
+        sharded: true
+      - name: ListWaitGroups
+        method_number: 3
+        sharded: true
+      - name: ListWaitGroupJobs
+        method_number: 4
+        sharded: true
+    update_methods:
+      - name: AddJobsToWaitGroup
+        method_number: 1
+        sharded: true
+      - name: CompleteJobsFromWaitGroup
+        method_number: 2
+        sharded: true
+      - name: CreateWaitGroup
+        method_number: 3
+        sharded: true
+      - name: DeleteWaitGroup
+        method_number: 4
+        sharded: true
+      - name: RunWaitGroupsGarbageCollection
+        method_number: 5
+        sharded: false
+      - name: WaitGroupsDeleteNamespace
+        method_number: 6
+        sharded: true
+
+  - name: GrackleBarriers
+    events:
+      - name: BarrierCreated
+      - name: BarrierDeleted
+      - name: AllArrived
+    read_methods:
+      - name: GetBarrier
+        method_number: 1
+        sharded: true
+      - name: GetBarrierByName
+        method_number: 2
+        sharded: true
+      - name: ListBarriers
+        method_number: 3
+        sharded: true
+      - name: ListBarrierParticipants
+        method_number: 4
+        sharded: true
+    update_methods:
+      - name: CreateBarrier
+        method_number: 1
+        sharded: true
+      - name: DeleteBarrier
+        method_number: 2
+        sharded: true
+      - name: UpdateBarrier
+        method_number: 3
+        sharded: true
+      - name: ArriveAtBarrier
+        method_number: 4
+        sharded: true
+      - name: RunBarriersGarbageCollection
+        method_number: 5
+        sharded: false
+      - name: BarriersDeleteNamespace
+        method_number: 6
+        sharded: true
+
+stubs:
+  - name: Grackle
+    cores:
+      - GrackleLocks
+      - GrackleSemaphores
+      - GrackleNamespaces
+      - GrackleWaitGroups
+      - GrackleBarriers
