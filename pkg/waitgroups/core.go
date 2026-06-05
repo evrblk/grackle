@@ -71,12 +71,14 @@ func (c *Core) GetWaitGroup(req *coreapis.GetWaitGroupRequest) (*coreapis.GetWai
 	waitGroup, err := c.waitGroups.Get(txn, req.Payload.WaitGroupId)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return nil, monsterax.NewErrorWithContext(
-				monsterax.NotFound,
-				"wait group not found",
-				map[string]string{
-					"wait_group_id": ids.EncodeWaitGroupId(req.Payload.WaitGroupId),
-				})
+			return &coreapis.GetWaitGroupResponse{
+				ApplicationError: monsterax.NewErrorWithContext(
+					monsterax.NotFound,
+					"wait group not found",
+					map[string]string{
+						"wait_group_id": ids.EncodeWaitGroupId(req.Payload.WaitGroupId),
+					}),
+			}, nil
 		}
 
 		return nil, err
@@ -96,12 +98,14 @@ func (c *Core) GetWaitGroupByName(req *coreapis.GetWaitGroupByNameRequest) (*cor
 	waitGroup, err := c.waitGroups.GetByName(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, req.Payload.WaitGroupName)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return nil, monsterax.NewErrorWithContext(
-				monsterax.NotFound,
-				"wait group not found",
-				map[string]string{
-					"wait_group_name": req.Payload.WaitGroupName,
-				})
+			return &coreapis.GetWaitGroupByNameResponse{
+				ApplicationError: monsterax.NewErrorWithContext(
+					monsterax.NotFound,
+					"wait group not found",
+					map[string]string{
+						"wait_group_name": req.Payload.WaitGroupName,
+					}),
+			}, nil
 		}
 
 		return nil, err
@@ -139,12 +143,14 @@ func (c *Core) ListWaitGroupJobs(req *coreapis.ListWaitGroupJobsRequest) (*corea
 	waitGroup, err := c.waitGroups.GetByName(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, req.Payload.WaitGroupName)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return nil, monsterax.NewErrorWithContext(
-				monsterax.NotFound,
-				"wait group not found",
-				map[string]string{
-					"wait_group_name": req.Payload.WaitGroupName,
-				})
+			return &coreapis.ListWaitGroupJobsResponse{
+				ApplicationError: monsterax.NewErrorWithContext(
+					monsterax.NotFound,
+					"wait group not found",
+					map[string]string{
+						"wait_group_name": req.Payload.WaitGroupName,
+					}),
+			}, nil
 		}
 
 		return nil, err
@@ -175,12 +181,14 @@ func (c *Core) CreateWaitGroup(req *coreapis.CreateWaitGroupRequest) (*coreapis.
 			return nil, err
 		}
 	} else {
-		return nil, monsterax.NewErrorWithContext(
-			monsterax.AlreadyExists,
-			"wait group with this name already exists",
-			map[string]string{
-				"wait_group_name": req.Payload.Name,
-			})
+		return &coreapis.CreateWaitGroupResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.AlreadyExists,
+				"wait group with this name already exists",
+				map[string]string{
+					"wait_group_name": req.Payload.Name,
+				}),
+		}, nil
 	}
 
 	// Get counters for that namespace
@@ -191,10 +199,13 @@ func (c *Core) CreateWaitGroup(req *coreapis.CreateWaitGroupRequest) (*coreapis.
 
 	// Checking max number of wait groups
 	if counters.NumberOfWaitGroups >= req.Payload.MaxNumberOfWaitGroupsPerNamespace {
-		return nil, monsterax.NewErrorWithContext(
-			monsterax.ResourceExhausted,
-			"max number of wait groups per namespace reached",
-			map[string]string{"limit": fmt.Sprintf("%d", req.Payload.MaxNumberOfWaitGroupsPerNamespace)})
+		return &coreapis.CreateWaitGroupResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.ResourceExhausted,
+				"max number of wait groups per namespace reached",
+				map[string]string{"limit": fmt.Sprintf("%d", req.Payload.MaxNumberOfWaitGroupsPerNamespace)},
+			),
+		}, nil
 	}
 
 	waitGroup := &corepb.WaitGroup{
@@ -299,12 +310,14 @@ func (c *Core) AddJobsToWaitGroup(req *coreapis.AddJobsToWaitGroupRequest) (*cor
 	waitGroup, err := c.waitGroups.GetByName(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, req.Payload.WaitGroupName)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return nil, monsterax.NewErrorWithContext(
-				monsterax.NotFound,
-				"wait group not found",
-				map[string]string{
-					"wait_group_name": req.Payload.WaitGroupName,
-				})
+			return &coreapis.AddJobsToWaitGroupResponse{
+				ApplicationError: monsterax.NewErrorWithContext(
+					monsterax.NotFound,
+					"wait group not found",
+					map[string]string{
+						"wait_group_name": req.Payload.WaitGroupName,
+					}),
+			}, nil
 		}
 
 		return nil, err
@@ -312,10 +325,13 @@ func (c *Core) AddJobsToWaitGroup(req *coreapis.AddJobsToWaitGroupRequest) (*cor
 
 	// Check if wait group is too big
 	if waitGroup.Counter+req.Payload.Counter > uint64(req.Payload.MaxWaitGroupSize) {
-		return nil, monsterax.NewErrorWithContext(
-			monsterax.ResourceExhausted,
-			"wait group counter is too big",
-			map[string]string{"limit": fmt.Sprintf("%d", req.Payload.MaxWaitGroupSize)})
+		return &coreapis.AddJobsToWaitGroupResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.ResourceExhausted,
+				"wait group counter is too big",
+				map[string]string{"limit": fmt.Sprintf("%d", req.Payload.MaxWaitGroupSize)},
+			),
+		}, nil
 	}
 
 	waitGroup.Counter += req.Payload.Counter
@@ -345,12 +361,14 @@ func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroup
 	waitGroup, err := c.waitGroups.GetByName(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, req.Payload.WaitGroupName)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return nil, monsterax.NewErrorWithContext(
-				monsterax.NotFound,
-				"wait group not found",
-				map[string]string{
-					"wait_group_name": req.Payload.WaitGroupName,
-				})
+			return &coreapis.CompleteJobsFromWaitGroupResponse{
+				ApplicationError: monsterax.NewErrorWithContext(
+					monsterax.NotFound,
+					"wait group not found",
+					map[string]string{
+						"wait_group_name": req.Payload.WaitGroupName,
+					}),
+			}, nil
 		}
 
 		return nil, err

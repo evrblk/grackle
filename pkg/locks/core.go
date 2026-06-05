@@ -241,12 +241,15 @@ func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest) (*coreapis.AcquireL
 	})
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return nil, monsterax.NewErrorWithContext(
-				monsterax.NotFound,
-				"lease not found",
-				map[string]string{
-					"lease_id": fmt.Sprintf("%d", req.Payload.LeaseId),
-				})
+			return &coreapis.AcquireLockResponse{
+				ApplicationError: monsterax.NewErrorWithContext(
+					monsterax.NotFound,
+					"lease not found",
+					map[string]string{
+						"lease_id": fmt.Sprintf("%d", req.Payload.LeaseId),
+					},
+				),
+			}, nil
 		}
 
 		return nil, err
@@ -255,12 +258,15 @@ func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest) (*coreapis.AcquireL
 	// Check if lease has expired
 	if lease.ExpiresAt <= req.Payload.Now {
 		// On return, the transaction will be discarded, and the expired lease will be deleted later by the garbage collector.
-		return nil, monsterax.NewErrorWithContext(
-			monsterax.NotFound,
-			"lease not found",
-			map[string]string{
-				"lease_id": fmt.Sprintf("%d", req.Payload.LeaseId),
-			})
+		return &coreapis.AcquireLockResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.NotFound,
+				"lease not found",
+				map[string]string{
+					"lease_id": fmt.Sprintf("%d", req.Payload.LeaseId),
+				},
+			),
+		}, nil
 	}
 
 	// Get counters for that namespace
@@ -283,12 +289,15 @@ func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest) (*coreapis.AcquireL
 
 			// Check the total number of locks
 			if counters.NumberOfLocks > req.Payload.MaxNumberOfLocksPerNamespace {
-				return nil, monsterax.NewErrorWithContext(
-					monsterax.ResourceExhausted,
-					"max number of locks per namespace reached",
-					map[string]string{
-						"limit": fmt.Sprintf("%d", req.Payload.MaxNumberOfLocksPerNamespace),
-					})
+				return &coreapis.AcquireLockResponse{
+					ApplicationError: monsterax.NewErrorWithContext(
+						monsterax.ResourceExhausted,
+						"max number of locks per namespace reached",
+						map[string]string{
+							"limit": fmt.Sprintf("%d", req.Payload.MaxNumberOfLocksPerNamespace),
+						},
+					),
+				}, nil
 			}
 		} else {
 			return nil, err
@@ -746,12 +755,15 @@ func (c *Core) CreateLockLease(req *coreapis.CreateLockLeaseRequest) (*coreapis.
 
 	// Check the total number of leases
 	if counters.NumberOfLeases > req.Payload.MaxNumberOfLockLeases {
-		return nil, monsterax.NewErrorWithContext(
-			monsterax.ResourceExhausted,
-			"max number of lock leases per namespace reached",
-			map[string]string{
-				"limit": fmt.Sprintf("%d", req.Payload.MaxNumberOfLockLeases),
-			})
+		return &coreapis.CreateLockLeaseResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.ResourceExhausted,
+				"max number of lock leases per namespace reached",
+				map[string]string{
+					"limit": fmt.Sprintf("%d", req.Payload.MaxNumberOfLockLeases),
+				},
+			),
+		}, nil
 	}
 
 	// Calculate expiration time
@@ -795,24 +807,30 @@ func (c *Core) GetLockLease(req *coreapis.GetLockLeaseRequest) (*coreapis.GetLoc
 	lease, err := c.leases.Get(txn, req.Payload.LeaseId)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return nil, monsterax.NewErrorWithContext(
-				monsterax.NotFound,
-				"lease not found",
-				map[string]string{
-					"lease_id": ids.EncodeLeaseId(req.Payload.LeaseId),
-				})
+			return &coreapis.GetLockLeaseResponse{
+				ApplicationError: monsterax.NewErrorWithContext(
+					monsterax.NotFound,
+					"lease not found",
+					map[string]string{
+						"lease_id": ids.EncodeLeaseId(req.Payload.LeaseId),
+					},
+				),
+			}, nil
 		}
 
 		return nil, err
 	}
 
 	if lease.ExpiresAt <= req.Payload.Now {
-		return nil, monsterax.NewErrorWithContext(
-			monsterax.NotFound,
-			"lease not found",
-			map[string]string{
-				"lease_id": ids.EncodeLeaseId(req.Payload.LeaseId),
-			})
+		return &coreapis.GetLockLeaseResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.NotFound,
+				"lease not found",
+				map[string]string{
+					"lease_id": ids.EncodeLeaseId(req.Payload.LeaseId),
+				},
+			),
+		}, nil
 	}
 
 	return &coreapis.GetLockLeaseResponse{
@@ -854,12 +872,15 @@ func (c *Core) RefreshLockLease(req *coreapis.RefreshLockLeaseRequest) (*coreapi
 	lease, err := c.leases.Get(txn, req.Payload.LeaseId)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return nil, monsterax.NewErrorWithContext(
-				monsterax.NotFound,
-				"lease not found",
-				map[string]string{
-					"lease_id": ids.EncodeLeaseId(req.Payload.LeaseId),
-				})
+			return &coreapis.RefreshLockLeaseResponse{
+				ApplicationError: monsterax.NewErrorWithContext(
+					monsterax.NotFound,
+					"lease not found",
+					map[string]string{
+						"lease_id": ids.EncodeLeaseId(req.Payload.LeaseId),
+					},
+				),
+			}, nil
 		}
 
 		return nil, err

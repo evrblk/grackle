@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/evrblk/monstera/store"
+	monsterax "github.com/evrblk/monstera/x"
 	"github.com/stretchr/testify/require"
 
 	"github.com/evrblk/grackle/pkg/corepb"
@@ -41,8 +42,9 @@ func TestSemaphoresTable_Get(t *testing.T) {
 
 		// Create semaphore
 		txn := store.Update()
-		err = table.Create(txn, semaphore)
+		appErr, err := table.Create(txn, semaphore)
 		require.NoError(t, err)
+		require.Nil(t, appErr)
 		require.NoError(t, txn.Commit())
 
 		// Get semaphore
@@ -114,8 +116,9 @@ func TestSemaphoresTable_GetByName(t *testing.T) {
 
 		// Create semaphore
 		txn := store.Update()
-		err = table.Create(txn, semaphore)
+		appErr, err := table.Create(txn, semaphore)
 		require.NoError(t, err)
+		require.Nil(t, appErr)
 		require.NoError(t, txn.Commit())
 
 		// Get semaphore by name
@@ -177,8 +180,9 @@ func TestSemaphoresTable_Create(t *testing.T) {
 
 		// Create semaphore
 		txn := store.Update()
-		err = table.Create(txn, semaphore)
+		appErr, err := table.Create(txn, semaphore)
 		require.NoError(t, err)
+		require.Nil(t, appErr)
 		require.NoError(t, txn.Commit())
 
 		// Verify semaphore was created in main table
@@ -238,17 +242,20 @@ func TestSemaphoresTable_Create(t *testing.T) {
 
 		// Create first semaphore
 		txn := store.Update()
-		err = table.Create(txn, semaphore1)
+		appErr, err := table.Create(txn, semaphore1)
 		require.NoError(t, err)
+		require.Nil(t, appErr)
 		require.NoError(t, txn.Commit())
 
 		// Try to create second semaphore with same name
 		txn = store.Update()
-		err = table.Create(txn, semaphore2)
+		appErr, err = table.Create(txn, semaphore2)
 		txn.Discard()
 
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "already exists")
+		require.NoError(t, err)
+		require.NotNil(t, appErr)
+		require.Equal(t, monsterax.AlreadyExists, appErr.Code)
+		require.Contains(t, appErr.Message, "already exists")
 	})
 }
 func TestSemaphoresTable_Update(t *testing.T) {
@@ -280,8 +287,9 @@ func TestSemaphoresTable_Update(t *testing.T) {
 
 		// Create semaphore
 		txn := store.Update()
-		err = table.Create(txn, semaphore)
+		appErr, err := table.Create(txn, semaphore)
 		require.NoError(t, err)
+		require.Nil(t, appErr)
 		require.NoError(t, txn.Commit())
 
 		// Update semaphore
@@ -348,8 +356,9 @@ func TestSemaphoresTable_Delete(t *testing.T) {
 
 		// Create semaphore
 		txn := store.Update()
-		err = table.Create(txn, semaphore)
+		appErr, err := table.Create(txn, semaphore)
 		require.NoError(t, err)
+		require.Nil(t, appErr)
 		require.NoError(t, txn.Commit())
 
 		// Delete semaphore
@@ -424,8 +433,9 @@ func TestSemaphoresTable_List(t *testing.T) {
 		// Create all semaphores
 		txn := store.Update()
 		for _, semaphore := range semaphores {
-			err := table.Create(txn, semaphore)
+			appErr, err := table.Create(txn, semaphore)
 			require.NoError(t, err)
+			require.Nil(t, appErr)
 		}
 		require.NoError(t, txn.Commit())
 
@@ -474,8 +484,9 @@ func TestSemaphoresTable_List(t *testing.T) {
 			}
 
 			txn := store.Update()
-			err := table.Create(txn, semaphore)
+			appErr, err := table.Create(txn, semaphore)
 			require.NoError(t, err)
+			require.Nil(t, appErr)
 			require.NoError(t, txn.Commit())
 		}
 
@@ -588,10 +599,12 @@ func TestSemaphoresTable_List(t *testing.T) {
 		}
 
 		txn := store.Update()
-		err = table.Create(txn, semaphore1)
+		appErr, err := table.Create(txn, semaphore1)
 		require.NoError(t, err)
-		err = table.Create(txn, semaphore2)
+		require.Nil(t, appErr)
+		appErr, err = table.Create(txn, semaphore2)
 		require.NoError(t, err)
+		require.Nil(t, appErr)
 		require.NoError(t, txn.Commit())
 
 		// List semaphores in first namespace
@@ -654,10 +667,12 @@ func TestSemaphoresTable_SameNameDifferentNamespaces(t *testing.T) {
 	}
 
 	txn := store.Update()
-	err = table.Create(txn, semaphore1)
+	appErr, err := table.Create(txn, semaphore1)
 	require.NoError(t, err)
-	err = table.Create(txn, semaphore2)
+	require.Nil(t, appErr)
+	appErr, err = table.Create(txn, semaphore2)
 	require.NoError(t, err)
+	require.Nil(t, appErr)
 	require.NoError(t, txn.Commit())
 
 	// Get by name in first namespace
@@ -717,8 +732,9 @@ func TestSemaphoresTable_NameIndexConsistency(t *testing.T) {
 
 	// Create semaphore
 	txn := store.Update()
-	err = table.Create(txn, semaphore)
+	appErr, err := table.Create(txn, semaphore)
 	require.NoError(t, err)
+	require.Nil(t, appErr)
 	require.NoError(t, txn.Commit())
 
 	// Verify Get and GetByName return the same semaphore

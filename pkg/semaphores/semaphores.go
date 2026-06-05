@@ -105,12 +105,12 @@ func (t *semaphoresTable) Delete(txn *store.Txn, semaphoreId *corepb.SemaphoreId
 			t.tableSK(semaphoreId.SemaphoreId)))
 }
 
-func (t *semaphoresTable) Create(txn *store.Txn, semaphore *corepb.Semaphore) error {
+func (t *semaphoresTable) Create(txn *store.Txn, semaphore *corepb.Semaphore) (*monsterax.Error, error) {
 	indexPK := t.namesIndexPK(semaphore.Id.AccountId, semaphore.Id.NamespaceId, semaphore.Name)
 	_, err := t.namesIndex.Get(txn, indexPK)
 	if err != nil {
 		if !errors.Is(err, store.ErrNotFound) {
-			return err
+			return nil, err
 		}
 	} else {
 		return monsterax.NewErrorWithContext(
@@ -118,15 +118,15 @@ func (t *semaphoresTable) Create(txn *store.Txn, semaphore *corepb.Semaphore) er
 			"semaphore with this name already exists",
 			map[string]string{
 				"semaphore_name": semaphore.Name,
-			})
+			}), nil
 	}
 
 	err = t.namesIndex.Set(txn, indexPK, semaphore.Id.SemaphoreId)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return t.table.Set(txn,
+	return nil, t.table.Set(txn,
 		utils.ConcatBytes(
 			t.tablePK(semaphore.Id.AccountId, semaphore.Id.NamespaceId),
 			t.tableSK(semaphore.Id.SemaphoreId)),
