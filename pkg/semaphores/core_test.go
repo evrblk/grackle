@@ -352,7 +352,7 @@ func TestCore_UpdateSemaphore(t *testing.T) {
 					AccountId:   rand.Uint64(),
 					NamespaceId: rand.Uint32(),
 				},
-				SemaphoreName: "non_existing_semaphore",
+				SemaphoreName: "nonexistent_semaphore",
 				Description:   "updated description",
 				Permits:       3,
 				Now:           now.UnixNano(),
@@ -520,7 +520,7 @@ func TestCore_GetSemaphoreByName(t *testing.T) {
 		resp1, err := core.GetSemaphoreByName(&coreapis.GetSemaphoreByNameRequest{
 			Payload: &corepb.GetSemaphoreByNameRequest{
 				NamespaceId:   namespaceId,
-				SemaphoreName: "non_existing_semaphore",
+				SemaphoreName: "nonexistent_semaphore",
 				Now:           now.UnixNano(),
 			},
 		})
@@ -734,7 +734,7 @@ func TestCore_DeleteSemaphore(t *testing.T) {
 					AccountId:   rand.Uint64(),
 					NamespaceId: rand.Uint32(),
 				},
-				SemaphoreName: "non_existing_semaphore",
+				SemaphoreName: "nonexistent_semaphore",
 			},
 		})
 

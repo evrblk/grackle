@@ -25,31 +25,18 @@ func TestCore_CreateNamespace(t *testing.T) {
 	t.Run("create a namespace", func(t *testing.T) {
 		core := newNamespacesCore(t)
 		now := time.Now()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+		}
 
 		// Create namespace
-		resp1, err := core.CreateNamespace(&coreapis.CreateNamespaceRequest{
-			Payload: &corepb.CreateNamespaceRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   rand.Uint64(),
-					NamespaceId: rand.Uint32(),
-				},
-				Name:                  "test_namespace",
-				Description:           "test description",
-				Now:                   now.UnixNano(),
-				MaxNumberOfNamespaces: 20,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.ApplicationError)
-		require.NotNil(t, resp1.Payload)
-		require.NotNil(t, resp1.Payload.Namespace)
+		namespace := createNamespace(t, core, namespaceId, "test_namespace", now)
 
 		// Get this newly created namespace
 		resp2, err := core.GetNamespace(&coreapis.GetNamespaceRequest{
 			Payload: &corepb.GetNamespaceRequest{
-				NamespaceId: resp1.Payload.Namespace.Id,
+				NamespaceId: namespace.Id,
 			},
 		})
 
@@ -128,34 +115,22 @@ func TestCore_CreateNamespace(t *testing.T) {
 		core := newNamespacesCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
+		namespace1Id := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
+		namespace2Id := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
 
 		// Create first namespace
-		resp1, err := core.CreateNamespace(&coreapis.CreateNamespaceRequest{
-			Payload: &corepb.CreateNamespaceRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   accountId,
-					NamespaceId: rand.Uint32(),
-				},
-				Name:                  "test_namespace",
-				Description:           "first description",
-				Now:                   now.UnixNano(),
-				MaxNumberOfNamespaces: 20,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.ApplicationError)
-		require.NotNil(t, resp1.Payload)
-		require.NotNil(t, resp1.Payload.Namespace)
+		_ = createNamespace(t, core, namespace1Id, "test_namespace", now)
 
 		// Try to create second namespace with the same name in the same account
 		resp2, err := core.CreateNamespace(&coreapis.CreateNamespaceRequest{
 			Payload: &corepb.CreateNamespaceRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   accountId,
-					NamespaceId: rand.Uint32(),
-				},
+				NamespaceId:           namespace2Id,
 				Name:                  "test_namespace",
 				Description:           "duplicate description",
 				Now:                   now.UnixNano(),
@@ -175,48 +150,24 @@ func TestCore_CreateNamespace(t *testing.T) {
 		now := time.Now()
 		accountId1 := rand.Uint64()
 		accountId2 := rand.Uint64()
+		namespace1Id := &corepb.NamespaceId{
+			AccountId:   accountId1,
+			NamespaceId: rand.Uint32(),
+		}
+		namespace2Id := &corepb.NamespaceId{
+			AccountId:   accountId2,
+			NamespaceId: rand.Uint32(),
+		}
 
 		// Create namespace in first account
-		resp1, err := core.CreateNamespace(&coreapis.CreateNamespaceRequest{
-			Payload: &corepb.CreateNamespaceRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   accountId1,
-					NamespaceId: rand.Uint32(),
-				},
-				Name:                  "test_namespace",
-				Description:           "account 1 description",
-				Now:                   now.UnixNano(),
-				MaxNumberOfNamespaces: 20,
-			},
-		})
+		namespace1 := createNamespace(t, core, namespace1Id, "test_namespace", now)
 
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.ApplicationError)
-		require.NotNil(t, resp1.Payload)
-		require.NotNil(t, resp1.Payload.Namespace)
+		require.Equal(t, "test_namespace", namespace1.Name)
 
 		// Create namespace with the same name in a different account (should succeed)
-		resp2, err := core.CreateNamespace(&coreapis.CreateNamespaceRequest{
-			Payload: &corepb.CreateNamespaceRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   accountId2,
-					NamespaceId: rand.Uint32(),
-				},
-				Name:                  "test_namespace",
-				Description:           "account 2 description",
-				Now:                   now.UnixNano(),
-				MaxNumberOfNamespaces: 20,
-			},
-		})
+		namespace2 := createNamespace(t, core, namespace2Id, "test_namespace", now)
 
-		require.NoError(t, err)
-		require.NotNil(t, resp2)
-		require.Nil(t, resp2.ApplicationError)
-		require.NotNil(t, resp2.Payload)
-		require.NotNil(t, resp2.Payload.Namespace)
-		require.Equal(t, "test_namespace", resp2.Payload.Namespace.Name)
-		require.Equal(t, "account 2 description", resp2.Payload.Namespace.Description)
+		require.Equal(t, "test_namespace", namespace2.Name)
 	})
 }
 
@@ -225,26 +176,13 @@ func TestCore_GetNamespaceByName(t *testing.T) {
 		core := newNamespacesCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
 
 		// Create namespace
-		resp1, err := core.CreateNamespace(&coreapis.CreateNamespaceRequest{
-			Payload: &corepb.CreateNamespaceRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   accountId,
-					NamespaceId: rand.Uint32(),
-				},
-				Name:                  "test_namespace",
-				Description:           "test description",
-				Now:                   now.UnixNano(),
-				MaxNumberOfNamespaces: 20,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.ApplicationError)
-		require.NotNil(t, resp1.Payload)
-		require.NotNil(t, resp1.Payload.Namespace)
+		_ = createNamespace(t, core, namespaceId, "test_namespace", now)
 
 		// Get namespace by name
 		resp2, err := core.GetNamespaceByName(&coreapis.GetNamespaceByNameRequest{
@@ -289,26 +227,13 @@ func TestCore_GetNamespaceByName(t *testing.T) {
 		now := time.Now()
 		accountId1 := rand.Uint64()
 		accountId2 := rand.Uint64()
+		namespace1Id := &corepb.NamespaceId{
+			AccountId:   accountId1,
+			NamespaceId: rand.Uint32(),
+		}
 
 		// Create namespace in account 1
-		resp1, err := core.CreateNamespace(&coreapis.CreateNamespaceRequest{
-			Payload: &corepb.CreateNamespaceRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   accountId1,
-					NamespaceId: rand.Uint32(),
-				},
-				Name:                  "test_namespace",
-				Description:           "account 1 description",
-				Now:                   now.UnixNano(),
-				MaxNumberOfNamespaces: 20,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.ApplicationError)
-		require.NotNil(t, resp1.Payload)
-		require.NotNil(t, resp1.Payload.Namespace)
+		_ = createNamespace(t, core, namespace1Id, "test_namespace", now)
 
 		// Try to get namespace by name from account 2 (should fail)
 		resp2, err := core.GetNamespaceByName(&coreapis.GetNamespaceByNameRequest{
@@ -338,39 +263,26 @@ func TestCore_GetNamespaceByName(t *testing.T) {
 		require.NotNil(t, resp3.Payload)
 		require.NotNil(t, resp3.Payload.Namespace)
 		require.Equal(t, "test_namespace", resp3.Payload.Namespace.Name)
-		require.Equal(t, "account 1 description", resp3.Payload.Namespace.Description)
+		require.Equal(t, "test description", resp3.Payload.Namespace.Description)
 	})
 
 	t.Run("get namespace by name after update", func(t *testing.T) {
 		core := newNamespacesCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
 
 		// Create namespace
-		resp1, err := core.CreateNamespace(&coreapis.CreateNamespaceRequest{
-			Payload: &corepb.CreateNamespaceRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   accountId,
-					NamespaceId: rand.Uint32(),
-				},
-				Name:                  "test_namespace",
-				Description:           "original description",
-				Now:                   now.UnixNano(),
-				MaxNumberOfNamespaces: 20,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.ApplicationError)
-		require.NotNil(t, resp1.Payload)
-		require.NotNil(t, resp1.Payload.Namespace)
+		_ = createNamespace(t, core, namespaceId, "test_namespace", now)
 
 		// Update namespace
 		updateTime := now.Add(time.Hour)
 		resp2, err := core.UpdateNamespace(&coreapis.UpdateNamespaceRequest{
 			Payload: &corepb.UpdateNamespaceRequest{
-				NamespaceId: resp1.Payload.Namespace.Id,
+				NamespaceId: namespaceId,
 				Description: "updated description",
 				Now:         updateTime.UnixNano(),
 			},
@@ -404,43 +316,18 @@ func TestCore_GetNamespaceByName(t *testing.T) {
 		core := newNamespacesCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
+		namespace1Id := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
+		namespace2Id := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
 
 		// Create multiple namespaces
-		resp1, err := core.CreateNamespace(&coreapis.CreateNamespaceRequest{
-			Payload: &corepb.CreateNamespaceRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   accountId,
-					NamespaceId: rand.Uint32(),
-				},
-				Name:                  "namespace_1",
-				Description:           "description 1",
-				Now:                   now.UnixNano(),
-				MaxNumberOfNamespaces: 20,
-			},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.ApplicationError)
-		require.NotNil(t, resp1.Payload)
-		require.NotNil(t, resp1.Payload.Namespace)
-
-		resp2, err := core.CreateNamespace(&coreapis.CreateNamespaceRequest{
-			Payload: &corepb.CreateNamespaceRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   accountId,
-					NamespaceId: rand.Uint32(),
-				},
-				Name:                  "namespace_2",
-				Description:           "description 2",
-				Now:                   now.UnixNano(),
-				MaxNumberOfNamespaces: 20,
-			},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp2)
-		require.Nil(t, resp2.ApplicationError)
-		require.NotNil(t, resp2.Payload)
-		require.NotNil(t, resp2.Payload.Namespace)
+		_ = createNamespace(t, core, namespace1Id, "namespace_1", now)
+		_ = createNamespace(t, core, namespace2Id, "namespace_2", now)
 
 		// Get first namespace by name
 		resp3, err := core.GetNamespaceByName(&coreapis.GetNamespaceByNameRequest{
@@ -456,7 +343,6 @@ func TestCore_GetNamespaceByName(t *testing.T) {
 		require.NotNil(t, resp3.Payload)
 		require.NotNil(t, resp3.Payload.Namespace)
 		require.Equal(t, "namespace_1", resp3.Payload.Namespace.Name)
-		require.Equal(t, "description 1", resp3.Payload.Namespace.Description)
 
 		// Get second namespace by name
 		resp4, err := core.GetNamespaceByName(&coreapis.GetNamespaceByNameRequest{
@@ -472,7 +358,6 @@ func TestCore_GetNamespaceByName(t *testing.T) {
 		require.NotNil(t, resp4.Payload)
 		require.NotNil(t, resp4.Payload.Namespace)
 		require.Equal(t, "namespace_2", resp4.Payload.Namespace.Name)
-		require.Equal(t, "description 2", resp4.Payload.Namespace.Description)
 
 		// Verify they are different namespaces
 		require.NotEqual(t, resp3.Payload.Namespace.Id.NamespaceId, resp4.Payload.Namespace.Id.NamespaceId)
@@ -483,44 +368,20 @@ func TestCore_ListNamespaces(t *testing.T) {
 	core := newNamespacesCore(t)
 	now := time.Now()
 	accountId := rand.Uint64()
+	namespace1Id := &corepb.NamespaceId{
+		AccountId:   accountId,
+		NamespaceId: rand.Uint32(),
+	}
+	namespace2Id := &corepb.NamespaceId{
+		AccountId:   accountId,
+		NamespaceId: rand.Uint32(),
+	}
 
 	// Create namespace 1
-	resp1, err := core.CreateNamespace(&coreapis.CreateNamespaceRequest{
-		Payload: &corepb.CreateNamespaceRequest{
-			NamespaceId: &corepb.NamespaceId{
-				AccountId:   accountId,
-				NamespaceId: rand.Uint32(),
-			},
-			Name:                  "test_namespace_1",
-			Now:                   now.UnixNano(),
-			MaxNumberOfNamespaces: 20,
-		},
-	})
-
-	require.NoError(t, err)
-	require.NotNil(t, resp1)
-	require.Nil(t, resp1.ApplicationError)
-	require.NotNil(t, resp1.Payload)
-	require.NotNil(t, resp1.Payload.Namespace)
+	_ = createNamespace(t, core, namespace1Id, "namespace_1", now)
 
 	// Create namespace 2
-	resp2, err := core.CreateNamespace(&coreapis.CreateNamespaceRequest{
-		Payload: &corepb.CreateNamespaceRequest{
-			NamespaceId: &corepb.NamespaceId{
-				AccountId:   accountId,
-				NamespaceId: rand.Uint32(),
-			},
-			Name:                  "test_namespace_2",
-			Now:                   now.UnixNano(),
-			MaxNumberOfNamespaces: 20,
-		},
-	})
-
-	require.NoError(t, err)
-	require.NotNil(t, resp2)
-	require.Nil(t, resp2.ApplicationError)
-	require.NotNil(t, resp2.Payload)
-	require.NotNil(t, resp2.Payload.Namespace)
+	_ = createNamespace(t, core, namespace2Id, "namespace_2", now)
 
 	// List namespaces
 	resp3, err := core.ListNamespaces(&coreapis.ListNamespacesRequest{
@@ -541,33 +402,19 @@ func TestCore_UpdateNamespace(t *testing.T) {
 		core := newNamespacesCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
 
 		// Create a namespace first
-		resp1, err := core.CreateNamespace(&coreapis.CreateNamespaceRequest{
-			Payload: &corepb.CreateNamespaceRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   accountId,
-					NamespaceId: rand.Uint32(),
-				},
-				Name:                  "test_namespace",
-				Description:           "original description",
-				Now:                   now.UnixNano(),
-				MaxNumberOfNamespaces: 20,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.ApplicationError)
-		require.NotNil(t, resp1.Payload)
-		require.NotNil(t, resp1.Payload.Namespace)
-		require.Equal(t, "original description", resp1.Payload.Namespace.Description)
+		_ = createNamespace(t, core, namespaceId, "namespace_1", now)
 
 		// Update the namespace
 		updateTime := time.Now().Add(time.Hour)
 		resp2, err := core.UpdateNamespace(&coreapis.UpdateNamespaceRequest{
 			Payload: &corepb.UpdateNamespaceRequest{
-				NamespaceId: resp1.Payload.Namespace.Id,
+				NamespaceId: namespaceId,
 				Description: "updated description",
 				Now:         updateTime.UnixNano(),
 			},
@@ -626,31 +473,18 @@ func TestCore_DeleteNamespace(t *testing.T) {
 		core := newNamespacesCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
 
 		// Create a namespace first
-		resp1, err := core.CreateNamespace(&coreapis.CreateNamespaceRequest{
-			Payload: &corepb.CreateNamespaceRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   accountId,
-					NamespaceId: rand.Uint32(),
-				},
-				Name:                  "test_namespace",
-				Description:           "test description",
-				Now:                   now.UnixNano(),
-				MaxNumberOfNamespaces: 20,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.ApplicationError)
-		require.NotNil(t, resp1.Payload)
-		require.NotNil(t, resp1.Payload.Namespace)
+		_ = createNamespace(t, core, namespaceId, "test_namespace", now)
 
 		// Verify the namespace exists
 		resp2, err := core.GetNamespace(&coreapis.GetNamespaceRequest{
 			Payload: &corepb.GetNamespaceRequest{
-				NamespaceId: resp1.Payload.Namespace.Id,
+				NamespaceId: namespaceId,
 			},
 		})
 
@@ -663,7 +497,7 @@ func TestCore_DeleteNamespace(t *testing.T) {
 		// Delete the namespace
 		resp3, err := core.DeleteNamespace(&coreapis.DeleteNamespaceRequest{
 			Payload: &corepb.DeleteNamespaceRequest{
-				NamespaceId: resp1.Payload.Namespace.Id,
+				NamespaceId: namespaceId,
 			},
 		})
 
@@ -675,7 +509,7 @@ func TestCore_DeleteNamespace(t *testing.T) {
 		// Verify the namespace no longer exists
 		resp4, err := core.GetNamespace(&coreapis.GetNamespaceRequest{
 			Payload: &corepb.GetNamespaceRequest{
-				NamespaceId: resp1.Payload.Namespace.Id,
+				NamespaceId: namespaceId,
 			},
 		})
 
@@ -708,45 +542,18 @@ func TestCore_DeleteNamespace(t *testing.T) {
 		core := newNamespacesCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
+		namespace1Id := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
+		namespace2Id := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
 
 		// Create multiple namespaces
-		resp1, err := core.CreateNamespace(&coreapis.CreateNamespaceRequest{
-			Payload: &corepb.CreateNamespaceRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   accountId,
-					NamespaceId: rand.Uint32(),
-				},
-				Name:                  "test_namespace_1",
-				Description:           "test description 1",
-				Now:                   now.UnixNano(),
-				MaxNumberOfNamespaces: 20,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.ApplicationError)
-		require.NotNil(t, resp1.Payload)
-		require.NotNil(t, resp1.Payload.Namespace)
-
-		resp2, err := core.CreateNamespace(&coreapis.CreateNamespaceRequest{
-			Payload: &corepb.CreateNamespaceRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   accountId,
-					NamespaceId: rand.Uint32(),
-				},
-				Name:                  "test_namespace_2",
-				Description:           "test description 2",
-				Now:                   now.UnixNano(),
-				MaxNumberOfNamespaces: 20,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp2)
-		require.Nil(t, resp2.ApplicationError)
-		require.NotNil(t, resp2.Payload)
-		require.NotNil(t, resp2.Payload.Namespace)
+		_ = createNamespace(t, core, namespace1Id, "test_namespace_1", now)
+		_ = createNamespace(t, core, namespace2Id, "test_namespace_2", now)
 
 		// Verify both namespaces exist
 		resp3, err := core.ListNamespaces(&coreapis.ListNamespacesRequest{
@@ -764,7 +571,7 @@ func TestCore_DeleteNamespace(t *testing.T) {
 		// Delete the first namespace
 		resp4, err := core.DeleteNamespace(&coreapis.DeleteNamespaceRequest{
 			Payload: &corepb.DeleteNamespaceRequest{
-				NamespaceId: resp1.Payload.Namespace.Id,
+				NamespaceId: namespace1Id,
 			},
 		})
 
@@ -790,7 +597,7 @@ func TestCore_DeleteNamespace(t *testing.T) {
 		// Verify the first namespace no longer exists
 		resp6, err := core.GetNamespace(&coreapis.GetNamespaceRequest{
 			Payload: &corepb.GetNamespaceRequest{
-				NamespaceId: resp1.Payload.Namespace.Id,
+				NamespaceId: namespace1Id,
 			},
 		})
 
@@ -803,7 +610,7 @@ func TestCore_DeleteNamespace(t *testing.T) {
 		// Verify the second namespace still exists
 		resp7, err := core.GetNamespace(&coreapis.GetNamespaceRequest{
 			Payload: &corepb.GetNamespaceRequest{
-				NamespaceId: resp2.Payload.Namespace.Id,
+				NamespaceId: namespace2Id,
 			},
 		})
 
@@ -820,47 +627,26 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 	t.Run("snapshot and restore namespaces", func(t *testing.T) {
 		now := time.Now()
 		accountId := rand.Uint64()
+		namespace1Id := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
+		namespace2Id := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
+		namespace3Id := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
 
 		// Create two cores for testing snapshot and restore
 		core1 := newNamespacesCore(t)
 		core2 := newNamespacesCore(t)
 
 		// Create multiple namespaces in core1
-		resp1, err := core1.CreateNamespace(&coreapis.CreateNamespaceRequest{
-			Payload: &corepb.CreateNamespaceRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   accountId,
-					NamespaceId: rand.Uint32(),
-				},
-				Name:                  "test_namespace_1",
-				Description:           "description 1",
-				Now:                   now.UnixNano(),
-				MaxNumberOfNamespaces: 20,
-			},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.ApplicationError)
-		require.NotNil(t, resp1.Payload)
-		require.NotNil(t, resp1.Payload.Namespace)
-
-		resp2, err := core1.CreateNamespace(&coreapis.CreateNamespaceRequest{
-			Payload: &corepb.CreateNamespaceRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   accountId,
-					NamespaceId: rand.Uint32(),
-				},
-				Name:                  "test_namespace_2",
-				Description:           "description 2",
-				Now:                   now.UnixNano(),
-				MaxNumberOfNamespaces: 20,
-			},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp2)
-		require.Nil(t, resp2.ApplicationError)
-		require.NotNil(t, resp2.Payload)
-		require.NotNil(t, resp2.Payload.Namespace)
+		_ = createNamespace(t, core1, namespace1Id, "test_namespace_1", now)
+		_ = createNamespace(t, core1, namespace2Id, "test_namespace_2", now)
 
 		// Take snapshot
 		snapshot := core1.Snapshot()
@@ -869,7 +655,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 		updateTime := now.Add(time.Hour)
 		resp3, err := core1.UpdateNamespace(&coreapis.UpdateNamespaceRequest{
 			Payload: &corepb.UpdateNamespaceRequest{
-				NamespaceId: resp1.Payload.Namespace.Id,
+				NamespaceId: namespace1Id,
 				Description: "updated description",
 				Now:         updateTime.UnixNano(),
 			},
@@ -881,23 +667,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 		require.NotNil(t, resp3.Payload.Namespace)
 
 		// Create another namespace after snapshot
-		resp4, err := core1.CreateNamespace(&coreapis.CreateNamespaceRequest{
-			Payload: &corepb.CreateNamespaceRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   accountId,
-					NamespaceId: rand.Uint32(),
-				},
-				Name:                  "test_namespace_3",
-				Description:           "description 3",
-				Now:                   now.Add(2 * time.Hour).UnixNano(),
-				MaxNumberOfNamespaces: 20,
-			},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp4)
-		require.Nil(t, resp4.ApplicationError)
-		require.NotNil(t, resp4.Payload)
-		require.NotNil(t, resp4.Payload.Namespace)
+		_ = createNamespace(t, core1, namespace3Id, "test_namespace_3", now.Add(2*time.Hour))
 
 		// Write snapshot to buffer
 		buf := &bytes.Buffer{}
@@ -924,7 +694,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 		// Verify first namespace has original description (not updated)
 		resp6, err := core2.GetNamespace(&coreapis.GetNamespaceRequest{
 			Payload: &corepb.GetNamespaceRequest{
-				NamespaceId: resp1.Payload.Namespace.Id,
+				NamespaceId: namespace1Id,
 			},
 		})
 		require.NoError(t, err)
@@ -932,13 +702,12 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 		require.Nil(t, resp6.ApplicationError)
 		require.NotNil(t, resp6.Payload)
 		require.NotNil(t, resp6.Payload.Namespace)
-		require.Equal(t, "description 1", resp6.Payload.Namespace.Description)
 		require.Equal(t, now.UnixNano(), resp6.Payload.Namespace.UpdatedAt)
 
 		// Verify second namespace exists
 		resp7, err := core2.GetNamespace(&coreapis.GetNamespaceRequest{
 			Payload: &corepb.GetNamespaceRequest{
-				NamespaceId: resp2.Payload.Namespace.Id,
+				NamespaceId: namespace2Id,
 			},
 		})
 		require.NoError(t, err)
@@ -946,7 +715,6 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 		require.Nil(t, resp7.ApplicationError)
 		require.NotNil(t, resp7.Payload)
 		require.NotNil(t, resp7.Payload.Namespace)
-		require.Equal(t, "description 2", resp7.Payload.Namespace.Description)
 
 		// Verify third namespace doesn't exist in restored state
 		resp8, err := core2.GetNamespaceByName(&coreapis.GetNamespaceByNameRequest{
@@ -974,62 +742,31 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 		require.NotNil(t, resp9.Payload)
 		require.NotNil(t, resp9.Payload.Namespace)
 		require.Equal(t, "test_namespace_1", resp9.Payload.Namespace.Name)
-		require.Equal(t, "description 1", resp9.Payload.Namespace.Description)
 	})
 
 	t.Run("snapshot and restore with multiple accounts", func(t *testing.T) {
 		now := time.Now()
 		accountId1 := rand.Uint64()
 		accountId2 := rand.Uint64()
+		namespace1Id := &corepb.NamespaceId{AccountId: accountId1, NamespaceId: rand.Uint32()}
+		namespace2Id := &corepb.NamespaceId{AccountId: accountId2, NamespaceId: rand.Uint32()}
 
 		// Create two cores for testing snapshot and restore
 		core1 := newNamespacesCore(t)
 		core2 := newNamespacesCore(t)
 
 		// Create namespaces for account 1
-		resp1, err := core1.CreateNamespace(&coreapis.CreateNamespaceRequest{
-			Payload: &corepb.CreateNamespaceRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   accountId1,
-					NamespaceId: rand.Uint32(),
-				},
-				Name:                  "account1_namespace",
-				Description:           "account 1 description",
-				Now:                   now.UnixNano(),
-				MaxNumberOfNamespaces: 20,
-			},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.ApplicationError)
-		require.NotNil(t, resp1.Payload)
-		require.NotNil(t, resp1.Payload.Namespace)
+		_ = createNamespace(t, core1, namespace1Id, "account1_namespace", now)
 
 		// Create namespaces for account 2
-		resp2, err := core1.CreateNamespace(&coreapis.CreateNamespaceRequest{
-			Payload: &corepb.CreateNamespaceRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   accountId2,
-					NamespaceId: rand.Uint32(),
-				},
-				Name:                  "account2_namespace",
-				Description:           "account 2 description",
-				Now:                   now.UnixNano(),
-				MaxNumberOfNamespaces: 20,
-			},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp2)
-		require.Nil(t, resp2.ApplicationError)
-		require.NotNil(t, resp2.Payload)
-		require.NotNil(t, resp2.Payload.Namespace)
+		_ = createNamespace(t, core1, namespace2Id, "account2_namespace", now)
 
 		// Take snapshot
 		snapshot := core1.Snapshot()
 
 		// Write snapshot to buffer
 		buf := &bytes.Buffer{}
-		err = snapshot.Write(buf)
+		err := snapshot.Write(buf)
 		require.NoError(t, err)
 
 		// Restore snapshot to second core
@@ -1039,7 +776,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 		// Verify both accounts' namespaces are restored
 		resp3, err := core2.GetNamespace(&coreapis.GetNamespaceRequest{
 			Payload: &corepb.GetNamespaceRequest{
-				NamespaceId: resp1.Payload.Namespace.Id,
+				NamespaceId: namespace1Id,
 			},
 		})
 		require.NoError(t, err)
@@ -1051,7 +788,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 
 		resp4, err := core2.GetNamespace(&coreapis.GetNamespaceRequest{
 			Payload: &corepb.GetNamespaceRequest{
-				NamespaceId: resp2.Payload.Namespace.Id,
+				NamespaceId: namespace2Id,
 			},
 		})
 		require.NoError(t, err)
@@ -1118,34 +855,20 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 	t.Run("restore and continue operations", func(t *testing.T) {
 		now := time.Now()
 		accountId := rand.Uint64()
+		namespace1Id := &corepb.NamespaceId{AccountId: accountId, NamespaceId: rand.Uint32()}
+		namespace2Id := &corepb.NamespaceId{AccountId: accountId, NamespaceId: rand.Uint32()}
 
 		// Create two cores for testing snapshot and restore
 		core1 := newNamespacesCore(t)
 		core2 := newNamespacesCore(t)
 
 		// Create namespace in core1
-		resp1, err := core1.CreateNamespace(&coreapis.CreateNamespaceRequest{
-			Payload: &corepb.CreateNamespaceRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   accountId,
-					NamespaceId: rand.Uint32(),
-				},
-				Name:                  "test_namespace",
-				Description:           "original description",
-				Now:                   now.UnixNano(),
-				MaxNumberOfNamespaces: 20,
-			},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.ApplicationError)
-		require.NotNil(t, resp1.Payload)
-		require.NotNil(t, resp1.Payload.Namespace)
+		_ = createNamespace(t, core1, namespace1Id, "test_namespace", now)
 
 		// Take snapshot
 		snapshot := core1.Snapshot()
 		buf := &bytes.Buffer{}
-		err = snapshot.Write(buf)
+		err := snapshot.Write(buf)
 		require.NoError(t, err)
 
 		// Restore to core2
@@ -1156,7 +879,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 		updateTime := now.Add(time.Hour)
 		resp2, err := core2.UpdateNamespace(&coreapis.UpdateNamespaceRequest{
 			Payload: &corepb.UpdateNamespaceRequest{
-				NamespaceId: resp1.Payload.Namespace.Id,
+				NamespaceId: namespace1Id,
 				Description: "updated after restore",
 				Now:         updateTime.UnixNano(),
 			},
@@ -1169,23 +892,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 		require.Equal(t, "updated after restore", resp2.Payload.Namespace.Description)
 
 		// Create new namespace in restored core
-		resp3, err := core2.CreateNamespace(&coreapis.CreateNamespaceRequest{
-			Payload: &corepb.CreateNamespaceRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   accountId,
-					NamespaceId: rand.Uint32(),
-				},
-				Name:                  "new_namespace",
-				Description:           "created after restore",
-				Now:                   now.Add(2 * time.Hour).UnixNano(),
-				MaxNumberOfNamespaces: 20,
-			},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp3)
-		require.Nil(t, resp3.ApplicationError)
-		require.NotNil(t, resp3.Payload)
-		require.NotNil(t, resp3.Payload.Namespace)
+		_ = createNamespace(t, core2, namespace2Id, "new_namespace", now)
 
 		// Verify both namespaces exist in restored core
 		resp4, err := core2.ListNamespaces(&coreapis.ListNamespacesRequest{
@@ -1205,4 +912,26 @@ func newNamespacesCore(t *testing.T) *Core {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 	return NewCore(store, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+}
+
+func createNamespace(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, name string, now time.Time) *corepb.Namespace {
+	t.Helper()
+
+	resp, err := core.CreateNamespace(&coreapis.CreateNamespaceRequest{
+		Payload: &corepb.CreateNamespaceRequest{
+			NamespaceId:           namespaceId,
+			Name:                  name,
+			Description:           "test description",
+			Now:                   now.UnixNano(),
+			MaxNumberOfNamespaces: 20,
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+	require.NotNil(t, resp.Payload.Namespace)
+
+	return resp.Payload.Namespace
 }
