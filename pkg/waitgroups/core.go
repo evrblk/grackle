@@ -13,6 +13,7 @@ import (
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/ids"
 	"github.com/evrblk/grackle/pkg/pagination"
+	"github.com/evrblk/grackle/pkg/tables"
 )
 
 type Core struct {
@@ -20,8 +21,8 @@ type Core struct {
 
 	waitGroups        *waitGroupsTable
 	jobs              *jobsTable
-	counters          *countersTable
-	gcRecords         *gcRecordsTable
+	counters          *tables.CountersTable[*corepb.WaitGroupsCounter, corepb.WaitGroupsCounter]
+	gcRecords         *tables.GCRecordsTable[*corepb.WaitGroupsGarbageCollectionRecord, corepb.WaitGroupsGarbageCollectionRecord]
 	expirationRecords *expirationRecordsTable
 }
 
@@ -31,10 +32,17 @@ func NewCore(badgerStore *store.BadgerStore, shardGlobalIndexPrefix []byte, shar
 	return &Core{
 		badgerStore: badgerStore,
 
-		waitGroups:        newWaitGroupsTable(shardLowerBound, shardUpperBound),
-		jobs:              newJobsTable(shardLowerBound, shardUpperBound),
-		counters:          newCountersTable(shardLowerBound, shardUpperBound),
-		gcRecords:         newGCRecordsTable(shardGlobalIndexPrefix),
+		waitGroups: newWaitGroupsTable(shardLowerBound, shardUpperBound),
+		jobs:       newJobsTable(shardLowerBound, shardUpperBound),
+		counters: tables.NewCountersTable[*corepb.WaitGroupsCounter, corepb.WaitGroupsCounter](
+			tables.Grackle["Grackle.WaitGroupsCore.Counters.Table"].Bytes(),
+			shardLowerBound,
+			shardUpperBound,
+		),
+		gcRecords: tables.NewGCRecordsTable[*corepb.WaitGroupsGarbageCollectionRecord, corepb.WaitGroupsGarbageCollectionRecord](
+			tables.Grackle["Grackle.WaitGroupsCore.GarbageCollectionRecords.Table"].Bytes(),
+			shardGlobalIndexPrefix,
+		),
 		expirationRecords: newExpirationRecordsTable(shardGlobalIndexPrefix),
 	}
 }

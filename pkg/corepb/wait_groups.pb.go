@@ -1407,8 +1407,7 @@ func (x *WaitGroupId) GetWaitGroupId() uint64 {
 
 type WaitGroupsCounter struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
-	NamespaceId        *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	NumberOfWaitGroups int64                  `protobuf:"varint,2,opt,name=number_of_wait_groups,json=numberOfWaitGroups,proto3" json:"number_of_wait_groups,omitempty"`
+	NumberOfWaitGroups int64                  `protobuf:"varint,1,opt,name=number_of_wait_groups,json=numberOfWaitGroups,proto3" json:"number_of_wait_groups,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
@@ -1441,13 +1440,6 @@ func (x *WaitGroupsCounter) ProtoReflect() protoreflect.Message {
 // Deprecated: Use WaitGroupsCounter.ProtoReflect.Descriptor instead.
 func (*WaitGroupsCounter) Descriptor() ([]byte, []int) {
 	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{24}
-}
-
-func (x *WaitGroupsCounter) GetNamespaceId() *NamespaceId {
-	if x != nil {
-		return x.NamespaceId
-	}
-	return nil
 }
 
 func (x *WaitGroupsCounter) GetNumberOfWaitGroups() int64 {
@@ -1706,10 +1698,9 @@ const file_pkg_corepb_wait_groups_proto_rawDesc = "" +
 	"\n" +
 	"account_id\x18\x01 \x01(\x04R\taccountId\x12!\n" +
 	"\fnamespace_id\x18\x02 \x01(\rR\vnamespaceId\x12\"\n" +
-	"\rwait_group_id\x18\x03 \x01(\x04R\vwaitGroupId\"\x91\x01\n" +
-	"\x11WaitGroupsCounter\x12I\n" +
-	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x121\n" +
-	"\x15number_of_wait_groups\x18\x02 \x01(\x03R\x12numberOfWaitGroups\"\xd8\x01\n" +
+	"\rwait_group_id\x18\x03 \x01(\x04R\vwaitGroupId\"F\n" +
+	"\x11WaitGroupsCounter\x121\n" +
+	"\x15number_of_wait_groups\x18\x01 \x01(\x03R\x12numberOfWaitGroups\"\xd8\x01\n" +
 	"!WaitGroupsGarbageCollectionRecord\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12K\n" +
 	"\fnamespace_id\x18\x02 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdH\x00R\vnamespaceId\x12L\n" +
@@ -1789,15 +1780,14 @@ var file_pkg_corepb_wait_groups_proto_depIdxs = []int32{
 	27, // 21: com.evrblk.grackle.corepb.WaitGroupsDeleteNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
 	23, // 22: com.evrblk.grackle.corepb.WaitGroup.id:type_name -> com.evrblk.grackle.corepb.WaitGroupId
 	22, // 23: com.evrblk.grackle.corepb.WaitGroupJob.id:type_name -> com.evrblk.grackle.corepb.WaitGroupJobId
-	27, // 24: com.evrblk.grackle.corepb.WaitGroupsCounter.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	27, // 25: com.evrblk.grackle.corepb.WaitGroupsGarbageCollectionRecord.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	23, // 26: com.evrblk.grackle.corepb.WaitGroupsGarbageCollectionRecord.wait_group_id:type_name -> com.evrblk.grackle.corepb.WaitGroupId
-	23, // 27: com.evrblk.grackle.corepb.WaitGroupsExpirationRecord.wait_group_id:type_name -> com.evrblk.grackle.corepb.WaitGroupId
-	28, // [28:28] is the sub-list for method output_type
-	28, // [28:28] is the sub-list for method input_type
-	28, // [28:28] is the sub-list for extension type_name
-	28, // [28:28] is the sub-list for extension extendee
-	0,  // [0:28] is the sub-list for field type_name
+	27, // 24: com.evrblk.grackle.corepb.WaitGroupsGarbageCollectionRecord.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	23, // 25: com.evrblk.grackle.corepb.WaitGroupsGarbageCollectionRecord.wait_group_id:type_name -> com.evrblk.grackle.corepb.WaitGroupId
+	23, // 26: com.evrblk.grackle.corepb.WaitGroupsExpirationRecord.wait_group_id:type_name -> com.evrblk.grackle.corepb.WaitGroupId
+	27, // [27:27] is the sub-list for method output_type
+	27, // [27:27] is the sub-list for method input_type
+	27, // [27:27] is the sub-list for extension type_name
+	27, // [27:27] is the sub-list for extension extendee
+	0,  // [0:27] is the sub-list for field type_name
 }
 
 func init() { file_pkg_corepb_wait_groups_proto_init() }

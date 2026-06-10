@@ -2,16 +2,25 @@
 
 DONT_FIND := -name .git -prune -o -name .cache -prune -o -name .pkg -prune -o
 
+# Lint, static checks, vuln shecks
+lint:
+	go fmt ./...
+	go vet ./...
+	staticcheck ./...
+	govulncheck ./...
+
 # Builds all artifacts
 build:
-	go vet ./...
-	go fmt ./...
 	go build ./...
 
 # Generates protos and go:generate
 generate:
-	@echo "Running go generate..."
-	go generate ./...
+	@echo "Generating Monstera stubs and adapters implementations..."
+	cd ./pkg/coreapis; go tool github.com/evrblk/monstera/cmd/monstera code generate
+
+	@echo "Generating Marshal/Unmarshal implementations..."
+	go run ./tools/codegen/genmarshal -dir ./pkg/corepb -output ./pkg/corepb/marshal_gen.go
+
 	@echo "Generating proto files..."
 	protoc --proto_path=. \
 		--go_out=. \

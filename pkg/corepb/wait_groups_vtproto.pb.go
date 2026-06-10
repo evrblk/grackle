@@ -1316,17 +1316,7 @@ func (m *WaitGroupsCounter) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	if m.NumberOfWaitGroups != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.NumberOfWaitGroups))
 		i--
-		dAtA[i] = 0x10
-	}
-	if m.NamespaceId != nil {
-		size, err := m.NamespaceId.MarshalToSizedBufferVT(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
-		i--
-		dAtA[i] = 0xa
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
@@ -1946,10 +1936,6 @@ func (m *WaitGroupsCounter) SizeVT() (n int) {
 	}
 	var l int
 	_ = l
-	if m.NamespaceId != nil {
-		l = m.NamespaceId.SizeVT()
-		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
-	}
 	if m.NumberOfWaitGroups != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.NumberOfWaitGroups))
 	}
@@ -5050,42 +5036,6 @@ func (m *WaitGroupsCounter) UnmarshalVT(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field NamespaceId", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return protohelpers.ErrInvalidLength
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return protohelpers.ErrInvalidLength
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.NamespaceId == nil {
-				m.NamespaceId = &NamespaceId{}
-			}
-			if err := m.NamespaceId.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NumberOfWaitGroups", wireType)
 			}

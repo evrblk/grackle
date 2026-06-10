@@ -1,6 +1,6 @@
 package grackle
 
-type GrackleServiceLimits struct {
+type ServiceLimits struct {
 	MaxNumberOfNamespaces             int64
 	MaxNumberOfWaitGroupsPerNamespace int64
 	MaxNumberOfLocksPerNamespace      int64

@@ -41,7 +41,7 @@ func RegisterMetrics() {
 }
 
 var (
-	DefaultServiceLimits = grackle.GrackleServiceLimits{
+	DefaultServiceLimits = grackle.ServiceLimits{
 		MaxNumberOfNamespaces:             100_000,
 		MaxNumberOfWaitGroupsPerNamespace: 1_000_000,
 		MaxNumberOfLocksPerNamespace:      1_000_000,

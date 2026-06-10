@@ -144,7 +144,7 @@ func NewAuthenticationMiddleware(authKeysPath string) *AuthenticationMiddleware 
 }
 
 func extractServiceAndMethod(grpcPath string) (string, string) {
-	re, _ := regexp.Compile("([\\w\\d_]+)\\/([\\w\\d_]+)")
+	re, _ := regexp.Compile(`([\w\d_]+)\/([\w\d_]+)`)
 	matches := re.FindStringSubmatch(grpcPath)
 	var service string
 	var method string

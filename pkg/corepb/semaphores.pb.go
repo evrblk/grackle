@@ -2433,9 +2433,8 @@ func (*SemaphoresGarbageCollectionRecord_SemaphoreId) isSemaphoresGarbageCollect
 
 type SemaphoresCounter struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
-	NamespaceId        *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	NumberOfSemaphores int64                  `protobuf:"varint,2,opt,name=number_of_semaphores,json=numberOfSemaphores,proto3" json:"number_of_semaphores,omitempty"`
-	NumberOfLeases     int64                  `protobuf:"varint,3,opt,name=number_of_leases,json=numberOfLeases,proto3" json:"number_of_leases,omitempty"`
+	NumberOfSemaphores int64                  `protobuf:"varint,1,opt,name=number_of_semaphores,json=numberOfSemaphores,proto3" json:"number_of_semaphores,omitempty"`
+	NumberOfLeases     int64                  `protobuf:"varint,2,opt,name=number_of_leases,json=numberOfLeases,proto3" json:"number_of_leases,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
@@ -2468,13 +2467,6 @@ func (x *SemaphoresCounter) ProtoReflect() protoreflect.Message {
 // Deprecated: Use SemaphoresCounter.ProtoReflect.Descriptor instead.
 func (*SemaphoresCounter) Descriptor() ([]byte, []int) {
 	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{41}
-}
-
-func (x *SemaphoresCounter) GetNamespaceId() *NamespaceId {
-	if x != nil {
-		return x.NamespaceId
-	}
-	return nil
 }
 
 func (x *SemaphoresCounter) GetNumberOfSemaphores() int64 {
@@ -2716,11 +2708,10 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12K\n" +
 	"\fnamespace_id\x18\x02 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdH\x00R\vnamespaceId\x12K\n" +
 	"\fsemaphore_id\x18\x03 \x01(\v2&.com.evrblk.grackle.corepb.SemaphoreIdH\x00R\vsemaphoreIdB\b\n" +
-	"\x06record\"\xba\x01\n" +
-	"\x11SemaphoresCounter\x12I\n" +
-	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x120\n" +
-	"\x14number_of_semaphores\x18\x02 \x01(\x03R\x12numberOfSemaphores\x12(\n" +
-	"\x10number_of_leases\x18\x03 \x01(\x03R\x0enumberOfLeases\"\x86\x01\n" +
+	"\x06record\"o\n" +
+	"\x11SemaphoresCounter\x120\n" +
+	"\x14number_of_semaphores\x18\x01 \x01(\x03R\x12numberOfSemaphores\x12(\n" +
+	"\x10number_of_leases\x18\x02 \x01(\x03R\x0enumberOfLeases\"\x86\x01\n" +
 	"\x1aSemaphoresExpirationRecord\x12I\n" +
 	"\fsemaphore_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.SemaphoreIdR\vsemaphoreId\x12\x1d\n" +
 	"\n" +
@@ -2839,13 +2830,12 @@ var file_pkg_corepb_semaphores_proto_depIdxs = []int32{
 	38, // 47: com.evrblk.grackle.corepb.SemaphoreHolder.id:type_name -> com.evrblk.grackle.corepb.SemaphoreHolderId
 	43, // 48: com.evrblk.grackle.corepb.SemaphoresGarbageCollectionRecord.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
 	39, // 49: com.evrblk.grackle.corepb.SemaphoresGarbageCollectionRecord.semaphore_id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
-	43, // 50: com.evrblk.grackle.corepb.SemaphoresCounter.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	39, // 51: com.evrblk.grackle.corepb.SemaphoresExpirationRecord.semaphore_id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
-	52, // [52:52] is the sub-list for method output_type
-	52, // [52:52] is the sub-list for method input_type
-	52, // [52:52] is the sub-list for extension type_name
-	52, // [52:52] is the sub-list for extension extendee
-	0,  // [0:52] is the sub-list for field type_name
+	39, // 50: com.evrblk.grackle.corepb.SemaphoresExpirationRecord.semaphore_id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
+	51, // [51:51] is the sub-list for method output_type
+	51, // [51:51] is the sub-list for method input_type
+	51, // [51:51] is the sub-list for extension type_name
+	51, // [51:51] is the sub-list for extension extendee
+	0,  // [0:51] is the sub-list for field type_name
 }
 
 func init() { file_pkg_corepb_semaphores_proto_init() }

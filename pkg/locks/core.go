@@ -25,8 +25,8 @@ type Core struct {
 
 	locks     *locksTable
 	ancestors *lockAncestorsTable
-	counters  *countersTable
-	gcRecords *gcRecordsTable
+	counters  *tables.CountersTable[*corepb.LocksCounter, corepb.LocksCounter]
+	gcRecords *tables.GCRecordsTable[*corepb.LocksGarbageCollectionRecord, corepb.LocksGarbageCollectionRecord]
 	leases    *tables.LeasesTable
 }
 
@@ -38,8 +38,15 @@ func NewCore(badgerStore *store.BadgerStore, shardGlobalIndexPrefix []byte, shar
 
 		locks:     newLocksTable(shardLowerBound, shardUpperBound),
 		ancestors: newLockAncestorsTable(shardLowerBound, shardUpperBound),
-		counters:  newCountersTable(shardLowerBound, shardUpperBound),
-		gcRecords: newGCRecordsTable(shardGlobalIndexPrefix),
+		counters: tables.NewCountersTable[*corepb.LocksCounter, corepb.LocksCounter](
+			tables.Grackle["Grackle.LocksCore.Counters.Table"].Bytes(),
+			shardLowerBound,
+			shardUpperBound,
+		),
+		gcRecords: tables.NewGCRecordsTable[*corepb.LocksGarbageCollectionRecord, corepb.LocksGarbageCollectionRecord](
+			tables.Grackle["Grackle.LocksCore.GarbageCollectionRecords.Table"].Bytes(),
+			shardGlobalIndexPrefix,
+		),
 		leases: tables.NewLeasesTable(
 			shardLowerBound,
 			shardUpperBound,

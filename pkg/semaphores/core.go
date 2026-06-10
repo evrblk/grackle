@@ -24,8 +24,8 @@ type Core struct {
 
 	semaphores        *semaphoresTable
 	holders           *holdersTable
-	counters          *countersTable
-	gcRecords         *gcRecordsTable
+	counters          *tables.CountersTable[*corepb.SemaphoresCounter, corepb.SemaphoresCounter]
+	gcRecords         *tables.GCRecordsTable[*corepb.SemaphoresGarbageCollectionRecord, corepb.SemaphoresGarbageCollectionRecord]
 	expirationRecords *expirationRecordsTable
 	leases            *tables.LeasesTable
 }
@@ -36,10 +36,17 @@ func NewCore(badgerStore *store.BadgerStore, shardGlobalIndexPrefix []byte, shar
 	return &Core{
 		badgerStore: badgerStore,
 
-		semaphores:        newSemaphoresTable(shardLowerBound, shardUpperBound),
-		holders:           newHoldersTable(shardLowerBound, shardUpperBound),
-		counters:          newCountersTable(shardLowerBound, shardUpperBound),
-		gcRecords:         newGCRecordsTable(shardGlobalIndexPrefix),
+		semaphores: newSemaphoresTable(shardLowerBound, shardUpperBound),
+		holders:    newHoldersTable(shardLowerBound, shardUpperBound),
+		counters: tables.NewCountersTable[*corepb.SemaphoresCounter, corepb.SemaphoresCounter](
+			tables.Grackle["Grackle.SemaphoresCore.Counters.Table"].Bytes(),
+			shardLowerBound,
+			shardUpperBound,
+		),
+		gcRecords: tables.NewGCRecordsTable[*corepb.SemaphoresGarbageCollectionRecord, corepb.SemaphoresGarbageCollectionRecord](
+			tables.Grackle["Grackle.SemaphoresCore.GarbageCollectionRecords.Table"].Bytes(),
+			shardGlobalIndexPrefix,
+		),
 		expirationRecords: newExpirationRecordsTable(shardGlobalIndexPrefix),
 		leases: tables.NewLeasesTable(
 			shardLowerBound,

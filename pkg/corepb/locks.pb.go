@@ -1796,9 +1796,8 @@ func (x *LockId) GetLockName() string {
 
 type LocksCounter struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
-	NamespaceId    *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	NumberOfLocks  int64                  `protobuf:"varint,2,opt,name=number_of_locks,json=numberOfLocks,proto3" json:"number_of_locks,omitempty"`
-	NumberOfLeases int64                  `protobuf:"varint,3,opt,name=number_of_leases,json=numberOfLeases,proto3" json:"number_of_leases,omitempty"`
+	NumberOfLocks  int64                  `protobuf:"varint,1,opt,name=number_of_locks,json=numberOfLocks,proto3" json:"number_of_locks,omitempty"`
+	NumberOfLeases int64                  `protobuf:"varint,2,opt,name=number_of_leases,json=numberOfLeases,proto3" json:"number_of_leases,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -1831,13 +1830,6 @@ func (x *LocksCounter) ProtoReflect() protoreflect.Message {
 // Deprecated: Use LocksCounter.ProtoReflect.Descriptor instead.
 func (*LocksCounter) Descriptor() ([]byte, []int) {
 	return file_pkg_corepb_locks_proto_rawDescGZIP(), []int{31}
-}
-
-func (x *LocksCounter) GetNamespaceId() *NamespaceId {
-	if x != nil {
-		return x.NamespaceId
-	}
-	return nil
 }
 
 func (x *LocksCounter) GetNumberOfLocks() int64 {
@@ -2083,11 +2075,10 @@ const file_pkg_corepb_locks_proto_rawDesc = "" +
 	"\n" +
 	"account_id\x18\x01 \x01(\x04R\taccountId\x12!\n" +
 	"\fnamespace_id\x18\x02 \x01(\rR\vnamespaceId\x12\x1b\n" +
-	"\tlock_name\x18\x03 \x01(\tR\blockName\"\xab\x01\n" +
-	"\fLocksCounter\x12I\n" +
-	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12&\n" +
-	"\x0fnumber_of_locks\x18\x02 \x01(\x03R\rnumberOfLocks\x12(\n" +
-	"\x10number_of_leases\x18\x03 \x01(\x03R\x0enumberOfLeases\"y\n" +
+	"\tlock_name\x18\x03 \x01(\tR\blockName\"`\n" +
+	"\fLocksCounter\x12&\n" +
+	"\x0fnumber_of_locks\x18\x01 \x01(\x03R\rnumberOfLocks\x12(\n" +
+	"\x10number_of_leases\x18\x02 \x01(\x03R\x0enumberOfLeases\"y\n" +
 	"\x1cLocksGarbageCollectionRecord\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12I\n" +
 	"\fnamespace_id\x18\x02 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\"\x8d\x01\n" +
@@ -2194,14 +2185,13 @@ var file_pkg_corepb_locks_proto_depIdxs = []int32{
 	31, // 35: com.evrblk.grackle.corepb.Lock.id:type_name -> com.evrblk.grackle.corepb.LockId
 	0,  // 36: com.evrblk.grackle.corepb.Lock.state:type_name -> com.evrblk.grackle.corepb.LockState
 	30, // 37: com.evrblk.grackle.corepb.Lock.lock_holders:type_name -> com.evrblk.grackle.corepb.LockHolder
-	35, // 38: com.evrblk.grackle.corepb.LocksCounter.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	35, // 39: com.evrblk.grackle.corepb.LocksGarbageCollectionRecord.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	31, // 40: com.evrblk.grackle.corepb.LockAncestor.id:type_name -> com.evrblk.grackle.corepb.LockId
-	41, // [41:41] is the sub-list for method output_type
-	41, // [41:41] is the sub-list for method input_type
-	41, // [41:41] is the sub-list for extension type_name
-	41, // [41:41] is the sub-list for extension extendee
-	0,  // [0:41] is the sub-list for field type_name
+	35, // 38: com.evrblk.grackle.corepb.LocksGarbageCollectionRecord.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	31, // 39: com.evrblk.grackle.corepb.LockAncestor.id:type_name -> com.evrblk.grackle.corepb.LockId
+	40, // [40:40] is the sub-list for method output_type
+	40, // [40:40] is the sub-list for method input_type
+	40, // [40:40] is the sub-list for extension type_name
+	40, // [40:40] is the sub-list for extension extendee
+	0,  // [0:40] is the sub-list for field type_name
 }
 
 func init() { file_pkg_corepb_locks_proto_init() }

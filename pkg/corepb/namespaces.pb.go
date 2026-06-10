@@ -775,8 +775,7 @@ func (x *NamespaceId) GetNamespaceId() uint32 {
 
 type NamespacesCounter struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
-	AccountId          uint64                 `protobuf:"varint,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
-	NumberOfNamespaces int64                  `protobuf:"varint,2,opt,name=number_of_namespaces,json=numberOfNamespaces,proto3" json:"number_of_namespaces,omitempty"`
+	NumberOfNamespaces int64                  `protobuf:"varint,1,opt,name=number_of_namespaces,json=numberOfNamespaces,proto3" json:"number_of_namespaces,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
@@ -809,13 +808,6 @@ func (x *NamespacesCounter) ProtoReflect() protoreflect.Message {
 // Deprecated: Use NamespacesCounter.ProtoReflect.Descriptor instead.
 func (*NamespacesCounter) Descriptor() ([]byte, []int) {
 	return file_pkg_corepb_namespaces_proto_rawDescGZIP(), []int{14}
-}
-
-func (x *NamespacesCounter) GetAccountId() uint64 {
-	if x != nil {
-		return x.AccountId
-	}
-	return 0
 }
 
 func (x *NamespacesCounter) GetNumberOfNamespaces() int64 {
@@ -881,11 +873,9 @@ const file_pkg_corepb_namespaces_proto_rawDesc = "" +
 	"\vNamespaceId\x12\x1d\n" +
 	"\n" +
 	"account_id\x18\x01 \x01(\x04R\taccountId\x12!\n" +
-	"\fnamespace_id\x18\x02 \x01(\rR\vnamespaceId\"d\n" +
-	"\x11NamespacesCounter\x12\x1d\n" +
-	"\n" +
-	"account_id\x18\x01 \x01(\x04R\taccountId\x120\n" +
-	"\x14number_of_namespaces\x18\x02 \x01(\x03R\x12numberOfNamespacesB&Z$github.com/evrblk/grackle/pkg/corepbb\x06proto3"
+	"\fnamespace_id\x18\x02 \x01(\rR\vnamespaceId\"E\n" +
+	"\x11NamespacesCounter\x120\n" +
+	"\x14number_of_namespaces\x18\x01 \x01(\x03R\x12numberOfNamespacesB&Z$github.com/evrblk/grackle/pkg/corepbb\x06proto3"
 
 var (
 	file_pkg_corepb_namespaces_proto_rawDescOnce sync.Once

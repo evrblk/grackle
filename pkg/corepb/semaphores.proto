@@ -242,9 +242,8 @@ message SemaphoresGarbageCollectionRecord {
 }
 
 message SemaphoresCounter {
-  NamespaceId namespace_id = 1;
-  int64 number_of_semaphores = 2;
-  int64 number_of_leases = 3;
+  int64 number_of_semaphores = 1;
+  int64 number_of_leases = 2;
 }
 
 message SemaphoresExpirationRecord {

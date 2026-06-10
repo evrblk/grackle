@@ -13,6 +13,7 @@ import (
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/ids"
 	"github.com/evrblk/grackle/pkg/pagination"
+	"github.com/evrblk/grackle/pkg/tables"
 )
 
 type Core struct {
@@ -20,8 +21,8 @@ type Core struct {
 
 	barriers          *barriersTable
 	participants      *participantsTable
-	counters          *countersTable
-	gcRecords         *gcRecordsTable
+	counters          *tables.CountersTable[*corepb.BarriersCounter, corepb.BarriersCounter]
+	gcRecords         *tables.GCRecordsTable[*corepb.BarriersGarbageCollectionRecord, corepb.BarriersGarbageCollectionRecord]
 	expirationRecords *expirationRecordsTable
 }
 
@@ -31,10 +32,17 @@ func NewCore(badgerStore *store.BadgerStore, globalIndexPrefix []byte, shardLowe
 	return &Core{
 		badgerStore: badgerStore,
 
-		barriers:          newBarriersTable(shardLowerBound, shardUpperBound),
-		participants:      newParticipantsTable(shardLowerBound, shardUpperBound),
-		counters:          newCountersTable(shardLowerBound, shardUpperBound),
-		gcRecords:         newGCRecordsTable(globalIndexPrefix),
+		barriers:     newBarriersTable(shardLowerBound, shardUpperBound),
+		participants: newParticipantsTable(shardLowerBound, shardUpperBound),
+		counters: tables.NewCountersTable[*corepb.BarriersCounter, corepb.BarriersCounter](
+			tables.Grackle["Grackle.BarriersCore.Counters.Table"].Bytes(),
+			shardLowerBound,
+			shardUpperBound,
+		),
+		gcRecords: tables.NewGCRecordsTable[*corepb.BarriersGarbageCollectionRecord, corepb.BarriersGarbageCollectionRecord](
+			tables.Grackle["Grackle.BarriersCore.GarbageCollectionRecords.Table"].Bytes(),
+			globalIndexPrefix,
+		),
 		expirationRecords: newExpirationRecordsTable(globalIndexPrefix),
 	}
 }
@@ -245,7 +253,7 @@ func (c *Core) DeleteBarrier(req *coreapis.DeleteBarrierRequest) (*coreapis.Dele
 			}, nil
 		}
 
-		panic(err)
+		return nil, err
 	}
 
 	// Get counters for this namespace

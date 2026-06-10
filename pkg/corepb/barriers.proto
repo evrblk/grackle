@@ -142,8 +142,7 @@ message BarrierId {
 }
 
 message BarriersCounter {
-  NamespaceId namespace_id = 1;
-  int64 number_of_barriers = 2;
+  int64 number_of_barriers = 1;
 }
 
 message BarriersGarbageCollectionRecord {

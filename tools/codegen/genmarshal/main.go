@@ -12,7 +12,7 @@ import (
 	"sort"
 	"strings"
 
-	. "github.com/dave/jennifer/jen"
+	. "github.com/dave/jennifer/jen" //lint:ignore ST1001 this is a single file program and dot-importing jen into main is ok
 )
 
 func main() {

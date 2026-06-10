@@ -1,32 +1,41 @@
-package semaphores
+package tables
 
 import (
+	"encoding/binary"
 	"math/rand/v2"
 	"testing"
 
 	"github.com/evrblk/monstera/store"
 	"github.com/stretchr/testify/require"
-
-	"github.com/evrblk/grackle/pkg/corepb"
 )
+
+type testCounters struct {
+	X uint64
+}
+
+func (c *testCounters) MarshalBinary() ([]byte, error) {
+	data := make([]byte, 8)
+	binary.BigEndian.PutUint64(data, c.X)
+	return data, nil
+}
+
+func (c *testCounters) UnmarshalBinary(data []byte) error {
+	c.X = binary.BigEndian.Uint64(data)
+	return nil
+}
 
 func TestCountersTable_Get(t *testing.T) {
 	t.Run("gets a counter", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newCountersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint32()
 
-		counter := &corepb.SemaphoresCounter{
-			NamespaceId: &corepb.NamespaceId{
-				AccountId:   accountId,
-				NamespaceId: namespaceId,
-			},
-			NumberOfSemaphores: 5,
-			NumberOfLeases:     10,
+		counter := &testCounters{
+			X: 5,
 		}
 
 		// Set counter
@@ -41,17 +50,14 @@ func TestCountersTable_Get(t *testing.T) {
 		txn.Discard()
 
 		require.NoError(t, err)
-		require.Equal(t, accountId, result.NamespaceId.AccountId)
-		require.Equal(t, namespaceId, result.NamespaceId.NamespaceId)
-		require.Equal(t, int64(5), result.NumberOfSemaphores)
-		require.Equal(t, int64(10), result.NumberOfLeases)
+		require.EqualValues(t, 5, result.X)
 	})
 
 	t.Run("gets a non-existent counter", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newCountersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint32()
@@ -62,38 +68,25 @@ func TestCountersTable_Get(t *testing.T) {
 		txn.Discard()
 
 		require.NoError(t, err)
-		require.Equal(t, accountId, result.NamespaceId.AccountId)
-		require.Equal(t, namespaceId, result.NamespaceId.NamespaceId)
-		require.Equal(t, int64(0), result.NumberOfSemaphores)
-		require.Equal(t, int64(0), result.NumberOfLeases)
+		require.EqualValues(t, 0, result.X)
 	})
 
 	t.Run("gets counters for different namespaces", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newCountersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
 		namespaceId1 := rand.Uint32()
 		namespaceId2 := rand.Uint32()
 
-		counter1 := &corepb.SemaphoresCounter{
-			NamespaceId: &corepb.NamespaceId{
-				AccountId:   accountId,
-				NamespaceId: namespaceId1,
-			},
-			NumberOfSemaphores: 3,
-			NumberOfLeases:     7,
+		counter1 := &testCounters{
+			X: 3,
 		}
 
-		counter2 := &corepb.SemaphoresCounter{
-			NamespaceId: &corepb.NamespaceId{
-				AccountId:   accountId,
-				NamespaceId: namespaceId2,
-			},
-			NumberOfSemaphores: 8,
-			NumberOfLeases:     15,
+		counter2 := &testCounters{
+			X: 8,
 		}
 
 		// Set both counters
@@ -108,44 +101,32 @@ func TestCountersTable_Get(t *testing.T) {
 		txn = badgerStore.View()
 		result1, err := table.Get(txn, accountId, namespaceId1)
 		require.NoError(t, err)
-		require.Equal(t, int64(3), result1.NumberOfSemaphores)
-		require.Equal(t, int64(7), result1.NumberOfLeases)
+		require.EqualValues(t, 3, result1.X)
 
 		// Get second counter
 		result2, err := table.Get(txn, accountId, namespaceId2)
 		txn.Discard()
 
 		require.NoError(t, err)
-		require.Equal(t, int64(8), result2.NumberOfSemaphores)
-		require.Equal(t, int64(15), result2.NumberOfLeases)
+		require.EqualValues(t, 8, result2.X)
 	})
 
 	t.Run("gets counters for different accounts", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newCountersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId1 := rand.Uint64()
 		accountId2 := rand.Uint64()
 		namespaceId := rand.Uint32()
 
-		counter1 := &corepb.SemaphoresCounter{
-			NamespaceId: &corepb.NamespaceId{
-				AccountId:   accountId1,
-				NamespaceId: namespaceId,
-			},
-			NumberOfSemaphores: 2,
-			NumberOfLeases:     4,
+		counter1 := &testCounters{
+			X: 2,
 		}
 
-		counter2 := &corepb.SemaphoresCounter{
-			NamespaceId: &corepb.NamespaceId{
-				AccountId:   accountId2,
-				NamespaceId: namespaceId,
-			},
-			NumberOfSemaphores: 6,
-			NumberOfLeases:     12,
+		counter2 := &testCounters{
+			X: 6,
 		}
 
 		// Set both counters
@@ -160,16 +141,14 @@ func TestCountersTable_Get(t *testing.T) {
 		txn = badgerStore.View()
 		result1, err := table.Get(txn, accountId1, namespaceId)
 		require.NoError(t, err)
-		require.Equal(t, int64(2), result1.NumberOfSemaphores)
-		require.Equal(t, int64(4), result1.NumberOfLeases)
+		require.EqualValues(t, 2, result1.X)
 
 		// Get second counter
 		result2, err := table.Get(txn, accountId2, namespaceId)
 		txn.Discard()
 
 		require.NoError(t, err)
-		require.Equal(t, int64(6), result2.NumberOfSemaphores)
-		require.Equal(t, int64(12), result2.NumberOfLeases)
+		require.EqualValues(t, 6, result2.X)
 	})
 }
 
@@ -178,18 +157,13 @@ func TestCountersTable_Set(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newCountersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint32()
 
-		counter := &corepb.SemaphoresCounter{
-			NamespaceId: &corepb.NamespaceId{
-				AccountId:   accountId,
-				NamespaceId: namespaceId,
-			},
-			NumberOfSemaphores: 42,
-			NumberOfLeases:     100,
+		counter := &testCounters{
+			X: 42,
 		}
 
 		// Set counter
@@ -204,28 +178,22 @@ func TestCountersTable_Set(t *testing.T) {
 		txn.Discard()
 
 		require.NoError(t, err)
-		require.Equal(t, int64(42), result.NumberOfSemaphores)
-		require.Equal(t, int64(100), result.NumberOfLeases)
+		require.EqualValues(t, 42, result.X)
 	})
 
 	t.Run("updates an existing counter", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newCountersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint32()
 
 		// Set initial counter
 		txn := badgerStore.Update()
-		counter1 := &corepb.SemaphoresCounter{
-			NamespaceId: &corepb.NamespaceId{
-				AccountId:   accountId,
-				NamespaceId: namespaceId,
-			},
-			NumberOfSemaphores: 5,
-			NumberOfLeases:     10,
+		counter1 := &testCounters{
+			X: 5,
 		}
 		err = table.Set(txn, accountId, namespaceId, counter1)
 		require.NoError(t, err)
@@ -233,13 +201,8 @@ func TestCountersTable_Set(t *testing.T) {
 
 		// Update counter
 		txn = badgerStore.Update()
-		counter2 := &corepb.SemaphoresCounter{
-			NamespaceId: &corepb.NamespaceId{
-				AccountId:   accountId,
-				NamespaceId: namespaceId,
-			},
-			NumberOfSemaphores: 20,
-			NumberOfLeases:     30,
+		counter2 := &testCounters{
+			X: 20,
 		}
 		err = table.Set(txn, accountId, namespaceId, counter2)
 		require.NoError(t, err)
@@ -251,26 +214,20 @@ func TestCountersTable_Set(t *testing.T) {
 		txn.Discard()
 
 		require.NoError(t, err)
-		require.Equal(t, int64(20), result.NumberOfSemaphores)
-		require.Equal(t, int64(30), result.NumberOfLeases)
+		require.EqualValues(t, 20, result.X)
 	})
 
 	t.Run("sets zero values", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newCountersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint32()
 
-		counter := &corepb.SemaphoresCounter{
-			NamespaceId: &corepb.NamespaceId{
-				AccountId:   accountId,
-				NamespaceId: namespaceId,
-			},
-			NumberOfSemaphores: 0,
-			NumberOfLeases:     0,
+		counter := &testCounters{
+			X: 0,
 		}
 
 		// Set counter with zero values
@@ -285,26 +242,20 @@ func TestCountersTable_Set(t *testing.T) {
 		txn.Discard()
 
 		require.NoError(t, err)
-		require.Equal(t, int64(0), result.NumberOfSemaphores)
-		require.Equal(t, int64(0), result.NumberOfLeases)
+		require.EqualValues(t, 0, result.X)
 	})
 
 	t.Run("sets large values", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newCountersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint32()
 
-		counter := &corepb.SemaphoresCounter{
-			NamespaceId: &corepb.NamespaceId{
-				AccountId:   accountId,
-				NamespaceId: namespaceId,
-			},
-			NumberOfSemaphores: 9223372036854775807, // max int64
-			NumberOfLeases:     9223372036854775807, // max int64
+		counter := &testCounters{
+			X: 9223372036854775807, // Max int64
 		}
 
 		// Set counter with large values
@@ -319,8 +270,7 @@ func TestCountersTable_Set(t *testing.T) {
 		txn.Discard()
 
 		require.NoError(t, err)
-		require.Equal(t, int64(9223372036854775807), result.NumberOfSemaphores)
-		require.Equal(t, int64(9223372036854775807), result.NumberOfLeases)
+		require.EqualValues(t, 9223372036854775807, result.X)
 	})
 }
 
@@ -329,18 +279,13 @@ func TestCountersTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newCountersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint32()
 
-		counter := &corepb.SemaphoresCounter{
-			NamespaceId: &corepb.NamespaceId{
-				AccountId:   accountId,
-				NamespaceId: namespaceId,
-			},
-			NumberOfSemaphores: 7,
-			NumberOfLeases:     14,
+		counter := &testCounters{
+			X: 7,
 		}
 
 		// Set counter
@@ -361,15 +306,14 @@ func TestCountersTable_Delete(t *testing.T) {
 		txn.Discard()
 
 		require.NoError(t, err)
-		require.Equal(t, int64(0), result.NumberOfSemaphores)
-		require.Equal(t, int64(0), result.NumberOfLeases)
+		require.EqualValues(t, 0, result.X)
 	})
 
 	t.Run("deletes a non-existent counter", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newCountersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint32()
@@ -386,15 +330,14 @@ func TestCountersTable_Delete(t *testing.T) {
 		txn.Discard()
 
 		require.NoError(t, err)
-		require.Equal(t, int64(0), result.NumberOfSemaphores)
-		require.Equal(t, int64(0), result.NumberOfLeases)
+		require.EqualValues(t, 0, result.X)
 	})
 
 	t.Run("increments and decrements counter", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newCountersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint32()
@@ -404,18 +347,12 @@ func TestCountersTable_Delete(t *testing.T) {
 		result, err := table.Get(txn, accountId, namespaceId)
 		txn.Discard()
 		require.NoError(t, err)
-		require.Equal(t, int64(0), result.NumberOfSemaphores)
-		require.Equal(t, int64(0), result.NumberOfLeases)
+		require.EqualValues(t, 0, result.X)
 
-		// Increment to 1,1
+		// Increment to 1
 		txn = badgerStore.Update()
-		counter := &corepb.SemaphoresCounter{
-			NamespaceId: &corepb.NamespaceId{
-				AccountId:   accountId,
-				NamespaceId: namespaceId,
-			},
-			NumberOfSemaphores: 1,
-			NumberOfLeases:     1,
+		counter := &testCounters{
+			X: 1,
 		}
 		err = table.Set(txn, accountId, namespaceId, counter)
 		require.NoError(t, err)
@@ -426,18 +363,12 @@ func TestCountersTable_Delete(t *testing.T) {
 		result, err = table.Get(txn, accountId, namespaceId)
 		txn.Discard()
 		require.NoError(t, err)
-		require.Equal(t, int64(1), result.NumberOfSemaphores)
-		require.Equal(t, int64(1), result.NumberOfLeases)
+		require.EqualValues(t, 1, result.X)
 
-		// Decrement back to 0,0
+		// Decrement back to 0
 		txn = badgerStore.Update()
-		counter = &corepb.SemaphoresCounter{
-			NamespaceId: &corepb.NamespaceId{
-				AccountId:   accountId,
-				NamespaceId: namespaceId,
-			},
-			NumberOfSemaphores: 0,
-			NumberOfLeases:     0,
+		counter = &testCounters{
+			X: 0,
 		}
 		err = table.Set(txn, accountId, namespaceId, counter)
 		require.NoError(t, err)
@@ -448,28 +379,22 @@ func TestCountersTable_Delete(t *testing.T) {
 		result, err = table.Get(txn, accountId, namespaceId)
 		txn.Discard()
 		require.NoError(t, err)
-		require.Equal(t, int64(0), result.NumberOfSemaphores)
-		require.Equal(t, int64(0), result.NumberOfLeases)
+		require.EqualValues(t, 0, result.X)
 	})
 
 	t.Run("deletes and recreates counter", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newCountersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint32()
 
 		// Create counter
 		txn := badgerStore.Update()
-		counter := &corepb.SemaphoresCounter{
-			NamespaceId: &corepb.NamespaceId{
-				AccountId:   accountId,
-				NamespaceId: namespaceId,
-			},
-			NumberOfSemaphores: 10,
-			NumberOfLeases:     20,
+		counter := &testCounters{
+			X: 10,
 		}
 		err = table.Set(txn, accountId, namespaceId, counter)
 		require.NoError(t, err)
@@ -483,13 +408,8 @@ func TestCountersTable_Delete(t *testing.T) {
 
 		// Recreate with different values
 		txn = badgerStore.Update()
-		counter = &corepb.SemaphoresCounter{
-			NamespaceId: &corepb.NamespaceId{
-				AccountId:   accountId,
-				NamespaceId: namespaceId,
-			},
-			NumberOfSemaphores: 30,
-			NumberOfLeases:     40,
+		counter = &testCounters{
+			X: 30,
 		}
 		err = table.Set(txn, accountId, namespaceId, counter)
 		require.NoError(t, err)
@@ -501,7 +421,6 @@ func TestCountersTable_Delete(t *testing.T) {
 		txn.Discard()
 
 		require.NoError(t, err)
-		require.Equal(t, int64(30), result.NumberOfSemaphores)
-		require.Equal(t, int64(40), result.NumberOfLeases)
+		require.EqualValues(t, 30, result.X)
 	})
 }

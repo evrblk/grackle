@@ -44,7 +44,7 @@ var (
 		Help: "Grackle Locks Garbage Collection Worker total amount of errors",
 	}, []string{"shard_id"})
 	grackleSemaphoresGCWorkerErrorsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "grackle_Semaphores_gc_worker_errors_total",
+		Name: "grackle_demaphores_gc_worker_errors_total",
 		Help: "Grackle Semaphores Garbage Collection Worker total amount of errors",
 	}, []string{"shard_id"})
 	grackleWaitGroupsGCWorkerErrorsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{

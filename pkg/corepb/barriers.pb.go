@@ -1407,8 +1407,7 @@ func (x *BarrierId) GetBarrierId() uint64 {
 
 type BarriersCounter struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
-	NamespaceId      *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	NumberOfBarriers int64                  `protobuf:"varint,2,opt,name=number_of_barriers,json=numberOfBarriers,proto3" json:"number_of_barriers,omitempty"`
+	NumberOfBarriers int64                  `protobuf:"varint,1,opt,name=number_of_barriers,json=numberOfBarriers,proto3" json:"number_of_barriers,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -1441,13 +1440,6 @@ func (x *BarriersCounter) ProtoReflect() protoreflect.Message {
 // Deprecated: Use BarriersCounter.ProtoReflect.Descriptor instead.
 func (*BarriersCounter) Descriptor() ([]byte, []int) {
 	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{24}
-}
-
-func (x *BarriersCounter) GetNamespaceId() *NamespaceId {
-	if x != nil {
-		return x.NamespaceId
-	}
-	return nil
 }
 
 func (x *BarriersCounter) GetNumberOfBarriers() int64 {
@@ -1729,10 +1721,9 @@ const file_pkg_corepb_barriers_proto_rawDesc = "" +
 	"account_id\x18\x01 \x01(\x04R\taccountId\x12!\n" +
 	"\fnamespace_id\x18\x02 \x01(\rR\vnamespaceId\x12\x1d\n" +
 	"\n" +
-	"barrier_id\x18\x04 \x01(\x04R\tbarrierId\"\x8a\x01\n" +
-	"\x0fBarriersCounter\x12I\n" +
-	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12,\n" +
-	"\x12number_of_barriers\x18\x02 \x01(\x03R\x10numberOfBarriers\"|\n" +
+	"barrier_id\x18\x04 \x01(\x04R\tbarrierId\"?\n" +
+	"\x0fBarriersCounter\x12,\n" +
+	"\x12number_of_barriers\x18\x01 \x01(\x03R\x10numberOfBarriers\"|\n" +
 	"\x1fBarriersGarbageCollectionRecord\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12I\n" +
 	"\fnamespace_id\x18\x02 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\"~\n" +
@@ -1821,14 +1812,13 @@ var file_pkg_corepb_barriers_proto_depIdxs = []int32{
 	29, // 22: com.evrblk.grackle.corepb.ListBarrierParticipantsResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
 	28, // 23: com.evrblk.grackle.corepb.BarriersDeleteNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
 	23, // 24: com.evrblk.grackle.corepb.Barrier.id:type_name -> com.evrblk.grackle.corepb.BarrierId
-	28, // 25: com.evrblk.grackle.corepb.BarriersCounter.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	28, // 26: com.evrblk.grackle.corepb.BarriersGarbageCollectionRecord.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	23, // 27: com.evrblk.grackle.corepb.BarriersExpirationRecord.barrier_id:type_name -> com.evrblk.grackle.corepb.BarrierId
-	28, // [28:28] is the sub-list for method output_type
-	28, // [28:28] is the sub-list for method input_type
-	28, // [28:28] is the sub-list for extension type_name
-	28, // [28:28] is the sub-list for extension extendee
-	0,  // [0:28] is the sub-list for field type_name
+	28, // 25: com.evrblk.grackle.corepb.BarriersGarbageCollectionRecord.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	23, // 26: com.evrblk.grackle.corepb.BarriersExpirationRecord.barrier_id:type_name -> com.evrblk.grackle.corepb.BarrierId
+	27, // [27:27] is the sub-list for method output_type
+	27, // [27:27] is the sub-list for method input_type
+	27, // [27:27] is the sub-list for extension type_name
+	27, // [27:27] is the sub-list for extension extendee
+	0,  // [0:27] is the sub-list for field type_name
 }
 
 func init() { file_pkg_corepb_barriers_proto_init() }

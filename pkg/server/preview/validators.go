@@ -793,8 +793,8 @@ func validateString(value string, minLength int, maxLength int, regex string, fi
 
 func invalid(fieldName string, details string) error {
 	if details == "" {
-		return fmt.Errorf("Invalid %s", fieldName)
+		return fmt.Errorf("invalid %s", fieldName)
 	} else {
-		return fmt.Errorf("Invalid %s: %s", fieldName, details)
+		return fmt.Errorf("invalid %s: %s", fieldName, details)
 	}
 }

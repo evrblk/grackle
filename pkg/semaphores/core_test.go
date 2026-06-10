@@ -586,7 +586,6 @@ func TestCore_DeleteSemaphore(t *testing.T) {
 		require.NotNil(t, resp3.Payload)
 
 		// Run GC to verify there are no orphaned expiration records
-		// Before the fix, this would panic because DeleteSemaphore didn't clean up expiration records
 		resp4, err := core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
 			Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
 				Now:                        now.Add(30 * time.Minute).UnixNano(),
@@ -1280,8 +1279,6 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		require.True(t, success)
 
 		// T+1h: Run garbage collection
-		// Before the fix, this could panic if the code encountered a scenario where
-		// oldExpiresAt == newExpiresAt (e.g., from stale expiration records)
 		resp6, err := core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
 			Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
 				Now:                        now.Add(1 * time.Hour).UnixNano(),

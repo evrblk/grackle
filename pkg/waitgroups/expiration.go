@@ -58,12 +58,6 @@ func (t *expirationRecordsTable) Add(txn *store.Txn, expiresAt int64, waitGroupI
 		})
 }
 
-type listExpirationRecordsResult struct {
-	records                 []*corepb.WaitGroupsExpirationRecord
-	nextPaginationToken     *corepb.PaginationToken
-	previousPaginationToken *corepb.PaginationToken
-}
-
 func (t *expirationRecordsTable) ListByExpiration(txn *store.Txn, from int64, to int64, fn func(record *corepb.WaitGroupsExpirationRecord) (bool, error)) error {
 	return t.table.ListInRange(txn, t.tablePrefix(from), t.tablePrefix(to), false, func(record *corepb.WaitGroupsExpirationRecord) (bool, error) {
 		return fn(record)
