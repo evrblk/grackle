@@ -2012,7 +2012,7 @@ func nilifyIfEmpty(err *monsterax.Error) error {
 	if err == nil || err.Code == monsterax.ErrorCode_INVALID || err.Code == monsterax.ErrorCode_OK {
 		return nil
 	} else {
-		return fmt.Errorf("%s: %s", err.Code, err.Message)
+		return err
 	}
 }
 
@@ -2081,7 +2081,14 @@ func (s *GrackleNonclusteredStub) ListLocks(ctx context.Context, request *corepb
 			defer adapter.mu.RUnlock()
 
 			response, err := adapter.core.ListLocks(&monsterax.ReadRequest[*corepb.ListLocksRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2096,7 +2103,14 @@ func (s *GrackleNonclusteredStub) ListLocksByLeaseId(ctx context.Context, reques
 			defer adapter.mu.RUnlock()
 
 			response, err := adapter.core.ListLocksByLeaseId(&monsterax.ReadRequest[*corepb.ListLocksByLeaseIdRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2111,7 +2125,14 @@ func (s *GrackleNonclusteredStub) ListLockLeases(ctx context.Context, request *c
 			defer adapter.mu.RUnlock()
 
 			response, err := adapter.core.ListLockLeases(&monsterax.ReadRequest[*corepb.ListLockLeasesRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2126,7 +2147,14 @@ func (s *GrackleNonclusteredStub) ListLockLeasesByProcessId(ctx context.Context,
 			defer adapter.mu.RUnlock()
 
 			response, err := adapter.core.ListLockLeasesByProcessId(&monsterax.ReadRequest[*corepb.ListLockLeasesByProcessIdRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2141,7 +2169,14 @@ func (s *GrackleNonclusteredStub) GetLockLease(ctx context.Context, request *cor
 			defer adapter.mu.RUnlock()
 
 			response, err := adapter.core.GetLockLease(&monsterax.ReadRequest[*corepb.GetLockLeaseRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2156,7 +2191,14 @@ func (s *GrackleNonclusteredStub) AcquireLock(ctx context.Context, request *core
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.AcquireLock(&monsterax.UpdateRequest[*corepb.AcquireLockRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2171,7 +2213,14 @@ func (s *GrackleNonclusteredStub) ReleaseLock(ctx context.Context, request *core
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.ReleaseLock(&monsterax.UpdateRequest[*corepb.ReleaseLockRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2186,7 +2235,14 @@ func (s *GrackleNonclusteredStub) DeleteLock(ctx context.Context, request *corep
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.DeleteLock(&monsterax.UpdateRequest[*corepb.DeleteLockRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2201,7 +2257,14 @@ func (s *GrackleNonclusteredStub) GetLock(ctx context.Context, request *corepb.G
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.GetLock(&monsterax.UpdateRequest[*corepb.GetLockRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2215,7 +2278,14 @@ func (s *GrackleNonclusteredStub) RunLocksGarbageCollection(ctx context.Context,
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.RunLocksGarbageCollection(&monsterax.UpdateUnshardedRequest[*corepb.RunLocksGarbageCollectionRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2230,7 +2300,14 @@ func (s *GrackleNonclusteredStub) LocksDeleteNamespace(ctx context.Context, requ
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.LocksDeleteNamespace(&monsterax.UpdateRequest[*corepb.LocksDeleteNamespaceRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2245,7 +2322,14 @@ func (s *GrackleNonclusteredStub) CreateLockLease(ctx context.Context, request *
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.CreateLockLease(&monsterax.UpdateRequest[*corepb.CreateLockLeaseRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2260,7 +2344,14 @@ func (s *GrackleNonclusteredStub) RefreshLockLease(ctx context.Context, request 
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.RefreshLockLease(&monsterax.UpdateRequest[*corepb.RefreshLockLeaseRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2275,7 +2366,14 @@ func (s *GrackleNonclusteredStub) RevokeLockLease(ctx context.Context, request *
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.RevokeLockLease(&monsterax.UpdateRequest[*corepb.RevokeLockLeaseRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2290,7 +2388,14 @@ func (s *GrackleNonclusteredStub) GetSemaphore(ctx context.Context, request *cor
 			defer adapter.mu.RUnlock()
 
 			response, err := adapter.core.GetSemaphore(&monsterax.ReadRequest[*corepb.GetSemaphoreRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2305,7 +2410,14 @@ func (s *GrackleNonclusteredStub) GetSemaphoreByName(ctx context.Context, reques
 			defer adapter.mu.RUnlock()
 
 			response, err := adapter.core.GetSemaphoreByName(&monsterax.ReadRequest[*corepb.GetSemaphoreByNameRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2320,7 +2432,14 @@ func (s *GrackleNonclusteredStub) ListSemaphores(ctx context.Context, request *c
 			defer adapter.mu.RUnlock()
 
 			response, err := adapter.core.ListSemaphores(&monsterax.ReadRequest[*corepb.ListSemaphoresRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2335,7 +2454,14 @@ func (s *GrackleNonclusteredStub) ListSemaphoresByLeaseId(ctx context.Context, r
 			defer adapter.mu.RUnlock()
 
 			response, err := adapter.core.ListSemaphoresByLeaseId(&monsterax.ReadRequest[*corepb.ListSemaphoresByLeaseIdRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2350,7 +2476,14 @@ func (s *GrackleNonclusteredStub) ListSemaphoreHolders(ctx context.Context, requ
 			defer adapter.mu.RUnlock()
 
 			response, err := adapter.core.ListSemaphoreHolders(&monsterax.ReadRequest[*corepb.ListSemaphoreHoldersRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2365,7 +2498,14 @@ func (s *GrackleNonclusteredStub) ListSemaphoreLeases(ctx context.Context, reque
 			defer adapter.mu.RUnlock()
 
 			response, err := adapter.core.ListSemaphoreLeases(&monsterax.ReadRequest[*corepb.ListSemaphoreLeasesRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2380,7 +2520,14 @@ func (s *GrackleNonclusteredStub) ListSemaphoreLeasesByProcessId(ctx context.Con
 			defer adapter.mu.RUnlock()
 
 			response, err := adapter.core.ListSemaphoreLeasesByProcessId(&monsterax.ReadRequest[*corepb.ListSemaphoreLeasesByProcessIdRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2395,7 +2542,14 @@ func (s *GrackleNonclusteredStub) GetSemaphoreLease(ctx context.Context, request
 			defer adapter.mu.RUnlock()
 
 			response, err := adapter.core.GetSemaphoreLease(&monsterax.ReadRequest[*corepb.GetSemaphoreLeaseRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2410,7 +2564,14 @@ func (s *GrackleNonclusteredStub) AcquireSemaphore(ctx context.Context, request 
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.AcquireSemaphore(&monsterax.UpdateRequest[*corepb.AcquireSemaphoreRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2425,7 +2586,14 @@ func (s *GrackleNonclusteredStub) ReleaseSemaphore(ctx context.Context, request 
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.ReleaseSemaphore(&monsterax.UpdateRequest[*corepb.ReleaseSemaphoreRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2440,7 +2608,14 @@ func (s *GrackleNonclusteredStub) CreateSemaphore(ctx context.Context, request *
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.CreateSemaphore(&monsterax.UpdateRequest[*corepb.CreateSemaphoreRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2455,7 +2630,14 @@ func (s *GrackleNonclusteredStub) UpdateSemaphore(ctx context.Context, request *
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.UpdateSemaphore(&monsterax.UpdateRequest[*corepb.UpdateSemaphoreRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2470,7 +2652,14 @@ func (s *GrackleNonclusteredStub) DeleteSemaphore(ctx context.Context, request *
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.DeleteSemaphore(&monsterax.UpdateRequest[*corepb.DeleteSemaphoreRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2484,7 +2673,14 @@ func (s *GrackleNonclusteredStub) RunSemaphoresGarbageCollection(ctx context.Con
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.RunSemaphoresGarbageCollection(&monsterax.UpdateUnshardedRequest[*corepb.RunSemaphoresGarbageCollectionRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2499,7 +2695,14 @@ func (s *GrackleNonclusteredStub) SemaphoresDeleteNamespace(ctx context.Context,
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.SemaphoresDeleteNamespace(&monsterax.UpdateRequest[*corepb.SemaphoresDeleteNamespaceRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2514,7 +2717,14 @@ func (s *GrackleNonclusteredStub) CreateSemaphoreLease(ctx context.Context, requ
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.CreateSemaphoreLease(&monsterax.UpdateRequest[*corepb.CreateSemaphoreLeaseRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2529,7 +2739,14 @@ func (s *GrackleNonclusteredStub) RevokeSemaphoreLease(ctx context.Context, requ
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.RevokeSemaphoreLease(&monsterax.UpdateRequest[*corepb.RevokeSemaphoreLeaseRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2544,7 +2761,14 @@ func (s *GrackleNonclusteredStub) RefreshSemaphoreLease(ctx context.Context, req
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.RefreshSemaphoreLease(&monsterax.UpdateRequest[*corepb.RefreshSemaphoreLeaseRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2559,7 +2783,14 @@ func (s *GrackleNonclusteredStub) GetNamespace(ctx context.Context, request *cor
 			defer adapter.mu.RUnlock()
 
 			response, err := adapter.core.GetNamespace(&monsterax.ReadRequest[*corepb.GetNamespaceRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2574,7 +2805,14 @@ func (s *GrackleNonclusteredStub) GetNamespaceByName(ctx context.Context, reques
 			defer adapter.mu.RUnlock()
 
 			response, err := adapter.core.GetNamespaceByName(&monsterax.ReadRequest[*corepb.GetNamespaceByNameRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2589,7 +2827,14 @@ func (s *GrackleNonclusteredStub) ListNamespaces(ctx context.Context, request *c
 			defer adapter.mu.RUnlock()
 
 			response, err := adapter.core.ListNamespaces(&monsterax.ReadRequest[*corepb.ListNamespacesRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2604,7 +2849,14 @@ func (s *GrackleNonclusteredStub) CreateNamespace(ctx context.Context, request *
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.CreateNamespace(&monsterax.UpdateRequest[*corepb.CreateNamespaceRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2619,7 +2871,14 @@ func (s *GrackleNonclusteredStub) UpdateNamespace(ctx context.Context, request *
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.UpdateNamespace(&monsterax.UpdateRequest[*corepb.UpdateNamespaceRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2634,7 +2893,14 @@ func (s *GrackleNonclusteredStub) DeleteNamespace(ctx context.Context, request *
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.DeleteNamespace(&monsterax.UpdateRequest[*corepb.DeleteNamespaceRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2649,7 +2915,14 @@ func (s *GrackleNonclusteredStub) GetWaitGroup(ctx context.Context, request *cor
 			defer adapter.mu.RUnlock()
 
 			response, err := adapter.core.GetWaitGroup(&monsterax.ReadRequest[*corepb.GetWaitGroupRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2664,7 +2937,14 @@ func (s *GrackleNonclusteredStub) GetWaitGroupByName(ctx context.Context, reques
 			defer adapter.mu.RUnlock()
 
 			response, err := adapter.core.GetWaitGroupByName(&monsterax.ReadRequest[*corepb.GetWaitGroupByNameRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2679,7 +2959,14 @@ func (s *GrackleNonclusteredStub) ListWaitGroups(ctx context.Context, request *c
 			defer adapter.mu.RUnlock()
 
 			response, err := adapter.core.ListWaitGroups(&monsterax.ReadRequest[*corepb.ListWaitGroupsRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2694,7 +2981,14 @@ func (s *GrackleNonclusteredStub) ListWaitGroupJobs(ctx context.Context, request
 			defer adapter.mu.RUnlock()
 
 			response, err := adapter.core.ListWaitGroupJobs(&monsterax.ReadRequest[*corepb.ListWaitGroupJobsRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2709,7 +3003,14 @@ func (s *GrackleNonclusteredStub) AddJobsToWaitGroup(ctx context.Context, reques
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.AddJobsToWaitGroup(&monsterax.UpdateRequest[*corepb.AddJobsToWaitGroupRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2724,7 +3025,14 @@ func (s *GrackleNonclusteredStub) CompleteJobsFromWaitGroup(ctx context.Context,
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.CompleteJobsFromWaitGroup(&monsterax.UpdateRequest[*corepb.CompleteJobsFromWaitGroupRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2739,7 +3047,14 @@ func (s *GrackleNonclusteredStub) CreateWaitGroup(ctx context.Context, request *
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.CreateWaitGroup(&monsterax.UpdateRequest[*corepb.CreateWaitGroupRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2754,7 +3069,14 @@ func (s *GrackleNonclusteredStub) DeleteWaitGroup(ctx context.Context, request *
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.DeleteWaitGroup(&monsterax.UpdateRequest[*corepb.DeleteWaitGroupRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2768,7 +3090,14 @@ func (s *GrackleNonclusteredStub) RunWaitGroupsGarbageCollection(ctx context.Con
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.RunWaitGroupsGarbageCollection(&monsterax.UpdateUnshardedRequest[*corepb.RunWaitGroupsGarbageCollectionRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2783,7 +3112,14 @@ func (s *GrackleNonclusteredStub) WaitGroupsDeleteNamespace(ctx context.Context,
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.WaitGroupsDeleteNamespace(&monsterax.UpdateRequest[*corepb.WaitGroupsDeleteNamespaceRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2798,7 +3134,14 @@ func (s *GrackleNonclusteredStub) GetBarrier(ctx context.Context, request *corep
 			defer adapter.mu.RUnlock()
 
 			response, err := adapter.core.GetBarrier(&monsterax.ReadRequest[*corepb.GetBarrierRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2813,7 +3156,14 @@ func (s *GrackleNonclusteredStub) GetBarrierByName(ctx context.Context, request 
 			defer adapter.mu.RUnlock()
 
 			response, err := adapter.core.GetBarrierByName(&monsterax.ReadRequest[*corepb.GetBarrierByNameRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2828,7 +3178,14 @@ func (s *GrackleNonclusteredStub) ListBarriers(ctx context.Context, request *cor
 			defer adapter.mu.RUnlock()
 
 			response, err := adapter.core.ListBarriers(&monsterax.ReadRequest[*corepb.ListBarriersRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2843,7 +3200,14 @@ func (s *GrackleNonclusteredStub) ListBarrierParticipants(ctx context.Context, r
 			defer adapter.mu.RUnlock()
 
 			response, err := adapter.core.ListBarrierParticipants(&monsterax.ReadRequest[*corepb.ListBarrierParticipantsRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2858,7 +3222,14 @@ func (s *GrackleNonclusteredStub) CreateBarrier(ctx context.Context, request *co
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.CreateBarrier(&monsterax.UpdateRequest[*corepb.CreateBarrierRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2873,7 +3244,14 @@ func (s *GrackleNonclusteredStub) DeleteBarrier(ctx context.Context, request *co
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.DeleteBarrier(&monsterax.UpdateRequest[*corepb.DeleteBarrierRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2888,7 +3266,14 @@ func (s *GrackleNonclusteredStub) UpdateBarrier(ctx context.Context, request *co
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.UpdateBarrier(&monsterax.UpdateRequest[*corepb.UpdateBarrierRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2903,7 +3288,14 @@ func (s *GrackleNonclusteredStub) ArriveAtBarrier(ctx context.Context, request *
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.ArriveAtBarrier(&monsterax.UpdateRequest[*corepb.ArriveAtBarrierRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2917,7 +3309,14 @@ func (s *GrackleNonclusteredStub) RunBarriersGarbageCollection(ctx context.Conte
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.RunBarriersGarbageCollection(&monsterax.UpdateUnshardedRequest[*corepb.RunBarriersGarbageCollectionRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 
@@ -2932,7 +3331,14 @@ func (s *GrackleNonclusteredStub) BarriersDeleteNamespace(ctx context.Context, r
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.BarriersDeleteNamespace(&monsterax.UpdateRequest[*corepb.BarriersDeleteNamespaceRequest]{Payload: request})
-			return response.Payload, err
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
 		}
 	}
 

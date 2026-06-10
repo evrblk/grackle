@@ -89,12 +89,12 @@ func (t *barriersTable) Delete(txn *store.Txn, barrierId *corepb.BarrierId) erro
 			t.tableSK(barrierId.BarrierId)))
 }
 
-func (t *barriersTable) Create(txn *store.Txn, barrier *corepb.Barrier) error {
+func (t *barriersTable) Create(txn *store.Txn, barrier *corepb.Barrier) (*monsterax.Error, error) {
 	indexPK := t.namesIndexPK(barrier.Id.AccountId, barrier.Id.NamespaceId, barrier.Name)
 	_, err := t.namesIndex.Get(txn, indexPK)
 	if err != nil {
 		if !errors.Is(err, store.ErrNotFound) {
-			return err
+			return nil, err
 		}
 	} else {
 		return monsterax.NewErrorWithContext(
@@ -102,15 +102,15 @@ func (t *barriersTable) Create(txn *store.Txn, barrier *corepb.Barrier) error {
 			"barrier with this name already exists",
 			map[string]string{
 				"barrier_name": barrier.Name,
-			})
+			}), nil
 	}
 
 	err = t.namesIndex.Set(txn, indexPK, barrier.Id.BarrierId)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return t.table.Set(txn,
+	return nil, t.table.Set(txn,
 		utils.ConcatBytes(
 			t.tablePK(barrier.Id.AccountId, barrier.Id.NamespaceId),
 			t.tableSK(barrier.Id.BarrierId)),

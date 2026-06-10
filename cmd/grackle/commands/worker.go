@@ -15,8 +15,7 @@ import (
 	"github.com/evrblk/monstera/transport/grpc"
 	"github.com/evrblk/yellowstone-common/metrics"
 
-	"github.com/evrblk/grackle/pkg/monsteragen"
-	"github.com/evrblk/grackle/pkg/sharding"
+	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/workers"
 )
 
@@ -50,13 +49,7 @@ var workerCmd = &cobra.Command{
 		defer monsteraClient.Stop()
 
 		// Grackle client
-		grackleCoreApiClient := monsteragen.NewGrackleCoreApiMonsteraStub(
-			monsteraClient,
-			&sharding.GrackleShardKeyCalculator{},
-			&monsteragen.GrackleReadRequestProtoCodec{},
-			&monsteragen.GrackleReadResponseProtoCodec{},
-			&monsteragen.GrackleUpdateRequestProtoCodec{},
-			&monsteragen.GrackleUpdateResponseProtoCodec{})
+		grackleCoreApiClient := coreapis.NewGrackleMonsteraStub(monsteraClient)
 
 		// Grackle workers
 		grackeLocksGarbageCollectionWorker := workers.NewGrackleLocksGCWorker(grackleCoreApiClient)

@@ -91,7 +91,7 @@ func (a *GrackleLocksCoreAdapter) Update(appRequestBytes []byte) (*monstera.Upda
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 2:
 		payload := corepb.ReleaseLockRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -109,7 +109,7 @@ func (a *GrackleLocksCoreAdapter) Update(appRequestBytes []byte) (*monstera.Upda
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 3:
 		payload := corepb.DeleteLockRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -127,7 +127,7 @@ func (a *GrackleLocksCoreAdapter) Update(appRequestBytes []byte) (*monstera.Upda
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 4:
 		payload := corepb.GetLockRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -145,7 +145,7 @@ func (a *GrackleLocksCoreAdapter) Update(appRequestBytes []byte) (*monstera.Upda
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 5:
 		payload := corepb.RunLocksGarbageCollectionRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -163,7 +163,7 @@ func (a *GrackleLocksCoreAdapter) Update(appRequestBytes []byte) (*monstera.Upda
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 6:
 		payload := corepb.LocksDeleteNamespaceRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -181,7 +181,7 @@ func (a *GrackleLocksCoreAdapter) Update(appRequestBytes []byte) (*monstera.Upda
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 7:
 		payload := corepb.CreateLockLeaseRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -199,7 +199,7 @@ func (a *GrackleLocksCoreAdapter) Update(appRequestBytes []byte) (*monstera.Upda
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 8:
 		payload := corepb.RefreshLockLeaseRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -217,7 +217,7 @@ func (a *GrackleLocksCoreAdapter) Update(appRequestBytes []byte) (*monstera.Upda
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 9:
 		payload := corepb.RevokeLockLeaseRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -235,9 +235,9 @@ func (a *GrackleLocksCoreAdapter) Update(appRequestBytes []byte) (*monstera.Upda
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	default:
-		fmt.Errorf("no matching handlers")
+		return nil, fmt.Errorf("no matching handlers")
 	}
 
 	appResponseBytes, err := appResponse.MarshalVT()
@@ -279,7 +279,7 @@ func (a *GrackleLocksCoreAdapter) Read(appRequestBytes []byte) (*monstera.ReadRe
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 2:
 		payload := corepb.ListLocksByLeaseIdRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -297,7 +297,7 @@ func (a *GrackleLocksCoreAdapter) Read(appRequestBytes []byte) (*monstera.ReadRe
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 3:
 		payload := corepb.ListLockLeasesRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -315,7 +315,7 @@ func (a *GrackleLocksCoreAdapter) Read(appRequestBytes []byte) (*monstera.ReadRe
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 4:
 		payload := corepb.ListLockLeasesByProcessIdRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -333,7 +333,7 @@ func (a *GrackleLocksCoreAdapter) Read(appRequestBytes []byte) (*monstera.ReadRe
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 5:
 		payload := corepb.GetLockLeaseRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -351,9 +351,9 @@ func (a *GrackleLocksCoreAdapter) Read(appRequestBytes []byte) (*monstera.ReadRe
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	default:
-		panic("no matching handlers")
+		return nil, fmt.Errorf("no matching handlers")
 	}
 
 	appResponseBytes, err := appResponse.MarshalVT()
@@ -430,7 +430,7 @@ func (a *GrackleSemaphoresCoreAdapter) Update(appRequestBytes []byte) (*monstera
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 2:
 		payload := corepb.ReleaseSemaphoreRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -448,7 +448,7 @@ func (a *GrackleSemaphoresCoreAdapter) Update(appRequestBytes []byte) (*monstera
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 3:
 		payload := corepb.CreateSemaphoreRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -466,7 +466,7 @@ func (a *GrackleSemaphoresCoreAdapter) Update(appRequestBytes []byte) (*monstera
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 4:
 		payload := corepb.UpdateSemaphoreRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -484,7 +484,7 @@ func (a *GrackleSemaphoresCoreAdapter) Update(appRequestBytes []byte) (*monstera
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 5:
 		payload := corepb.DeleteSemaphoreRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -502,7 +502,7 @@ func (a *GrackleSemaphoresCoreAdapter) Update(appRequestBytes []byte) (*monstera
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 6:
 		payload := corepb.RunSemaphoresGarbageCollectionRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -520,7 +520,7 @@ func (a *GrackleSemaphoresCoreAdapter) Update(appRequestBytes []byte) (*monstera
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 7:
 		payload := corepb.SemaphoresDeleteNamespaceRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -538,7 +538,7 @@ func (a *GrackleSemaphoresCoreAdapter) Update(appRequestBytes []byte) (*monstera
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 8:
 		payload := corepb.CreateSemaphoreLeaseRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -556,7 +556,7 @@ func (a *GrackleSemaphoresCoreAdapter) Update(appRequestBytes []byte) (*monstera
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 9:
 		payload := corepb.RevokeSemaphoreLeaseRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -574,7 +574,7 @@ func (a *GrackleSemaphoresCoreAdapter) Update(appRequestBytes []byte) (*monstera
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 10:
 		payload := corepb.RefreshSemaphoreLeaseRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -592,9 +592,9 @@ func (a *GrackleSemaphoresCoreAdapter) Update(appRequestBytes []byte) (*monstera
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	default:
-		fmt.Errorf("no matching handlers")
+		return nil, fmt.Errorf("no matching handlers")
 	}
 
 	appResponseBytes, err := appResponse.MarshalVT()
@@ -636,7 +636,7 @@ func (a *GrackleSemaphoresCoreAdapter) Read(appRequestBytes []byte) (*monstera.R
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 2:
 		payload := corepb.GetSemaphoreByNameRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -654,7 +654,7 @@ func (a *GrackleSemaphoresCoreAdapter) Read(appRequestBytes []byte) (*monstera.R
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 3:
 		payload := corepb.ListSemaphoresRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -672,7 +672,7 @@ func (a *GrackleSemaphoresCoreAdapter) Read(appRequestBytes []byte) (*monstera.R
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 4:
 		payload := corepb.ListSemaphoresByLeaseIdRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -690,7 +690,7 @@ func (a *GrackleSemaphoresCoreAdapter) Read(appRequestBytes []byte) (*monstera.R
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 5:
 		payload := corepb.ListSemaphoreHoldersRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -708,7 +708,7 @@ func (a *GrackleSemaphoresCoreAdapter) Read(appRequestBytes []byte) (*monstera.R
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 6:
 		payload := corepb.ListSemaphoreLeasesRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -726,7 +726,7 @@ func (a *GrackleSemaphoresCoreAdapter) Read(appRequestBytes []byte) (*monstera.R
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 7:
 		payload := corepb.ListSemaphoreLeasesByProcessIdRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -744,7 +744,7 @@ func (a *GrackleSemaphoresCoreAdapter) Read(appRequestBytes []byte) (*monstera.R
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 8:
 		payload := corepb.GetSemaphoreLeaseRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -762,9 +762,9 @@ func (a *GrackleSemaphoresCoreAdapter) Read(appRequestBytes []byte) (*monstera.R
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	default:
-		panic("no matching handlers")
+		return nil, fmt.Errorf("no matching handlers")
 	}
 
 	appResponseBytes, err := appResponse.MarshalVT()
@@ -841,7 +841,7 @@ func (a *GrackleNamespacesCoreAdapter) Update(appRequestBytes []byte) (*monstera
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 2:
 		payload := corepb.UpdateNamespaceRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -859,7 +859,7 @@ func (a *GrackleNamespacesCoreAdapter) Update(appRequestBytes []byte) (*monstera
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 3:
 		payload := corepb.DeleteNamespaceRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -877,9 +877,9 @@ func (a *GrackleNamespacesCoreAdapter) Update(appRequestBytes []byte) (*monstera
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	default:
-		fmt.Errorf("no matching handlers")
+		return nil, fmt.Errorf("no matching handlers")
 	}
 
 	appResponseBytes, err := appResponse.MarshalVT()
@@ -921,7 +921,7 @@ func (a *GrackleNamespacesCoreAdapter) Read(appRequestBytes []byte) (*monstera.R
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 2:
 		payload := corepb.GetNamespaceByNameRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -939,7 +939,7 @@ func (a *GrackleNamespacesCoreAdapter) Read(appRequestBytes []byte) (*monstera.R
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 3:
 		payload := corepb.ListNamespacesRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -957,9 +957,9 @@ func (a *GrackleNamespacesCoreAdapter) Read(appRequestBytes []byte) (*monstera.R
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	default:
-		panic("no matching handlers")
+		return nil, fmt.Errorf("no matching handlers")
 	}
 
 	appResponseBytes, err := appResponse.MarshalVT()
@@ -1036,7 +1036,7 @@ func (a *GrackleWaitGroupsCoreAdapter) Update(appRequestBytes []byte) (*monstera
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 2:
 		payload := corepb.CompleteJobsFromWaitGroupRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -1054,7 +1054,7 @@ func (a *GrackleWaitGroupsCoreAdapter) Update(appRequestBytes []byte) (*monstera
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 3:
 		payload := corepb.CreateWaitGroupRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -1072,7 +1072,7 @@ func (a *GrackleWaitGroupsCoreAdapter) Update(appRequestBytes []byte) (*monstera
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 4:
 		payload := corepb.DeleteWaitGroupRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -1090,7 +1090,7 @@ func (a *GrackleWaitGroupsCoreAdapter) Update(appRequestBytes []byte) (*monstera
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 5:
 		payload := corepb.RunWaitGroupsGarbageCollectionRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -1108,7 +1108,7 @@ func (a *GrackleWaitGroupsCoreAdapter) Update(appRequestBytes []byte) (*monstera
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 6:
 		payload := corepb.WaitGroupsDeleteNamespaceRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -1126,9 +1126,9 @@ func (a *GrackleWaitGroupsCoreAdapter) Update(appRequestBytes []byte) (*monstera
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	default:
-		fmt.Errorf("no matching handlers")
+		return nil, fmt.Errorf("no matching handlers")
 	}
 
 	appResponseBytes, err := appResponse.MarshalVT()
@@ -1170,7 +1170,7 @@ func (a *GrackleWaitGroupsCoreAdapter) Read(appRequestBytes []byte) (*monstera.R
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 2:
 		payload := corepb.GetWaitGroupByNameRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -1188,7 +1188,7 @@ func (a *GrackleWaitGroupsCoreAdapter) Read(appRequestBytes []byte) (*monstera.R
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 3:
 		payload := corepb.ListWaitGroupsRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -1206,7 +1206,7 @@ func (a *GrackleWaitGroupsCoreAdapter) Read(appRequestBytes []byte) (*monstera.R
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 4:
 		payload := corepb.ListWaitGroupJobsRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -1224,9 +1224,9 @@ func (a *GrackleWaitGroupsCoreAdapter) Read(appRequestBytes []byte) (*monstera.R
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	default:
-		panic("no matching handlers")
+		return nil, fmt.Errorf("no matching handlers")
 	}
 
 	appResponseBytes, err := appResponse.MarshalVT()
@@ -1303,7 +1303,7 @@ func (a *GrackleBarriersCoreAdapter) Update(appRequestBytes []byte) (*monstera.U
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 2:
 		payload := corepb.DeleteBarrierRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -1321,7 +1321,7 @@ func (a *GrackleBarriersCoreAdapter) Update(appRequestBytes []byte) (*monstera.U
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 3:
 		payload := corepb.UpdateBarrierRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -1339,7 +1339,7 @@ func (a *GrackleBarriersCoreAdapter) Update(appRequestBytes []byte) (*monstera.U
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 4:
 		payload := corepb.ArriveAtBarrierRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -1357,7 +1357,7 @@ func (a *GrackleBarriersCoreAdapter) Update(appRequestBytes []byte) (*monstera.U
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 5:
 		payload := corepb.RunBarriersGarbageCollectionRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -1375,7 +1375,7 @@ func (a *GrackleBarriersCoreAdapter) Update(appRequestBytes []byte) (*monstera.U
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 6:
 		payload := corepb.BarriersDeleteNamespaceRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -1393,9 +1393,9 @@ func (a *GrackleBarriersCoreAdapter) Update(appRequestBytes []byte) (*monstera.U
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	default:
-		fmt.Errorf("no matching handlers")
+		return nil, fmt.Errorf("no matching handlers")
 	}
 
 	appResponseBytes, err := appResponse.MarshalVT()
@@ -1437,7 +1437,7 @@ func (a *GrackleBarriersCoreAdapter) Read(appRequestBytes []byte) (*monstera.Rea
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 2:
 		payload := corepb.GetBarrierByNameRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -1455,7 +1455,7 @@ func (a *GrackleBarriersCoreAdapter) Read(appRequestBytes []byte) (*monstera.Rea
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 3:
 		payload := corepb.ListBarriersRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -1473,7 +1473,7 @@ func (a *GrackleBarriersCoreAdapter) Read(appRequestBytes []byte) (*monstera.Rea
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	case 4:
 		payload := corepb.ListBarrierParticipantsRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
@@ -1491,9 +1491,9 @@ func (a *GrackleBarriersCoreAdapter) Read(appRequestBytes []byte) (*monstera.Rea
 		if err != nil {
 			return nil, err
 		}
-		response.Data = methodResponseBytes
+		appResponse.Data = methodResponseBytes
 	default:
-		panic("no matching handlers")
+		return nil, fmt.Errorf("no matching handlers")
 	}
 
 	appResponseBytes, err := appResponse.MarshalVT()

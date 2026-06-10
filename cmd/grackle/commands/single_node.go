@@ -19,12 +19,11 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/evrblk/grackle/pkg/barriers"
+	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/locks"
-	"github.com/evrblk/grackle/pkg/monsteragen"
 	"github.com/evrblk/grackle/pkg/namespaces"
 	"github.com/evrblk/grackle/pkg/semaphores"
 	grackle_preview "github.com/evrblk/grackle/pkg/server/preview"
-	"github.com/evrblk/grackle/pkg/sharding"
 	"github.com/evrblk/grackle/pkg/tables"
 	"github.com/evrblk/grackle/pkg/waitgroups"
 	"github.com/evrblk/grackle/pkg/workers"
@@ -71,24 +70,24 @@ var singleNodeCmd = &cobra.Command{
 		}
 
 		// Grackle single node client
-		coresFactory := &monsteragen.GrackleNonclusteredApplicationCoresFactory{
-			GrackleLocksCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) monsteragen.GrackleLocksCoreApi {
+		coresFactory := &coreapis.GrackleNonclusteredApplicationCoresFactory{
+			GrackleLocksCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) coreapis.GrackleLocksCoreApi {
 				return locks.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
 			},
-			GrackleNamespacesCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) monsteragen.GrackleNamespacesCoreApi {
+			GrackleNamespacesCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) coreapis.GrackleNamespacesCoreApi {
 				return namespaces.NewCore(dataStore, lowerBound, upperBound)
 			},
-			GrackleSemaphoresCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) monsteragen.GrackleSemaphoresCoreApi {
+			GrackleSemaphoresCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) coreapis.GrackleSemaphoresCoreApi {
 				return semaphores.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
 			},
-			GrackleWaitGroupsCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) monsteragen.GrackleWaitGroupsCoreApi {
+			GrackleWaitGroupsCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) coreapis.GrackleWaitGroupsCoreApi {
 				return waitgroups.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
 			},
-			GrackleBarriersCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) monsteragen.GrackleBarriersCoreApi {
+			GrackleBarriersCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) coreapis.GrackleBarriersCoreApi {
 				return barriers.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
 			},
 		}
-		grackleCoreApiClient := monsteragen.NewGrackleCoreApiNonclusteredStub(singleNodeCmdCfg.shardsCount, coresFactory, &sharding.GrackleShardKeyCalculator{})
+		grackleCoreApiClient := coreapis.NewGrackleNonclusteredStub(singleNodeCmdCfg.shardsCount, coresFactory)
 
 		// Grackle workers
 		grackeLocksGarbageCollectionWorker := workers.NewGrackleLocksGCWorker(grackleCoreApiClient)

@@ -17,9 +17,8 @@ import (
 	"google.golang.org/grpc"
 
 	gracklepb "github.com/evrblk/evrblk-go/grackle/preview"
-	"github.com/evrblk/grackle/pkg/monsteragen"
+	"github.com/evrblk/grackle/pkg/coreapis"
 	grackle_preview "github.com/evrblk/grackle/pkg/server/preview"
-	"github.com/evrblk/grackle/pkg/sharding"
 )
 
 var gatewayCmdCfg struct {
@@ -88,13 +87,7 @@ var gatewayCmd = &cobra.Command{
 		}()
 
 		// Grackle API Gateway
-		grackleCoreApiClient := monsteragen.NewGrackleCoreApiMonsteraStub(
-			monsteraClient,
-			&sharding.GrackleShardKeyCalculator{},
-			&monsteragen.GrackleReadRequestProtoCodec{},
-			&monsteragen.GrackleReadResponseProtoCodec{},
-			&monsteragen.GrackleUpdateRequestProtoCodec{},
-			&monsteragen.GrackleUpdateResponseProtoCodec{})
+		grackleCoreApiClient := coreapis.NewGrackleMonsteraStub(monsteraClient)
 		grackleApiGatewayServer := grackle_preview.NewGrackleApiServer(grackleCoreApiClient)
 		defer grackleApiGatewayServer.Close()
 		gracklepb.RegisterGracklePreviewApiServer(grpcServer, grackleApiGatewayServer)

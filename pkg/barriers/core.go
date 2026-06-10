@@ -71,12 +71,14 @@ func (c *Core) GetBarrier(req *coreapis.GetBarrierRequest) (*coreapis.GetBarrier
 	barrier, err := c.barriers.Get(txn, req.Payload.BarrierId)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return nil, monsterax.NewErrorWithContext(
-				monsterax.NotFound,
-				"barrier not found",
-				map[string]string{
-					"barrier_id": ids.EncodeBarrierId(req.Payload.BarrierId),
-				})
+			return &coreapis.GetBarrierResponse{
+				ApplicationError: monsterax.NewErrorWithContext(
+					monsterax.NotFound,
+					"barrier not found",
+					map[string]string{
+						"barrier_id": ids.EncodeBarrierId(req.Payload.BarrierId),
+					}),
+			}, nil
 		}
 
 		return nil, err
@@ -96,12 +98,14 @@ func (c *Core) GetBarrierByName(req *coreapis.GetBarrierByNameRequest) (*coreapi
 	barrier, err := c.barriers.GetByName(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, req.Payload.BarrierName)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return nil, monsterax.NewErrorWithContext(
-				monsterax.NotFound,
-				"barrier not found",
-				map[string]string{
-					"barrier_name": req.Payload.BarrierName,
-				})
+			return &coreapis.GetBarrierByNameResponse{
+				ApplicationError: monsterax.NewErrorWithContext(
+					monsterax.NotFound,
+					"barrier not found",
+					map[string]string{
+						"barrier_name": req.Payload.BarrierName,
+					}),
+			}, nil
 		}
 
 		return nil, err
@@ -139,12 +143,14 @@ func (c *Core) ListBarrierParticipants(req *coreapis.ListBarrierParticipantsRequ
 	barrier, err := c.barriers.GetByName(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, req.Payload.BarrierName)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return nil, monsterax.NewErrorWithContext(
-				monsterax.NotFound,
-				"barrier not found",
-				map[string]string{
-					"barrier_name": req.Payload.BarrierName,
-				})
+			return &coreapis.ListBarrierParticipantsResponse{
+				ApplicationError: monsterax.NewErrorWithContext(
+					monsterax.NotFound,
+					"barrier not found",
+					map[string]string{
+						"barrier_name": req.Payload.BarrierName,
+					}),
+			}, nil
 		}
 
 		return nil, err
@@ -176,10 +182,14 @@ func (c *Core) CreateBarrier(req *coreapis.CreateBarrierRequest) (*coreapis.Crea
 
 	// Checking max number of barriers
 	if counters.NumberOfBarriers >= req.Payload.MaxNumberOfBarriersPerNamespace {
-		return nil, monsterax.NewErrorWithContext(
-			monsterax.ResourceExhausted,
-			"max number of barriers per namespace reached",
-			map[string]string{"limit": fmt.Sprintf("%d", req.Payload.MaxNumberOfBarriersPerNamespace)})
+		return &coreapis.CreateBarrierResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.ResourceExhausted,
+				"max number of barriers per namespace reached",
+				map[string]string{
+					"limit": fmt.Sprintf("%d", req.Payload.MaxNumberOfBarriersPerNamespace),
+				}),
+		}, nil
 	}
 
 	barrier := &corepb.Barrier{
@@ -193,14 +203,14 @@ func (c *Core) CreateBarrier(req *coreapis.CreateBarrierRequest) (*coreapis.Crea
 		UpdatedAt:         req.Payload.Now,
 	}
 
-	err = c.barriers.Create(txn, barrier)
+	appErr, err := c.barriers.Create(txn, barrier)
 	if err != nil {
-		merr := &monsterax.Error{}
-		if errors.As(err, &merr) {
-			return nil, merr
-		}
-
-		panic(err)
+		return nil, err
+	}
+	if appErr != nil {
+		return &coreapis.CreateBarrierResponse{
+			ApplicationError: appErr,
+		}, nil
 	}
 
 	// Update counters
@@ -275,12 +285,14 @@ func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest) (*coreapis.Upda
 	barrier, err := c.barriers.Get(txn, req.Payload.BarrierId)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return nil, monsterax.NewErrorWithContext(
-				monsterax.NotFound,
-				"barrier not found",
-				map[string]string{
-					"barrier_id": ids.EncodeBarrierId(req.Payload.BarrierId),
-				})
+			return &coreapis.UpdateBarrierResponse{
+				ApplicationError: monsterax.NewErrorWithContext(
+					monsterax.NotFound,
+					"barrier not found",
+					map[string]string{
+						"barrier_id": ids.EncodeBarrierId(req.Payload.BarrierId),
+					}),
+			}, nil
 		}
 
 		return nil, err
@@ -288,10 +300,12 @@ func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest) (*coreapis.Upda
 
 	// If there are currently more arrived processes than the new expected processes
 	if barrier.ArrivedProcesses > req.Payload.ExpectedProcesses {
-		return nil, monsterax.NewErrorWithContext(
-			monsterax.InvalidArgument,
-			"there are currently more arrived processes than the new expected processes",
-			map[string]string{})
+		return &coreapis.UpdateBarrierResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.InvalidArgument,
+				"there are currently more arrived processes than the new expected processes",
+				map[string]string{}),
+		}, nil
 	}
 
 	barrier.Description = req.Payload.Description
@@ -322,12 +336,14 @@ func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest) (*coreapis.
 	barrier, err := c.barriers.GetByName(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, req.Payload.BarrierName)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return nil, monsterax.NewErrorWithContext(
-				monsterax.NotFound,
-				"barrier not found",
-				map[string]string{
-					"barrier_name": req.Payload.BarrierName,
-				})
+			return &coreapis.ArriveAtBarrierResponse{
+				ApplicationError: monsterax.NewErrorWithContext(
+					monsterax.NotFound,
+					"barrier not found",
+					map[string]string{
+						"barrier_name": req.Payload.BarrierName,
+					}),
+			}, nil
 		}
 
 		return nil, err
@@ -344,7 +360,9 @@ func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest) (*coreapis.
 		// This process has already arrived, nothing to do
 		// TODO
 		return &coreapis.ArriveAtBarrierResponse{
-			Payload: &corepb.ArriveAtBarrierResponse{},
+			Payload: &corepb.ArriveAtBarrierResponse{
+				Barrier: barrier,
+			},
 		}, nil
 	}
 

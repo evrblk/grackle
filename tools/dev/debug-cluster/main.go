@@ -27,12 +27,11 @@ import (
 
 	gracklepb "github.com/evrblk/evrblk-go/grackle/preview"
 	"github.com/evrblk/grackle/pkg/barriers"
+	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/locks"
-	"github.com/evrblk/grackle/pkg/monsteragen"
 	"github.com/evrblk/grackle/pkg/namespaces"
 	"github.com/evrblk/grackle/pkg/semaphores"
 	grackle_preview "github.com/evrblk/grackle/pkg/server/preview"
-	"github.com/evrblk/grackle/pkg/sharding"
 	"github.com/evrblk/grackle/pkg/tables"
 	"github.com/evrblk/grackle/pkg/waitgroups"
 )
@@ -86,70 +85,45 @@ func (nr *nodeRunner) start(transport transport.Transport, useGrpc bool) error {
 	monsteraNodeConfig := monstera.DefaultMonsteraNodeConfig
 	monsteraNodeConfig.UseInMemoryRaftStore = true
 
-	readRequestCodec := &monsteragen.GrackleReadRequestProtoCodec{}
-	readResponseCodec := &monsteragen.GrackleReadResponseProtoCodec{}
-	updateRequestCodec := &monsteragen.GrackleUpdateRequestProtoCodec{}
-	updateResponseCodec := &monsteragen.GrackleUpdateResponseProtoCodec{}
-
 	applicationDescriptors := monstera.ApplicationCoreDescriptors{
 		"GrackleLocks": {
 			RestoreSnapshotOnStart: false,
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
-				return monsteragen.NewGrackleLocksCoreAdapter(
+				return coreapis.NewGrackleLocksCoreAdapter(
 					shard.Id, replica.Id,
-					locks.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound),
-					readRequestCodec,
-					readResponseCodec,
-					updateRequestCodec,
-					updateResponseCodec)
+					locks.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
 			},
 		},
 		"GrackleNamespaces": {
 			RestoreSnapshotOnStart: false,
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
-				return monsteragen.NewGrackleNamespacesCoreAdapter(
+				return coreapis.NewGrackleNamespacesCoreAdapter(
 					shard.Id, replica.Id,
-					namespaces.NewCore(nr.dataStore, shard.LowerBound, shard.UpperBound),
-					readRequestCodec,
-					readResponseCodec,
-					updateRequestCodec,
-					updateResponseCodec)
+					namespaces.NewCore(nr.dataStore, shard.LowerBound, shard.UpperBound))
 			},
 		},
 		"GrackleWaitGroups": {
 			RestoreSnapshotOnStart: false,
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
-				return monsteragen.NewGrackleWaitGroupsCoreAdapter(
+				return coreapis.NewGrackleWaitGroupsCoreAdapter(
 					shard.Id, replica.Id,
-					waitgroups.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound),
-					readRequestCodec,
-					readResponseCodec,
-					updateRequestCodec,
-					updateResponseCodec)
+					waitgroups.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
 			},
 		},
 		"GrackleBarriers": {
 			RestoreSnapshotOnStart: false,
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
-				return monsteragen.NewGrackleBarriersCoreAdapter(
+				return coreapis.NewGrackleBarriersCoreAdapter(
 					shard.Id, replica.Id,
-					barriers.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound),
-					readRequestCodec,
-					readResponseCodec,
-					updateRequestCodec,
-					updateResponseCodec)
+					barriers.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
 			},
 		},
 		"GrackleSemaphores": {
 			RestoreSnapshotOnStart: false,
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
-				return monsteragen.NewGrackleSemaphoresCoreAdapter(
+				return coreapis.NewGrackleSemaphoresCoreAdapter(
 					shard.Id, replica.Id,
-					semaphores.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound),
-					readRequestCodec,
-					readResponseCodec,
-					updateRequestCodec,
-					updateResponseCodec)
+					semaphores.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
 			},
 		},
 	}
@@ -337,14 +311,7 @@ func main() {
 		grpcServer = grpc_server.NewServer()
 
 		// Create Grackle API Gateway
-		grackleCoreApiClient := monsteragen.NewGrackleCoreApiMonsteraStub(
-			monsteraClient,
-			&sharding.GrackleShardKeyCalculator{},
-			&monsteragen.GrackleReadRequestProtoCodec{},
-			&monsteragen.GrackleReadResponseProtoCodec{},
-			&monsteragen.GrackleUpdateRequestProtoCodec{},
-			&monsteragen.GrackleUpdateResponseProtoCodec{},
-		)
+		grackleCoreApiClient := coreapis.NewGrackleMonsteraStub(monsteraClient)
 		grackleApiGatewayServer = grackle_preview.NewGrackleApiServer(grackleCoreApiClient)
 		gracklepb.RegisterGracklePreviewApiServer(grpcServer, grackleApiGatewayServer)
 

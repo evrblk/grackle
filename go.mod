@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/evrblk/evrblk-go v0.0.0-20260529161512-a5e94a1108ac
-	github.com/evrblk/monstera v0.0.0-20260529160934-968a07b3db33
+	github.com/evrblk/monstera v0.0.0-20260610153412-ffd2127186cd
 	github.com/evrblk/yellowstone-common v0.0.0-20260317193758-e5d4f0d6d632
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10
 	github.com/prometheus/client_golang v1.23.2
@@ -22,7 +22,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dave/jennifer v1.7.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/dgraph-io/badger/v4 v4.9.1 // indirect
+	github.com/dgraph-io/badger/v4 v4.9.2 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.4.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fatih/color v1.19.0 // indirect
@@ -56,12 +56,10 @@ require (
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	golang.org/x/crypto v0.52.0 // indirect
 	golang.org/x/net v0.55.0 // indirect
-	golang.org/x/sys v0.45.0 // indirect
+	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260608224507-4308a22a1bab // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 tool github.com/evrblk/monstera/cmd/monstera
-
-replace github.com/evrblk/monstera v0.0.0-20260529160934-968a07b3db33 => ../monstera

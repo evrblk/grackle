@@ -136,21 +136,8 @@ func TestCore_AcquireSemaphore(t *testing.T) {
 
 		// Try to acquire a nonexistent semaphore
 		lease := createLease(t, core, accountId, namespaceId.NamespaceId, "process_1", now, 60*time.Minute)
-		resp1, err := core.AcquireSemaphore(&coreapis.AcquireSemaphoreRequest{
-			Payload: &corepb.AcquireSemaphoreRequest{
-				NamespaceId:   namespaceId,
-				SemaphoreName: "non_existing_semaphore",
-				Weight:        1,
-				Now:           now.UnixNano(),
-				LeaseId:       lease.Id.LeaseId,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.Payload)
-		require.NotNil(t, resp1.ApplicationError)
-		require.Equal(t, monsterax.NotFound, resp1.ApplicationError.Code)
+		appErr := acquireSemaphoreWithError(t, core, namespaceId, lease.Id, "non_existing_semaphore", 1, now)
+		require.Equal(t, monsterax.NotFound, appErr.Code)
 	})
 }
 
@@ -193,20 +180,8 @@ func TestCore_ReleaseSemaphore(t *testing.T) {
 
 		// Try to release a nonexistent semaphore
 		lease := createLease(t, core, accountId, namespaceId.NamespaceId, "process_1", now, 60*time.Minute)
-		resp1, err := core.ReleaseSemaphore(&coreapis.ReleaseSemaphoreRequest{
-			Payload: &corepb.ReleaseSemaphoreRequest{
-				NamespaceId:   namespaceId,
-				SemaphoreName: "nonexistent_semaphore",
-				Now:           now.UnixNano(),
-				LeaseId:       lease.Id.LeaseId,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.Payload)
-		require.NotNil(t, resp1.ApplicationError)
-		require.Equal(t, monsterax.NotFound, resp1.ApplicationError.Code)
+		appErr := releaseSemaphoreWithError(t, core, namespaceId, "nonexistent_semaphore", lease.Id, now)
+		require.Equal(t, monsterax.NotFound, appErr.Code)
 	})
 
 	t.Run("release nonexistent lease id", func(t *testing.T) {
@@ -258,21 +233,7 @@ func TestCore_UpdateSemaphore(t *testing.T) {
 		_ = createSemaphore(t, core, semaphoreId, "test_semaphore", 2, now)
 
 		// T+1m: Update semaphore
-		resp2, err := core.UpdateSemaphore(&coreapis.UpdateSemaphoreRequest{
-			Payload: &corepb.UpdateSemaphoreRequest{
-				NamespaceId:   namespaceId,
-				SemaphoreName: "test_semaphore",
-				Description:   "updated description",
-				Permits:       3,
-				Now:           now.Add(time.Minute).UnixNano(),
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp2)
-		require.Nil(t, resp2.ApplicationError)
-		require.NotNil(t, resp2.Payload)
-		require.NotNil(t, resp2.Payload.Semaphore)
+		_ = updateSemaphore(t, core, namespaceId, "test_semaphore", "updated description", 3, now.Add(time.Minute))
 
 		// T+2m: Get updated semaphore
 		semaphore := getSemaphore(t, core, semaphoreId, now.Add(2*time.Minute))
@@ -317,21 +278,8 @@ func TestCore_UpdateSemaphore(t *testing.T) {
 		require.EqualValues(t, 3, semaphore.ActiveHoldersCount)
 
 		// T+5m: Try to update semaphore to reduce permits to 2 (less than current holders)
-		resp6, err := core.UpdateSemaphore(&coreapis.UpdateSemaphoreRequest{
-			Payload: &corepb.UpdateSemaphoreRequest{
-				NamespaceId:   namespaceId,
-				SemaphoreName: "test_semaphore",
-				Description:   "updated description",
-				Permits:       2,
-				Now:           now.Add(5 * time.Minute).UnixNano(),
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp6)
-		require.Nil(t, resp6.Payload)
-		require.NotNil(t, resp6.ApplicationError)
-		require.Equal(t, monsterax.InvalidArgument, resp6.ApplicationError.Code)
+		appErr := updateSemaphoreWithError(t, core, namespaceId, "test_semaphore", "updated description", 2, now.Add(5*time.Minute))
+		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
 
 		// Verify the semaphore was not updated
 		semaphore = getSemaphore(t, core, semaphoreId, now.Add(6*time.Minute))
@@ -344,26 +292,14 @@ func TestCore_UpdateSemaphore(t *testing.T) {
 	t.Run("update nonexistent semaphore", func(t *testing.T) {
 		core := newSemaphoresCore(t)
 		now := time.Now()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+		}
 
 		// Try to update a nonexistent semaphore
-		resp1, err := core.UpdateSemaphore(&coreapis.UpdateSemaphoreRequest{
-			Payload: &corepb.UpdateSemaphoreRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   rand.Uint64(),
-					NamespaceId: rand.Uint32(),
-				},
-				SemaphoreName: "nonexistent_semaphore",
-				Description:   "updated description",
-				Permits:       3,
-				Now:           now.UnixNano(),
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.Payload)
-		require.NotNil(t, resp1.ApplicationError)
-		require.Equal(t, monsterax.NotFound, resp1.ApplicationError.Code)
+		appErr := updateSemaphoreWithError(t, core, namespaceId, "nonexistent_semaphore", "updated description", 3, now)
+		require.Equal(t, monsterax.NotFound, appErr.Code)
 	})
 }
 
@@ -377,18 +313,8 @@ func TestCore_GetSemaphore(t *testing.T) {
 			SemaphoreId: rand.Uint64(),
 		}
 
-		resp1, err := core.GetSemaphore(&coreapis.GetSemaphoreRequest{
-			Payload: &corepb.GetSemaphoreRequest{
-				SemaphoreId: nonExistingSemaphoreId,
-				Now:         now.UnixNano(),
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.Payload)
-		require.NotNil(t, resp1.ApplicationError)
-		require.Equal(t, monsterax.NotFound, resp1.ApplicationError.Code)
+		appErr := getSemaphoreWithError(t, core, nonExistingSemaphoreId, now)
+		require.Equal(t, monsterax.NotFound, appErr.Code)
 	})
 }
 
@@ -410,23 +336,11 @@ func TestCore_GetSemaphoreByName(t *testing.T) {
 		_ = createSemaphore(t, core, semaphoreId, "test_semaphore", 5, now)
 
 		// T+1m: Get semaphore by name
-		resp2, err := core.GetSemaphoreByName(&coreapis.GetSemaphoreByNameRequest{
-			Payload: &corepb.GetSemaphoreByNameRequest{
-				NamespaceId:   namespaceId,
-				SemaphoreName: "test_semaphore",
-				Now:           now.Add(time.Minute).UnixNano(),
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp2)
-		require.Nil(t, resp2.ApplicationError)
-		require.NotNil(t, resp2.Payload)
-		require.NotNil(t, resp2.Payload.Semaphore)
-		require.Equal(t, "test_semaphore", resp2.Payload.Semaphore.Name)
-		require.Equal(t, "test description", resp2.Payload.Semaphore.Description)
-		require.EqualValues(t, 5, resp2.Payload.Semaphore.Permits)
-		require.Equal(t, semaphoreId.SemaphoreId, resp2.Payload.Semaphore.Id.SemaphoreId)
+		semaphore := getSemaphoreByName(t, core, namespaceId, "test_semaphore", now.Add(time.Minute))
+		require.Equal(t, "test_semaphore", semaphore.Name)
+		require.Equal(t, "test description", semaphore.Description)
+		require.EqualValues(t, 5, semaphore.Permits)
+		require.Equal(t, semaphoreId.SemaphoreId, semaphore.Id.SemaphoreId)
 	})
 
 	t.Run("get semaphore by name with expired holders", func(t *testing.T) {
@@ -457,55 +371,19 @@ func TestCore_GetSemaphoreByName(t *testing.T) {
 		require.True(t, success)
 
 		// T+3m: Get semaphore by name (both holders should be active)
-		resp4, err := core.GetSemaphoreByName(&coreapis.GetSemaphoreByNameRequest{
-			Payload: &corepb.GetSemaphoreByNameRequest{
-				NamespaceId:   namespaceId,
-				SemaphoreName: "test_semaphore",
-				Now:           now.Add(3 * time.Minute).UnixNano(),
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp4)
-		require.Nil(t, resp4.ApplicationError)
-		require.NotNil(t, resp4.Payload)
-		require.NotNil(t, resp4.Payload.Semaphore)
-		require.EqualValues(t, 2, resp4.Payload.Semaphore.ActiveHoldersCount)
-		require.EqualValues(t, 2, resp4.Payload.Semaphore.ActiveHolds)
+		semaphore := getSemaphoreByName(t, core, namespaceId, "test_semaphore", now.Add(3*time.Minute))
+		require.EqualValues(t, 2, semaphore.ActiveHoldersCount)
+		require.EqualValues(t, 2, semaphore.ActiveHolds)
 
 		// T+35m: Get semaphore by name (process_1 should have expired, only process_2 remains)
-		resp5, err := core.GetSemaphoreByName(&coreapis.GetSemaphoreByNameRequest{
-			Payload: &corepb.GetSemaphoreByNameRequest{
-				NamespaceId:   namespaceId,
-				SemaphoreName: "test_semaphore",
-				Now:           now.Add(35 * time.Minute).UnixNano(),
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp5)
-		require.Nil(t, resp5.ApplicationError)
-		require.NotNil(t, resp5.Payload)
-		require.NotNil(t, resp5.Payload.Semaphore)
-		require.EqualValues(t, 1, resp5.Payload.Semaphore.ActiveHoldersCount)
-		require.EqualValues(t, 1, resp5.Payload.Semaphore.ActiveHolds)
+		semaphore = getSemaphoreByName(t, core, namespaceId, "test_semaphore", now.Add(35*time.Minute))
+		require.EqualValues(t, 1, semaphore.ActiveHoldersCount)
+		require.EqualValues(t, 1, semaphore.ActiveHolds)
 
 		// T+65m: Get semaphore by name (all holders should have expired)
-		resp6, err := core.GetSemaphoreByName(&coreapis.GetSemaphoreByNameRequest{
-			Payload: &corepb.GetSemaphoreByNameRequest{
-				NamespaceId:   namespaceId,
-				SemaphoreName: "test_semaphore",
-				Now:           now.Add(65 * time.Minute).UnixNano(),
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp6)
-		require.Nil(t, resp6.ApplicationError)
-		require.NotNil(t, resp6.Payload)
-		require.NotNil(t, resp6.Payload.Semaphore)
-		require.EqualValues(t, 0, resp6.Payload.Semaphore.ActiveHoldersCount)
-		require.EqualValues(t, 0, resp6.Payload.Semaphore.ActiveHolds)
+		semaphore = getSemaphoreByName(t, core, namespaceId, "test_semaphore", now.Add(65*time.Minute))
+		require.EqualValues(t, 0, semaphore.ActiveHoldersCount)
+		require.EqualValues(t, 0, semaphore.ActiveHolds)
 	})
 
 	t.Run("get nonexistent semaphore by name", func(t *testing.T) {
@@ -517,19 +395,8 @@ func TestCore_GetSemaphoreByName(t *testing.T) {
 		}
 
 		// Try to get a nonexistent semaphore by name
-		resp1, err := core.GetSemaphoreByName(&coreapis.GetSemaphoreByNameRequest{
-			Payload: &corepb.GetSemaphoreByNameRequest{
-				NamespaceId:   namespaceId,
-				SemaphoreName: "nonexistent_semaphore",
-				Now:           now.UnixNano(),
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.Payload)
-		require.NotNil(t, resp1.ApplicationError)
-		require.Equal(t, monsterax.NotFound, resp1.ApplicationError.Code)
+		appErr := getSemaphoreByNameWithError(t, core, namespaceId, "nonexistent_semaphore", now)
+		require.Equal(t, monsterax.NotFound, appErr.Code)
 	})
 
 	t.Run("get semaphore by name from different namespace", func(t *testing.T) {
@@ -564,38 +431,14 @@ func TestCore_GetSemaphoreByName(t *testing.T) {
 		_ = createSemaphore(t, core, semaphore2Id, "test_semaphore", 3, now)
 
 		// Get semaphore from namespace 1
-		resp3, err := core.GetSemaphoreByName(&coreapis.GetSemaphoreByNameRequest{
-			Payload: &corepb.GetSemaphoreByNameRequest{
-				NamespaceId:   namespace1Id,
-				SemaphoreName: "test_semaphore",
-				Now:           now.UnixNano(),
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp3)
-		require.Nil(t, resp3.ApplicationError)
-		require.NotNil(t, resp3.Payload)
-		require.NotNil(t, resp3.Payload.Semaphore)
-		require.EqualValues(t, 5, resp3.Payload.Semaphore.Permits)
-		require.Equal(t, semaphore1Id, resp3.Payload.Semaphore.Id)
+		semaphore := getSemaphoreByName(t, core, namespace1Id, "test_semaphore", now)
+		require.EqualValues(t, 5, semaphore.Permits)
+		require.Equal(t, semaphore1Id, semaphore.Id)
 
 		// Get semaphore from namespace 2
-		resp4, err := core.GetSemaphoreByName(&coreapis.GetSemaphoreByNameRequest{
-			Payload: &corepb.GetSemaphoreByNameRequest{
-				NamespaceId:   namespace2Id,
-				SemaphoreName: "test_semaphore",
-				Now:           now.UnixNano(),
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp4)
-		require.Nil(t, resp4.ApplicationError)
-		require.NotNil(t, resp4.Payload)
-		require.NotNil(t, resp4.Payload.Semaphore)
-		require.EqualValues(t, 3, resp4.Payload.Semaphore.Permits)
-		require.Equal(t, semaphore2Id, resp4.Payload.Semaphore.Id)
+		semaphore = getSemaphoreByName(t, core, namespace2Id, "test_semaphore", now)
+		require.EqualValues(t, 3, semaphore.Permits)
+		require.Equal(t, semaphore2Id, semaphore.Id)
 	})
 }
 
@@ -618,26 +461,13 @@ func TestCore_CreateSemaphore(t *testing.T) {
 		}
 
 		// Try to create one more semaphore (should fail)
-		resp2, err := core.CreateSemaphore(&coreapis.CreateSemaphoreRequest{
-			Payload: &corepb.CreateSemaphoreRequest{
-				SemaphoreId: &corepb.SemaphoreId{
-					AccountId:   accountId,
-					NamespaceId: namespaceId,
-					SemaphoreId: rand.Uint64(),
-				},
-				Name:                              "test_semaphore_limit_exceeded",
-				Description:                       "test description limit exceeded",
-				Permits:                           2,
-				Now:                               now.UnixNano(),
-				MaxNumberOfSemaphoresPerNamespace: maxSemaphores,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp2)
-		require.Nil(t, resp2.Payload)
-		require.NotNil(t, resp2.ApplicationError)
-		require.Equal(t, monsterax.ResourceExhausted, resp2.ApplicationError.Code)
+		semaphoreId := &corepb.SemaphoreId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			SemaphoreId: rand.Uint64(),
+		}
+		appErr := createSemaphoreWithError(t, core, semaphoreId, "test_semaphore_limit_exceeded", 2, maxSemaphores, now)
+		require.Equal(t, monsterax.ResourceExhausted, appErr.Code)
 	})
 
 	t.Run("create semaphore with duplicate name", func(t *testing.T) {
@@ -660,22 +490,8 @@ func TestCore_CreateSemaphore(t *testing.T) {
 		_ = createSemaphore(t, core, semaphore1Id, "test_semaphore", 2, now)
 
 		// Try to create a second semaphore with the same name
-		resp2, err := core.CreateSemaphore(&coreapis.CreateSemaphoreRequest{
-			Payload: &corepb.CreateSemaphoreRequest{
-				SemaphoreId:                       semaphore2Id,
-				Name:                              "test_semaphore",
-				Description:                       "duplicate description",
-				Permits:                           3,
-				Now:                               now.UnixNano(),
-				MaxNumberOfSemaphoresPerNamespace: 100,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp2)
-		require.Nil(t, resp2.Payload)
-		require.NotNil(t, resp2.ApplicationError)
-		require.Equal(t, monsterax.AlreadyExists, resp2.ApplicationError.Code)
+		appErr := createSemaphoreWithError(t, core, semaphore2Id, "test_semaphore", 3, 100, now)
+		require.Equal(t, monsterax.AlreadyExists, appErr.Code)
 	})
 }
 
@@ -711,17 +527,8 @@ func TestCore_DeleteSemaphore(t *testing.T) {
 		require.NotNil(t, resp3.Payload)
 
 		// T+3m: Verify semaphore no longer exists
-		resp4, err := core.GetSemaphore(&coreapis.GetSemaphoreRequest{
-			Payload: &corepb.GetSemaphoreRequest{
-				SemaphoreId: semaphoreId,
-				Now:         now.Add(3 * time.Minute).UnixNano(),
-			},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp4)
-		require.Nil(t, resp4.Payload)
-		require.NotNil(t, resp4.ApplicationError)
-		require.Equal(t, monsterax.NotFound, resp4.ApplicationError.Code)
+		appErr := getSemaphoreWithError(t, core, semaphoreId, now.Add(3*time.Minute))
+		require.Equal(t, monsterax.NotFound, appErr.Code)
 	})
 
 	t.Run("delete nonexistent semaphore", func(t *testing.T) {
@@ -794,17 +601,8 @@ func TestCore_DeleteSemaphore(t *testing.T) {
 		require.NotNil(t, resp4.Payload)
 
 		// Verify semaphore is gone
-		resp5, err := core.GetSemaphore(&coreapis.GetSemaphoreRequest{
-			Payload: &corepb.GetSemaphoreRequest{
-				SemaphoreId: semaphoreId,
-				Now:         now.Add(30 * time.Minute).UnixNano(),
-			},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp5)
-		require.Nil(t, resp5.Payload)
-		require.NotNil(t, resp5.ApplicationError)
-		require.Equal(t, monsterax.NotFound, resp5.ApplicationError.Code)
+		appErr := getSemaphoreWithError(t, core, semaphoreId, now.Add(30*time.Minute))
+		require.Equal(t, monsterax.NotFound, appErr.Code)
 	})
 }
 
@@ -834,22 +632,11 @@ func TestCore_ListSemaphoreHolders(t *testing.T) {
 		}
 
 		// List all holders
-		resp3, err := core.ListSemaphoreHolders(&coreapis.ListSemaphoreHoldersRequest{
-			Payload: &corepb.ListSemaphoreHoldersRequest{
-				NamespaceId:   namespaceId,
-				SemaphoreName: "test_semaphore",
-				Limit:         100,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp3)
-		require.Nil(t, resp3.ApplicationError)
-		require.NotNil(t, resp3.Payload)
-		require.Len(t, resp3.Payload.Holders, 3)
+		list := listSemaphoreHolders(t, core, namespaceId, "test_semaphore")
+		require.Len(t, list.Holders, 3)
 
 		// Verify holder lease IDs (we can't easily verify by process name anymore since it's via lease)
-		for _, holder := range resp3.Payload.Holders {
+		for _, holder := range list.Holders {
 			require.Equal(t, namespaceId.AccountId, holder.Id.AccountId)
 			require.Equal(t, namespaceId.NamespaceId, holder.Id.NamespaceId)
 			require.Equal(t, semaphoreId.SemaphoreId, holder.Id.SemaphoreId)
@@ -942,20 +729,9 @@ func TestCore_ListSemaphoreHolders(t *testing.T) {
 		_ = createSemaphore(t, core, semaphoreId, "test_semaphore", 5, now)
 
 		// List holders (should be empty)
-		resp2, err := core.ListSemaphoreHolders(&coreapis.ListSemaphoreHoldersRequest{
-			Payload: &corepb.ListSemaphoreHoldersRequest{
-				NamespaceId:   namespaceId,
-				SemaphoreName: "test_semaphore",
-				Limit:         100,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp2)
-		require.Nil(t, resp2.ApplicationError)
-		require.NotNil(t, resp2.Payload)
-		require.Len(t, resp2.Payload.Holders, 0)
-		require.Nil(t, resp2.Payload.NextPaginationToken)
+		list := listSemaphoreHolders(t, core, namespaceId, "test_semaphore")
+		require.Len(t, list.Holders, 0)
+		require.Nil(t, list.NextPaginationToken)
 	})
 
 	t.Run("list holders for nonexistent semaphore", func(t *testing.T) {
@@ -1018,23 +794,12 @@ func TestCore_ListSemaphoreHolders(t *testing.T) {
 		}
 
 		// List all holders
-		resp3, err := core.ListSemaphoreHolders(&coreapis.ListSemaphoreHoldersRequest{
-			Payload: &corepb.ListSemaphoreHoldersRequest{
-				NamespaceId:   namespaceId,
-				SemaphoreName: "test_semaphore",
-				Limit:         100,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp3)
-		require.Nil(t, resp3.ApplicationError)
-		require.NotNil(t, resp3.Payload)
-		require.Len(t, resp3.Payload.Holders, 3)
+		list := listSemaphoreHolders(t, core, namespaceId, "test_semaphore")
+		require.Len(t, list.Holders, 3)
 
 		// Verify weights - we can't easily map process_id to weight now since holder stores process_id not lease_id
 		// Just verify that all holders have valid weights
-		for _, holder := range resp3.Payload.Holders {
+		for _, holder := range list.Holders {
 			require.True(t, holder.Weight >= 1 && holder.Weight <= 3, "Invalid weight: %d", holder.Weight)
 		}
 	})
@@ -1070,23 +835,10 @@ func TestCore_ListSemaphoreHolders(t *testing.T) {
 		_ = releaseSemaphore(t, core, namespaceId, "test_semaphore", leases[3].Id, now.Add(time.Minute))
 
 		// List remaining holders
-		resp5, err := core.ListSemaphoreHolders(&coreapis.ListSemaphoreHoldersRequest{
-			Payload: &corepb.ListSemaphoreHoldersRequest{
-				NamespaceId:   namespaceId,
-				SemaphoreName: "test_semaphore",
-				Limit:         100,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp5)
-		require.Nil(t, resp5.ApplicationError)
-		require.NotNil(t, resp5.Payload)
-		require.Len(t, resp5.Payload.Holders, 3)
+		list := listSemaphoreHolders(t, core, namespaceId, "test_semaphore")
 
 		// Verify remaining holders - we expect 3 holders after releasing 2
-		// We can't verify by lease_id since holder.Id uses process_id, but we can verify the count
-		require.Len(t, resp5.Payload.Holders, 3)
+		require.Len(t, list.Holders, 3)
 	})
 }
 
@@ -1332,18 +1084,8 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 
 		// Verify that semaphores in the deleted namespace are no longer accessible
 		for _, semaphoreId := range semaphoreIds {
-			resp8, err := core.GetSemaphore(&coreapis.GetSemaphoreRequest{
-				Payload: &corepb.GetSemaphoreRequest{
-					SemaphoreId: semaphoreId,
-					Now:         now.UnixNano(),
-				},
-			})
-
-			require.NoError(t, err)
-			require.NotNil(t, resp8)
-			require.Nil(t, resp8.Payload)
-			require.NotNil(t, resp8.ApplicationError)
-			require.Equal(t, monsterax.NotFound, resp8.ApplicationError.Code)
+			appErr := getSemaphoreWithError(t, core, semaphoreId, now)
+			require.Equal(t, monsterax.NotFound, appErr.Code)
 		}
 
 		// Verify the different namespace semaphore still exists after GC
@@ -1627,19 +1369,9 @@ func TestCore_RevokeSemaphoreLease(t *testing.T) {
 
 		// Verify that all semaphores are released
 		for i := range numSemaphores {
-			resp4, err := core.GetSemaphoreByName(&coreapis.GetSemaphoreByNameRequest{
-				Payload: &corepb.GetSemaphoreByNameRequest{
-					NamespaceId:   namespaceId,
-					SemaphoreName: fmt.Sprintf("test_semaphore_%d", i),
-					Now:           now.UnixNano(),
-				},
-			})
-			require.NoError(t, err)
-			require.NotNil(t, resp4)
-			require.Nil(t, resp4.ApplicationError)
-			require.NotNil(t, resp4.Payload)
-			require.EqualValues(t, 0, resp4.Payload.Semaphore.ActiveHoldersCount)
-			require.EqualValues(t, 0, resp4.Payload.Semaphore.ActiveHolds)
+			semaphore := getSemaphoreByName(t, core, namespaceId, fmt.Sprintf("test_semaphore_%d", i), now)
+			require.EqualValues(t, 0, semaphore.ActiveHoldersCount)
+			require.EqualValues(t, 0, semaphore.ActiveHolds)
 		}
 
 		// Verify that counters are updated correctly
@@ -1706,19 +1438,9 @@ func TestCore_RevokeSemaphoreLease(t *testing.T) {
 		require.NotNil(t, resp4.Payload)
 
 		// Verify that the semaphore is still held by lease2
-		resp5, err := core.GetSemaphoreByName(&coreapis.GetSemaphoreByNameRequest{
-			Payload: &corepb.GetSemaphoreByNameRequest{
-				NamespaceId:   namespaceId,
-				SemaphoreName: "shared_semaphore",
-				Now:           now.UnixNano(),
-			},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp5)
-		require.Nil(t, resp5.ApplicationError)
-		require.NotNil(t, resp5.Payload)
-		require.EqualValues(t, 1, resp5.Payload.Semaphore.ActiveHoldersCount)
-		require.EqualValues(t, 3, resp5.Payload.Semaphore.ActiveHolds)
+		semaphore = getSemaphoreByName(t, core, namespaceId, "shared_semaphore", now)
+		require.EqualValues(t, 1, semaphore.ActiveHoldersCount)
+		require.EqualValues(t, 3, semaphore.ActiveHolds)
 
 		// Revoke lease2
 		resp6, err := core.RevokeSemaphoreLease(&coreapis.RevokeSemaphoreLeaseRequest{
@@ -1733,19 +1455,9 @@ func TestCore_RevokeSemaphoreLease(t *testing.T) {
 		require.NotNil(t, resp6.Payload)
 
 		// Verify that the semaphore is now released
-		resp7, err := core.GetSemaphoreByName(&coreapis.GetSemaphoreByNameRequest{
-			Payload: &corepb.GetSemaphoreByNameRequest{
-				NamespaceId:   namespaceId,
-				SemaphoreName: "shared_semaphore",
-				Now:           now.UnixNano(),
-			},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp7)
-		require.Nil(t, resp7.ApplicationError)
-		require.NotNil(t, resp7.Payload)
-		require.EqualValues(t, 0, resp7.Payload.Semaphore.ActiveHoldersCount)
-		require.EqualValues(t, 0, resp7.Payload.Semaphore.ActiveHolds)
+		semaphore = getSemaphoreByName(t, core, namespaceId, "shared_semaphore", now)
+		require.EqualValues(t, 0, semaphore.ActiveHoldersCount)
+		require.EqualValues(t, 0, semaphore.ActiveHolds)
 	})
 }
 
@@ -1803,19 +1515,9 @@ func TestCore_RefreshSemaphoreLease(t *testing.T) {
 
 		// Verify that all semaphores are released
 		for i := range numSemaphores {
-			resp4, err := core.GetSemaphoreByName(&coreapis.GetSemaphoreByNameRequest{
-				Payload: &corepb.GetSemaphoreByNameRequest{
-					NamespaceId:   namespaceId,
-					SemaphoreName: fmt.Sprintf("test_semaphore_%d", i),
-					Now:           futureTime.UnixNano(),
-				},
-			})
-			require.NoError(t, err)
-			require.NotNil(t, resp4)
-			require.Nil(t, resp4.ApplicationError)
-			require.NotNil(t, resp4.Payload)
-			require.EqualValues(t, 0, resp4.Payload.Semaphore.ActiveHoldersCount)
-			require.EqualValues(t, 0, resp4.Payload.Semaphore.ActiveHolds)
+			semaphore := getSemaphoreByName(t, core, namespaceId, fmt.Sprintf("test_semaphore_%d", i), futureTime)
+			require.EqualValues(t, 0, semaphore.ActiveHoldersCount)
+			require.EqualValues(t, 0, semaphore.ActiveHolds)
 		}
 
 		// Verify that counters are updated correctly (semaphores still exist, but lease is gone)
@@ -2297,6 +1999,26 @@ func releaseSemaphore(t *testing.T, core *Core, namespaceId *corepb.NamespaceId,
 	return resp.Payload.Semaphore
 }
 
+func releaseSemaphoreWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, semaphoreName string, leaseId *corepb.LeaseId, now time.Time) *monsterax.Error {
+	t.Helper()
+
+	resp, err := core.ReleaseSemaphore(&coreapis.ReleaseSemaphoreRequest{
+		Payload: &corepb.ReleaseSemaphoreRequest{
+			NamespaceId:   namespaceId,
+			SemaphoreName: semaphoreName,
+			Now:           now.UnixNano(),
+			LeaseId:       leaseId.LeaseId,
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.NotNil(t, resp.ApplicationError)
+	require.Nil(t, resp.Payload)
+
+	return resp.ApplicationError
+}
+
 func createSemaphore(t *testing.T, core *Core, semaphoreId *corepb.SemaphoreId, semaphoreName string, permits uint64, now time.Time) *corepb.Semaphore {
 	t.Helper()
 
@@ -2326,6 +2048,28 @@ func createSemaphore(t *testing.T, core *Core, semaphoreId *corepb.SemaphoreId, 
 	return resp.Payload.Semaphore
 }
 
+func createSemaphoreWithError(t *testing.T, core *Core, semaphoreId *corepb.SemaphoreId, semaphoreName string, permits uint64, maxNumberOfSemaphoresPerNamespace int64, now time.Time) *monsterax.Error {
+	t.Helper()
+
+	resp, err := core.CreateSemaphore(&coreapis.CreateSemaphoreRequest{
+		Payload: &corepb.CreateSemaphoreRequest{
+			SemaphoreId:                       semaphoreId,
+			Name:                              semaphoreName,
+			Description:                       "test description",
+			Permits:                           permits,
+			Now:                               now.UnixNano(),
+			MaxNumberOfSemaphoresPerNamespace: maxNumberOfSemaphoresPerNamespace,
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.NotNil(t, resp.ApplicationError)
+	require.Nil(t, resp.Payload)
+
+	return resp.ApplicationError
+}
+
 func getSemaphore(t *testing.T, core *Core, semaphoreId *corepb.SemaphoreId, now time.Time) *corepb.Semaphore {
 	t.Helper()
 
@@ -2343,4 +2087,144 @@ func getSemaphore(t *testing.T, core *Core, semaphoreId *corepb.SemaphoreId, now
 	require.NotNil(t, resp.Payload.Semaphore)
 
 	return resp.Payload.Semaphore
+}
+
+func getSemaphoreWithError(t *testing.T, core *Core, semaphoreId *corepb.SemaphoreId, now time.Time) *monsterax.Error {
+	t.Helper()
+
+	resp, err := core.GetSemaphore(&coreapis.GetSemaphoreRequest{
+		Payload: &corepb.GetSemaphoreRequest{
+			SemaphoreId: semaphoreId,
+			Now:         now.UnixNano(),
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.NotNil(t, resp.ApplicationError)
+	require.Nil(t, resp.Payload)
+
+	return resp.ApplicationError
+}
+
+func getSemaphoreByName(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, semaphoreName string, now time.Time) *corepb.Semaphore {
+	t.Helper()
+
+	resp, err := core.GetSemaphoreByName(&coreapis.GetSemaphoreByNameRequest{
+		Payload: &corepb.GetSemaphoreByNameRequest{
+			NamespaceId:   namespaceId,
+			SemaphoreName: semaphoreName,
+			Now:           now.UnixNano(),
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+	require.NotNil(t, resp.Payload.Semaphore)
+
+	return resp.Payload.Semaphore
+}
+
+func getSemaphoreByNameWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, semaphoreName string, now time.Time) *monsterax.Error {
+	t.Helper()
+
+	resp, err := core.GetSemaphoreByName(&coreapis.GetSemaphoreByNameRequest{
+		Payload: &corepb.GetSemaphoreByNameRequest{
+			NamespaceId:   namespaceId,
+			SemaphoreName: semaphoreName,
+			Now:           now.UnixNano(),
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.NotNil(t, resp.ApplicationError)
+	require.Nil(t, resp.Payload)
+
+	return resp.ApplicationError
+}
+
+func acquireSemaphoreWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, leaseId *corepb.LeaseId, semaphoreName string, weight uint64, now time.Time) *monsterax.Error {
+	t.Helper()
+
+	resp, err := core.AcquireSemaphore(&coreapis.AcquireSemaphoreRequest{
+		Payload: &corepb.AcquireSemaphoreRequest{
+			NamespaceId:   namespaceId,
+			SemaphoreName: semaphoreName,
+			Weight:        weight,
+			Now:           now.UnixNano(),
+			LeaseId:       leaseId.LeaseId,
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.Payload)
+	require.NotNil(t, resp.ApplicationError)
+
+	return resp.ApplicationError
+}
+
+func listSemaphoreHolders(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, semaphoreName string) *corepb.ListSemaphoreHoldersResponse {
+	t.Helper()
+
+	resp, err := core.ListSemaphoreHolders(&coreapis.ListSemaphoreHoldersRequest{
+		Payload: &corepb.ListSemaphoreHoldersRequest{
+			NamespaceId:   namespaceId,
+			SemaphoreName: semaphoreName,
+			Limit:         100,
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+
+	return resp.Payload
+}
+
+func updateSemaphore(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, semaphoreName string, description string, permits uint64, now time.Time) *corepb.Semaphore {
+	t.Helper()
+
+	resp, err := core.UpdateSemaphore(&coreapis.UpdateSemaphoreRequest{
+		Payload: &corepb.UpdateSemaphoreRequest{
+			NamespaceId:   namespaceId,
+			SemaphoreName: semaphoreName,
+			Description:   description,
+			Permits:       permits,
+			Now:           now.UnixNano(),
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+	require.NotNil(t, resp.Payload.Semaphore)
+
+	return resp.Payload.Semaphore
+}
+
+func updateSemaphoreWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, semaphoreName string, description string, permits uint64, now time.Time) *monsterax.Error {
+	t.Helper()
+
+	resp, err := core.UpdateSemaphore(&coreapis.UpdateSemaphoreRequest{
+		Payload: &corepb.UpdateSemaphoreRequest{
+			NamespaceId:   namespaceId,
+			SemaphoreName: semaphoreName,
+			Description:   description,
+			Permits:       permits,
+			Now:           now.UnixNano(),
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.Payload)
+	require.NotNil(t, resp.ApplicationError)
+
+	return resp.ApplicationError
 }

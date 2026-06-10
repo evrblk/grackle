@@ -7,18 +7,18 @@ import (
 )
 
 const (
-	maxLimit     = 250
-	defaultLimit = 100
+	DefaultPaginationLimit = 100
+	MaxPaginationLimit     = 250
 )
 
 func GetLimitWithDefaults(requestedLimit int) int {
-	if requestedLimit > 0 && requestedLimit < maxLimit {
+	if requestedLimit > 0 && requestedLimit < MaxPaginationLimit {
 		return requestedLimit
 	} else if requestedLimit <= 0 {
-		return defaultLimit
+		return DefaultPaginationLimit
 	}
 
-	return maxLimit
+	return MaxPaginationLimit
 }
 
 func CoreToMonstera(paginationToken *corepb.PaginationToken) *monsterax.PaginationToken {

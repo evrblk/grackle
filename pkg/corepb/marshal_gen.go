@@ -810,58 +810,6 @@ func (m *GetWaitGroupResponse) MarshalBinary() (data []byte, err error) {
 	return m.MarshalVT()
 }
 
-// GrackleReadRequest
-
-var _ encoding.BinaryMarshaler = (*GrackleReadRequest)(nil)
-var _ encoding.BinaryUnmarshaler = (*GrackleReadRequest)(nil)
-
-func (m *GrackleReadRequest) UnmarshalBinary(data []byte) error {
-	return m.UnmarshalVT(data)
-}
-
-func (m *GrackleReadRequest) MarshalBinary() (data []byte, err error) {
-	return m.MarshalVT()
-}
-
-// GrackleReadResponse
-
-var _ encoding.BinaryMarshaler = (*GrackleReadResponse)(nil)
-var _ encoding.BinaryUnmarshaler = (*GrackleReadResponse)(nil)
-
-func (m *GrackleReadResponse) UnmarshalBinary(data []byte) error {
-	return m.UnmarshalVT(data)
-}
-
-func (m *GrackleReadResponse) MarshalBinary() (data []byte, err error) {
-	return m.MarshalVT()
-}
-
-// GrackleUpdateRequest
-
-var _ encoding.BinaryMarshaler = (*GrackleUpdateRequest)(nil)
-var _ encoding.BinaryUnmarshaler = (*GrackleUpdateRequest)(nil)
-
-func (m *GrackleUpdateRequest) UnmarshalBinary(data []byte) error {
-	return m.UnmarshalVT(data)
-}
-
-func (m *GrackleUpdateRequest) MarshalBinary() (data []byte, err error) {
-	return m.MarshalVT()
-}
-
-// GrackleUpdateResponse
-
-var _ encoding.BinaryMarshaler = (*GrackleUpdateResponse)(nil)
-var _ encoding.BinaryUnmarshaler = (*GrackleUpdateResponse)(nil)
-
-func (m *GrackleUpdateResponse) UnmarshalBinary(data []byte) error {
-	return m.UnmarshalVT(data)
-}
-
-func (m *GrackleUpdateResponse) MarshalBinary() (data []byte, err error) {
-	return m.MarshalVT()
-}
-
 // Lease
 
 var _ encoding.BinaryMarshaler = (*Lease)(nil)

@@ -9,16 +9,16 @@ import (
 	monsterax "github.com/evrblk/monstera/x"
 	"github.com/evrblk/yellowstone-common/workers"
 
+	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/corepb"
-	"github.com/evrblk/grackle/pkg/monsteragen"
 )
 
 type GrackleSemaphoresGCWorker struct {
-	coreApiClient monsteragen.GrackleCoreApi
+	coreApiClient coreapis.GrackleClientApi
 	worker        *workers.IntervalWorker
 }
 
-func NewGrackleSemaphoresGCWorker(coreApiClient monsteragen.GrackleCoreApi) *GrackleSemaphoresGCWorker {
+func NewGrackleSemaphoresGCWorker(coreApiClient coreapis.GrackleClientApi) *GrackleSemaphoresGCWorker {
 	return &GrackleSemaphoresGCWorker{
 		coreApiClient: coreApiClient,
 		worker:        workers.NewIntervalWorker(time.Duration(5) * time.Second),

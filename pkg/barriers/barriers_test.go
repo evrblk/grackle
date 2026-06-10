@@ -39,8 +39,9 @@ func TestBarriersTable_Get(t *testing.T) {
 
 		// Create barrier
 		txn := badgerStore.Update()
-		err = barriersTable.Create(txn, barrier)
+		appErr, err := barriersTable.Create(txn, barrier)
 		require.NoError(t, err)
+		require.Nil(t, appErr)
 		err = txn.Commit()
 		require.NoError(t, err)
 
@@ -117,8 +118,9 @@ func TestBarriersTable_GetByName(t *testing.T) {
 
 		// Create barrier
 		txn := badgerStore.Update()
-		err = barriersTable.Create(txn, barrier)
+		appErr, err := barriersTable.Create(txn, barrier)
 		require.NoError(t, err)
+		require.Nil(t, appErr)
 		err = txn.Commit()
 		require.NoError(t, err)
 
@@ -180,8 +182,9 @@ func TestBarriersTable_Create(t *testing.T) {
 		}
 
 		txn := badgerStore.Update()
-		err = barriersTable.Create(txn, barrier)
+		appErr, err := barriersTable.Create(txn, barrier)
 		require.NoError(t, err)
+		require.Nil(t, appErr)
 		err = txn.Commit()
 		require.NoError(t, err)
 
@@ -222,8 +225,9 @@ func TestBarriersTable_Create(t *testing.T) {
 
 		// Create first barrier
 		txn := badgerStore.Update()
-		err = barriersTable.Create(txn, barrier1)
+		appErr, err := barriersTable.Create(txn, barrier1)
 		require.NoError(t, err)
+		require.Nil(t, appErr)
 		err = txn.Commit()
 		require.NoError(t, err)
 
@@ -244,9 +248,10 @@ func TestBarriersTable_Create(t *testing.T) {
 		}
 
 		txn2 := badgerStore.Update()
-		err = barriersTable.Create(txn2, barrier2)
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "already exists")
+		appErr, err = barriersTable.Create(txn2, barrier2)
+		require.NoError(t, err)
+		require.NotNil(t, appErr)
+		require.Contains(t, appErr.Message, "already exists")
 		txn2.Discard()
 	})
 
@@ -278,8 +283,9 @@ func TestBarriersTable_Create(t *testing.T) {
 		}
 
 		txn := badgerStore.Update()
-		err = barriersTable.Create(txn, barrier1)
+		appErr, err := barriersTable.Create(txn, barrier1)
 		require.NoError(t, err)
+		require.Nil(t, appErr)
 		err = txn.Commit()
 		require.NoError(t, err)
 
@@ -300,8 +306,9 @@ func TestBarriersTable_Create(t *testing.T) {
 		}
 
 		txn2 := badgerStore.Update()
-		err = barriersTable.Create(txn2, barrier2)
+		appErr, err = barriersTable.Create(txn2, barrier2)
 		require.NoError(t, err)
+		require.Nil(t, appErr)
 		err = txn2.Commit()
 		require.NoError(t, err)
 	})
@@ -335,8 +342,9 @@ func TestBarriersTable_Update(t *testing.T) {
 
 		// Create barrier
 		txn := badgerStore.Update()
-		err = barriersTable.Create(txn, barrier)
+		appErr, err := barriersTable.Create(txn, barrier)
 		require.NoError(t, err)
+		require.Nil(t, appErr)
 		err = txn.Commit()
 		require.NoError(t, err)
 
@@ -389,8 +397,9 @@ func TestBarriersTable_Delete(t *testing.T) {
 
 		// Create barrier
 		txn := badgerStore.Update()
-		err = barriersTable.Create(txn, barrier)
+		appErr, err := barriersTable.Create(txn, barrier)
 		require.NoError(t, err)
+		require.Nil(t, appErr)
 		err = txn.Commit()
 		require.NoError(t, err)
 
@@ -484,8 +493,9 @@ func TestBarriersTable_List(t *testing.T) {
 				CreatedAt:         12345,
 				UpdatedAt:         12345,
 			}
-			err := barriersTable.Create(txn, barrier)
+			appErr, err := barriersTable.Create(txn, barrier)
 			require.NoError(t, err)
+			require.Nil(t, appErr)
 		}
 		err = txn.Commit()
 		require.NoError(t, err)
@@ -528,8 +538,9 @@ func TestBarriersTable_List(t *testing.T) {
 				CreatedAt:         12345,
 				UpdatedAt:         12345,
 			}
-			err := barriersTable.Create(txn, barrier)
+			appErr, err := barriersTable.Create(txn, barrier)
 			require.NoError(t, err)
+			require.Nil(t, appErr)
 		}
 
 		// Create barriers in namespace 2
@@ -548,8 +559,9 @@ func TestBarriersTable_List(t *testing.T) {
 				CreatedAt:         12345,
 				UpdatedAt:         12345,
 			}
-			err := barriersTable.Create(txn, barrier)
+			appErr, err := barriersTable.Create(txn, barrier)
 			require.NoError(t, err)
+			require.Nil(t, appErr)
 		}
 		err = txn.Commit()
 		require.NoError(t, err)
@@ -594,8 +606,9 @@ func TestBarriersTable_List(t *testing.T) {
 				CreatedAt:         12345,
 				UpdatedAt:         12345,
 			}
-			err := barriersTable.Create(txn, barrier)
+			appErr, err := barriersTable.Create(txn, barrier)
 			require.NoError(t, err)
+			require.Nil(t, appErr)
 		}
 		err = txn.Commit()
 		require.NoError(t, err)
