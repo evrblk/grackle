@@ -101,6 +101,18 @@ func (c *Core) Close() {
 // Returns a ResourceExhausted application error when the namespace has reached
 // MaxNumberOfSemaphoresPerNamespace, or AlreadyExists when a semaphore with the same name exists.
 func (c *Core) CreateSemaphore(req *coreapis.CreateSemaphoreRequest) (*coreapis.CreateSemaphoreResponse, error) {
+	if req.Payload.Permits == 0 {
+		return &coreapis.CreateSemaphoreResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.InvalidArgument,
+				"permits must be greater than 0",
+				map[string]string{
+					"permits": fmt.Sprintf("%d", req.Payload.Permits),
+				},
+			),
+		}, nil
+	}
+
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -187,7 +199,7 @@ func (c *Core) UpdateSemaphore(req *coreapis.UpdateSemaphoreRequest) (*coreapis.
 	}
 
 	// Check expired holders
-	updatedSemaphore, err := c.deleteExpiredSemaphoreholders(txn, semaphore, req.Payload.Now)
+	updatedSemaphore, _, err := c.deleteExpiredSemaphoreHolders(txn, semaphore, req.Payload.Now)
 	if err != nil {
 		return nil, err
 	}
@@ -206,6 +218,26 @@ func (c *Core) UpdateSemaphore(req *coreapis.UpdateSemaphoreRequest) (*coreapis.
 	updatedSemaphore.Description = req.Payload.Description
 	updatedSemaphore.Permits = req.Payload.Permits
 	updatedSemaphore.UpdatedAt = req.Payload.Now
+
+	// Reconcile expirationRecords when the prune changed which holder expires first. Without
+	// this, the global expiration index keeps a row pointing at the old earliest timestamp;
+	// the GC sweep will revisit it forever and the namespace's lease-counter accounting can
+	// drift.
+	if semaphore.EarliestHolderExpiresAt != updatedSemaphore.EarliestHolderExpiresAt {
+		if semaphore.EarliestHolderExpiresAt != 0 {
+			err = c.expirationRecords.Delete(txn, semaphore.EarliestHolderExpiresAt, semaphore.Id)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		if updatedSemaphore.EarliestHolderExpiresAt != 0 {
+			err = c.expirationRecords.Add(txn, updatedSemaphore.EarliestHolderExpiresAt, semaphore.Id)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
 
 	err = c.semaphores.Update(txn, updatedSemaphore)
 	if err != nil {
@@ -317,7 +349,7 @@ func (c *Core) GetSemaphore(req *coreapis.GetSemaphoreRequest) (*coreapis.GetSem
 	}
 
 	// Check expired holders
-	updatedSemaphore, err := c.deleteExpiredSemaphoreholders(txn, semaphore, req.Payload.Now)
+	updatedSemaphore, _, err := c.deleteExpiredSemaphoreHolders(txn, semaphore, req.Payload.Now)
 	if err != nil {
 		return nil, err
 	}
@@ -383,7 +415,7 @@ func (c *Core) GetSemaphoreByName(req *coreapis.GetSemaphoreByNameRequest) (*cor
 	}
 
 	// Check expired holders
-	updatedSemaphore, err := c.deleteExpiredSemaphoreholders(txn, semaphore, req.Payload.Now)
+	updatedSemaphore, _, err := c.deleteExpiredSemaphoreHolders(txn, semaphore, req.Payload.Now)
 	if err != nil {
 		return nil, err
 	}
@@ -504,9 +536,9 @@ func (c *Core) ListSemaphores(req *coreapis.ListSemaphoresRequest) (*coreapis.Li
 // check so an expired holder's permits become available immediately.
 // Returns Payload.Success=false (without an application error) when the request is valid but
 // permits are unavailable. Returns NotFound application errors for missing/expired leases or a
-// missing semaphore, and InvalidArgument when Weight <= 0.
+// missing semaphore, and InvalidArgument when Weight == 0.
 func (c *Core) AcquireSemaphore(req *coreapis.AcquireSemaphoreRequest) (*coreapis.AcquireSemaphoreResponse, error) {
-	if req.Payload.Weight <= 0 {
+	if req.Payload.Weight == 0 {
 		return &coreapis.AcquireSemaphoreResponse{
 			ApplicationError: monsterax.NewErrorWithContext(
 				monsterax.InvalidArgument,
@@ -575,7 +607,7 @@ func (c *Core) AcquireSemaphore(req *coreapis.AcquireSemaphoreRequest) (*coreapi
 	}
 
 	// Check expired holders
-	updatedSemaphore, err := c.deleteExpiredSemaphoreholders(txn, semaphore, req.Payload.Now)
+	updatedSemaphore, _, err := c.deleteExpiredSemaphoreHolders(txn, semaphore, req.Payload.Now)
 	if err != nil {
 		return nil, err
 	}
@@ -776,7 +808,7 @@ func (c *Core) ReleaseSemaphore(req *coreapis.ReleaseSemaphoreRequest) (*coreapi
 	}
 
 	// Check expired holders
-	updatedSemaphore, err := c.deleteExpiredSemaphoreholders(txn, semaphore, req.Payload.Now)
+	updatedSemaphore, _, err := c.deleteExpiredSemaphoreHolders(txn, semaphore, req.Payload.Now)
 	if err != nil {
 		return nil, err
 	}
@@ -917,6 +949,7 @@ func (c *Core) RunSemaphoresGarbageCollection(req *coreapis.RunSemaphoresGarbage
 	if visited < req.Payload.MaxVisitedSemaphores {
 		// Update semaphores with expired holders
 		err = c.expirationRecords.List(txn, 0, req.Payload.Now, func(record *corepb.SemaphoresExpirationRecord) (bool, error) {
+			// One visit for the semaphore row itself; the pruned holders are counted below.
 			visited++
 
 			// Get the semaphore
@@ -934,10 +967,14 @@ func (c *Core) RunSemaphoresGarbageCollection(req *coreapis.RunSemaphoresGarbage
 				}
 			}
 
-			updatedSemaphore, err := c.deleteExpiredSemaphoreholders(txn, semaphore, req.Payload.Now)
+			updatedSemaphore, expiredCount, err := c.deleteExpiredSemaphoreHolders(txn, semaphore, req.Payload.Now)
 			if err != nil {
 				return false, err
 			}
+			// Credit every pruned holder against the budget. The transaction size grows by
+			// roughly one holder row + one lease-index entry per expired holder, so
+			// under-counting here is the dominant gap when a semaphore has many holders.
+			visited += int64(expiredCount)
 
 			// If semaphore still has holders it will have non zero expiration time
 			if updatedSemaphore.EarliestHolderExpiresAt != 0 {
@@ -954,6 +991,25 @@ func (c *Core) RunSemaphoresGarbageCollection(req *coreapis.RunSemaphoresGarbage
 			}
 
 			// Stop if we have visited enough locks
+			return visited < req.Payload.MaxVisitedSemaphores, nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if visited < req.Payload.MaxVisitedSemaphores {
+		// Reap expired leases. Each released holder counts against MaxVisitedSemaphores;
+		// if the budget runs out mid-lease, revokeLeaseInTransactionBounded reports
+		// drained=false and the lease row is left in place for a subsequent GC pass.
+		err = c.leases.ListByExpiration(txn, 0, req.Payload.Now, func(lease *corepb.Lease) (bool, error) {
+			drained, err := c.revokeLeaseInTransactionBounded(txn, lease, req.Payload.Now, &visited, req.Payload.MaxVisitedSemaphores)
+			if err != nil {
+				return false, err
+			}
+			if !drained {
+				return false, nil
+			}
 			return visited < req.Payload.MaxVisitedSemaphores, nil
 		})
 		if err != nil {
@@ -1429,31 +1485,30 @@ func (c *Core) refreshLeaseHolders(txn *store.Txn, lease *corepb.Lease) error {
 }
 
 // revokeLeaseInTransaction revokes a lease within an existing transaction by releasing all
-// semaphores held by the lease and cleaning up the lease and counters.
+// semaphores held by the lease and cleaning up the lease and counters. The work is unbounded —
+// every holder owned by the lease is released before the function returns. Callers that need
+// a visit budget (e.g. GC) should use revokeLeaseInTransactionBounded directly.
 func (c *Core) revokeLeaseInTransaction(txn *store.Txn, lease *corepb.Lease, now int64) error {
-	// Get counters for this namespace
-	counters, err := c.counters.Get(txn, lease.Id.AccountId, lease.Id.NamespaceId)
-	if err != nil {
-		return err
-	}
+	visited := int64(0)
+	_, err := c.revokeLeaseInTransactionBounded(txn, lease, now, &visited, math.MaxInt64)
+	return err
+}
 
-	// Release all semaphores held by this lease, paginating through all pages
+// revokeLeaseInTransactionBounded releases the lease's semaphore holders, counting each holder
+// against *visited. If *visited reaches maxVisited before every holder is drained, the function
+// returns (false, nil) with the lease row still present — a later GC pass will resume the work.
+// Once every holder has been released the lease row is deleted and the namespace's lease counter
+// is decremented (a missing counter row is tolerated, since the namespace may already have been
+// GC'd while leases were still in flight), and the function returns (true, nil).
+func (c *Core) revokeLeaseInTransactionBounded(txn *store.Txn, lease *corepb.Lease, now int64, visited *int64, maxVisited int64) (bool, error) {
 	var paginationToken *corepb.PaginationToken
 	for {
-		// List semaphores held by this lease
 		semaphoresResult, err := c.semaphores.ListByLeaseId(txn, lease.Id, paginationToken, 1000)
 		if err != nil {
-			return err
+			return false, err
 		}
 
-		// If no semaphores found, we're done
-		if len(semaphoresResult.semaphores) == 0 && semaphoresResult.nextPaginationToken == nil {
-			break
-		}
-
-		// Release semaphores on this page
 		for _, semaphore := range semaphoresResult.semaphores {
-			// Get the holder for this lease
 			holderId := &corepb.SemaphoreHolderId{
 				AccountId:   lease.Id.AccountId,
 				NamespaceId: lease.Id.NamespaceId,
@@ -1464,32 +1519,35 @@ func (c *Core) revokeLeaseInTransaction(txn *store.Txn, lease *corepb.Lease, now
 			holder, err := c.holders.Get(txn, holderId)
 			if err != nil {
 				if errors.Is(err, store.ErrNotFound) {
-					// Holder doesn't exist, the lease index entry is stale
-					// Just remove from index and continue
+					// Stale lease index entry — clean it up and continue.
 					err = c.semaphores.RemoveLeaseFromIndex(txn, semaphore.Id, lease.Id.LeaseId)
 					if err != nil {
-						return err
+						return false, err
 					}
 					continue
 				}
-				return err
+				return false, err
 			}
 
-			// Delete the holder
 			err = c.holders.Delete(txn, holderId)
 			if err != nil {
-				return err
+				return false, err
 			}
 
-			// Remove from lease ID index
 			err = c.semaphores.RemoveLeaseFromIndex(txn, semaphore.Id, lease.Id.LeaseId)
 			if err != nil {
-				return err
+				return false, err
 			}
 
-			// Update semaphore
 			semaphore.ActiveHolds -= holder.Weight
 			semaphore.ActiveHoldersCount -= 1
+
+			// Capture the current earliest before the recompute so the expirationRecords
+			// cleanup below targets the index entry's *actual* key. Using the removed
+			// holder's ExpiresAt only happens to converge when the removed holder was the
+			// earliest; for any other holder the delete would silently miss and the add
+			// would land on a different key from the stored entry.
+			oldEarliest := semaphore.EarliestHolderExpiresAt
 
 			// Recalculate earliest expiration time
 			semaphore.EarliestHolderExpiresAt = 0
@@ -1501,60 +1559,67 @@ func (c *Core) revokeLeaseInTransaction(txn *store.Txn, lease *corepb.Lease, now
 				return true, nil
 			})
 			if err != nil {
-				return err
+				return false, err
 			}
 
-			// Update semaphore in table
 			err = c.semaphores.Update(txn, semaphore)
 			if err != nil {
-				return err
+				return false, err
 			}
 
-			// Update expiration records
-			if semaphore.EarliestHolderExpiresAt != 0 {
-				// Remove old expiration record if it exists
-				err = c.expirationRecords.Delete(txn, holder.ExpiresAt, semaphore.Id)
-				if err != nil && !errors.Is(err, store.ErrNotFound) {
-					return err
+			// Reconcile expirationRecords only when the earliest holder actually moved.
+			// Tolerate NotFound on the delete so the cleanup is safe against pre-existing
+			// stale entries (e.g. left over by earlier buggy paths).
+			if oldEarliest != semaphore.EarliestHolderExpiresAt {
+				if oldEarliest != 0 {
+					err = c.expirationRecords.Delete(txn, oldEarliest, semaphore.Id)
+					if err != nil && !errors.Is(err, store.ErrNotFound) {
+						return false, err
+					}
 				}
+				if semaphore.EarliestHolderExpiresAt != 0 {
+					err = c.expirationRecords.Add(txn, semaphore.EarliestHolderExpiresAt, semaphore.Id)
+					if err != nil {
+						return false, err
+					}
+				}
+			}
 
-				// Add new expiration record
-				err = c.expirationRecords.Add(txn, semaphore.EarliestHolderExpiresAt, semaphore.Id)
-				if err != nil {
-					return err
-				}
-			} else {
-				// No more holders, remove from expiration records
-				err = c.expirationRecords.Delete(txn, holder.ExpiresAt, semaphore.Id)
-				if err != nil && !errors.Is(err, store.ErrNotFound) {
-					return err
-				}
+			*visited++
+			if *visited >= maxVisited {
+				return false, nil
 			}
 		}
 
-		// Check if there are more pages
 		if semaphoresResult.nextPaginationToken == nil {
 			break
 		}
 		paginationToken = semaphoresResult.nextPaginationToken
 	}
 
-	// Delete the lease
-	err = c.leases.Delete(txn, lease)
+	// Drained: delete the lease itself and decrement the namespace counter. The lease row
+	// (plus its two index entries) is real transactional work, so it counts toward the budget.
+	err := c.leases.Delete(txn, lease)
 	if err != nil {
-		return err
+		return false, err
 	}
+	*visited++
 
-	// Decrement lease counter
+	counters, err := c.counters.Get(txn, lease.Id.AccountId, lease.Id.NamespaceId)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			// Counters were already removed by namespace-deletion GC; nothing to decrement.
+			return true, nil
+		}
+		return false, err
+	}
 	counters.NumberOfLeases -= 1
-
-	// Update counters
 	err = c.counters.Set(txn, lease.Id.AccountId, lease.Id.NamespaceId, counters)
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	return nil
+	return true, nil
 }
 
 // computeExpiredSemaphoreHolders walks holders in expiration order and returns a clone of the
@@ -1586,27 +1651,29 @@ func (c *Core) computeExpiredSemaphoreHolders(txn *store.Txn, semaphore *corepb.
 	return updatedSemaphore, expired, nil
 }
 
-// deleteExpiredSemaphoreholders ensures that the semaphore is still held at the moment `now`.
-// It deletes holders that expire before `now`, calculates `EarliestHolderExpiresAt`, and returns an updated copy
-// of the semaphore.
-func (c *Core) deleteExpiredSemaphoreholders(txn *store.Txn, semaphore *corepb.Semaphore, now int64) (*corepb.Semaphore, error) {
+// deleteExpiredSemaphoreHolders ensures that the semaphore is still held at the moment `now`.
+// It deletes holders that expire before `now`, calculates `EarliestHolderExpiresAt`, and returns
+// an updated copy of the semaphore together with the number of holders that were pruned.
+// The count lets GC callers credit each removed holder against the visit budget; non-GC callers
+// can ignore it.
+func (c *Core) deleteExpiredSemaphoreHolders(txn *store.Txn, semaphore *corepb.Semaphore, now int64) (*corepb.Semaphore, int, error) {
 	updatedSemaphore, expired, err := c.computeExpiredSemaphoreHolders(txn, semaphore, now)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	for _, holder := range expired {
 		err = c.holders.Delete(txn, holder.Id)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 
 		// Remove from lease ID index
 		err = c.semaphores.RemoveLeaseFromIndex(txn, semaphore.Id, holder.Id.LeaseId)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 	}
 
-	return updatedSemaphore, nil
+	return updatedSemaphore, len(expired), nil
 }

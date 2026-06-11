@@ -686,11 +686,13 @@ func (c *Core) RunLocksGarbageCollection(req *coreapis.RunLocksGarbageCollection
 				}
 			}
 
-			// Delete the expired lease
+			// Delete the expired lease. The lease row (plus its index entries) is real
+			// transactional work, so credit one visit against the budget.
 			err = c.leases.Delete(txn, lease)
 			if err != nil {
 				return false, err
 			}
+			visitedLocks++
 
 			// Decrement lease counter
 			counters, err := c.counters.Get(txn, lease.Id.AccountId, lease.Id.NamespaceId)
