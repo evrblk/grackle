@@ -41,6 +41,7 @@ type semaphoresTable struct {
 	table        *monsterax.BinaryTable[*corepb.Semaphore, corepb.Semaphore]
 	namesIndex   *monsterax.Uint64Table
 	leaseIdIndex *monsterax.OneToManySortedIndex
+	// TODO: does leaseIdIndex belong here?
 }
 
 func newSemaphoresTable(shardLowerBound []byte, shardUpperBound []byte) *semaphoresTable {
@@ -99,6 +100,19 @@ func (t *semaphoresTable) Update(txn *store.Txn, semaphore *corepb.Semaphore) er
 }
 
 func (t *semaphoresTable) Delete(txn *store.Txn, semaphoreId *corepb.SemaphoreId) error {
+	semaphore, err := t.Get(txn, semaphoreId)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			return nil
+		}
+		return err
+	}
+
+	err = t.namesIndex.Delete(txn, t.namesIndexPK(semaphore.Id.AccountId, semaphore.Id.NamespaceId, semaphore.Name))
+	if err != nil {
+		return err
+	}
+
 	return t.table.Delete(txn,
 		utils.ConcatBytes(
 			t.tablePK(semaphoreId.AccountId, semaphoreId.NamespaceId),

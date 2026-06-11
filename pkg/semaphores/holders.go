@@ -106,28 +106,19 @@ func (t *holdersTable) Update(txn *store.Txn, updatedHolder *corepb.SemaphoreHol
 	return t.table.Set(txn, key, updatedHolder)
 }
 
-func (t *holdersTable) Delete(txn *store.Txn, holderId *corepb.SemaphoreHolderId) error {
-	key := utils.ConcatBytes(
-		t.tablePK(holderId.AccountId, holderId.NamespaceId, holderId.SemaphoreId),
-		t.tableSK(holderId.LeaseId))
-
-	holder, err := t.table.Get(txn, key)
-	if err != nil {
-		return err
-	}
-
-	err = t.expirationIndex.Delete(txn,
+func (t *holdersTable) Delete(txn *store.Txn, holder *corepb.SemaphoreHolder) error {
+	err := t.expirationIndex.Delete(txn,
 		utils.ConcatBytes(
 			t.expirationIndexPK(holder.Id.AccountId, holder.Id.NamespaceId, holder.Id.SemaphoreId),
-			t.expirationIndexSK(holder.ExpiresAt, holderId.LeaseId)))
+			t.expirationIndexSK(holder.ExpiresAt, holder.Id.LeaseId)))
 	if err != nil {
 		return err
 	}
 
 	return t.table.Delete(txn,
 		utils.ConcatBytes(
-			t.tablePK(holderId.AccountId, holderId.NamespaceId, holderId.SemaphoreId),
-			t.tableSK(holderId.LeaseId)))
+			t.tablePK(holder.Id.AccountId, holder.Id.NamespaceId, holder.Id.SemaphoreId),
+			t.tableSK(holder.Id.LeaseId)))
 }
 
 type listHoldersResult struct {

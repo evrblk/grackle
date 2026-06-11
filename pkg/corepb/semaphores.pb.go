@@ -1970,9 +1970,9 @@ type RunSemaphoresGarbageCollectionRequest struct {
 	Now                        int64                  `protobuf:"varint,1,opt,name=now,proto3" json:"now,omitempty"`
 	GcRecordsPageSize          int64                  `protobuf:"varint,2,opt,name=gc_records_page_size,json=gcRecordsPageSize,proto3" json:"gc_records_page_size,omitempty"`
 	GcRecordSemaphoresPageSize int64                  `protobuf:"varint,3,opt,name=gc_record_semaphores_page_size,json=gcRecordSemaphoresPageSize,proto3" json:"gc_record_semaphores_page_size,omitempty"`
-	// Maximum number of records (holders + semaphores) deleted by one GC pass.
+	// Maximum number of records (holders + semaphores + leases) deleted by one GC pass.
 	// Bounds the transaction size; the GC worker calls this method repeatedly until everything drains.
-	MaxVisitedSemaphores    int64 `protobuf:"varint,4,opt,name=max_visited_semaphores,json=maxVisitedSemaphores,proto3" json:"max_visited_semaphores,omitempty"`
+	MaxVisited              int64 `protobuf:"varint,4,opt,name=max_visited,json=maxVisited,proto3" json:"max_visited,omitempty"`
 	GcRecordHoldersPageSize int64 `protobuf:"varint,5,opt,name=gc_record_holders_page_size,json=gcRecordHoldersPageSize,proto3" json:"gc_record_holders_page_size,omitempty"`
 	unknownFields           protoimpl.UnknownFields
 	sizeCache               protoimpl.SizeCache
@@ -2029,9 +2029,9 @@ func (x *RunSemaphoresGarbageCollectionRequest) GetGcRecordSemaphoresPageSize() 
 	return 0
 }
 
-func (x *RunSemaphoresGarbageCollectionRequest) GetMaxVisitedSemaphores() int64 {
+func (x *RunSemaphoresGarbageCollectionRequest) GetMaxVisited() int64 {
 	if x != nil {
-		return x.MaxVisitedSemaphores
+		return x.MaxVisited
 	}
 	return 0
 }
@@ -2721,12 +2721,13 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\trecord_id\x18\x01 \x01(\x04R\brecordId\x12I\n" +
 	"\fnamespace_id\x18\x02 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x10\n" +
 	"\x03now\x18\x03 \x01(\x03R\x03now\"#\n" +
-	"!SemaphoresDeleteNamespaceResponse\"\xa2\x02\n" +
+	"!SemaphoresDeleteNamespaceResponse\"\x8d\x02\n" +
 	"%RunSemaphoresGarbageCollectionRequest\x12\x10\n" +
 	"\x03now\x18\x01 \x01(\x03R\x03now\x12/\n" +
 	"\x14gc_records_page_size\x18\x02 \x01(\x03R\x11gcRecordsPageSize\x12B\n" +
-	"\x1egc_record_semaphores_page_size\x18\x03 \x01(\x03R\x1agcRecordSemaphoresPageSize\x124\n" +
-	"\x16max_visited_semaphores\x18\x04 \x01(\x03R\x14maxVisitedSemaphores\x12<\n" +
+	"\x1egc_record_semaphores_page_size\x18\x03 \x01(\x03R\x1agcRecordSemaphoresPageSize\x12\x1f\n" +
+	"\vmax_visited\x18\x04 \x01(\x03R\n" +
+	"maxVisited\x12<\n" +
 	"\x1bgc_record_holders_page_size\x18\x05 \x01(\x03R\x17gcRecordHoldersPageSize\"(\n" +
 	"&RunSemaphoresGarbageCollectionResponse\"\xfd\x02\n" +
 	"\tSemaphore\x126\n" +

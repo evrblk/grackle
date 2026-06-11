@@ -376,6 +376,127 @@ func TestSemaphoresTable_Delete(t *testing.T) {
 		require.Contains(t, err.Error(), "not found")
 	})
 
+	t.Run("removes the namesIndex entry", func(t *testing.T) {
+		store, err := store.NewBadgerInMemoryStore()
+		require.NoError(t, err)
+
+		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+		now := time.Now()
+
+		semaphore := &corepb.Semaphore{
+			Id: &corepb.SemaphoreId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId,
+				SemaphoreId: rand.Uint64(),
+			},
+			Name:      "test_semaphore",
+			CreatedAt: now.UnixNano(),
+			UpdatedAt: now.UnixNano(),
+			Permits:   5,
+		}
+
+		txn := store.Update()
+		appErr, err := table.Create(txn, semaphore)
+		require.NoError(t, err)
+		require.Nil(t, appErr)
+		require.NoError(t, txn.Commit())
+
+		// Sanity check: namesIndex points at the semaphore.
+		txn = store.View()
+		_, err = table.namesIndex.Get(txn, table.namesIndexPK(accountId, namespaceId, semaphore.Name))
+		txn.Discard()
+		require.NoError(t, err)
+
+		// Delete.
+		txn = store.Update()
+		err = table.Delete(txn, semaphore.Id)
+		require.NoError(t, err)
+		require.NoError(t, txn.Commit())
+
+		// namesIndex entry must be gone.
+		txn = store.View()
+		_, err = table.namesIndex.Get(txn, table.namesIndexPK(accountId, namespaceId, semaphore.Name))
+		txn.Discard()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "not found")
+
+		// GetByName must report NotFound, not return a dead semaphore pointer.
+		txn = store.View()
+		_, err = table.GetByName(txn, accountId, namespaceId, semaphore.Name)
+		txn.Discard()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "not found")
+	})
+
+	t.Run("allows recreating a semaphore with the same name after delete", func(t *testing.T) {
+		store, err := store.NewBadgerInMemoryStore()
+		require.NoError(t, err)
+
+		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+		now := time.Now()
+		name := "recycled_name"
+
+		first := &corepb.Semaphore{
+			Id: &corepb.SemaphoreId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId,
+				SemaphoreId: rand.Uint64(),
+			},
+			Name:      name,
+			CreatedAt: now.UnixNano(),
+			UpdatedAt: now.UnixNano(),
+			Permits:   1,
+		}
+
+		txn := store.Update()
+		appErr, err := table.Create(txn, first)
+		require.NoError(t, err)
+		require.Nil(t, appErr)
+		require.NoError(t, txn.Commit())
+
+		txn = store.Update()
+		err = table.Delete(txn, first.Id)
+		require.NoError(t, err)
+		require.NoError(t, txn.Commit())
+
+		// Second semaphore with the same name, different id, must be creatable.
+		second := &corepb.Semaphore{
+			Id: &corepb.SemaphoreId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId,
+				SemaphoreId: first.Id.SemaphoreId + 1,
+			},
+			Name:      name,
+			CreatedAt: now.UnixNano(),
+			UpdatedAt: now.UnixNano(),
+			Permits:   2,
+		}
+
+		txn = store.Update()
+		appErr, err = table.Create(txn, second)
+		require.NoError(t, err)
+		require.Nil(t, appErr, "creating a semaphore with a recycled name must not return AlreadyExists")
+		require.NoError(t, txn.Commit())
+
+		// namesIndex now points to the second semaphore id.
+		txn = store.View()
+		idFromIndex, err := table.namesIndex.Get(txn, table.namesIndexPK(accountId, namespaceId, name))
+		require.NoError(t, err)
+		require.Equal(t, second.Id.SemaphoreId, idFromIndex)
+
+		actual, err := table.GetByName(txn, accountId, namespaceId, name)
+		txn.Discard()
+		require.NoError(t, err)
+		require.Equal(t, second.Id.SemaphoreId, actual.Id.SemaphoreId)
+		require.Equal(t, uint64(2), actual.Permits)
+	})
+
 	t.Run("deletes a non-existent semaphore", func(t *testing.T) {
 		store, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)

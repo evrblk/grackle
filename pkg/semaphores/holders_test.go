@@ -333,7 +333,7 @@ func TestHoldersTable_Delete(t *testing.T) {
 
 	// Delete holder
 	txn = store.Update()
-	err = table.Delete(txn, holder.Id)
+	err = table.Delete(txn, holder)
 	require.NoError(t, err)
 	require.NoError(t, txn.Commit())
 
@@ -353,32 +353,6 @@ func TestHoldersTable_Delete(t *testing.T) {
 
 	require.NoError(t, err)
 	require.False(t, exists)
-}
-
-func TestHoldersTable_DeleteNonExistent(t *testing.T) {
-	store, err := store.NewBadgerInMemoryStore()
-	require.NoError(t, err)
-
-	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
-
-	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
-	semaphoreId := rand.Uint64()
-	leaseId := rand.Uint64()
-
-	holderId := &corepb.SemaphoreHolderId{
-		AccountId:   accountId,
-		NamespaceId: namespaceId,
-		SemaphoreId: semaphoreId,
-		LeaseId:     leaseId,
-	}
-
-	txn := store.Update()
-	err = table.Delete(txn, holderId)
-	txn.Discard()
-
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "not found")
 }
 
 func TestHoldersTable_List(t *testing.T) {

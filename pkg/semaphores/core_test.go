@@ -819,7 +819,7 @@ func TestCore_DeleteSemaphore(t *testing.T) {
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
 				GcRecordHoldersPageSize:    100,
-				MaxVisitedSemaphores:       100,
+				MaxVisited:                 100,
 			},
 		})
 		require.NoError(t, err)
@@ -1489,7 +1489,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
 				GcRecordHoldersPageSize:    100,
-				MaxVisitedSemaphores:       1000,
+				MaxVisited:                 1000,
 			},
 		})
 
@@ -1518,7 +1518,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 			NamespaceId: rand.Uint32(),
 		}
 
-		// Create more semaphores than MaxVisitedSemaphores to test the limit
+		// Create more semaphores than MaxVisited to test the limit
 		const numSemaphores = 15
 		const maxVisitedSemaphores = 10
 
@@ -1589,7 +1589,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
 				GcRecordHoldersPageSize:    100,
-				MaxVisitedSemaphores:       maxVisitedSemaphores,
+				MaxVisited:                 maxVisitedSemaphores,
 			},
 		})
 
@@ -1635,7 +1635,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
 				GcRecordHoldersPageSize:    100,
-				MaxVisitedSemaphores:       maxVisitedSemaphores,
+				MaxVisited:                 maxVisitedSemaphores,
 			},
 		})
 
@@ -1704,7 +1704,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
 				GcRecordHoldersPageSize:    100,
-				MaxVisitedSemaphores:       100,
+				MaxVisited:                 100,
 			},
 		})
 		require.NoError(t, err)
@@ -1720,7 +1720,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
 				GcRecordHoldersPageSize:    100,
-				MaxVisitedSemaphores:       100,
+				MaxVisited:                 100,
 			},
 		})
 		require.NoError(t, err)
@@ -1773,7 +1773,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
 				GcRecordHoldersPageSize:    100,
-				MaxVisitedSemaphores:       100,
+				MaxVisited:                 100,
 			},
 		})
 		require.NoError(t, err)
@@ -1837,7 +1837,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 					GcRecordsPageSize:          10,
 					GcRecordSemaphoresPageSize: 10,
 					GcRecordHoldersPageSize:    passBudget,
-					MaxVisitedSemaphores:       passBudget,
+					MaxVisited:                 passBudget,
 				},
 			})
 			require.NoError(t, err)
@@ -1913,7 +1913,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 				GcRecordsPageSize:          10,
 				GcRecordSemaphoresPageSize: 10,
 				GcRecordHoldersPageSize:    passBudget,
-				MaxVisitedSemaphores:       passBudget,
+				MaxVisited:                 passBudget,
 			},
 		})
 		require.NoError(t, err)
@@ -1940,7 +1940,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 					GcRecordsPageSize:          10,
 					GcRecordSemaphoresPageSize: 10,
 					GcRecordHoldersPageSize:    passBudget,
-					MaxVisitedSemaphores:       passBudget,
+					MaxVisited:                 passBudget,
 				},
 			})
 			require.NoError(t, err)
@@ -2011,7 +2011,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
 				GcRecordHoldersPageSize:    100,
-				MaxVisitedSemaphores:       100,
+				MaxVisited:                 100,
 			},
 		})
 		require.NoError(t, err)
@@ -2054,7 +2054,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		require.EqualValues(t, 1, sem.ActiveHolds)
 	})
 
-	t.Run("expired-lease sweep is skipped when prior sweeps exhaust MaxVisitedSemaphores", func(t *testing.T) {
+	t.Run("expired-lease sweep is skipped when prior sweeps exhaust MaxVisited", func(t *testing.T) {
 		// Several semaphores each have one expired holder, so the per-semaphore expiration
 		// sweep alone exceeds the visit budget. Once that budget is gone the lease sweep
 		// must not run — the expired leases are left in place for a subsequent pass.
@@ -2092,7 +2092,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
 				GcRecordHoldersPageSize:    100,
-				MaxVisitedSemaphores:       2,
+				MaxVisited:                 2,
 			},
 		})
 		require.NoError(t, err)
@@ -2108,7 +2108,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 			}
 			require.ErrorIs(t, err, store.ErrNotFound)
 		}
-		require.GreaterOrEqual(t, survived, numSemaphores-2, "GC processed more work than MaxVisitedSemaphores allowed")
+		require.GreaterOrEqual(t, survived, numSemaphores-2, "GC processed more work than MaxVisited allowed")
 
 		// Subsequent bounded passes converge. Each pass reaps a small slice of work
 		// (one semaphore + its expired holder, or two empty lease rows), so we cap the
@@ -2120,7 +2120,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 					GcRecordsPageSize:          100,
 					GcRecordSemaphoresPageSize: 100,
 					GcRecordHoldersPageSize:    100,
-					MaxVisitedSemaphores:       2,
+					MaxVisited:                 2,
 				},
 			})
 			require.NoError(t, err)
@@ -2133,6 +2133,172 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		postCounters, err := core.counters.Get(core.badgerStore.View(), accountId, namespaceId.NamespaceId)
 		require.NoError(t, err)
 		require.EqualValues(t, 0, postCounters.NumberOfLeases)
+	})
+
+	t.Run("tolerates stale expirationRecord pointing at a deleted semaphore", func(t *testing.T) {
+		// Reproduces the poison-record case: an expirationRecord exists but the semaphore
+		// it points to has been removed. The old sweep aborted with ErrNotFound on the
+		// semaphores.Get and the same record poisoned every subsequent GC pass.
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		ghostSemaphoreId := &corepb.SemaphoreId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+			SemaphoreId: rand.Uint64(),
+		}
+		staleAt := now.Add(-1 * time.Minute).UnixNano()
+
+		// Inject a stale expirationRecord referencing a semaphore that does not exist.
+		txn := core.badgerStore.Update()
+		require.NoError(t, core.expirationRecords.Add(txn, staleAt, ghostSemaphoreId))
+		require.NoError(t, txn.Commit())
+		require.Equal(t, []int64{staleAt}, listExpirationRecords(t, core, ghostSemaphoreId))
+
+		// Also create a live semaphore in a different namespace so we can verify the sweep
+		// still processes valid work after stepping over the poison record.
+		liveSemaphoreId := &corepb.SemaphoreId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+			SemaphoreId: rand.Uint64(),
+		}
+		liveNamespaceId := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: liveSemaphoreId.NamespaceId,
+		}
+		_ = createSemaphore(t, core, liveSemaphoreId, "live", 1, now)
+		lease := createLease(t, core, accountId, liveSemaphoreId.NamespaceId, "p", now, 1*time.Minute)
+		success, _ := acquireSemaphore(t, core, liveNamespaceId, lease.Id, "live", 1, now)
+		require.True(t, success)
+
+		// T+2m: live semaphore's holder is expired. Run GC.
+		resp, err := core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
+			Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
+				Now:                        now.Add(2 * time.Minute).UnixNano(),
+				GcRecordsPageSize:          100,
+				GcRecordSemaphoresPageSize: 100,
+				GcRecordHoldersPageSize:    100,
+				MaxVisited:                 1000,
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp.ApplicationError)
+
+		// The poison row must be gone.
+		require.Empty(t, listExpirationRecords(t, core, ghostSemaphoreId))
+
+		// The live semaphore was processed in the same pass — its expired holder was pruned
+		// and its expirationRecord cleared.
+		require.Empty(t, listExpirationRecords(t, core, liveSemaphoreId))
+		liveSem, err := core.semaphores.Get(core.badgerStore.View(), liveSemaphoreId)
+		require.NoError(t, err)
+		require.EqualValues(t, 0, liveSem.ActiveHoldersCount)
+		require.EqualValues(t, 0, liveSem.EarliestHolderExpiresAt)
+	})
+
+	t.Run("removes duplicate expirationRecords for the same semaphore", func(t *testing.T) {
+		// A duplicate expirationRecord at a timestamp different from
+		// semaphore.EarliestHolderExpiresAt would survive the old sweep forever: the delete
+		// targeted EarliestHolderExpiresAt, not the iterated record.
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
+		semaphoreId := &corepb.SemaphoreId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId.NamespaceId,
+			SemaphoreId: rand.Uint64(),
+		}
+		_ = createSemaphore(t, core, semaphoreId, "sema", 1, now)
+		lease := createLease(t, core, accountId, namespaceId.NamespaceId, "p", now, 1*time.Minute)
+		success, sem := acquireSemaphore(t, core, namespaceId, lease.Id, "sema", 1, now)
+		require.True(t, success)
+		canonical := sem.EarliestHolderExpiresAt
+		require.NotZero(t, canonical)
+
+		// Inject a stale duplicate at an earlier timestamp.
+		staleAt := canonical - int64(30*time.Second)
+		txn := core.badgerStore.Update()
+		require.NoError(t, core.expirationRecords.Add(txn, staleAt, semaphoreId))
+		require.NoError(t, txn.Commit())
+		require.ElementsMatch(t, []int64{staleAt, canonical}, listExpirationRecords(t, core, semaphoreId))
+
+		// Run GC at T+2m: both the stale duplicate and the canonical record are <= now.
+		// The holder is also expired, so the pruned semaphore ends up with no record at all.
+		resp, err := core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
+			Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
+				Now:                        now.Add(2 * time.Minute).UnixNano(),
+				GcRecordsPageSize:          100,
+				GcRecordSemaphoresPageSize: 100,
+				GcRecordHoldersPageSize:    100,
+				MaxVisited:                 1000,
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp.ApplicationError)
+
+		require.Empty(t, listExpirationRecords(t, core, semaphoreId))
+		stored, err := core.semaphores.Get(core.badgerStore.View(), semaphoreId)
+		require.NoError(t, err)
+		require.EqualValues(t, 0, stored.ActiveHoldersCount)
+		require.EqualValues(t, 0, stored.EarliestHolderExpiresAt)
+	})
+
+	t.Run("removes stale expirationRecord when semaphore has no holders", func(t *testing.T) {
+		// The old code skipped the delete entirely when semaphore.EarliestHolderExpiresAt
+		// was zero, so a stale row would keep getting visited every GC pass forever.
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		semaphoreId := &corepb.SemaphoreId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+			SemaphoreId: rand.Uint64(),
+		}
+		_ = createSemaphore(t, core, semaphoreId, "sema", 1, now)
+
+		// Inject a stale expirationRecord; the semaphore has no holders so its
+		// EarliestHolderExpiresAt is zero.
+		staleAt := now.Add(-1 * time.Minute).UnixNano()
+		txn := core.badgerStore.Update()
+		require.NoError(t, core.expirationRecords.Add(txn, staleAt, semaphoreId))
+		require.NoError(t, txn.Commit())
+
+		stored, err := core.semaphores.Get(core.badgerStore.View(), semaphoreId)
+		require.NoError(t, err)
+		require.EqualValues(t, 0, stored.EarliestHolderExpiresAt)
+		require.Equal(t, []int64{staleAt}, listExpirationRecords(t, core, semaphoreId))
+
+		resp, err := core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
+			Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
+				Now:                        now.UnixNano(),
+				GcRecordsPageSize:          100,
+				GcRecordSemaphoresPageSize: 100,
+				GcRecordHoldersPageSize:    100,
+				MaxVisited:                 1000,
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp.ApplicationError)
+
+		require.Empty(t, listExpirationRecords(t, core, semaphoreId))
+
+		// And a subsequent pass over an empty index is a no-op — proves the row is truly
+		// gone, not just hidden behind the iterator's snapshot.
+		resp, err = core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
+			Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
+				Now:                        now.UnixNano(),
+				GcRecordsPageSize:          100,
+				GcRecordSemaphoresPageSize: 100,
+				GcRecordHoldersPageSize:    100,
+				MaxVisited:                 1000,
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp.ApplicationError)
+		require.Empty(t, listExpirationRecords(t, core, semaphoreId))
 	})
 }
 

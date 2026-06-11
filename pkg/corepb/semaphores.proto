@@ -200,9 +200,9 @@ message RunSemaphoresGarbageCollectionRequest {
   int64 now = 1;
   int64 gc_records_page_size = 2;
   int64 gc_record_semaphores_page_size = 3;
-  // Maximum number of records (holders + semaphores) deleted by one GC pass.
+  // Maximum number of records (holders + semaphores + leases) deleted by one GC pass.
   // Bounds the transaction size; the GC worker calls this method repeatedly until everything drains.
-  int64 max_visited_semaphores = 4;
+  int64 max_visited = 4;
   int64 gc_record_holders_page_size = 5;
 }
 

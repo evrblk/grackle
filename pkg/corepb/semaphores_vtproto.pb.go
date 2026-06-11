@@ -1892,8 +1892,8 @@ func (m *RunSemaphoresGarbageCollectionRequest) MarshalToSizedBufferVT(dAtA []by
 		i--
 		dAtA[i] = 0x28
 	}
-	if m.MaxVisitedSemaphores != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.MaxVisitedSemaphores))
+	if m.MaxVisited != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.MaxVisited))
 		i--
 		dAtA[i] = 0x20
 	}
@@ -3067,8 +3067,8 @@ func (m *RunSemaphoresGarbageCollectionRequest) SizeVT() (n int) {
 	if m.GcRecordSemaphoresPageSize != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.GcRecordSemaphoresPageSize))
 	}
-	if m.MaxVisitedSemaphores != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.MaxVisitedSemaphores))
+	if m.MaxVisited != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.MaxVisited))
 	}
 	if m.GcRecordHoldersPageSize != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.GcRecordHoldersPageSize))
@@ -7715,9 +7715,9 @@ func (m *RunSemaphoresGarbageCollectionRequest) UnmarshalVT(dAtA []byte) error {
 			}
 		case 4:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxVisitedSemaphores", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxVisited", wireType)
 			}
-			m.MaxVisitedSemaphores = 0
+			m.MaxVisited = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return protohelpers.ErrIntOverflow
@@ -7727,7 +7727,7 @@ func (m *RunSemaphoresGarbageCollectionRequest) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.MaxVisitedSemaphores |= int64(b&0x7F) << shift
+				m.MaxVisited |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

@@ -63,7 +63,7 @@ func (w *GrackleSemaphoresGCWorker) runGarbageCollection(shardId string, now tim
 		GcRecordsPageSize:          100,
 		GcRecordSemaphoresPageSize: 1000,
 		GcRecordHoldersPageSize:    1000,
-		MaxVisitedSemaphores:       1000,
+		MaxVisited:                 1000,
 	}, shardId)
 	if err != nil {
 		grackleSemaphoresGCWorkerErrorsTotal.WithLabelValues(shardId).Inc()
