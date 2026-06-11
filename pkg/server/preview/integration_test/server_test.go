@@ -1,4 +1,4 @@
-package preview
+package integration_test
 
 import (
 	"testing"

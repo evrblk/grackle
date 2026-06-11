@@ -154,6 +154,7 @@ type ListSemaphoresRequest struct {
 	NamespaceId     *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	PaginationToken *PaginationToken       `protobuf:"bytes,2,opt,name=pagination_token,json=paginationToken,proto3" json:"pagination_token,omitempty"`
 	Limit           int32                  `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
+	Now             int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -205,6 +206,13 @@ func (x *ListSemaphoresRequest) GetPaginationToken() *PaginationToken {
 func (x *ListSemaphoresRequest) GetLimit() int32 {
 	if x != nil {
 		return x.Limit
+	}
+	return 0
+}
+
+func (x *ListSemaphoresRequest) GetNow() int64 {
+	if x != nil {
+		return x.Now
 	}
 	return 0
 }
@@ -274,6 +282,7 @@ type ListSemaphoresByLeaseIdRequest struct {
 	LeaseId         *LeaseId               `protobuf:"bytes,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
 	PaginationToken *PaginationToken       `protobuf:"bytes,2,opt,name=pagination_token,json=paginationToken,proto3" json:"pagination_token,omitempty"`
 	Limit           int32                  `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
+	Now             int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -325,6 +334,13 @@ func (x *ListSemaphoresByLeaseIdRequest) GetPaginationToken() *PaginationToken {
 func (x *ListSemaphoresByLeaseIdRequest) GetLimit() int32 {
 	if x != nil {
 		return x.Limit
+	}
+	return 0
+}
+
+func (x *ListSemaphoresByLeaseIdRequest) GetNow() int64 {
+	if x != nil {
+		return x.Now
 	}
 	return 0
 }
@@ -953,6 +969,7 @@ type DeleteSemaphoreRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	SemaphoreName string                 `protobuf:"bytes,2,opt,name=semaphore_name,json=semaphoreName,proto3" json:"semaphore_name,omitempty"`
+	RecordId      uint64                 `protobuf:"varint,3,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1001,6 +1018,13 @@ func (x *DeleteSemaphoreRequest) GetSemaphoreName() string {
 	return ""
 }
 
+func (x *DeleteSemaphoreRequest) GetRecordId() uint64 {
+	if x != nil {
+		return x.RecordId
+	}
+	return 0
+}
+
 type DeleteSemaphoreResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -1043,6 +1067,7 @@ type ListSemaphoreHoldersRequest struct {
 	SemaphoreName   string                 `protobuf:"bytes,2,opt,name=semaphore_name,json=semaphoreName,proto3" json:"semaphore_name,omitempty"`
 	PaginationToken *PaginationToken       `protobuf:"bytes,3,opt,name=pagination_token,json=paginationToken,proto3" json:"pagination_token,omitempty"`
 	Limit           int32                  `protobuf:"varint,4,opt,name=limit,proto3" json:"limit,omitempty"`
+	Now             int64                  `protobuf:"varint,5,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -1101,6 +1126,13 @@ func (x *ListSemaphoreHoldersRequest) GetPaginationToken() *PaginationToken {
 func (x *ListSemaphoreHoldersRequest) GetLimit() int32 {
 	if x != nil {
 		return x.Limit
+	}
+	return 0
+}
+
+func (x *ListSemaphoreHoldersRequest) GetNow() int64 {
+	if x != nil {
+		return x.Now
 	}
 	return 0
 }
@@ -1432,6 +1464,7 @@ func (x *ListSemaphoreLeasesByProcessIdResponse) GetPreviousPaginationToken() *P
 type GetSemaphoreLeaseRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	LeaseId       *LeaseId               `protobuf:"bytes,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
+	Now           int64                  `protobuf:"varint,2,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1471,6 +1504,13 @@ func (x *GetSemaphoreLeaseRequest) GetLeaseId() *LeaseId {
 		return x.LeaseId
 	}
 	return nil
+}
+
+func (x *GetSemaphoreLeaseRequest) GetNow() int64 {
+	if x != nil {
+		return x.Now
+	}
+	return 0
 }
 
 type GetSemaphoreLeaseResponse struct {
@@ -1930,9 +1970,12 @@ type RunSemaphoresGarbageCollectionRequest struct {
 	Now                        int64                  `protobuf:"varint,1,opt,name=now,proto3" json:"now,omitempty"`
 	GcRecordsPageSize          int64                  `protobuf:"varint,2,opt,name=gc_records_page_size,json=gcRecordsPageSize,proto3" json:"gc_records_page_size,omitempty"`
 	GcRecordSemaphoresPageSize int64                  `protobuf:"varint,3,opt,name=gc_record_semaphores_page_size,json=gcRecordSemaphoresPageSize,proto3" json:"gc_record_semaphores_page_size,omitempty"`
-	MaxVisitedSemaphores       int64                  `protobuf:"varint,4,opt,name=max_visited_semaphores,json=maxVisitedSemaphores,proto3" json:"max_visited_semaphores,omitempty"`
-	unknownFields              protoimpl.UnknownFields
-	sizeCache                  protoimpl.SizeCache
+	// Maximum number of records (holders + semaphores) deleted by one GC pass.
+	// Bounds the transaction size; the GC worker calls this method repeatedly until everything drains.
+	MaxVisitedSemaphores    int64 `protobuf:"varint,4,opt,name=max_visited_semaphores,json=maxVisitedSemaphores,proto3" json:"max_visited_semaphores,omitempty"`
+	GcRecordHoldersPageSize int64 `protobuf:"varint,5,opt,name=gc_record_holders_page_size,json=gcRecordHoldersPageSize,proto3" json:"gc_record_holders_page_size,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
 }
 
 func (x *RunSemaphoresGarbageCollectionRequest) Reset() {
@@ -1989,6 +2032,13 @@ func (x *RunSemaphoresGarbageCollectionRequest) GetGcRecordSemaphoresPageSize() 
 func (x *RunSemaphoresGarbageCollectionRequest) GetMaxVisitedSemaphores() int64 {
 	if x != nil {
 		return x.MaxVisitedSemaphores
+	}
+	return 0
+}
+
+func (x *RunSemaphoresGarbageCollectionRequest) GetGcRecordHoldersPageSize() int64 {
+	if x != nil {
+		return x.GcRecordHoldersPageSize
 	}
 	return 0
 }
@@ -2548,21 +2598,23 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\apermits\x18\x05 \x01(\x04R\apermits\x12Q\n" +
 	"&max_number_of_semaphores_per_namespace\x18\x06 \x01(\x03R!maxNumberOfSemaphoresPerNamespace\"]\n" +
 	"\x17CreateSemaphoreResponse\x12B\n" +
-	"\tsemaphore\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.SemaphoreR\tsemaphore\"\xcf\x01\n" +
+	"\tsemaphore\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.SemaphoreR\tsemaphore\"\xe1\x01\n" +
 	"\x15ListSemaphoresRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12U\n" +
 	"\x10pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x0fpaginationToken\x12\x14\n" +
-	"\x05limit\x18\x03 \x01(\x05R\x05limit\"\xa6\x02\n" +
+	"\x05limit\x18\x03 \x01(\x05R\x05limit\x12\x10\n" +
+	"\x03now\x18\x04 \x01(\x03R\x03now\"\xa6\x02\n" +
 	"\x16ListSemaphoresResponse\x12D\n" +
 	"\n" +
 	"semaphores\x18\x01 \x03(\v2$.com.evrblk.grackle.corepb.SemaphoreR\n" +
 	"semaphores\x12^\n" +
 	"\x15next_pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x13nextPaginationToken\x12f\n" +
-	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"\xcc\x01\n" +
+	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"\xde\x01\n" +
 	"\x1eListSemaphoresByLeaseIdRequest\x12=\n" +
 	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\x12U\n" +
 	"\x10pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x0fpaginationToken\x12\x14\n" +
-	"\x05limit\x18\x03 \x01(\x05R\x05limit\"\xaf\x02\n" +
+	"\x05limit\x18\x03 \x01(\x05R\x05limit\x12\x10\n" +
+	"\x03now\x18\x04 \x01(\x03R\x03now\"\xaf\x02\n" +
 	"\x1fListSemaphoresByLeaseIdResponse\x12D\n" +
 	"\n" +
 	"semaphores\x18\x01 \x03(\v2$.com.evrblk.grackle.corepb.SemaphoreR\n" +
@@ -2603,16 +2655,18 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\apermits\x18\x04 \x01(\x04R\apermits\x12\x10\n" +
 	"\x03now\x18\x05 \x01(\x03R\x03now\"]\n" +
 	"\x17UpdateSemaphoreResponse\x12B\n" +
-	"\tsemaphore\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.SemaphoreR\tsemaphore\"\x8a\x01\n" +
+	"\tsemaphore\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.SemaphoreR\tsemaphore\"\xa7\x01\n" +
 	"\x16DeleteSemaphoreRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12%\n" +
-	"\x0esemaphore_name\x18\x02 \x01(\tR\rsemaphoreName\"\x19\n" +
-	"\x17DeleteSemaphoreResponse\"\xfc\x01\n" +
+	"\x0esemaphore_name\x18\x02 \x01(\tR\rsemaphoreName\x12\x1b\n" +
+	"\trecord_id\x18\x03 \x01(\x04R\brecordId\"\x19\n" +
+	"\x17DeleteSemaphoreResponse\"\x8e\x02\n" +
 	"\x1bListSemaphoreHoldersRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12%\n" +
 	"\x0esemaphore_name\x18\x02 \x01(\tR\rsemaphoreName\x12U\n" +
 	"\x10pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x0fpaginationToken\x12\x14\n" +
-	"\x05limit\x18\x04 \x01(\x05R\x05limit\"\xac\x02\n" +
+	"\x05limit\x18\x04 \x01(\x05R\x05limit\x12\x10\n" +
+	"\x03now\x18\x05 \x01(\x03R\x03now\"\xac\x02\n" +
 	"\x1cListSemaphoreHoldersResponse\x12D\n" +
 	"\aholders\x18\x01 \x03(\v2*.com.evrblk.grackle.corepb.SemaphoreHolderR\aholders\x12^\n" +
 	"\x15next_pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x13nextPaginationToken\x12f\n" +
@@ -2636,9 +2690,10 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"&ListSemaphoreLeasesByProcessIdResponse\x128\n" +
 	"\x06leases\x18\x01 \x03(\v2 .com.evrblk.grackle.corepb.LeaseR\x06leases\x12^\n" +
 	"\x15next_pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x13nextPaginationToken\x12f\n" +
-	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"Y\n" +
+	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"k\n" +
 	"\x18GetSemaphoreLeaseRequest\x12=\n" +
-	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\"S\n" +
+	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\x12\x10\n" +
+	"\x03now\x18\x02 \x01(\x03R\x03now\"S\n" +
 	"\x19GetSemaphoreLeaseResponse\x126\n" +
 	"\x05lease\x18\x01 \x01(\v2 .com.evrblk.grackle.corepb.LeaseR\x05lease\"\xf2\x01\n" +
 	"\x1bCreateSemaphoreLeaseRequest\x12=\n" +
@@ -2666,12 +2721,13 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\trecord_id\x18\x01 \x01(\x04R\brecordId\x12I\n" +
 	"\fnamespace_id\x18\x02 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x10\n" +
 	"\x03now\x18\x03 \x01(\x03R\x03now\"#\n" +
-	"!SemaphoresDeleteNamespaceResponse\"\xe4\x01\n" +
+	"!SemaphoresDeleteNamespaceResponse\"\xa2\x02\n" +
 	"%RunSemaphoresGarbageCollectionRequest\x12\x10\n" +
 	"\x03now\x18\x01 \x01(\x03R\x03now\x12/\n" +
 	"\x14gc_records_page_size\x18\x02 \x01(\x03R\x11gcRecordsPageSize\x12B\n" +
 	"\x1egc_record_semaphores_page_size\x18\x03 \x01(\x03R\x1agcRecordSemaphoresPageSize\x124\n" +
-	"\x16max_visited_semaphores\x18\x04 \x01(\x03R\x14maxVisitedSemaphores\"(\n" +
+	"\x16max_visited_semaphores\x18\x04 \x01(\x03R\x14maxVisitedSemaphores\x12<\n" +
+	"\x1bgc_record_holders_page_size\x18\x05 \x01(\x03R\x17gcRecordHoldersPageSize\"(\n" +
 	"&RunSemaphoresGarbageCollectionResponse\"\xfd\x02\n" +
 	"\tSemaphore\x126\n" +
 	"\x02id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.SemaphoreIdR\x02id\x12\x12\n" +

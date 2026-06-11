@@ -7,6 +7,7 @@ make build                    # fully build Grackle only
 make generate                 # generate all protobufs and monstera stubs
 go test -v --race ./...       # run all tests with Go directly
 make format                   # format code (gofmt and goimports)
+make lint                     # run linter, statick check, go vet
 ```
 
 ## Code Style Guidelines

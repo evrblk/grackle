@@ -10,6 +10,7 @@ import (
 
 	"github.com/evrblk/monstera/store"
 	monsterax "github.com/evrblk/monstera/x"
+	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
 
 	"github.com/evrblk/grackle/pkg/coreapis"
@@ -138,6 +139,158 @@ func TestCore_AcquireSemaphore(t *testing.T) {
 		lease := createLease(t, core, accountId, namespaceId.NamespaceId, "process_1", now, 60*time.Minute)
 		appErr := acquireSemaphoreWithError(t, core, namespaceId, lease.Id, "non_existing_semaphore", 1, now)
 		require.Equal(t, monsterax.NotFound, appErr.Code)
+	})
+
+	t.Run("same lease re-acquires with a smaller weight - permits freed", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
+		semaphoreId := &corepb.SemaphoreId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId.NamespaceId,
+			SemaphoreId: rand.Uint64(),
+		}
+
+		_ = createSemaphore(t, core, semaphoreId, "sem", 10, now)
+		lease := createLease(t, core, accountId, namespaceId.NamespaceId, "process_1", now, 60*time.Minute)
+
+		success, sem := acquireSemaphore(t, core, namespaceId, lease.Id, "sem", 5, now)
+		require.True(t, success)
+		require.EqualValues(t, 5, sem.ActiveHolds)
+		require.EqualValues(t, 1, sem.ActiveHoldersCount)
+
+		// Re-acquire with smaller weight at a later time
+		success, sem = acquireSemaphore(t, core, namespaceId, lease.Id, "sem", 2, now.Add(time.Minute))
+		require.True(t, success)
+		require.EqualValues(t, 2, sem.ActiveHolds)
+		require.EqualValues(t, 1, sem.ActiveHoldersCount)
+
+		// Another lease can grab the freed permits
+		lease2 := createLease(t, core, accountId, namespaceId.NamespaceId, "process_2", now, 60*time.Minute)
+		success, sem = acquireSemaphore(t, core, namespaceId, lease2.Id, "sem", 8, now.Add(time.Minute))
+		require.True(t, success)
+		require.EqualValues(t, 10, sem.ActiveHolds)
+		require.EqualValues(t, 2, sem.ActiveHoldersCount)
+	})
+
+	t.Run("same lease re-acquires with a larger weight - succeeds if permits fit", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
+		semaphoreId := &corepb.SemaphoreId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId.NamespaceId,
+			SemaphoreId: rand.Uint64(),
+		}
+
+		_ = createSemaphore(t, core, semaphoreId, "sem", 10, now)
+		lease := createLease(t, core, accountId, namespaceId.NamespaceId, "process_1", now, 60*time.Minute)
+
+		success, _ := acquireSemaphore(t, core, namespaceId, lease.Id, "sem", 2, now)
+		require.True(t, success)
+
+		// A different lease is already holding 5; the same lease now wants to grow from 2 → 5.
+		// 5 + 5 = 10 = permits — should fit.
+		lease2 := createLease(t, core, accountId, namespaceId.NamespaceId, "process_2", now, 60*time.Minute)
+		success, _ = acquireSemaphore(t, core, namespaceId, lease2.Id, "sem", 5, now)
+		require.True(t, success)
+
+		success, sem := acquireSemaphore(t, core, namespaceId, lease.Id, "sem", 5, now.Add(time.Minute))
+		require.True(t, success)
+		require.EqualValues(t, 10, sem.ActiveHolds)
+		require.EqualValues(t, 2, sem.ActiveHoldersCount)
+
+		// The grown holder's weight is persisted.
+		listed := listSemaphoreHolders(t, core, namespaceId, "sem", now.Add(time.Minute))
+		require.Len(t, listed.Holders, 2)
+		holdersByLease := lo.KeyBy(listed.Holders, func(h *corepb.SemaphoreHolder) uint64 {
+			return h.Id.LeaseId
+		})
+		require.EqualValues(t, 5, holdersByLease[lease.Id.LeaseId].Weight)
+		require.EqualValues(t, 5, holdersByLease[lease2.Id.LeaseId].Weight)
+	})
+
+	t.Run("same lease re-acquires with a larger weight - fails when permits run out", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
+		semaphoreId := &corepb.SemaphoreId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId.NamespaceId,
+			SemaphoreId: rand.Uint64(),
+		}
+
+		_ = createSemaphore(t, core, semaphoreId, "sem", 10, now)
+		lease := createLease(t, core, accountId, namespaceId.NamespaceId, "process_1", now, 60*time.Minute)
+		success, _ := acquireSemaphore(t, core, namespaceId, lease.Id, "sem", 2, now)
+		require.True(t, success)
+
+		// Another lease consumes most of the remaining permits.
+		lease2 := createLease(t, core, accountId, namespaceId.NamespaceId, "process_2", now, 60*time.Minute)
+		success, _ = acquireSemaphore(t, core, namespaceId, lease2.Id, "sem", 7, now)
+		require.True(t, success)
+
+		// Attempt to grow from 2 → 5: would need 5 + 7 = 12 > 10.
+		success, sem := acquireSemaphore(t, core, namespaceId, lease.Id, "sem", 5, now.Add(time.Minute))
+		require.False(t, success)
+		// State is unchanged.
+		require.EqualValues(t, 9, sem.ActiveHolds)
+		require.EqualValues(t, 2, sem.ActiveHoldersCount)
+
+		// Existing holder weight stays at 2, and its expiration was NOT refreshed.
+		listed := listSemaphoreHolders(t, core, namespaceId, "sem", now)
+		holdersByLease := lo.KeyBy(listed.Holders, func(h *corepb.SemaphoreHolder) uint64 {
+			return h.Id.LeaseId
+		})
+		require.EqualValues(t, 2, holdersByLease[lease.Id.LeaseId].Weight)
+		require.EqualValues(t, now.UnixNano(), holdersByLease[lease.Id.LeaseId].LockedAt)
+	})
+
+	t.Run("same lease re-acquires with the same weight - refreshes expiration only", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
+		semaphoreId := &corepb.SemaphoreId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId.NamespaceId,
+			SemaphoreId: rand.Uint64(),
+		}
+
+		_ = createSemaphore(t, core, semaphoreId, "sem", 10, now)
+		lease := createLease(t, core, accountId, namespaceId.NamespaceId, "process_1", now, 60*time.Minute)
+		success, _ := acquireSemaphore(t, core, namespaceId, lease.Id, "sem", 3, now)
+		require.True(t, success)
+
+		laterLease := createLease(t, core, accountId, namespaceId.NamespaceId, "process_1", now.Add(time.Minute), 30*time.Minute)
+		_ = laterLease // just to advance time consistently in the test
+
+		// Re-acquire at T+1m with the same weight; ActiveHolds should not change.
+		success, sem := acquireSemaphore(t, core, namespaceId, lease.Id, "sem", 3, now.Add(time.Minute))
+		require.True(t, success)
+		require.EqualValues(t, 3, sem.ActiveHolds)
+		require.EqualValues(t, 1, sem.ActiveHoldersCount)
+
+		// The single holder's LockedAt advanced.
+		listed := listSemaphoreHolders(t, core, namespaceId, "sem", now.Add(time.Minute))
+		require.Len(t, listed.Holders, 1)
+		require.EqualValues(t, 3, listed.Holders[0].Weight)
+		require.EqualValues(t, now.Add(time.Minute).UnixNano(), listed.Holders[0].LockedAt)
 	})
 }
 
@@ -519,6 +672,7 @@ func TestCore_DeleteSemaphore(t *testing.T) {
 					NamespaceId: semaphoreId.NamespaceId,
 				},
 				SemaphoreName: "test_semaphore",
+				RecordId:      rand.Uint64(),
 			},
 		})
 		require.NoError(t, err)
@@ -542,6 +696,7 @@ func TestCore_DeleteSemaphore(t *testing.T) {
 					NamespaceId: rand.Uint32(),
 				},
 				SemaphoreName: "nonexistent_semaphore",
+				RecordId:      rand.Uint64(),
 			},
 		})
 
@@ -578,6 +733,7 @@ func TestCore_DeleteSemaphore(t *testing.T) {
 			Payload: &corepb.DeleteSemaphoreRequest{
 				NamespaceId:   namespaceId,
 				SemaphoreName: "test_semaphore",
+				RecordId:      rand.Uint64(),
 			},
 		})
 		require.NoError(t, err)
@@ -591,6 +747,7 @@ func TestCore_DeleteSemaphore(t *testing.T) {
 				Now:                        now.Add(30 * time.Minute).UnixNano(),
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
+				GcRecordHoldersPageSize:    100,
 				MaxVisitedSemaphores:       100,
 			},
 		})
@@ -602,6 +759,56 @@ func TestCore_DeleteSemaphore(t *testing.T) {
 		// Verify semaphore is gone
 		appErr := getSemaphoreWithError(t, core, semaphoreId, now.Add(30*time.Minute))
 		require.Equal(t, monsterax.NotFound, appErr.Code)
+	})
+
+	t.Run("queues a GC record so leftover holders can be drained later", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
+		semaphoreId := &corepb.SemaphoreId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId.NamespaceId,
+			SemaphoreId: rand.Uint64(),
+		}
+
+		_ = createSemaphore(t, core, semaphoreId, "doomed", 5, now)
+
+		// Acquire with three different leases — three holders for the same semaphore
+		for i := 0; i < 3; i++ {
+			lease := createLease(t, core, accountId, namespaceId.NamespaceId, fmt.Sprintf("process_%d", i), now, 60*time.Minute)
+			success, _ := acquireSemaphore(t, core, namespaceId, lease.Id, "doomed", 1, now)
+			require.True(t, success)
+		}
+
+		recordId := rand.Uint64()
+		_, err := core.DeleteSemaphore(&coreapis.DeleteSemaphoreRequest{
+			Payload: &corepb.DeleteSemaphoreRequest{
+				NamespaceId:   namespaceId,
+				SemaphoreName: "doomed",
+				RecordId:      recordId,
+			},
+		})
+		require.NoError(t, err)
+
+		// The semaphore record is gone right away …
+		_, err = core.semaphores.Get(core.badgerStore.View(), semaphoreId)
+		require.ErrorIs(t, err, store.ErrNotFound)
+
+		// … but the holders are still in the store until GC drains them.
+		holdersResult, err := core.holders.List(core.badgerStore.View(), accountId, namespaceId.NamespaceId, semaphoreId.SemaphoreId, nil, 100)
+		require.NoError(t, err)
+		require.Len(t, holdersResult.holders, 3)
+
+		// A GC record with the deleted semaphore_id was queued.
+		gcRecords, err := core.gcRecords.List(core.badgerStore.View(), 100)
+		require.NoError(t, err)
+		require.Len(t, gcRecords, 1)
+		require.Equal(t, recordId, gcRecords[0].Id)
+		require.Equal(t, semaphoreId.SemaphoreId, gcRecords[0].GetSemaphoreId().SemaphoreId)
 	})
 }
 
@@ -631,7 +838,7 @@ func TestCore_ListSemaphoreHolders(t *testing.T) {
 		}
 
 		// List all holders
-		list := listSemaphoreHolders(t, core, namespaceId, "test_semaphore")
+		list := listSemaphoreHolders(t, core, namespaceId, "test_semaphore", now)
 		require.Len(t, list.Holders, 3)
 
 		// Verify holder lease IDs (we can't easily verify by process name anymore since it's via lease)
@@ -672,6 +879,7 @@ func TestCore_ListSemaphoreHolders(t *testing.T) {
 			Payload: &corepb.ListSemaphoreHoldersRequest{
 				NamespaceId:   namespaceId,
 				SemaphoreName: "test_semaphore",
+				Now:           now.UnixNano(),
 				Limit:         3,
 			},
 		})
@@ -688,6 +896,7 @@ func TestCore_ListSemaphoreHolders(t *testing.T) {
 			Payload: &corepb.ListSemaphoreHoldersRequest{
 				NamespaceId:     namespaceId,
 				SemaphoreName:   "test_semaphore",
+				Now:             now.UnixNano(),
 				Limit:           3,
 				PaginationToken: resp3.Payload.NextPaginationToken,
 			},
@@ -728,13 +937,14 @@ func TestCore_ListSemaphoreHolders(t *testing.T) {
 		_ = createSemaphore(t, core, semaphoreId, "test_semaphore", 5, now)
 
 		// List holders (should be empty)
-		list := listSemaphoreHolders(t, core, namespaceId, "test_semaphore")
+		list := listSemaphoreHolders(t, core, namespaceId, "test_semaphore", now)
 		require.Len(t, list.Holders, 0)
 		require.Nil(t, list.NextPaginationToken)
 	})
 
 	t.Run("list holders for nonexistent semaphore", func(t *testing.T) {
 		core := newSemaphoresCore(t)
+		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
 			NamespaceId: rand.Uint32(),
@@ -745,6 +955,7 @@ func TestCore_ListSemaphoreHolders(t *testing.T) {
 			Payload: &corepb.ListSemaphoreHoldersRequest{
 				NamespaceId:   namespaceId,
 				SemaphoreName: "non_existing_semaphore",
+				Now:           now.UnixNano(),
 				Limit:         100,
 			},
 		})
@@ -793,7 +1004,7 @@ func TestCore_ListSemaphoreHolders(t *testing.T) {
 		}
 
 		// List all holders
-		list := listSemaphoreHolders(t, core, namespaceId, "test_semaphore")
+		list := listSemaphoreHolders(t, core, namespaceId, "test_semaphore", now)
 		require.Len(t, list.Holders, 3)
 
 		// Verify weights - we can't easily map process_id to weight now since holder stores process_id not lease_id
@@ -834,49 +1045,183 @@ func TestCore_ListSemaphoreHolders(t *testing.T) {
 		_ = releaseSemaphore(t, core, namespaceId, "test_semaphore", leases[3].Id, now.Add(time.Minute))
 
 		// List remaining holders
-		list := listSemaphoreHolders(t, core, namespaceId, "test_semaphore")
+		list := listSemaphoreHolders(t, core, namespaceId, "test_semaphore", now.Add(time.Minute))
 
 		// Verify remaining holders - we expect 3 holders after releasing 2
 		require.Len(t, list.Holders, 3)
 	})
+
+	t.Run("filters out holders whose leases have expired", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
+		semaphoreId := &corepb.SemaphoreId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			SemaphoreId: rand.Uint64(),
+		}
+
+		_ = createSemaphore(t, core, semaphoreId, "test_semaphore", 5, now)
+
+		// Short-lived lease expires in 1m, long-lived lease stays valid
+		shortLease := createLease(t, core, accountId, namespaceId.NamespaceId, "process_short", now, 1*time.Minute)
+		longLease := createLease(t, core, accountId, namespaceId.NamespaceId, "process_long", now, 60*time.Minute)
+
+		success, _ := acquireSemaphore(t, core, namespaceId, shortLease.Id, "test_semaphore", 1, now)
+		require.True(t, success)
+		success, _ = acquireSemaphore(t, core, namespaceId, longLease.Id, "test_semaphore", 1, now)
+		require.True(t, success)
+
+		// T+0: both holders are returned
+		list := listSemaphoreHolders(t, core, namespaceId, "test_semaphore", now)
+		require.Len(t, list.Holders, 2)
+
+		// T+2m: short lease has expired, only the long-lived holder is returned
+		list = listSemaphoreHolders(t, core, namespaceId, "test_semaphore", now.Add(2*time.Minute))
+		require.Len(t, list.Holders, 1)
+		require.EqualValues(t, longLease.Id.LeaseId, list.Holders[0].Id.LeaseId)
+
+		// Read-only call must not mutate state — the expired holder is still in the store
+		storedHolder, err := core.holders.Get(core.badgerStore.View(), &corepb.SemaphoreHolderId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId.NamespaceId,
+			SemaphoreId: semaphoreId.SemaphoreId,
+			LeaseId:     shortLease.Id.LeaseId,
+		})
+		require.NoError(t, err)
+		require.Equal(t, shortLease.ExpiresAt, storedHolder.ExpiresAt)
+	})
 }
 
 func TestCore_ListSemaphores(t *testing.T) {
-	core := newSemaphoresCore(t)
-	now := time.Now()
-	namespaceId := &corepb.NamespaceId{
-		AccountId:   rand.Uint64(),
-		NamespaceId: rand.Uint32(),
-	}
+	t.Run("lists semaphores in namespace", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+		}
 
-	// Create first semaphore
-	semaphore1Id := &corepb.SemaphoreId{
-		AccountId:   namespaceId.AccountId,
-		NamespaceId: namespaceId.NamespaceId,
-		SemaphoreId: rand.Uint64(),
-	}
-	_ = createSemaphore(t, core, semaphore1Id, "test_semaphore_1", 2, now)
+		// Create first semaphore
+		semaphore1Id := &corepb.SemaphoreId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			SemaphoreId: rand.Uint64(),
+		}
+		_ = createSemaphore(t, core, semaphore1Id, "test_semaphore_1", 2, now)
 
-	// Create second semaphore
-	semaphore2Id := &corepb.SemaphoreId{
-		AccountId:   namespaceId.AccountId,
-		NamespaceId: namespaceId.NamespaceId,
-		SemaphoreId: rand.Uint64(),
-	}
-	_ = createSemaphore(t, core, semaphore2Id, "test_semaphore_2", 3, now)
+		// Create second semaphore
+		semaphore2Id := &corepb.SemaphoreId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			SemaphoreId: rand.Uint64(),
+		}
+		_ = createSemaphore(t, core, semaphore2Id, "test_semaphore_2", 3, now)
 
-	// List semaphores
-	resp3, err := core.ListSemaphores(&coreapis.ListSemaphoresRequest{
-		Payload: &corepb.ListSemaphoresRequest{
-			NamespaceId: namespaceId,
-		},
+		// List semaphores
+		resp3, err := core.ListSemaphores(&coreapis.ListSemaphoresRequest{
+			Payload: &corepb.ListSemaphoresRequest{
+				NamespaceId: namespaceId,
+				Now:         now.UnixNano(),
+			},
+		})
+
+		require.NoError(t, err)
+		require.NotNil(t, resp3)
+		require.Nil(t, resp3.ApplicationError)
+		require.NotNil(t, resp3.Payload)
+		require.Len(t, resp3.Payload.Semaphores, 2)
 	})
 
-	require.NoError(t, err)
-	require.NotNil(t, resp3)
-	require.Nil(t, resp3.ApplicationError)
-	require.NotNil(t, resp3.Payload)
-	require.Len(t, resp3.Payload.Semaphores, 2)
+	t.Run("returns holder counters with expired holders filtered out", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
+		semaphoreId := &corepb.SemaphoreId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			SemaphoreId: rand.Uint64(),
+		}
+
+		_ = createSemaphore(t, core, semaphoreId, "test_semaphore", 5, now)
+
+		// Short-lived lease expires in 1m, long-lived lease stays valid
+		shortLease := createLease(t, core, accountId, namespaceId.NamespaceId, "process_1", now, 1*time.Minute)
+		longLease := createLease(t, core, accountId, namespaceId.NamespaceId, "process_2", now, 60*time.Minute)
+
+		success, _ := acquireSemaphore(t, core, namespaceId, shortLease.Id, "test_semaphore", 2, now)
+		require.True(t, success)
+		success, _ = acquireSemaphore(t, core, namespaceId, longLease.Id, "test_semaphore", 1, now)
+		require.True(t, success)
+
+		// T+2m: short lease has expired
+		listAt := now.Add(2 * time.Minute)
+		resp, err := core.ListSemaphores(&coreapis.ListSemaphoresRequest{
+			Payload: &corepb.ListSemaphoresRequest{
+				NamespaceId: namespaceId,
+				Now:         listAt.UnixNano(),
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp.ApplicationError)
+		require.Len(t, resp.Payload.Semaphores, 1)
+
+		// Returned counters reflect only the still-valid holder
+		listed := resp.Payload.Semaphores[0]
+		require.EqualValues(t, 1, listed.ActiveHoldersCount)
+		require.EqualValues(t, 1, listed.ActiveHolds)
+		require.EqualValues(t, longLease.ExpiresAt, listed.EarliestHolderExpiresAt)
+
+		// The view txn must not mutate state — stored counters are still the pre-expiration values
+		storedSemaphore, err := core.semaphores.Get(core.badgerStore.View(), semaphoreId)
+		require.NoError(t, err)
+		require.EqualValues(t, 2, storedSemaphore.ActiveHoldersCount)
+		require.EqualValues(t, 3, storedSemaphore.ActiveHolds)
+	})
+
+	t.Run("returns zero counters when all holders expired", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
+		semaphoreId := &corepb.SemaphoreId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			SemaphoreId: rand.Uint64(),
+		}
+
+		_ = createSemaphore(t, core, semaphoreId, "test_semaphore", 5, now)
+
+		lease := createLease(t, core, accountId, namespaceId.NamespaceId, "process_1", now, 1*time.Minute)
+		success, _ := acquireSemaphore(t, core, namespaceId, lease.Id, "test_semaphore", 2, now)
+		require.True(t, success)
+
+		resp, err := core.ListSemaphores(&coreapis.ListSemaphoresRequest{
+			Payload: &corepb.ListSemaphoresRequest{
+				NamespaceId: namespaceId,
+				Now:         now.Add(2 * time.Minute).UnixNano(),
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp.ApplicationError)
+		require.Len(t, resp.Payload.Semaphores, 1)
+
+		listed := resp.Payload.Semaphores[0]
+		require.EqualValues(t, 0, listed.ActiveHoldersCount)
+		require.EqualValues(t, 0, listed.ActiveHolds)
+		require.EqualValues(t, 0, listed.EarliestHolderExpiresAt)
+	})
 }
 
 func TestCore_SnapshotAndRestore(t *testing.T) {
@@ -1072,6 +1417,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 				Now:                        now.UnixNano(),
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
+				GcRecordHoldersPageSize:    100,
 				MaxVisitedSemaphores:       1000,
 			},
 		})
@@ -1171,6 +1517,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 				Now:                        gcTime.UnixNano(),
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
+				GcRecordHoldersPageSize:    100,
 				MaxVisitedSemaphores:       maxVisitedSemaphores,
 			},
 		})
@@ -1216,6 +1563,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 				Now:                        gcTime.UnixNano(),
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
+				GcRecordHoldersPageSize:    100,
 				MaxVisitedSemaphores:       maxVisitedSemaphores,
 			},
 		})
@@ -1284,6 +1632,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 				Now:                        now.Add(1 * time.Hour).UnixNano(),
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
+				GcRecordHoldersPageSize:    100,
 				MaxVisitedSemaphores:       100,
 			},
 		})
@@ -1299,6 +1648,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 				Now:                        now.Add(1*time.Hour + 5*time.Minute).UnixNano(),
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
+				GcRecordHoldersPageSize:    100,
 				MaxVisitedSemaphores:       100,
 			},
 		})
@@ -1311,6 +1661,309 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		semaphore := getSemaphore(t, core, semaphoreId, now.Add(1*time.Hour+5*time.Minute))
 		require.EqualValues(t, 2, semaphore.ActiveHoldersCount)
 		require.EqualValues(t, 2, semaphore.ActiveHolds)
+	})
+
+	t.Run("drains holders left behind by DeleteSemaphore", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
+		semaphoreId := &corepb.SemaphoreId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId.NamespaceId,
+			SemaphoreId: rand.Uint64(),
+		}
+
+		const numHolders = 5
+		_ = createSemaphore(t, core, semaphoreId, "doomed", 100, now)
+		leases := make([]*corepb.Lease, numHolders)
+		for i := range numHolders {
+			leases[i] = createLease(t, core, accountId, namespaceId.NamespaceId, fmt.Sprintf("process_%d", i), now, 60*time.Minute)
+			success, _ := acquireSemaphore(t, core, namespaceId, leases[i].Id, "doomed", 1, now)
+			require.True(t, success)
+		}
+
+		_, err := core.DeleteSemaphore(&coreapis.DeleteSemaphoreRequest{
+			Payload: &corepb.DeleteSemaphoreRequest{
+				NamespaceId:   namespaceId,
+				SemaphoreName: "doomed",
+				RecordId:      rand.Uint64(),
+			},
+		})
+		require.NoError(t, err)
+
+		// One GC pass with ample budget cleans up every leftover holder and the GC record.
+		_, err = core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
+			Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
+				Now:                        now.UnixNano(),
+				GcRecordsPageSize:          100,
+				GcRecordSemaphoresPageSize: 100,
+				GcRecordHoldersPageSize:    100,
+				MaxVisitedSemaphores:       100,
+			},
+		})
+		require.NoError(t, err)
+
+		holdersResult, err := core.holders.List(core.badgerStore.View(), accountId, namespaceId.NamespaceId, semaphoreId.SemaphoreId, nil, 100)
+		require.NoError(t, err)
+		require.Empty(t, holdersResult.holders)
+
+		gcRecords, err := core.gcRecords.List(core.badgerStore.View(), 100)
+		require.NoError(t, err)
+		require.Empty(t, gcRecords)
+
+		// Lease-id index entries are gone too, so the deleted semaphore no longer shows up for any lease.
+		for _, lease := range leases {
+			result, err := core.semaphores.ListByLeaseId(core.badgerStore.View(), lease.Id, nil, 100)
+			require.NoError(t, err)
+			require.Empty(t, result.semaphores)
+		}
+	})
+
+	t.Run("drains a deleted semaphore's holders across multiple bounded passes", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
+		semaphoreId := &corepb.SemaphoreId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId.NamespaceId,
+			SemaphoreId: rand.Uint64(),
+		}
+
+		const numHolders = 7
+		_ = createSemaphore(t, core, semaphoreId, "doomed", 100, now)
+		for i := range numHolders {
+			lease := createLease(t, core, accountId, namespaceId.NamespaceId, fmt.Sprintf("process_%d", i), now, 60*time.Minute)
+			success, _ := acquireSemaphore(t, core, namespaceId, lease.Id, "doomed", 1, now)
+			require.True(t, success)
+		}
+
+		_, err := core.DeleteSemaphore(&coreapis.DeleteSemaphoreRequest{
+			Payload: &corepb.DeleteSemaphoreRequest{
+				NamespaceId:   namespaceId,
+				SemaphoreName: "doomed",
+				RecordId:      rand.Uint64(),
+			},
+		})
+		require.NoError(t, err)
+
+		// Tight per-pass budget so it takes several passes to drain 7 holders.
+		const passBudget = 3
+		passes := 0
+		for {
+			passes++
+			require.Less(t, passes, 20, "GC failed to converge")
+			_, err = core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
+				Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
+					Now:                        now.UnixNano(),
+					GcRecordsPageSize:          10,
+					GcRecordSemaphoresPageSize: 10,
+					GcRecordHoldersPageSize:    passBudget,
+					MaxVisitedSemaphores:       passBudget,
+				},
+			})
+			require.NoError(t, err)
+
+			gcRecords, err := core.gcRecords.List(core.badgerStore.View(), 100)
+			require.NoError(t, err)
+			if len(gcRecords) == 0 {
+				break
+			}
+		}
+		require.Greater(t, passes, 1, "expected multiple passes to clear the holders")
+
+		holdersResult, err := core.holders.List(core.badgerStore.View(), accountId, namespaceId.NamespaceId, semaphoreId.SemaphoreId, nil, 100)
+		require.NoError(t, err)
+		require.Empty(t, holdersResult.holders)
+	})
+
+	t.Run("namespace GC drains holders before deleting each semaphore", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
+
+		const numSemaphores = 4
+		const holdersPerSemaphore = 5
+		semaphoreIds := make([]*corepb.SemaphoreId, numSemaphores)
+		for i := range numSemaphores {
+			semaphoreIds[i] = &corepb.SemaphoreId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId.NamespaceId,
+				SemaphoreId: rand.Uint64(),
+			}
+			_ = createSemaphore(t, core, semaphoreIds[i], fmt.Sprintf("sem_%d", i), 100, now)
+			for j := 0; j < holdersPerSemaphore; j++ {
+				lease := createLease(t, core, accountId, namespaceId.NamespaceId, fmt.Sprintf("proc_%d_%d", i, j), now, 60*time.Minute)
+				success, _ := acquireSemaphore(t, core, namespaceId, lease.Id, fmt.Sprintf("sem_%d", i), 1, now)
+				require.True(t, success)
+			}
+		}
+
+		// A second namespace whose state must NOT be touched by the GC.
+		survivorNamespaceId := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
+		survivorSemaphoreId := &corepb.SemaphoreId{
+			AccountId:   accountId,
+			NamespaceId: survivorNamespaceId.NamespaceId,
+			SemaphoreId: rand.Uint64(),
+		}
+		_ = createSemaphore(t, core, survivorSemaphoreId, "survivor", 1, now)
+		survivorLease := createLease(t, core, accountId, survivorNamespaceId.NamespaceId, "survivor_proc", now, 60*time.Minute)
+		success, _ := acquireSemaphore(t, core, survivorNamespaceId, survivorLease.Id, "survivor", 1, now)
+		require.True(t, success)
+
+		_, err := core.SemaphoresDeleteNamespace(&coreapis.SemaphoresDeleteNamespaceRequest{
+			Payload: &corepb.SemaphoresDeleteNamespaceRequest{
+				RecordId:    rand.Uint64(),
+				NamespaceId: namespaceId,
+				Now:         now.UnixNano(),
+			},
+		})
+		require.NoError(t, err)
+
+		// One pass with a tiny budget: it should drain a partial set of holders but cannot finish.
+		const passBudget = 3
+		_, err = core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
+			Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
+				Now:                        now.UnixNano(),
+				GcRecordsPageSize:          10,
+				GcRecordSemaphoresPageSize: 10,
+				GcRecordHoldersPageSize:    passBudget,
+				MaxVisitedSemaphores:       passBudget,
+			},
+		})
+		require.NoError(t, err)
+
+		// The GC record should still be around because we couldn't drain everything.
+		gcRecords, err := core.gcRecords.List(core.badgerStore.View(), 100)
+		require.NoError(t, err)
+		require.Len(t, gcRecords, 1)
+
+		// At least the first semaphore should still exist — its holders aren't fully drained yet,
+		// so the semaphore record must remain so a future pass can finish the job.
+		firstSemaphore, err := core.semaphores.Get(core.badgerStore.View(), semaphoreIds[0])
+		require.NoError(t, err)
+		require.NotNil(t, firstSemaphore)
+
+		// Keep running passes until the GC record disappears.
+		passes := 1
+		for {
+			passes++
+			require.Less(t, passes, 100, "GC failed to converge")
+			_, err = core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
+				Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
+					Now:                        now.UnixNano(),
+					GcRecordsPageSize:          10,
+					GcRecordSemaphoresPageSize: 10,
+					GcRecordHoldersPageSize:    passBudget,
+					MaxVisitedSemaphores:       passBudget,
+				},
+			})
+			require.NoError(t, err)
+
+			gcRecords, err := core.gcRecords.List(core.badgerStore.View(), 100)
+			require.NoError(t, err)
+			if len(gcRecords) == 0 {
+				break
+			}
+		}
+		require.Greater(t, passes, 2, "expected multi-pass GC to clear the deleted namespace")
+
+		// All deleted-namespace semaphores and their holders are gone.
+		for _, sid := range semaphoreIds {
+			_, err := core.semaphores.Get(core.badgerStore.View(), sid)
+			require.ErrorIs(t, err, store.ErrNotFound)
+			holdersResult, err := core.holders.List(core.badgerStore.View(), accountId, namespaceId.NamespaceId, sid.SemaphoreId, nil, 100)
+			require.NoError(t, err)
+			require.Empty(t, holdersResult.holders)
+		}
+
+		// The unrelated namespace is untouched.
+		survivor, err := core.semaphores.Get(core.badgerStore.View(), survivorSemaphoreId)
+		require.NoError(t, err)
+		require.EqualValues(t, 1, survivor.ActiveHoldersCount)
+	})
+}
+
+func TestCore_GetSemaphoreLease(t *testing.T) {
+	t.Run("returns the lease when still valid", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 1*time.Minute)
+
+		// T+30s: lease is still active
+		resp, err := core.GetSemaphoreLease(&coreapis.GetSemaphoreLeaseRequest{
+			Payload: &corepb.GetSemaphoreLeaseRequest{
+				LeaseId: lease.Id,
+				Now:     now.Add(30 * time.Second).UnixNano(),
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp.ApplicationError)
+		require.NotNil(t, resp.Payload)
+		require.Equal(t, lease.ExpiresAt, resp.Payload.Lease.ExpiresAt)
+	})
+
+	t.Run("returns not found when the lease has expired by now", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 1*time.Minute)
+
+		// T+2m: lease has expired even though it's still in the store
+		resp, err := core.GetSemaphoreLease(&coreapis.GetSemaphoreLeaseRequest{
+			Payload: &corepb.GetSemaphoreLeaseRequest{
+				LeaseId: lease.Id,
+				Now:     now.Add(2 * time.Minute).UnixNano(),
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp.Payload)
+		require.NotNil(t, resp.ApplicationError)
+		require.Equal(t, monsterax.NotFound, resp.ApplicationError.Code)
+
+		// View txn must not mutate state — the expired lease is still in the store
+		storedLease, err := core.leases.Get(core.badgerStore.View(), lease.Id)
+		require.NoError(t, err)
+		require.Equal(t, lease.ExpiresAt, storedLease.ExpiresAt)
+	})
+
+	t.Run("returns not found when the lease does not exist", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+
+		resp, err := core.GetSemaphoreLease(&coreapis.GetSemaphoreLeaseRequest{
+			Payload: &corepb.GetSemaphoreLeaseRequest{
+				LeaseId: &corepb.LeaseId{
+					AccountId:   rand.Uint64(),
+					NamespaceId: rand.Uint32(),
+					LeaseId:     rand.Uint64(),
+				},
+				Now: now.UnixNano(),
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp.Payload)
+		require.NotNil(t, resp.ApplicationError)
+		require.Equal(t, monsterax.NotFound, resp.ApplicationError.Code)
 	})
 }
 
@@ -1381,6 +2034,7 @@ func TestCore_RevokeSemaphoreLease(t *testing.T) {
 		resp5, err := core.GetSemaphoreLease(&coreapis.GetSemaphoreLeaseRequest{
 			Payload: &corepb.GetSemaphoreLeaseRequest{
 				LeaseId: lease.Id,
+				Now:     now.UnixNano(),
 			},
 		})
 		require.NoError(t, err)
@@ -1456,6 +2110,26 @@ func TestCore_RevokeSemaphoreLease(t *testing.T) {
 		require.EqualValues(t, 0, semaphore.ActiveHoldersCount)
 		require.EqualValues(t, 0, semaphore.ActiveHolds)
 	})
+
+	t.Run("returns not found when the lease does not exist", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+
+		resp, err := core.RevokeSemaphoreLease(&coreapis.RevokeSemaphoreLeaseRequest{
+			Payload: &corepb.RevokeSemaphoreLeaseRequest{
+				LeaseId: &corepb.LeaseId{
+					AccountId:   rand.Uint64(),
+					NamespaceId: rand.Uint32(),
+					LeaseId:     rand.Uint64(),
+				},
+				Now: now.UnixNano(),
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp.Payload)
+		require.NotNil(t, resp.ApplicationError)
+		require.Equal(t, monsterax.NotFound, resp.ApplicationError.Code)
+	})
 }
 
 func TestCore_RefreshSemaphoreLease(t *testing.T) {
@@ -1527,6 +2201,7 @@ func TestCore_RefreshSemaphoreLease(t *testing.T) {
 		resp5, err := core.GetSemaphoreLease(&coreapis.GetSemaphoreLeaseRequest{
 			Payload: &corepb.GetSemaphoreLeaseRequest{
 				LeaseId: lease.Id,
+				Now:     futureTime.UnixNano(),
 			},
 		})
 		require.NoError(t, err)
@@ -1570,6 +2245,7 @@ func TestCore_RefreshSemaphoreLease(t *testing.T) {
 		resp2, err := core.GetSemaphoreLease(&coreapis.GetSemaphoreLeaseRequest{
 			Payload: &corepb.GetSemaphoreLeaseRequest{
 				LeaseId: lease.Id,
+				Now:     futureTime.UnixNano(),
 			},
 		})
 		require.NoError(t, err)
@@ -1577,6 +2253,90 @@ func TestCore_RefreshSemaphoreLease(t *testing.T) {
 		require.Nil(t, resp2.ApplicationError)
 		require.NotNil(t, resp2.Payload)
 		require.Equal(t, resp1.Payload.Lease.ExpiresAt, resp2.Payload.Lease.ExpiresAt)
+	})
+
+	t.Run("propagates new expiration to holders", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
+
+		// Lease that will be refreshed
+		lease := createLease(t, core, accountId, namespaceId.NamespaceId, "process-1", now, 1*time.Minute)
+		originalLeaseExpiresAt := lease.ExpiresAt
+
+		// A second lease that will outlive `lease` initially but will be overtaken once
+		// `lease` is refreshed — used to verify EarliestHolderExpiresAt is recomputed.
+		otherLease := createLease(t, core, accountId, namespaceId.NamespaceId, "process-2", now, 2*time.Minute)
+
+		// Two semaphores: one held only by `lease`, one shared with `otherLease`
+		soloSemaphoreId := &corepb.SemaphoreId{AccountId: accountId, NamespaceId: namespaceId.NamespaceId, SemaphoreId: rand.Uint64()}
+		_ = createSemaphore(t, core, soloSemaphoreId, "solo", 5, now)
+		success, _ := acquireSemaphore(t, core, namespaceId, lease.Id, "solo", 1, now)
+		require.True(t, success)
+
+		sharedSemaphoreId := &corepb.SemaphoreId{AccountId: accountId, NamespaceId: namespaceId.NamespaceId, SemaphoreId: rand.Uint64()}
+		_ = createSemaphore(t, core, sharedSemaphoreId, "shared", 5, now)
+		success, _ = acquireSemaphore(t, core, namespaceId, lease.Id, "shared", 1, now)
+		require.True(t, success)
+		success, sharedSem := acquireSemaphore(t, core, namespaceId, otherLease.Id, "shared", 1, now)
+		require.True(t, success)
+		// The shorter-lived lease drives EarliestHolderExpiresAt before the refresh
+		require.Equal(t, originalLeaseExpiresAt, sharedSem.EarliestHolderExpiresAt)
+
+		// T+30s: refresh `lease` to a 5 minute TTL — new expiration is later than `otherLease`'s
+		refreshAt := now.Add(30 * time.Second)
+		resp, err := core.RefreshSemaphoreLease(&coreapis.RefreshSemaphoreLeaseRequest{
+			Payload: &corepb.RefreshSemaphoreLeaseRequest{
+				LeaseId:    lease.Id,
+				TtlSeconds: 300,
+				Now:        refreshAt.UnixNano(),
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp.ApplicationError)
+		newLeaseExpiresAt := resp.Payload.Lease.ExpiresAt
+		require.Greater(t, newLeaseExpiresAt, originalLeaseExpiresAt)
+
+		// Holder on the solo semaphore now tracks the refreshed lease
+		soloHolders, err := core.ListSemaphoreHolders(&coreapis.ListSemaphoreHoldersRequest{
+			Payload: &corepb.ListSemaphoreHoldersRequest{
+				NamespaceId:   namespaceId,
+				SemaphoreName: "solo",
+				Now:           refreshAt.UnixNano(),
+			},
+		})
+		require.NoError(t, err)
+		require.Len(t, soloHolders.Payload.Holders, 1)
+		require.Equal(t, newLeaseExpiresAt, soloHolders.Payload.Holders[0].ExpiresAt)
+
+		// Solo semaphore's earliest holder expiration follows
+		soloStored, err := core.semaphores.Get(core.badgerStore.View(), soloSemaphoreId)
+		require.NoError(t, err)
+		require.Equal(t, newLeaseExpiresAt, soloStored.EarliestHolderExpiresAt)
+
+		// On the shared semaphore the refreshed holder is no longer the earliest; `otherLease` wins
+		sharedHolders, err := core.ListSemaphoreHolders(&coreapis.ListSemaphoreHoldersRequest{
+			Payload: &corepb.ListSemaphoreHoldersRequest{
+				NamespaceId:   namespaceId,
+				SemaphoreName: "shared",
+				Now:           refreshAt.UnixNano(),
+			},
+		})
+		require.NoError(t, err)
+		require.Len(t, sharedHolders.Payload.Holders, 2)
+		holdersByLease := lo.KeyBy(sharedHolders.Payload.Holders, func(h *corepb.SemaphoreHolder) uint64 {
+			return h.Id.LeaseId
+		})
+		require.Equal(t, newLeaseExpiresAt, holdersByLease[lease.Id.LeaseId].ExpiresAt)
+		require.Equal(t, otherLease.ExpiresAt, holdersByLease[otherLease.Id.LeaseId].ExpiresAt)
+
+		sharedStored, err := core.semaphores.Get(core.badgerStore.View(), sharedSemaphoreId)
+		require.NoError(t, err)
+		require.Equal(t, otherLease.ExpiresAt, sharedStored.EarliestHolderExpiresAt)
 	})
 }
 
@@ -1819,6 +2579,7 @@ func TestCore_ListSemaphoresByLeaseId(t *testing.T) {
 		resp4, err := core.ListSemaphoresByLeaseId(&coreapis.ListSemaphoresByLeaseIdRequest{
 			Payload: &corepb.ListSemaphoresByLeaseIdRequest{
 				LeaseId: lease1.Id,
+				Now:     now.UnixNano(),
 			},
 		})
 		require.NoError(t, err)
@@ -1851,6 +2612,7 @@ func TestCore_ListSemaphoresByLeaseId(t *testing.T) {
 		resp1, err := core.ListSemaphoresByLeaseId(&coreapis.ListSemaphoresByLeaseIdRequest{
 			Payload: &corepb.ListSemaphoresByLeaseIdRequest{
 				LeaseId: lease.Id,
+				Now:     now.UnixNano(),
 			},
 		})
 		require.NoError(t, err)
@@ -1893,6 +2655,7 @@ func TestCore_ListSemaphoresByLeaseId(t *testing.T) {
 		resp4, err := core.ListSemaphoresByLeaseId(&coreapis.ListSemaphoresByLeaseIdRequest{
 			Payload: &corepb.ListSemaphoresByLeaseIdRequest{
 				LeaseId: lease1.Id,
+				Now:     now.UnixNano(),
 			},
 		})
 		require.NoError(t, err)
@@ -1908,6 +2671,7 @@ func TestCore_ListSemaphoresByLeaseId(t *testing.T) {
 		resp6, err := core.ListSemaphoresByLeaseId(&coreapis.ListSemaphoresByLeaseIdRequest{
 			Payload: &corepb.ListSemaphoresByLeaseIdRequest{
 				LeaseId: lease1.Id,
+				Now:     now.UnixNano(),
 			},
 		})
 		require.NoError(t, err)
@@ -1916,6 +2680,56 @@ func TestCore_ListSemaphoresByLeaseId(t *testing.T) {
 		require.NotNil(t, resp6.Payload)
 		require.Len(t, resp6.Payload.Semaphores, 1)
 		require.Equal(t, semaphoreId.SemaphoreId, resp6.Payload.Semaphores[0].Id.SemaphoreId)
+	})
+
+	t.Run("returns counters with expired holders filtered out", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
+		semaphoreId := &corepb.SemaphoreId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId.NamespaceId,
+			SemaphoreId: rand.Uint64(),
+		}
+
+		_ = createSemaphore(t, core, semaphoreId, "test_semaphore", 5, now)
+
+		// The lease we'll list by — stays valid past the listing time.
+		longLease := createLease(t, core, accountId, namespaceId.NamespaceId, "process_long", now, 60*time.Minute)
+		// A second short-lived lease that also acquires the same semaphore.
+		shortLease := createLease(t, core, accountId, namespaceId.NamespaceId, "process_short", now, 1*time.Minute)
+
+		success, _ := acquireSemaphore(t, core, namespaceId, longLease.Id, "test_semaphore", 1, now)
+		require.True(t, success)
+		success, _ = acquireSemaphore(t, core, namespaceId, shortLease.Id, "test_semaphore", 2, now)
+		require.True(t, success)
+
+		// T+2m: the short lease's holder has expired
+		listAt := now.Add(2 * time.Minute)
+		resp, err := core.ListSemaphoresByLeaseId(&coreapis.ListSemaphoresByLeaseIdRequest{
+			Payload: &corepb.ListSemaphoresByLeaseIdRequest{
+				LeaseId: longLease.Id,
+				Now:     listAt.UnixNano(),
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp.ApplicationError)
+		require.Len(t, resp.Payload.Semaphores, 1)
+
+		listed := resp.Payload.Semaphores[0]
+		require.EqualValues(t, 1, listed.ActiveHoldersCount)
+		require.EqualValues(t, 1, listed.ActiveHolds)
+		require.EqualValues(t, longLease.ExpiresAt, listed.EarliestHolderExpiresAt)
+
+		// View txn must not mutate state — stored counters are still the pre-expiration values
+		stored, err := core.semaphores.Get(core.badgerStore.View(), semaphoreId)
+		require.NoError(t, err)
+		require.EqualValues(t, 2, stored.ActiveHoldersCount)
+		require.EqualValues(t, 3, stored.ActiveHolds)
 	})
 }
 
@@ -2164,13 +2978,14 @@ func acquireSemaphoreWithError(t *testing.T, core *Core, namespaceId *corepb.Nam
 	return resp.ApplicationError
 }
 
-func listSemaphoreHolders(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, semaphoreName string) *corepb.ListSemaphoreHoldersResponse {
+func listSemaphoreHolders(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, semaphoreName string, now time.Time) *corepb.ListSemaphoreHoldersResponse {
 	t.Helper()
 
 	resp, err := core.ListSemaphoreHolders(&coreapis.ListSemaphoreHoldersRequest{
 		Payload: &corepb.ListSemaphoreHoldersRequest{
 			NamespaceId:   namespaceId,
 			SemaphoreName: semaphoreName,
+			Now:           now.UnixNano(),
 			Limit:         100,
 		},
 	})

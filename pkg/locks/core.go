@@ -874,8 +874,6 @@ func (c *Core) RefreshLockLease(req *coreapis.RefreshLockLeaseRequest) (*coreapi
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
-	// TODO: revoke if expired
-
 	lease, err := c.leases.Get(txn, req.Payload.LeaseId)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
@@ -891,6 +889,29 @@ func (c *Core) RefreshLockLease(req *coreapis.RefreshLockLeaseRequest) (*coreapi
 		}
 
 		return nil, err
+	}
+
+	// If the lease has already expired, revoke it instead of refreshing
+	if lease.ExpiresAt <= req.Payload.Now {
+		err = c.revokeLease(txn, lease)
+		if err != nil {
+			return nil, err
+		}
+
+		err = txn.Commit()
+		if err != nil {
+			return nil, err
+		}
+
+		return &coreapis.RefreshLockLeaseResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.NotFound,
+				"lease not found",
+				map[string]string{
+					"lease_id": ids.EncodeLeaseId(req.Payload.LeaseId),
+				},
+			),
+		}, nil
 	}
 
 	// Update the expiration time
@@ -931,100 +952,7 @@ func (c *Core) RevokeLockLease(req *coreapis.RevokeLockLeaseRequest) (*coreapis.
 		return nil, err
 	}
 
-	// Get counters for that namespace
-	counters, err := c.counters.Get(txn, req.Payload.LeaseId.AccountId, req.Payload.LeaseId.NamespaceId)
-	if err != nil {
-		return nil, err
-	}
-
-	// Release all locks held by this lease, paginating through all pages
-	var paginationToken *corepb.PaginationToken
-	for {
-		// List locks held by this lease
-		locksResult, err := c.locks.ListByLeaseId(txn, req.Payload.LeaseId, paginationToken, 1000)
-		if err != nil {
-			return nil, err
-		}
-
-		// If no locks found, we're done
-		if len(locksResult.locks) == 0 && locksResult.nextPaginationToken == nil {
-			break
-		}
-
-		// Release locks on this page
-		for _, lock := range locksResult.locks {
-			switch lock.State {
-			case corepb.LockState_UNLOCKED:
-				// Already unlocked, nothing to do
-				continue
-			case corepb.LockState_SHARED_LOCKED:
-				// Remove the holder
-				lock.LockHolders = lo.Filter(lock.LockHolders, func(h *corepb.LockHolder, _ int) bool {
-					return h.LeaseId != req.Payload.LeaseId.LeaseId
-				})
-
-				// If no read lock holders left
-				if len(lock.LockHolders) == 0 {
-					// Unlock and delete
-					err = c.locks.Delete(txn, lock.Id)
-					if err != nil {
-						return nil, err
-					}
-
-					// Update ancestor entries
-					err = c.decrementAncestors(txn, lock.Id, false)
-					if err != nil {
-						return nil, err
-					}
-
-					counters.NumberOfLocks -= 1
-				} else {
-					// Update lock
-					err = c.locks.Update(txn, lock)
-					if err != nil {
-						return nil, err
-					}
-				}
-			case corepb.LockState_EXCLUSIVE_LOCKED:
-				if lock.LockHolders[0].LeaseId == req.Payload.LeaseId.LeaseId {
-					// This lease holds the exclusive lock, delete it
-					err = c.locks.Delete(txn, lock.Id)
-					if err != nil {
-						return nil, err
-					}
-
-					// Update ancestor entries
-					err = c.decrementAncestors(txn, lock.Id, true)
-					if err != nil {
-						return nil, err
-					}
-
-					counters.NumberOfLocks -= 1
-				} else {
-					// ListByLeaseId returned a lock that is not held by the lease, this should not happen
-					return nil, fmt.Errorf("list locks by lease id returned a lock that is not held by the lease")
-				}
-			}
-		}
-
-		// Check if there are more pages
-		if locksResult.nextPaginationToken == nil {
-			break
-		}
-		paginationToken = locksResult.nextPaginationToken
-	}
-
-	// Delete the lease
-	err = c.leases.Delete(txn, lease)
-	if err != nil {
-		return nil, err
-	}
-
-	// Decrement lease counter
-	counters.NumberOfLeases -= 1
-
-	// Update counters
-	err = c.counters.Set(txn, req.Payload.LeaseId.AccountId, req.Payload.LeaseId.NamespaceId, counters)
+	err = c.revokeLease(txn, lease)
 	if err != nil {
 		return nil, err
 	}
@@ -1090,6 +1018,110 @@ func (c *Core) ListLocksByLeaseId(req *coreapis.ListLocksByLeaseIdRequest) (*cor
 			PreviousPaginationToken: result.previousPaginationToken,
 		},
 	}, nil
+}
+
+// revokeLease releases all locks held by the lease, deletes the lease itself,
+// and decrements the namespace counters accordingly. The caller owns the txn lifecycle.
+func (c *Core) revokeLease(txn *store.Txn, lease *corepb.Lease) error {
+	// Get counters for that namespace
+	counters, err := c.counters.Get(txn, lease.Id.AccountId, lease.Id.NamespaceId)
+	if err != nil {
+		return err
+	}
+
+	// Release all locks held by this lease, paginating through all pages
+	var paginationToken *corepb.PaginationToken
+	for {
+		// List locks held by this lease
+		locksResult, err := c.locks.ListByLeaseId(txn, lease.Id, paginationToken, 1000)
+		if err != nil {
+			return err
+		}
+
+		// If no locks found, we're done
+		if len(locksResult.locks) == 0 && locksResult.nextPaginationToken == nil {
+			break
+		}
+
+		// Release locks on this page
+		for _, lock := range locksResult.locks {
+			switch lock.State {
+			case corepb.LockState_UNLOCKED:
+				// Already unlocked, nothing to do
+				continue
+			case corepb.LockState_SHARED_LOCKED:
+				// Remove the holder
+				lock.LockHolders = lo.Filter(lock.LockHolders, func(h *corepb.LockHolder, _ int) bool {
+					return h.LeaseId != lease.Id.LeaseId
+				})
+
+				// If no read lock holders left
+				if len(lock.LockHolders) == 0 {
+					// Unlock and delete
+					err = c.locks.Delete(txn, lock.Id)
+					if err != nil {
+						return err
+					}
+
+					// Update ancestor entries
+					err = c.decrementAncestors(txn, lock.Id, false)
+					if err != nil {
+						return err
+					}
+
+					counters.NumberOfLocks -= 1
+				} else {
+					// Update lock
+					err = c.locks.Update(txn, lock)
+					if err != nil {
+						return err
+					}
+				}
+			case corepb.LockState_EXCLUSIVE_LOCKED:
+				if lock.LockHolders[0].LeaseId == lease.Id.LeaseId {
+					// This lease holds the exclusive lock, delete it
+					err = c.locks.Delete(txn, lock.Id)
+					if err != nil {
+						return err
+					}
+
+					// Update ancestor entries
+					err = c.decrementAncestors(txn, lock.Id, true)
+					if err != nil {
+						return err
+					}
+
+					counters.NumberOfLocks -= 1
+				} else {
+					// ListByLeaseId returned a lock that is not held by the lease, this should not happen
+					return fmt.Errorf("list locks by lease id returned a lock that is not held by the lease")
+				}
+			}
+		}
+
+		// Check if there are more pages
+		if locksResult.nextPaginationToken == nil {
+			break
+		}
+		paginationToken = locksResult.nextPaginationToken
+	}
+
+	// Delete the lease
+	err = c.leases.Delete(txn, lease)
+	if err != nil {
+		return err
+	}
+
+	// Decrement lease counter
+	counters.NumberOfLeases -= 1
+
+	// Update counters
+	err = c.counters.Set(txn, lease.Id.AccountId, lease.Id.NamespaceId, counters)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // checkLockExpiration ensures that the lock is still held at the moment `now`. Returns an updated copy of the lock.

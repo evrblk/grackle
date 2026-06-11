@@ -163,6 +163,11 @@ func (m *ListSemaphoresRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error)
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
+	if m.Now != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Now))
+		i--
+		dAtA[i] = 0x20
+	}
 	if m.Limit != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Limit))
 		i--
@@ -285,6 +290,11 @@ func (m *ListSemaphoresByLeaseIdRequest) MarshalToSizedBufferVT(dAtA []byte) (in
 	if m.unknownFields != nil {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
+	}
+	if m.Now != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Now))
+		i--
+		dAtA[i] = 0x20
 	}
 	if m.Limit != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Limit))
@@ -929,6 +939,11 @@ func (m *DeleteSemaphoreRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
+	if m.RecordId != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.RecordId))
+		i--
+		dAtA[i] = 0x18
+	}
 	if len(m.SemaphoreName) > 0 {
 		i -= len(m.SemaphoreName)
 		copy(dAtA[i:], m.SemaphoreName)
@@ -1011,6 +1026,11 @@ func (m *ListSemaphoreHoldersRequest) MarshalToSizedBufferVT(dAtA []byte) (int, 
 	if m.unknownFields != nil {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
+	}
+	if m.Now != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Now))
+		i--
+		dAtA[i] = 0x28
 	}
 	if m.Limit != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Limit))
@@ -1404,6 +1424,11 @@ func (m *GetSemaphoreLeaseRequest) MarshalToSizedBufferVT(dAtA []byte) (int, err
 	if m.unknownFields != nil {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
+	}
+	if m.Now != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Now))
+		i--
+		dAtA[i] = 0x10
 	}
 	if m.LeaseId != nil {
 		size, err := m.LeaseId.MarshalToSizedBufferVT(dAtA[:i])
@@ -1861,6 +1886,11 @@ func (m *RunSemaphoresGarbageCollectionRequest) MarshalToSizedBufferVT(dAtA []by
 	if m.unknownFields != nil {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
+	}
+	if m.GcRecordHoldersPageSize != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.GcRecordHoldersPageSize))
+		i--
+		dAtA[i] = 0x28
 	}
 	if m.MaxVisitedSemaphores != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.MaxVisitedSemaphores))
@@ -2407,6 +2437,9 @@ func (m *ListSemaphoresRequest) SizeVT() (n int) {
 	if m.Limit != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.Limit))
 	}
+	if m.Now != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.Now))
+	}
 	n += len(m.unknownFields)
 	return n
 }
@@ -2451,6 +2484,9 @@ func (m *ListSemaphoresByLeaseIdRequest) SizeVT() (n int) {
 	}
 	if m.Limit != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.Limit))
+	}
+	if m.Now != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.Now))
 	}
 	n += len(m.unknownFields)
 	return n
@@ -2684,6 +2720,9 @@ func (m *DeleteSemaphoreRequest) SizeVT() (n int) {
 	if l > 0 {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
+	if m.RecordId != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.RecordId))
+	}
 	n += len(m.unknownFields)
 	return n
 }
@@ -2718,6 +2757,9 @@ func (m *ListSemaphoreHoldersRequest) SizeVT() (n int) {
 	}
 	if m.Limit != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.Limit))
+	}
+	if m.Now != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.Now))
 	}
 	n += len(m.unknownFields)
 	return n
@@ -2856,6 +2898,9 @@ func (m *GetSemaphoreLeaseRequest) SizeVT() (n int) {
 	if m.LeaseId != nil {
 		l = m.LeaseId.SizeVT()
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	if m.Now != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.Now))
 	}
 	n += len(m.unknownFields)
 	return n
@@ -3024,6 +3069,9 @@ func (m *RunSemaphoresGarbageCollectionRequest) SizeVT() (n int) {
 	}
 	if m.MaxVisitedSemaphores != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.MaxVisitedSemaphores))
+	}
+	if m.GcRecordHoldersPageSize != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.GcRecordHoldersPageSize))
 	}
 	n += len(m.unknownFields)
 	return n
@@ -3634,6 +3682,25 @@ func (m *ListSemaphoresRequest) UnmarshalVT(dAtA []byte) error {
 					break
 				}
 			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
+			}
+			m.Now = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Now |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -3929,6 +3996,25 @@ func (m *ListSemaphoresByLeaseIdRequest) UnmarshalVT(dAtA []byte) error {
 				b := dAtA[iNdEx]
 				iNdEx++
 				m.Limit |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
+			}
+			m.Now = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Now |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5430,6 +5516,25 @@ func (m *DeleteSemaphoreRequest) UnmarshalVT(dAtA []byte) error {
 			}
 			m.SemaphoreName = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecordId", wireType)
+			}
+			m.RecordId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RecordId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -5651,6 +5756,25 @@ func (m *ListSemaphoreHoldersRequest) UnmarshalVT(dAtA []byte) error {
 				b := dAtA[iNdEx]
 				iNdEx++
 				m.Limit |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
+			}
+			m.Now = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Now |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -6567,6 +6691,25 @@ func (m *GetSemaphoreLeaseRequest) UnmarshalVT(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
+			}
+			m.Now = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Now |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -7585,6 +7728,25 @@ func (m *RunSemaphoresGarbageCollectionRequest) UnmarshalVT(dAtA []byte) error {
 				b := dAtA[iNdEx]
 				iNdEx++
 				m.MaxVisitedSemaphores |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GcRecordHoldersPageSize", wireType)
+			}
+			m.GcRecordHoldersPageSize = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.GcRecordHoldersPageSize |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

@@ -1946,6 +1946,179 @@ func TestCore_RevokeLockLease_ReleasesSharedLocks(t *testing.T) {
 	require.Equal(t, corepb.LockState_UNLOCKED, lock.State)
 }
 
+func TestCore_RefreshLockLease(t *testing.T) {
+	t.Run("refreshes a valid lease", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 1*time.Minute)
+
+		// T+30s: refresh with a fresh 5 minute TTL
+		refreshAt := now.Add(30 * time.Second)
+		resp, err := core.RefreshLockLease(&coreapis.RefreshLockLeaseRequest{
+			Payload: &corepb.RefreshLockLeaseRequest{
+				LeaseId:    lease.Id,
+				TtlSeconds: uint64((5 * time.Minute).Seconds()),
+				Now:        refreshAt.UnixNano(),
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp.ApplicationError)
+		require.NotNil(t, resp.Payload)
+		require.NotNil(t, resp.Payload.Lease)
+		require.EqualValues(t, refreshAt.Add(5*time.Minute).UnixNano(), resp.Payload.Lease.ExpiresAt)
+
+		// Lease is still readable at T+4m after refresh
+		getResp, err := core.GetLockLease(&coreapis.GetLockLeaseRequest{
+			Payload: &corepb.GetLockLeaseRequest{
+				LeaseId: lease.Id,
+				Now:     refreshAt.Add(4 * time.Minute).UnixNano(),
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, getResp.ApplicationError)
+		require.EqualValues(t, refreshAt.Add(5*time.Minute).UnixNano(), getResp.Payload.Lease.ExpiresAt)
+	})
+
+	t.Run("returns not found for missing lease", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+
+		resp, err := core.RefreshLockLease(&coreapis.RefreshLockLeaseRequest{
+			Payload: &corepb.RefreshLockLeaseRequest{
+				LeaseId: &corepb.LeaseId{
+					AccountId:   rand.Uint64(),
+					NamespaceId: rand.Uint32(),
+					LeaseId:     rand.Uint64(),
+				},
+				TtlSeconds: 60,
+				Now:        now.UnixNano(),
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp.Payload)
+		require.NotNil(t, resp.ApplicationError)
+		require.Equal(t, monsterax.NotFound, resp.ApplicationError.Code)
+	})
+
+	t.Run("revokes an expired lease and releases its locks", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		// Lease with 1 minute TTL
+		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 1*time.Minute)
+
+		// Acquire an exclusive and a shared lock under that lease
+		exclusiveLockId := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "exclusive_lock",
+		}
+		sharedLockId := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "shared_lock",
+		}
+
+		success, _ := acquireLock(t, core, exclusiveLockId, lease.Id, true, now)
+		require.True(t, success)
+		success, _ = acquireLock(t, core, sharedLockId, lease.Id, false, now)
+		require.True(t, success)
+
+		counters, err := core.counters.Get(core.badgerStore.View(), accountId, namespaceId)
+		require.NoError(t, err)
+		require.EqualValues(t, 2, counters.NumberOfLocks)
+		require.EqualValues(t, 1, counters.NumberOfLeases)
+
+		// T+2m: refresh after the lease has expired
+		refreshAt := now.Add(2 * time.Minute)
+		resp, err := core.RefreshLockLease(&coreapis.RefreshLockLeaseRequest{
+			Payload: &corepb.RefreshLockLeaseRequest{
+				LeaseId:    lease.Id,
+				TtlSeconds: 60,
+				Now:        refreshAt.UnixNano(),
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp.Payload)
+		require.NotNil(t, resp.ApplicationError)
+		require.Equal(t, monsterax.NotFound, resp.ApplicationError.Code)
+
+		// Lease is deleted
+		getResp, err := core.GetLockLease(&coreapis.GetLockLeaseRequest{
+			Payload: &corepb.GetLockLeaseRequest{
+				LeaseId: lease.Id,
+				Now:     refreshAt.UnixNano(),
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, getResp.Payload)
+		require.NotNil(t, getResp.ApplicationError)
+		require.Equal(t, monsterax.NotFound, getResp.ApplicationError.Code)
+
+		// Locks held by the lease are released
+		require.Equal(t, corepb.LockState_UNLOCKED, getLock(t, core, exclusiveLockId, refreshAt).State)
+		require.Equal(t, corepb.LockState_UNLOCKED, getLock(t, core, sharedLockId, refreshAt).State)
+
+		// Counters reflect the revocation
+		counters, err = core.counters.Get(core.badgerStore.View(), accountId, namespaceId)
+		require.NoError(t, err)
+		require.EqualValues(t, 0, counters.NumberOfLocks)
+		require.EqualValues(t, 0, counters.NumberOfLeases)
+	})
+
+	t.Run("revokes an expired lease while preserving shared locks held by others", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+		lockId := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "shared_lock",
+		}
+
+		// Lease 1 expires in 1m, lease 2 stays valid for 1h
+		expiringLease := createLease(t, core, accountId, namespaceId, "process-1", now, 1*time.Minute)
+		validLease := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+
+		success, _ := acquireLock(t, core, lockId, expiringLease.Id, false, now)
+		require.True(t, success)
+		success, lock := acquireLock(t, core, lockId, validLease.Id, false, now)
+		require.True(t, success)
+		require.Len(t, lock.LockHolders, 2)
+
+		// T+2m: refresh the expired lease — it should be revoked
+		refreshAt := now.Add(2 * time.Minute)
+		resp, err := core.RefreshLockLease(&coreapis.RefreshLockLeaseRequest{
+			Payload: &corepb.RefreshLockLeaseRequest{
+				LeaseId:    expiringLease.Id,
+				TtlSeconds: 60,
+				Now:        refreshAt.UnixNano(),
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp.Payload)
+		require.NotNil(t, resp.ApplicationError)
+		require.Equal(t, monsterax.NotFound, resp.ApplicationError.Code)
+
+		// The shared lock is still held by the valid lease
+		lock = getLock(t, core, lockId, refreshAt)
+		require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+		require.Len(t, lock.LockHolders, 1)
+		require.EqualValues(t, validLease.Id.LeaseId, lock.LockHolders[0].LeaseId)
+
+		counters, err := core.counters.Get(core.badgerStore.View(), accountId, namespaceId)
+		require.NoError(t, err)
+		require.EqualValues(t, 1, counters.NumberOfLocks)
+		require.EqualValues(t, 1, counters.NumberOfLeases)
+	})
+}
+
 func newLocksCore(t *testing.T) *Core {
 	badgerStore, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)

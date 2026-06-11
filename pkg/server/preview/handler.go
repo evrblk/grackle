@@ -710,6 +710,8 @@ func (s *GrackleApiServerHandler) CreateSemaphore(ctx context.Context, req *grac
 }
 
 func (s *GrackleApiServerHandler) ListSemaphores(ctx context.Context, req *gracklepb.ListSemaphoresRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.ListSemaphoresResponse, error) {
+	now := time.Now()
+
 	// Resolve namespace by name to get its ID
 	resp1, err := s.grackleClient.GetNamespaceByName(ctx, &corepb.GetNamespaceByNameRequest{
 		AccountId:     accountId,
@@ -728,6 +730,7 @@ func (s *GrackleApiServerHandler) ListSemaphores(ctx context.Context, req *grack
 	// List all semaphores in namespace with pagination
 	resp2, err := s.grackleClient.ListSemaphores(ctx, &corepb.ListSemaphoresRequest{
 		NamespaceId:     resp1.Namespace.Id,
+		Now:             now.UnixNano(),
 		PaginationToken: paginationToken,
 		Limit:           req.Limit,
 	})
@@ -753,6 +756,8 @@ func (s *GrackleApiServerHandler) ListSemaphores(ctx context.Context, req *grack
 }
 
 func (s *GrackleApiServerHandler) ListSemaphoreHolders(ctx context.Context, req *gracklepb.ListSemaphoreHoldersRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.ListSemaphoreHoldersResponse, error) {
+	now := time.Now()
+
 	// Resolve namespace by name to get its ID
 	resp1, err := s.grackleClient.GetNamespaceByName(ctx, &corepb.GetNamespaceByNameRequest{
 		AccountId:     accountId,
@@ -772,6 +777,7 @@ func (s *GrackleApiServerHandler) ListSemaphoreHolders(ctx context.Context, req 
 	resp2, err := s.grackleClient.ListSemaphoreHolders(ctx, &corepb.ListSemaphoreHoldersRequest{
 		NamespaceId:     resp1.Namespace.Id,
 		SemaphoreName:   req.SemaphoreName,
+		Now:             now.UnixNano(),
 		PaginationToken: paginationToken,
 		Limit:           req.Limit,
 	})
@@ -950,6 +956,7 @@ func (s *GrackleApiServerHandler) DeleteSemaphore(ctx context.Context, req *grac
 	_, err = s.grackleClient.DeleteSemaphore(ctx, &corepb.DeleteSemaphoreRequest{
 		NamespaceId:   resp1.Namespace.Id,
 		SemaphoreName: req.SemaphoreName,
+		RecordId:      rand.Uint64(),
 	})
 	if err != nil {
 		return nil, monsterax.ErrorToGRPC(err)
@@ -1416,6 +1423,8 @@ func (s *GrackleApiServerHandler) ListSemaphoreLeases(ctx context.Context, req *
 }
 
 func (s *GrackleApiServerHandler) GetSemaphoreLease(ctx context.Context, req *gracklepb.GetSemaphoreLeaseRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.GetSemaphoreLeaseResponse, error) {
+	now := time.Now()
+
 	// Resolve namespace by name to get its ID
 	resp1, err := s.grackleClient.GetNamespaceByName(ctx, &corepb.GetNamespaceByNameRequest{
 		AccountId:     accountId,
@@ -1439,6 +1448,7 @@ func (s *GrackleApiServerHandler) GetSemaphoreLease(ctx context.Context, req *gr
 	// Retrieve semaphore lease by ID
 	resp2, err := s.grackleClient.GetSemaphoreLease(ctx, &corepb.GetSemaphoreLeaseRequest{
 		LeaseId: leaseId,
+		Now:     now.UnixNano(),
 	})
 	if err != nil {
 		return nil, monsterax.ErrorToGRPC(err)
