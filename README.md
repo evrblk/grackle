@@ -17,7 +17,7 @@ Grackle can operate in a cluster mode (with replication and sharding), or it can
 mode (full state on disk, no replication, no sharding). It has no external dependencies (no databases, no kafka, no redis, 
 no zookeeper, or whatever) and it stores all its state on disk (on embedded BadgerDB).
 
-Go to [official documentation](https://everblack.dev/docs/grackle) to learn more.
+Go to [documentation](/docs/overview.md) to learn more.
 
 ## Installing
 
