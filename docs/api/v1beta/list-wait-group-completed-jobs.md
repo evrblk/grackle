@@ -1,9 +1,3 @@
----
-title: ListWaitGroupCompletedJobs
-type: docs
-layout: grackle
----
-
 # ListWaitGroupCompletedJobs
 
 Lists jobs that have been reported complete in a wait group. Paginated. Useful for diagnostics —

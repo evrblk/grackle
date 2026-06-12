@@ -1,9 +1,3 @@
----
-title: WaitForWaitGroup
-type: docs
-layout: grackle
----
-
 # WaitForWaitGroup
 
 Blocks until the wait group is complete (`completed >= counter`) or until `timeout_seconds`

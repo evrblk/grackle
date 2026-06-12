@@ -1,9 +1,3 @@
----
-title: ReleaseSemaphore
-type: docs
-layout: grackle
----
-
 # ReleaseSemaphore
 
 Releases this lease's hold on a semaphore, freeing its permits. Releasing a semaphore the lease

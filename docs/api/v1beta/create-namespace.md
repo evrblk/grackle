@@ -1,9 +1,3 @@
----
-title: CreateNamespace
-type: docs
-layout: grackle
----
-
 # CreateNamespace
 
 Creates a new namespace. Namespace names are unique per account. Locks, semaphores, wait groups,

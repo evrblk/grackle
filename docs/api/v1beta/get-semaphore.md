@@ -1,9 +1,3 @@
----
-title: GetSemaphore
-type: docs
-layout: grackle
----
-
 # GetSemaphore
 
 Fetches a semaphore by name. Does not list holders themselves — use `ListSemaphoreHolders` for that.

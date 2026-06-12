@@ -1,9 +1,3 @@
----
-title: GetWaitGroup
-type: docs
-layout: grackle
----
-
 # GetWaitGroup
 
 Fetches a wait group by name. For blocking until completion, use `WaitForWaitGroup` 

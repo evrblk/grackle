@@ -1,9 +1,3 @@
----
-title: AcquireSemaphore
-type: docs
-layout: grackle
----
-
 # AcquireSemaphore
 
 Attempts to acquire `weight` permits on a semaphore under the caller's lease. The acquire is 

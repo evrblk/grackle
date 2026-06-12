@@ -1,9 +1,3 @@
----
-title: ListSemaphores
-type: docs
-layout: grackle
----
-
 # ListSemaphores
 
 Lists all semaphores in a namespace. Paginated.

@@ -1,9 +1,3 @@
----
-title: ListSemaphoreHolders
-type: docs
-layout: grackle
----
-
 # ListSemaphoreHolders
 
 Lists current holders of a semaphore. Each holder carries the `lease_id` that grabbed the permits,

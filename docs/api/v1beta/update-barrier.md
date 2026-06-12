@@ -1,9 +1,3 @@
----
-title: UpdateBarrier
-type: docs
-layout: grackle
----
-
 # UpdateBarrier
 
 Updates a barrier's `description` and/or `expected_processes`. Useful when the size of the peer

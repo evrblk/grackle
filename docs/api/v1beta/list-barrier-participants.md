@@ -1,9 +1,3 @@
----
-title: ListBarrierParticipants
-type: docs
-layout: grackle
----
-
 # ListBarrierParticipants
 
 Lists participants that have arrived at a specific generation of a barrier. Paginated. Useful for

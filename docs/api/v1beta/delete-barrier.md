@@ -1,9 +1,3 @@
----
-title: DeleteBarrier
-type: docs
-layout: grackle
----
-
 # DeleteBarrier
 
 Deletes a barrier. Any in-flight `WaitAtBarrier` callers will see `NotFound`.

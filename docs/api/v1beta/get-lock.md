@@ -1,9 +1,3 @@
----
-title: GetLock
-type: docs
-layout: grackle
----
-
 # GetLock
 
 Fetches a lock by name.

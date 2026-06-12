@@ -1,9 +1,3 @@
----
-title: DeleteSemaphore
-type: docs
-layout: grackle
----
-
 # DeleteSemaphore
 
 Deletes a semaphore. Any holders are dropped; clients holding the semaphore via a still-active

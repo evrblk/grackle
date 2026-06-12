@@ -1,9 +1,3 @@
----
-title: ListWaitGroups
-type: docs
-layout: grackle
----
-
 # ListWaitGroups
 
 Lists all wait groups in a namespace. Paginated.

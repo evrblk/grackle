@@ -1,8 +1,4 @@
----
-title: Wait Groups
-type: docs
-layout: grackle
----
+# Wait Groups
 
 A Grackle **wait group** is a named counter for coordinating the completion of N parallel jobs.
 The producer sets (or grows) the total number of jobs it expects; the workers report each job as
@@ -55,18 +51,18 @@ released together when it completes.
 The producer creates a wait group for a batch of 100 jobs and gives it an absolute deadline.
 (Assuming that a namespace `pipelines` already exists.)
 
-Request:
+CreateWaitGroupRequest:
 ```json
-CreateWaitGroup({
+{
   "namespace_name": "pipelines",
   "wait_group_name": "batch_2026_06_12",
   "description": "Daily ETL batch",
   "counter": 100,
   "expires_at": 1718236800000000000
-})
+}
 ```
 
-Response:
+CreateWaitGroupResponse:
 ```json
 {
   "wait_group": {
@@ -84,16 +80,16 @@ Response:
 
 If the producer discovers more work after the fact, it grows the counter:
 
-Request:
+AddJobsToWaitGroupRequest:
 ```json
-AddJobsToWaitGroup({
+{
   "namespace_name": "pipelines",
   "wait_group_name": "batch_2026_06_12",
   "counter": 10
-})
+}
 ```
 
-Response:
+AddJobsToWaitGroupResponse:
 ```json
 {
   "wait_group": {
@@ -108,9 +104,9 @@ Response:
 Workers report jobs as they finish. The call accepts a batch of `job_ids` and is idempotent —
 reporting the same id again is a no-op for `completed`.
 
-Request:
+CompleteJobsFromWaitGroupRequest:
 ```json
-CompleteJobsFromWaitGroup({
+{
   "namespace_name": "pipelines",
   "wait_group_name": "batch_2026_06_12",
   "job_ids": [
@@ -118,10 +114,10 @@ CompleteJobsFromWaitGroup({
     "shard-1",
     "shard-2"
   ]
-})
+}
 ```
 
-Response:
+CompleteJobsFromWaitGroupResponse:
 ```json
 {
   "wait_group": {
@@ -136,16 +132,16 @@ Response:
 Meanwhile, an observer blocks on the group. The call returns as soon as `completed >= counter`
 or the timeout elapses.
 
-Request:
+WaitForWaitGroupRequest:
 ```json
-WaitForWaitGroup({
+{
   "namespace_name": "pipelines",
   "wait_group_name": "batch_2026_06_12",
   "timeout_seconds": 300
-})
+}
 ```
 
-Response (group completed before timeout):
+WaitForWaitGroupResponse (group completed before timeout):
 ```json
 {
   "wait_group": {
@@ -159,7 +155,7 @@ Response (group completed before timeout):
 }
 ```
 
-Response (timeout fired first):
+WaitForWaitGroupResponse (timeout fired first):
 ```json
 {
   "wait_group": {
@@ -193,11 +189,11 @@ know when the fan-in is done.
 
 ## API reference
 
-* [CreateWaitGroup](/docs/api/v1beta/create-wait-group)
-* [ListWaitGroups](/docs/api/v1beta/list-wait-groups)
-* [GetWaitGroup](/docs/api/v1beta/get-wait-group)
-* [DeleteWaitGroup](/docs/api/v1beta/delete-wait-group)
-* [AddJobsToWaitGroup](/docs/api/v1beta/add-jobs-to-wait-group)
-* [CompleteJobsFromWaitGroup](/docs/api/v1beta/complete-jobs-from-wait-group)
-* [ListWaitGroupCompletedJobs](/docs/api/v1beta/list-wait-group-completed-jobs)
-* [WaitForWaitGroup](/docs/api/v1beta/wait-for-wait-group)
+* [CreateWaitGroup](/docs/api/v1beta/create-wait-group.md)
+* [ListWaitGroups](/docs/api/v1beta/list-wait-groups.md)
+* [GetWaitGroup](/docs/api/v1beta/get-wait-group.md)
+* [DeleteWaitGroup](/docs/api/v1beta/delete-wait-group.md)
+* [AddJobsToWaitGroup](/docs/api/v1beta/add-jobs-to-wait-group.md)
+* [CompleteJobsFromWaitGroup](/docs/api/v1beta/complete-jobs-from-wait-group.md)
+* [ListWaitGroupCompletedJobs](/docs/api/v1beta/list-wait-group-completed-jobs.md)
+* [WaitForWaitGroup](/docs/api/v1beta/wait-for-wait-group.md)

@@ -1,9 +1,3 @@
----
-title: GetBarrier
-type: docs
-layout: grackle
----
-
 # GetBarrier
 
 Fetches a barrier by name. For blocking until release, use `WaitAtBarrier` instead of polling.

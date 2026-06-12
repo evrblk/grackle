@@ -1,8 +1,4 @@
----
-title: Barriers
-type: docs
-layout: grackle
----
+# Barriers
 
 A Grackle **barrier** is a named N-party rendezvous point. A fixed number of peers agree to
 synchronize at it: each one arrives, then waits, and they are all released together once the last
@@ -71,9 +67,9 @@ There are two ways to interact with a barrier:
 The coordinator creates a barrier for 4 worker shards that need to meet at end-of-phase.
 (Assuming that a namespace `pipelines` already exists.)
 
-Request:
+CreateBarrierRequest:
 ```json
-CreateBarrier({
+{
   "namespace_name": "pipelines",
   "barrier_name": "phase_1_complete",
   "description": "End of map phase",
@@ -82,7 +78,7 @@ CreateBarrier({
 })
 ```
 
-Response:
+CreateBarrierResponse:
 ```json
 {
   "barrier": {
@@ -102,17 +98,17 @@ Each worker reports arrival with its own `process_id` and the current generation
 non-blocking and idempotent — a retry with the same `(process_id, expected_generation)` is a
 no-op.
 
-Request:
+ArriveAtBarrierRequest:
 ```json
-ArriveAtBarrier({
+{
   "namespace_name": "pipelines",
   "barrier_name": "phase_1_complete",
   "process_id": "shard-0",
   "expected_generation": 1
-})
+}
 ```
 
-Response (not yet released):
+ArriveAtBarrierResponse (not yet released):
 ```json
 {
   "barrier": {
@@ -129,17 +125,17 @@ Response (not yet released):
 A worker that needs to block until the whole group has caught up calls `WaitAtBarrier`. Many
 peers can wait on the same generation at once; they are all released together.
 
-Request:
+WaitAtBarrierRequest:
 ```json
-WaitAtBarrier({
+{
   "namespace_name": "pipelines",
   "barrier_name": "phase_1_complete",
   "expected_generation": 1,
   "timeout_seconds": 300
-})
+}
 ```
 
-Response (all peers arrived before timeout):
+WaitAtBarrierResponse (all peers arrived before timeout):
 ```json
 {
   "barrier": {
@@ -154,7 +150,7 @@ Response (all peers arrived before timeout):
 }
 ```
 
-Response (timeout fired first):
+WaitAtBarrierResponse (timeout fired first):
 ```json
 {
   "barrier": {
@@ -191,11 +187,11 @@ the fan-in is done.
 
 ## API reference
 
-* [CreateBarrier](/docs/api/v1beta/create-barrier)
-* [ListBarriers](/docs/api/v1beta/list-barriers)
-* [GetBarrier](/docs/api/v1beta/get-barrier)
-* [DeleteBarrier](/docs/api/v1beta/delete-barrier)
-* [UpdateBarrier](/docs/api/v1beta/update-barrier)
-* [ArriveAtBarrier](/docs/api/v1beta/arrive-at-barrier)
-* [WaitAtBarrier](/docs/api/v1beta/wait-at-barrier)
-* [ListBarrierParticipants](/docs/api/v1beta/list-barrier-participants)
+* [CreateBarrier](/docs/api/v1beta/create-barrier.md)
+* [ListBarriers](/docs/api/v1beta/list-barriers.md)
+* [GetBarrier](/docs/api/v1beta/get-barrier.md)
+* [DeleteBarrier](/docs/api/v1beta/delete-barrier.md)
+* [UpdateBarrier](/docs/api/v1beta/update-barrier.md)
+* [ArriveAtBarrier](/docs/api/v1beta/arrive-at-barrier.md)
+* [WaitAtBarrier](/docs/api/v1beta/wait-at-barrier.md)
+* [ListBarrierParticipants](/docs/api/v1beta/list-barrier-participants.md)

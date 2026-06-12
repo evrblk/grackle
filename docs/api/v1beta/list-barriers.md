@@ -1,9 +1,3 @@
----
-title: ListBarriers
-type: docs
-layout: grackle
----
-
 # ListBarriers
 
 Lists all barriers in a namespace. Paginated.

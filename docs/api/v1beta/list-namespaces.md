@@ -1,9 +1,3 @@
----
-title: ListNamespaces
-type: docs
-layout: grackle
----
-
 # ListNamespaces
 
 Lists all namespaces for the account. Paginated: leave `pagination_token` empty for the first

@@ -1,8 +1,4 @@
----
-title: Semaphores
-type: docs
-layout: grackle
----
+# Semaphores
 
 A Grackle **semaphore** is a named counter that limits how many units of a resource can be in use
 concurrently. It lives inside a **namespace** and is referenced by name. Each semaphore has a fixed
@@ -54,17 +50,17 @@ it; it only stores it on the lease so callers can later enumerate leases by `pro
 Define a new semaphore. `permits` must be > 0. (Assuming that a namespace `third_parties` already 
 exists):
 
-Request:
+CreateSemaphoreRequest:
 ```json
-CreateSemaphore({
+{
   "namespace_name": "third_parties",
   "semaphore_name": "partner_1",
   "description": "Partner 1 API",
   "permits": 20,
-})
+}
 ```
 
-Response:
+CreateSemaphoreResponse:
 ```json
 {
   "semaphore": {
@@ -82,16 +78,16 @@ Response:
 
 Process `host-123/pid-4567` creates a lease. `ttl_seconds` is added to "now" server-side.
 
-Request:
+CreateSemaphoreLeaseRequest:
 ```json
-CreateSemaphoreLease({
+{
   "namespace_name": "third_parties",
   "process_id": "host-123/pid-4567",
   "ttl_seconds": 60,
-})
+}
 ```
 
-Response:
+CreateSemaphoreLeaseResponse:
 ```json
 {
   "lease": {
@@ -108,18 +104,18 @@ Then the process tries to acquire `weight` permits under the lease. The acquire 
 current state of the semaphore. `timeout_seconds` parameter tells how long should the call wait
 if all necessary permits are not readily available.
 
-Request:
+AcquireSemaphoreRequest:
 ```json
-AcquireSemaphore({
+{
   "namespace_name": "third_parties",
   "semaphore_name": "partner_1",
   "lease_id": "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
   "weight": 3,
   "timeout_seconds": 60,
-})
+}
 ```
 
-Response (success):
+AcquireSemaphoreResponse (success):
 ```json
 {
   "semaphore": {
@@ -136,7 +132,7 @@ Response (success):
 }
 ```
 
-Response (no permits left — not an error):
+AcquireSemaphoreResponse (no permits left — not an error):
 ```json
 {
   "semaphore": {
@@ -155,16 +151,16 @@ Response (no permits left — not an error):
 
 When the process is done with its work it should release the semaphore.
 
-Request:
+ReleaseSemaphoreRequest:
 ```json
-ReleaseSemaphore({
+{
   "namespace_name": "third_parties",
   "semaphore_name": "partner_1",
   "lease_id": "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB"
-})
+}
 ```
 
-Response:
+ReleaseSemaphoreResponse:
 ```json
 {
   "semaphore": {
@@ -197,16 +193,16 @@ available.
 
 ## API reference
 
-* [CreateSemaphore](/docs/api/v1beta/create-semaphore)
-* [ListSemaphores](/docs/api/v1beta/list-semaphores)
-* [GetSemaphore](/docs/api/v1beta/get-semaphore)
-* [AcquireSemaphore](/docs/api/v1beta/acquire-semaphore)
-* [ReleaseSemaphore](/docs/api/v1beta/release-semaphore)
-* [UpdateSemaphore](/docs/api/v1beta/update-semaphore)
-* [DeleteSemaphore](/docs/api/v1beta/delete-semaphore)
-* [ListSemaphoreHolders](/docs/api/v1beta/list-semaphore-holders)
-* [CreateSemaphoreLease](/docs/api/v1beta/create-semaphore-lease)
-* [RevokeSemaphoreLease](/docs/api/v1beta/revoke-semaphore-lease)
-* [RefreshSemaphoreLease](/docs/api/v1beta/refresh-semaphore-lease)
-* [ListSemaphoreLeases](/docs/api/v1beta/list-semaphore-leases)
-* [GetSemaphoreLease](/docs/api/v1beta/get-semaphore-lease)
+* [CreateSemaphore](/docs/api/v1beta/create-semaphore.md)
+* [ListSemaphores](/docs/api/v1beta/list-semaphores.md)
+* [GetSemaphore](/docs/api/v1beta/get-semaphore.md)
+* [AcquireSemaphore](/docs/api/v1beta/acquire-semaphore.md)
+* [ReleaseSemaphore](/docs/api/v1beta/release-semaphore.md)
+* [UpdateSemaphore](/docs/api/v1beta/update-semaphore.md)
+* [DeleteSemaphore](/docs/api/v1beta/delete-semaphore.md)
+* [ListSemaphoreHolders](/docs/api/v1beta/list-semaphore-holders.md)
+* [CreateSemaphoreLease](/docs/api/v1beta/create-semaphore-lease.md)
+* [RevokeSemaphoreLease](/docs/api/v1beta/revoke-semaphore-lease.md)
+* [RefreshSemaphoreLease](/docs/api/v1beta/refresh-semaphore-lease.md)
+* [ListSemaphoreLeases](/docs/api/v1beta/list-semaphore-leases.md)
+* [GetSemaphoreLease](/docs/api/v1beta/get-semaphore-lease.md)

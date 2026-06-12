@@ -1,9 +1,3 @@
----
-title: CreateLockLease
-type: docs
-layout: grackle
----
-
 # CreateLockLease
 
 Creates a new lock lease. The lease is a TTL token used by `AcquireLock`/`ReleaseLock`;

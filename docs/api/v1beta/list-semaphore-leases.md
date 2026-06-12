@@ -1,9 +1,3 @@
----
-title: ListSemaphoreLeases
-type: docs
-layout: grackle
----
-
 # ListSemaphoreLeases
 
 Lists semaphore unexpired leases in a namespace. Paginated.

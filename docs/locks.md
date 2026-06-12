@@ -1,8 +1,4 @@
----
-title: Locks
-type: docs
-layout: grackle
----
+# Locks
 
 A Grackle **lock** is a named read/write lock that mediates access to a resource. It lives inside a
 **namespace** and is referenced by name. A lock can be held in one of two modes: **shared** (read)
@@ -65,16 +61,16 @@ it; it only stores it on the lease so callers can later enumerate leases by `pro
 Process `host-123/pid-4567` creates a lease. `ttl_seconds` is added to "now" server-side.
 (Assuming that a namespace `documents` already exists.)
 
-Request:
+CreateLockLeaseRequest:
 ```json
-CreateLockLease({
+{
   "namespace_name": "documents",
   "process_id": "host-123/pid-4567",
   "ttl_seconds": 60,
-})
+}
 ```
 
-Response:
+CreateLockLeaseResponse:
 ```json
 {
   "lease": {
@@ -93,18 +89,18 @@ currently unlocked, already held in a compatible mode, or held by the **same lea
 your own lock is always allowed and just refreshes `locked_at`). Otherwise `success: false` is
 returned with no error and the current state of the lock.
 
-Request:
+AcquireLockRequest:
 ```json
-AcquireLock({
+{
   "namespace_name": "documents",
   "lock_name": "users/123/profile",
   "exclusive": true,
   "lease_id": "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
   "timeout_seconds": 60,
-})
+}
 ```
 
-Response (success):
+AcquireLockResponse (success):
 ```json
 {
   "lock": {
@@ -122,7 +118,7 @@ Response (success):
 }
 ```
 
-Response (already locked by someone else — not an error):
+AcquireLockResponse (already locked by someone else — not an error):
 ```json
 {
   "lock": {
@@ -142,16 +138,16 @@ Response (already locked by someone else — not an error):
 
 When the process is done it should release the lock.
 
-Request:
+ReleaseLockRequest:
 ```json
-ReleaseLock({
+{
   "namespace_name": "documents",
   "lock_name": "users/123/profile",
   "lease_id": "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB"
-})
+}
 ```
 
-Response:
+ReleaseLockResponse:
 ```json
 {
   "lock": {
@@ -166,7 +162,7 @@ Response:
 For a shared lock, the same `AcquireLock` call with `exclusive: false` succeeds for many leases at
 once:
 
-Response:
+AcquireLockResponse:
 ```json
 {
   "lock": {
@@ -254,13 +250,13 @@ Paths that are not in the same hierarchy (siblings or unrelated paths) should no
 
 ## API reference
 
-* [AcquireLock](/docs/api/v1beta/acquire-lock)
-* [ReleaseLock](/docs/api/v1beta/release-lock)
-* [GetLock](/docs/api/v1beta/get-lock)
-* [DeleteLock](/docs/api/v1beta/delete-lock)
-* [ListLocks](/docs/api/v1beta/list-locks)
-* [CreateLockLease](/docs/api/v1beta/create-lock-lease)
-* [RevokeLockLease](/docs/api/v1beta/revoke-lock-lease)
-* [RefreshLockLease](/docs/api/v1beta/refresh-lock-lease)
-* [ListLockLeases](/docs/api/v1beta/list-lock-leases)
-* [GetLockLease](/docs/api/v1beta/get-lock-lease)
+* [AcquireLock](/docs/api/v1beta/acquire-lock.md)
+* [ReleaseLock](/docs/api/v1beta/release-lock.md)
+* [GetLock](/docs/api/v1beta/get-lock.md)
+* [DeleteLock](/docs/api/v1beta/delete-lock.md)
+* [ListLocks](/docs/api/v1beta/list-locks.md)
+* [CreateLockLease](/docs/api/v1beta/create-lock-lease.md)
+* [RevokeLockLease](/docs/api/v1beta/revoke-lock-lease.md)
+* [RefreshLockLease](/docs/api/v1beta/refresh-lock-lease.md)
+* [ListLockLeases](/docs/api/v1beta/list-lock-leases.md)
+* [GetLockLease](/docs/api/v1beta/get-lock-lease.md)

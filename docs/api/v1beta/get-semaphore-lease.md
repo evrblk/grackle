@@ -1,9 +1,3 @@
----
-title: GetSemaphoreLease
-type: docs
-layout: grackle
----
-
 # GetSemaphoreLease
 
 Fetches a semaphore lease by id.

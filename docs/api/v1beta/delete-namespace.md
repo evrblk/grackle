@@ -1,9 +1,3 @@
----
-title: DeleteNamespace
-type: docs
-layout: grackle
----
-
 # DeleteNamespace
 
 Deletes a namespace and everything inside it — all locks, semaphores, wait groups, barriers, and

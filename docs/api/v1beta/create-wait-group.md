@@ -1,9 +1,3 @@
----
-title: CreateWaitGroup
-type: docs
-layout: grackle
----
-
 # CreateWaitGroup
 
 Creates a new wait group.

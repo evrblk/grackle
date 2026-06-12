@@ -1,9 +1,3 @@
----
-title: CreateSemaphoreLease
-type: docs
-layout: grackle
----
-
 # CreateSemaphoreLease
 
 Creates a new semaphore lease. The lease is a TTL token used by `AcquireSemaphore`/

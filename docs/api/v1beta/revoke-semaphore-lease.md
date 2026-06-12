@@ -1,9 +1,3 @@
----
-title: RevokeSemaphoreLease
-type: docs
-layout: grackle
----
-
 # RevokeSemaphoreLease
 
 Releases every semaphore held by the lease and deletes the lease. This is the typical "process is

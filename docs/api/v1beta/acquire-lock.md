@@ -1,16 +1,10 @@
----
-title: AcquireLock
-type: docs
-layout: grackle
----
-
 # AcquireLock
 
 Attempts to acquire a lock under the caller's lease. Locks do not need to be created upfront —
 the first successful acquire creates the lock record.
 
 Lock names are paths; an acquire can be blocked by an existing holder at an ancestor
-or descendant path — see [Locks](/docs/locks) for the hierarchical compatibility rules.
+or descendant path — see [Locks](/docs/locks.md) for the hierarchical compatibility rules.
 
 Re-acquiring under the same `lease_id` is always allowed and just refreshes the holder's
 `locked_at`.

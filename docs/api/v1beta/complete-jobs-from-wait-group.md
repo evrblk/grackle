@@ -1,16 +1,10 @@
----
-title: CompleteJobsFromWaitGroup
-type: docs
-layout: grackle
----
-
 # CompleteJobsFromWaitGroup
 
 Marks a batch of jobs as completed. Each `job_id` is recorded once; reporting the same id again
 is a no-op for `completed` (the call is idempotent per `job_id`).
 
 `job_id` values are unique within a single wait group. They are independent of `process_id` used
-by lock/semaphore leases — see [Wait Groups](/docs/wait-groups).
+by lock/semaphore leases — see [Wait Groups](/docs/wait-groups.md).
 
 ## Request
 

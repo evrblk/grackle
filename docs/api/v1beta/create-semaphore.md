@@ -1,9 +1,3 @@
----
-title: CreateSemaphore
-type: docs
-layout: grackle
----
-
 # CreateSemaphore
 
 Creates a new semaphore in a namespace.

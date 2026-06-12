@@ -1,9 +1,3 @@
----
-title: DeleteWaitGroup
-type: docs
-layout: grackle
----
-
 # DeleteWaitGroup
 
 Deletes a wait group. Any in-flight `WaitForWaitGroup` callers will see `NotFound`. A wait 

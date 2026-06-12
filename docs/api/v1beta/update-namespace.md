@@ -1,9 +1,3 @@
----
-title: UpdateNamespace
-type: docs
-layout: grackle
----
-
 # UpdateNamespace
 
 Updates a namespace's `description`. The namespace name itself cannot be changed.

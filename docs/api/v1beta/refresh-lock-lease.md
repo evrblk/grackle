@@ -1,9 +1,3 @@
----
-title: RefreshLockLease
-type: docs
-layout: grackle
----
-
 # RefreshLockLease
 
 Extends a lock lease's TTL to `now + ttl_seconds` and propagates the new `expires_at` to every

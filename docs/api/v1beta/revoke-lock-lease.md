@@ -1,9 +1,3 @@
----
-title: RevokeLockLease
-type: docs
-layout: grackle
----
-
 # RevokeLockLease
 
 Releases every lock held by the lease and deletes the lease. This is the typical "process is

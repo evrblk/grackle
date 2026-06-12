@@ -1,9 +1,3 @@
----
-title: DeleteLock
-type: docs
-layout: grackle
----
-
 # DeleteLock
 
 Deletes a lock regardless of state. Use this to forcibly unlock a stuck lock — the holders

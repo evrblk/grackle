@@ -1,9 +1,3 @@
----
-title: ListLockLeases
-type: docs
-layout: grackle
----
-
 # ListLockLeases
 
 Lists lock leases in a namespace. Paginated. Expired leases are filtered out of the response.

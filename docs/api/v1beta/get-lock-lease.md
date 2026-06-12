@@ -1,9 +1,3 @@
----
-title: GetLockLease
-type: docs
-layout: grackle
----
-
 # GetLockLease
 
 Fetches a lock lease by id.

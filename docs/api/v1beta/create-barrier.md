@@ -1,9 +1,3 @@
----
-title: CreateBarrier
-type: docs
-layout: grackle
----
-
 # CreateBarrier
 
 Creates a new barrier in a namespace.

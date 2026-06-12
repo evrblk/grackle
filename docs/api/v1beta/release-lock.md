@@ -1,9 +1,3 @@
----
-title: ReleaseLock
-type: docs
-layout: grackle
----
-
 # ReleaseLock
 
 Removes this lease from a lock's holder list. The lock becomes `UNLOCKED` only when the last

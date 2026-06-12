@@ -1,9 +1,3 @@
----
-title: AddJobsToWaitGroup
-type: docs
-layout: grackle
----
-
 # AddJobsToWaitGroup
 
 Grows a wait group's `counter` by the given amount. Use this when the producer discovers more

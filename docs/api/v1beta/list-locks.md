@@ -1,9 +1,3 @@
----
-title: ListLocks
-type: docs
-layout: grackle
----
-
 # ListLocks
 
 Lists locks currently tracked in a namespace. Paginated. Only locks that have at least one holder

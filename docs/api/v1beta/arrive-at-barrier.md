@@ -1,9 +1,3 @@
----
-title: ArriveAtBarrier
-type: docs
-layout: grackle
----
-
 # ArriveAtBarrier
 
 Records a peer's arrival at the barrier for a specific generation. Returns **immediately**

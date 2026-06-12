@@ -1,9 +1,3 @@
----
-title: GetNamespace
-type: docs
-layout: grackle
----
-
 # GetNamespace
 
 Fetches a namespace by name.

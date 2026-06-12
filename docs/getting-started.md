@@ -1,8 +1,4 @@
----
-title: Getting Started
-type: docs
-layout: grackle
----
+# Getting Started
 
 ## Installing
 

@@ -1,9 +1,3 @@
----
-title: UpdateSemaphore
-type: docs
-layout: grackle
----
-
 # UpdateSemaphore
 
 Updates a semaphore's `description` and/or `permits`. Permits can be raised freely; it can only be

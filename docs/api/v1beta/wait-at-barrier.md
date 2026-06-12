@@ -1,9 +1,3 @@
----
-title: WaitAtBarrier
-type: docs
-layout: grackle
----
-
 # WaitAtBarrier
 
 Blocks until the barrier releases for the requested generation (`all_arrived: true`) or until
