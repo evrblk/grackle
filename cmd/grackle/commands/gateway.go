@@ -16,9 +16,9 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
-	gracklepb "github.com/evrblk/evrblk-go/grackle/preview"
+	gracklepb "github.com/evrblk/evrblk-go/grackle/v1beta"
 	"github.com/evrblk/grackle/pkg/coreapis"
-	grackle_preview "github.com/evrblk/grackle/pkg/server/preview"
+	grackle_v1beta "github.com/evrblk/grackle/pkg/server/v1beta"
 )
 
 var gatewayCmdCfg struct {
@@ -40,7 +40,7 @@ var gatewayCmd = &cobra.Command{
 		}
 
 		// Metrics
-		grackle_preview.RegisterMetrics()
+		grackle_v1beta.RegisterMetrics()
 		metricsSrv := metrics.NewMetricsServer(gatewayCmdCfg.prometheusPort)
 		metricsSrv.Start()
 
@@ -60,7 +60,7 @@ var gatewayCmd = &cobra.Command{
 		// Middleware
 		unaryInterceptors := make([]grpc.UnaryServerInterceptor, 0)
 		if gatewayCmdCfg.authKeysPath != "" {
-			unaryInterceptors = append(unaryInterceptors, grackle_preview.NewAuthenticationMiddleware(gatewayCmdCfg.authKeysPath).Unary)
+			unaryInterceptors = append(unaryInterceptors, grackle_v1beta.NewAuthenticationMiddleware(gatewayCmdCfg.authKeysPath).Unary)
 		}
 
 		grpcServer := grpc.NewServer(
@@ -88,9 +88,9 @@ var gatewayCmd = &cobra.Command{
 
 		// Grackle API Gateway
 		grackleCoreApiClient := coreapis.NewGrackleMonsteraStub(monsteraClient)
-		grackleApiGatewayServer := grackle_preview.NewGrackleApiServer(grackleCoreApiClient)
+		grackleApiGatewayServer := grackle_v1beta.NewGrackleApiServer(grackleCoreApiClient)
 		defer grackleApiGatewayServer.Close()
-		gracklepb.RegisterGracklePreviewApiServer(grpcServer, grackleApiGatewayServer)
+		gracklepb.RegisterGrackleApiServer(grpcServer, grackleApiGatewayServer)
 
 		log.Println("Starting API Gateway Server...")
 		grpcServer.Serve(lis)

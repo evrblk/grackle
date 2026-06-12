@@ -681,7 +681,7 @@ type CompleteJobsFromWaitGroupRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	WaitGroupName string                 `protobuf:"bytes,2,opt,name=wait_group_name,json=waitGroupName,proto3" json:"wait_group_name,omitempty"`
-	ProcessIds    []string               `protobuf:"bytes,3,rep,name=process_ids,json=processIds,proto3" json:"process_ids,omitempty"`
+	JobIds        []string               `protobuf:"bytes,3,rep,name=job_ids,json=jobIds,proto3" json:"job_ids,omitempty"`
 	Now           int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -731,9 +731,9 @@ func (x *CompleteJobsFromWaitGroupRequest) GetWaitGroupName() string {
 	return ""
 }
 
-func (x *CompleteJobsFromWaitGroupRequest) GetProcessIds() []string {
+func (x *CompleteJobsFromWaitGroupRequest) GetJobIds() []string {
 	if x != nil {
-		return x.ProcessIds
+		return x.JobIds
 	}
 	return nil
 }
@@ -1282,7 +1282,7 @@ type WaitGroupJobId struct {
 	AccountId     uint64                 `protobuf:"varint,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
 	NamespaceId   uint32                 `protobuf:"varint,2,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	WaitGroupId   uint64                 `protobuf:"varint,3,opt,name=wait_group_id,json=waitGroupId,proto3" json:"wait_group_id,omitempty"`
-	ProcessId     string                 `protobuf:"bytes,4,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
+	JobId         string                 `protobuf:"bytes,4,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1338,9 +1338,9 @@ func (x *WaitGroupJobId) GetWaitGroupId() uint64 {
 	return 0
 }
 
-func (x *WaitGroupJobId) GetProcessId() string {
+func (x *WaitGroupJobId) GetJobId() string {
 	if x != nil {
-		return x.ProcessId
+		return x.JobId
 	}
 	return ""
 }
@@ -1641,12 +1641,11 @@ const file_pkg_corepb_wait_groups_proto_rawDesc = "" +
 	"\x13max_wait_group_size\x18\x05 \x01(\x03R\x10maxWaitGroupSize\"a\n" +
 	"\x1aAddJobsToWaitGroupResponse\x12C\n" +
 	"\n" +
-	"wait_group\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.WaitGroupR\twaitGroup\"\xc8\x01\n" +
+	"wait_group\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.WaitGroupR\twaitGroup\"\xc0\x01\n" +
 	" CompleteJobsFromWaitGroupRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12&\n" +
-	"\x0fwait_group_name\x18\x02 \x01(\tR\rwaitGroupName\x12\x1f\n" +
-	"\vprocess_ids\x18\x03 \x03(\tR\n" +
-	"processIds\x12\x10\n" +
+	"\x0fwait_group_name\x18\x02 \x01(\tR\rwaitGroupName\x12\x17\n" +
+	"\ajob_ids\x18\x03 \x03(\tR\x06jobIds\x12\x10\n" +
 	"\x03now\x18\x04 \x01(\x03R\x03now\"h\n" +
 	"!CompleteJobsFromWaitGroupResponse\x12C\n" +
 	"\n" +
@@ -1686,14 +1685,13 @@ const file_pkg_corepb_wait_groups_proto_rawDesc = "" +
 	"\tcompleted\x18\t \x01(\x04R\tcompleted\"l\n" +
 	"\fWaitGroupJob\x129\n" +
 	"\x02id\x18\x01 \x01(\v2).com.evrblk.grackle.corepb.WaitGroupJobIdR\x02id\x12!\n" +
-	"\fcompleted_at\x18\x02 \x01(\x03R\vcompletedAt\"\x95\x01\n" +
+	"\fcompleted_at\x18\x02 \x01(\x03R\vcompletedAt\"\x8d\x01\n" +
 	"\x0eWaitGroupJobId\x12\x1d\n" +
 	"\n" +
 	"account_id\x18\x01 \x01(\x04R\taccountId\x12!\n" +
 	"\fnamespace_id\x18\x02 \x01(\rR\vnamespaceId\x12\"\n" +
-	"\rwait_group_id\x18\x03 \x01(\x04R\vwaitGroupId\x12\x1d\n" +
-	"\n" +
-	"process_id\x18\x04 \x01(\tR\tprocessId\"s\n" +
+	"\rwait_group_id\x18\x03 \x01(\x04R\vwaitGroupId\x12\x15\n" +
+	"\x06job_id\x18\x04 \x01(\tR\x05jobId\"s\n" +
 	"\vWaitGroupId\x12\x1d\n" +
 	"\n" +
 	"account_id\x18\x01 \x01(\x04R\taccountId\x12!\n" +

@@ -1,0 +1,156 @@
+package v1beta
+
+import (
+	"context"
+	"errors"
+	"os"
+	"path"
+	"regexp"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/evrblk/evrblk-go/authn"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
+)
+
+var (
+	errUnauthenticated = status.Error(codes.Unauthenticated, "unauthenticated")
+)
+
+const (
+	signatureKey = "evrblk-signature"
+	apiKeyKey    = "evrblk-api-key-id"
+	timestampKey = "evrblk-timestamp"
+)
+
+type apiKey struct {
+	id   string
+	body string
+}
+
+type AuthenticationMiddleware struct {
+	authKeysPath string
+
+	mu   sync.Mutex
+	keys map[string]*apiKey
+}
+
+func (m *AuthenticationMiddleware) Unary(
+	ctx context.Context,
+	req any,
+	info *grpc.UnaryServerInfo,
+	handler grpc.UnaryHandler,
+) (any, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		//log.Println("failed to load metadata")
+		return nil, errUnauthenticated
+	}
+
+	if len(md.Get(signatureKey)) != 1 {
+		//log.Println("no evrblk-signature key in metadata")
+		return nil, errUnauthenticated
+	}
+	signature := md.Get(signatureKey)[0]
+
+	if len(md.Get(apiKeyKey)) != 1 {
+		//log.Println("no evrblk-api-key-id key in metadata")
+		return nil, errUnauthenticated
+	}
+	apiKeyIdStr := md.Get(apiKeyKey)[0]
+
+	if len(md.Get(timestampKey)) != 1 {
+		//log.Println("no evrblk-timestamp key in metadata")
+		return nil, errUnauthenticated
+	}
+	timestamp, err := strconv.Atoi(md.Get(timestampKey)[0])
+	if err != nil {
+		//log.Printf("failed to convert timestamp %s \n", md.Get(timestampKey)[0])
+		return nil, errUnauthenticated
+	}
+
+	key, err := m.getApiKey(apiKeyIdStr)
+	if err != nil {
+		return nil, errUnauthenticated
+	}
+
+	_, method := extractServiceAndMethod(info.FullMethod)
+
+	err = m.verifySignature(req, key, signature, int64(timestamp), method)
+	if err != nil {
+		return nil, errUnauthenticated
+	}
+
+	return handler(ctx, req)
+}
+
+func (m *AuthenticationMiddleware) verifySignature(req any, key *apiKey, signature string, timestamp int64, method string) error {
+	requestProto, ok := req.(authn.VTProtoMessage)
+	if !ok {
+		return errors.New("request does not implement VTProtoMessage")
+	}
+
+	now := time.Now()
+
+	if strings.HasPrefix(key.id, "key_alfa_") {
+		return authn.VerifyAlfaSignature(signature, timestamp, now, key.body, requestProto, "Grackle", method)
+	} else if strings.HasPrefix(key.id, "key_bravo_") {
+		date := authn.GetDateOfTimestamp(timestamp)
+		hashedSecret, err := authn.HashBravoSecretWithDate(key.body, date)
+		if err != nil {
+			return err
+		}
+
+		return authn.VerifyBravoSignature(signature, timestamp, now, hashedSecret, requestProto, "Grackle", method)
+	} else {
+		return errors.New("unsupported api key type")
+	}
+}
+
+func (m *AuthenticationMiddleware) getApiKey(apiKeyId string) (*apiKey, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	key, ok := m.keys[apiKeyId]
+	if ok {
+		return key, nil
+	}
+
+	body, err := os.ReadFile(path.Join(m.authKeysPath, apiKeyId))
+	if err != nil {
+		return key, err
+	}
+
+	key = &apiKey{
+		id:   apiKeyId,
+		body: string(body),
+	}
+
+	m.keys[apiKeyId] = key
+
+	return key, nil
+}
+
+func NewAuthenticationMiddleware(authKeysPath string) *AuthenticationMiddleware {
+	return &AuthenticationMiddleware{
+		keys:         make(map[string]*apiKey),
+		authKeysPath: authKeysPath,
+	}
+}
+
+func extractServiceAndMethod(grpcPath string) (string, string) {
+	re, _ := regexp.Compile(`([\w\d_]+)\/([\w\d_]+)`)
+	matches := re.FindStringSubmatch(grpcPath)
+	var service string
+	var method string
+	if len(matches) == 3 {
+		service = matches[1]
+		method = matches[2]
+	}
+	return service, method
+}

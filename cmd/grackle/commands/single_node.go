@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"syscall"
 
-	gracklepb "github.com/evrblk/evrblk-go/grackle/preview"
+	gracklepb "github.com/evrblk/evrblk-go/grackle/v1beta"
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
 	monsterax "github.com/evrblk/monstera/x"
@@ -23,7 +23,7 @@ import (
 	"github.com/evrblk/grackle/pkg/locks"
 	"github.com/evrblk/grackle/pkg/namespaces"
 	"github.com/evrblk/grackle/pkg/semaphores"
-	grackle_preview "github.com/evrblk/grackle/pkg/server/preview"
+	grackle_v1beta "github.com/evrblk/grackle/pkg/server/v1beta"
 	"github.com/evrblk/grackle/pkg/tables"
 	"github.com/evrblk/grackle/pkg/waitgroups"
 	"github.com/evrblk/grackle/pkg/workers"
@@ -49,7 +49,7 @@ var singleNodeCmd = &cobra.Command{
 		}
 
 		// Metrics
-		grackle_preview.RegisterMetrics()
+		grackle_v1beta.RegisterMetrics()
 		metricsSrv := metrics.NewMetricsServer(singleNodeCmdCfg.prometheusPort)
 		metricsSrv.Start()
 
@@ -66,7 +66,7 @@ var singleNodeCmd = &cobra.Command{
 		// Middleware
 		unaryInterceptors := make([]grpc.UnaryServerInterceptor, 0)
 		if singleNodeCmdCfg.authKeysPath != "" {
-			unaryInterceptors = append(unaryInterceptors, grackle_preview.NewAuthenticationMiddleware(singleNodeCmdCfg.authKeysPath).Unary)
+			unaryInterceptors = append(unaryInterceptors, grackle_v1beta.NewAuthenticationMiddleware(singleNodeCmdCfg.authKeysPath).Unary)
 		}
 
 		// Grackle single node client
@@ -126,9 +126,9 @@ var singleNodeCmd = &cobra.Command{
 		}()
 
 		// Grackle API Gateway
-		grackleApiGatewayServer := grackle_preview.NewGrackleApiServer(grackleCoreApiClient)
+		grackleApiGatewayServer := grackle_v1beta.NewGrackleApiServer(grackleCoreApiClient)
 		defer grackleApiGatewayServer.Close()
-		gracklepb.RegisterGracklePreviewApiServer(grpcServer, grackleApiGatewayServer)
+		gracklepb.RegisterGrackleApiServer(grpcServer, grackleApiGatewayServer)
 
 		log.Println("Starting API Gateway Server...")
 		grpcServer.Serve(lis)

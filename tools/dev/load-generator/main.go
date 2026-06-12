@@ -10,7 +10,7 @@ import (
 	"time"
 
 	evrblk "github.com/evrblk/evrblk-go"
-	grackle "github.com/evrblk/evrblk-go/grackle/preview"
+	grackle "github.com/evrblk/evrblk-go/grackle/v1beta"
 	"github.com/evrblk/yellowstone-common/metrics"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

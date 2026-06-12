@@ -383,7 +383,7 @@ func TestCore_CompleteJobsFromWaitGroup(t *testing.T) {
 			Payload: &corepb.CompleteJobsFromWaitGroupRequest{
 				NamespaceId:   namespaceId,
 				WaitGroupName: "test_wait_group",
-				ProcessIds:    []string{"process_1", "process_2", "process_3"},
+				JobIds:        []string{"job_1", "job_2", "job_3"},
 				Now:           now.Add(time.Minute).UnixNano(),
 			},
 		})
@@ -400,7 +400,7 @@ func TestCore_CompleteJobsFromWaitGroup(t *testing.T) {
 			Payload: &corepb.CompleteJobsFromWaitGroupRequest{
 				NamespaceId:   namespaceId,
 				WaitGroupName: "test_wait_group",
-				ProcessIds:    []string{"process_1", "process_2"},
+				JobIds:        []string{"job_1", "job_2"},
 				Now:           now.Add(2 * time.Minute).UnixNano(),
 			},
 		})
@@ -425,7 +425,7 @@ func TestCore_CompleteJobsFromWaitGroup(t *testing.T) {
 					NamespaceId: rand.Uint32(),
 				},
 				WaitGroupName: "nonexistent_wait_group",
-				ProcessIds:    []string{"process_1", "process_2", "process_3"},
+				JobIds:        []string{"job_1", "job_2", "job_3"},
 				Now:           now.UnixNano(),
 			},
 		})
@@ -538,7 +538,7 @@ func TestCore_ListWaitGroupJobs(t *testing.T) {
 			Payload: &corepb.CompleteJobsFromWaitGroupRequest{
 				NamespaceId:   namespaceId,
 				WaitGroupName: "test_wait_group",
-				ProcessIds:    []string{"process_1", "process_2", "process_3"},
+				JobIds:        []string{"job_1", "job_2", "job_3"},
 				Now:           now.Add(time.Minute).UnixNano(),
 			},
 		})
@@ -594,15 +594,15 @@ func TestCore_ListWaitGroupJobs(t *testing.T) {
 		require.NotNil(t, resp1.Payload)
 
 		// Complete many jobs
-		processIds := make([]string, 50)
+		jobIds := make([]string, 50)
 		for i := range 50 {
-			processIds[i] = fmt.Sprintf("process_%d", i)
+			jobIds[i] = fmt.Sprintf("job_%d", i)
 		}
 		resp2, err := core.CompleteJobsFromWaitGroup(&coreapis.CompleteJobsFromWaitGroupRequest{
 			Payload: &corepb.CompleteJobsFromWaitGroupRequest{
 				NamespaceId:   namespaceId,
 				WaitGroupName: "test_wait_group",
-				ProcessIds:    processIds,
+				JobIds:        jobIds,
 				Now:           now.Add(time.Minute).UnixNano(),
 			},
 		})
@@ -834,12 +834,12 @@ func TestCore_DeleteWaitGroup(t *testing.T) {
 
 		// Complete all jobs in batches
 		batchSize := 10
-		processIds := make([]string, batchSize)
+		jobIds := make([]string, batchSize)
 		completedJobs := uint64(0)
 
 		for completedJobs < groupSize {
 			for i := range batchSize {
-				processIds[i] = fmt.Sprintf("process_%d", completedJobs+uint64(i))
+				jobIds[i] = fmt.Sprintf("job_%d", completedJobs+uint64(i))
 			}
 
 			resp2, err := core.CompleteJobsFromWaitGroup(&coreapis.CompleteJobsFromWaitGroupRequest{
@@ -849,7 +849,7 @@ func TestCore_DeleteWaitGroup(t *testing.T) {
 						NamespaceId: waitGroupId.NamespaceId,
 					},
 					WaitGroupName: "test_large_wait_group",
-					ProcessIds:    processIds,
+					JobIds:        jobIds,
 					Now:           now.Add(time.Duration(completedJobs) * time.Millisecond).UnixNano(),
 				},
 			})
@@ -932,7 +932,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 				NamespaceId: waitGroupId.NamespaceId,
 			},
 			WaitGroupName: "test_wait_group",
-			ProcessIds:    []string{"process_1", "process_2", "process_3"},
+			JobIds:        []string{"job_1", "job_2", "job_3"},
 			Now:           now.Add(time.Minute).UnixNano(),
 		},
 	})
@@ -952,7 +952,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 				NamespaceId: waitGroupId.NamespaceId,
 			},
 			WaitGroupName: "test_wait_group",
-			ProcessIds:    []string{"process_4", "process_5"},
+			JobIds:        []string{"job_4", "job_5"},
 			Now:           now.Add(2 * time.Minute).UnixNano(),
 		},
 	})
@@ -1011,7 +1011,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 				NamespaceId: waitGroupId.NamespaceId,
 			},
 			WaitGroupName: "test_wait_group",
-			ProcessIds:    []string{"process_6", "process_7"},
+			JobIds:        []string{"job_6", "job_7"},
 			Now:           now.Add(5 * time.Minute).UnixNano(),
 		},
 	})
@@ -1125,9 +1125,9 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 		require.NotNil(t, resp1.Payload)
 
 		// Complete all jobs to create job records
-		processIds := make([]string, jobsPerGroup)
+		jobIds := make([]string, jobsPerGroup)
 		for j := range jobsPerGroup {
-			processIds[j] = fmt.Sprintf("process_%d_%d", i, j)
+			jobIds[j] = fmt.Sprintf("job_%d_%d", i, j)
 		}
 
 		resp2, err := core.CompleteJobsFromWaitGroup(&coreapis.CompleteJobsFromWaitGroupRequest{
@@ -1137,7 +1137,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 					NamespaceId: waitGroupIds[i].NamespaceId,
 				},
 				WaitGroupName: waitGroupName,
-				ProcessIds:    processIds,
+				JobIds:        jobIds,
 				Now:           now.Add(time.Minute).UnixNano(),
 			},
 		})
@@ -1187,9 +1187,9 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 			require.NotNil(t, resp3.Payload)
 
 			// Complete all jobs to create job records
-			processIds := make([]string, jobsPerWaitGroup)
+			jobIds := make([]string, jobsPerWaitGroup)
 			for j := range jobsPerWaitGroup {
-				processIds[j] = fmt.Sprintf("process_ns%d_wg%d_%d", ns, wg, j)
+				jobIds[j] = fmt.Sprintf("job_ns%d_wg%d_%d", ns, wg, j)
 			}
 
 			resp4, err := core.CompleteJobsFromWaitGroup(&coreapis.CompleteJobsFromWaitGroupRequest{
@@ -1199,7 +1199,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 						NamespaceId: waitGroupId.NamespaceId,
 					},
 					WaitGroupName: waitGroupName,
-					ProcessIds:    processIds,
+					JobIds:        jobIds,
 					Now:           now.Add(time.Minute).UnixNano(),
 				},
 			})

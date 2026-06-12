@@ -23,7 +23,7 @@ func TestJobsTable_Create(t *testing.T) {
 				AccountId:   rand.Uint64(),
 				NamespaceId: rand.Uint32(),
 				WaitGroupId: rand.Uint64(),
-				ProcessId:   "process_123",
+				JobId:       "job_123",
 			},
 			CompletedAt: rand.Int64(),
 		}
@@ -42,7 +42,7 @@ func TestJobsTable_Create(t *testing.T) {
 		actual, err := table.Get(txn, waitGroupJob.Id)
 		require.NoError(t, err)
 		require.NotNil(t, actual)
-		require.Equal(t, waitGroupJob.Id.ProcessId, actual.Id.ProcessId)
+		require.Equal(t, waitGroupJob.Id.JobId, actual.Id.JobId)
 		require.Equal(t, waitGroupJob.CompletedAt, actual.CompletedAt)
 	})
 
@@ -64,7 +64,7 @@ func TestJobsTable_Create(t *testing.T) {
 					AccountId:   accountId,
 					NamespaceId: namespaceId,
 					WaitGroupId: waitGroupId,
-					ProcessId:   fmt.Sprintf("process_%d", i),
+					JobId:       fmt.Sprintf("job_%d", i),
 				},
 				CompletedAt: rand.Int64(),
 			}
@@ -85,13 +85,13 @@ func TestJobsTable_Create(t *testing.T) {
 				AccountId:   accountId,
 				NamespaceId: namespaceId,
 				WaitGroupId: waitGroupId,
-				ProcessId:   fmt.Sprintf("process_%d", i),
+				JobId:       fmt.Sprintf("job_%d", i),
 			}
 
 			actual, err := table.Get(txn, jobId)
 			require.NoError(t, err)
 			require.NotNil(t, actual)
-			require.Equal(t, fmt.Sprintf("process_%d", i), actual.Id.ProcessId)
+			require.Equal(t, fmt.Sprintf("job_%d", i), actual.Id.JobId)
 		}
 	})
 }
@@ -108,7 +108,7 @@ func TestJobsTable_Get(t *testing.T) {
 				AccountId:   rand.Uint64(),
 				NamespaceId: rand.Uint32(),
 				WaitGroupId: rand.Uint64(),
-				ProcessId:   "process_123",
+				JobId:       "job_123",
 			},
 			CompletedAt: rand.Int64(),
 		}
@@ -129,7 +129,7 @@ func TestJobsTable_Get(t *testing.T) {
 		require.Equal(t, waitGroupJob.Id.AccountId, actual.Id.AccountId)
 		require.Equal(t, waitGroupJob.Id.NamespaceId, actual.Id.NamespaceId)
 		require.Equal(t, waitGroupJob.Id.WaitGroupId, actual.Id.WaitGroupId)
-		require.Equal(t, waitGroupJob.Id.ProcessId, actual.Id.ProcessId)
+		require.Equal(t, waitGroupJob.Id.JobId, actual.Id.JobId)
 		require.Equal(t, waitGroupJob.CompletedAt, actual.CompletedAt)
 	})
 
@@ -146,7 +146,7 @@ func TestJobsTable_Get(t *testing.T) {
 			AccountId:   rand.Uint64(),
 			NamespaceId: rand.Uint32(),
 			WaitGroupId: rand.Uint64(),
-			ProcessId:   "nonexistent_process",
+			JobId:       "nonexistent_job",
 		}
 
 		actual, err := table.Get(txn, jobId)
@@ -168,7 +168,7 @@ func TestJobsTable_Delete(t *testing.T) {
 				AccountId:   rand.Uint64(),
 				NamespaceId: rand.Uint32(),
 				WaitGroupId: rand.Uint64(),
-				ProcessId:   "process_123",
+				JobId:       "job_123",
 			},
 			CompletedAt: rand.Int64(),
 		}
@@ -206,7 +206,7 @@ func TestJobsTable_Delete(t *testing.T) {
 			AccountId:   rand.Uint64(),
 			NamespaceId: rand.Uint32(),
 			WaitGroupId: rand.Uint64(),
-			ProcessId:   "nonexistent_process",
+			JobId:       "nonexistent_job",
 		}
 
 		txn := badgerStore.Update()
@@ -232,7 +232,7 @@ func TestJobsTable_Delete(t *testing.T) {
 				AccountId:   accountId,
 				NamespaceId: namespaceId,
 				WaitGroupId: waitGroupId,
-				ProcessId:   "process_1",
+				JobId:       "job_1",
 			},
 			CompletedAt: rand.Int64(),
 		}
@@ -242,7 +242,7 @@ func TestJobsTable_Delete(t *testing.T) {
 				AccountId:   accountId,
 				NamespaceId: namespaceId,
 				WaitGroupId: waitGroupId,
-				ProcessId:   "process_2",
+				JobId:       "job_2",
 			},
 			CompletedAt: rand.Int64(),
 		}
@@ -274,7 +274,7 @@ func TestJobsTable_Delete(t *testing.T) {
 		actual2, err := table.Get(txn, job2.Id)
 		require.NoError(t, err)
 		require.NotNil(t, actual2)
-		require.Equal(t, "process_2", actual2.Id.ProcessId)
+		require.Equal(t, "job_2", actual2.Id.JobId)
 	})
 }
 
@@ -297,7 +297,7 @@ func TestJobsTable_List(t *testing.T) {
 					AccountId:   accountId,
 					NamespaceId: namespaceId,
 					WaitGroupId: waitGroupId,
-					ProcessId:   fmt.Sprintf("process_%d", i),
+					JobId:       fmt.Sprintf("job_%d", i),
 				},
 				CompletedAt: rand.Int64(),
 			}
@@ -339,7 +339,7 @@ func TestJobsTable_List(t *testing.T) {
 					AccountId:   accountId,
 					NamespaceId: namespaceId,
 					WaitGroupId: waitGroupId,
-					ProcessId:   fmt.Sprintf("process_%03d", i),
+					JobId:       fmt.Sprintf("job_%03d", i),
 				},
 				CompletedAt: rand.Int64(),
 			}
@@ -371,7 +371,7 @@ func TestJobsTable_List(t *testing.T) {
 		require.NotNil(t, page2.previousPaginationToken)
 
 		// Verify different pages have different jobs
-		require.NotEqual(t, page1.jobs[0].Id.ProcessId, page2.jobs[0].Id.ProcessId)
+		require.NotEqual(t, page1.jobs[0].Id.JobId, page2.jobs[0].Id.JobId)
 	})
 
 	t.Run("list empty wait group", func(t *testing.T) {
@@ -409,7 +409,7 @@ func TestJobsTable_List(t *testing.T) {
 					AccountId:   accountId,
 					NamespaceId: namespaceId,
 					WaitGroupId: waitGroupId1,
-					ProcessId:   fmt.Sprintf("wg1_process_%d", i),
+					JobId:       fmt.Sprintf("wg1_job_%d", i),
 				},
 				CompletedAt: rand.Int64(),
 			}
@@ -428,7 +428,7 @@ func TestJobsTable_List(t *testing.T) {
 					AccountId:   accountId,
 					NamespaceId: namespaceId,
 					WaitGroupId: waitGroupId2,
-					ProcessId:   fmt.Sprintf("wg2_process_%d", i),
+					JobId:       fmt.Sprintf("wg2_job_%d", i),
 				},
 				CompletedAt: rand.Int64(),
 			}

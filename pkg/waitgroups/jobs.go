@@ -11,7 +11,7 @@ import (
 	"github.com/evrblk/grackle/pkg/tables"
 )
 
-// jobsTable stores completed jobs for wait groups indexed by process ID.
+// jobsTable stores completed jobs for wait groups indexed by job ID.
 //
 // Table Primary Key:
 // 1. shard key (by account id and namespace id)
@@ -20,7 +20,7 @@ import (
 // 4. wait group id
 //
 // Table Sort Key:
-// 1. process id
+// 1. job id
 type jobsTable struct {
 	table *monsterax.BinaryTable[*corepb.WaitGroupJob, corepb.WaitGroupJob]
 }
@@ -62,14 +62,14 @@ func (t *jobsTable) Get(txn *store.Txn, waitGroupJobId *corepb.WaitGroupJobId) (
 	return t.table.Get(txn,
 		utils.ConcatBytes(
 			tablePK(waitGroupJobId.AccountId, waitGroupJobId.NamespaceId, waitGroupJobId.WaitGroupId),
-			tableSK(waitGroupJobId.ProcessId)))
+			tableSK(waitGroupJobId.JobId)))
 }
 
 func (t *jobsTable) Create(txn *store.Txn, waitGroupJob *corepb.WaitGroupJob) error {
 	return t.table.Set(txn,
 		utils.ConcatBytes(
 			tablePK(waitGroupJob.Id.AccountId, waitGroupJob.Id.NamespaceId, waitGroupJob.Id.WaitGroupId),
-			tableSK(waitGroupJob.Id.ProcessId)),
+			tableSK(waitGroupJob.Id.JobId)),
 		waitGroupJob)
 }
 
@@ -77,7 +77,7 @@ func (t *jobsTable) Delete(txn *store.Txn, waitGroupJobId *corepb.WaitGroupJobId
 	return t.table.Delete(txn,
 		utils.ConcatBytes(
 			tablePK(waitGroupJobId.AccountId, waitGroupJobId.NamespaceId, waitGroupJobId.WaitGroupId),
-			tableSK(waitGroupJobId.ProcessId)))
+			tableSK(waitGroupJobId.JobId)))
 }
 
 func tablePK(accountId uint64, namespaceId uint32, waitGroupId uint64) []byte {
@@ -89,8 +89,8 @@ func tablePK(accountId uint64, namespaceId uint32, waitGroupId uint64) []byte {
 	)
 }
 
-func tableSK(processId string) []byte {
+func tableSK(jobId string) []byte {
 	return utils.ConcatBytes(
-		processId,
+		jobId,
 	)
 }

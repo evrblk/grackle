@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"time"
 
-	grackle "github.com/evrblk/evrblk-go/grackle/preview"
+	grackle "github.com/evrblk/evrblk-go/grackle/v1beta"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -278,17 +278,17 @@ func executeCompleteWaitGroupJobs(ctx context.Context, client grackle.GrackleApi
 	}
 	wgName := waitgroups[rng.Intn(len(waitgroups))]
 
-	// Random number of process IDs (1 to batch size)
+	// Random number of job IDs (1 to batch size)
 	numProcesses := rng.Intn(config.WaitGroupJobBatchSize) + 1
-	processIDs := make([]string, numProcesses)
+	jobIDs := make([]string, numProcesses)
 	for i := range numProcesses {
-		processIDs[i] = fmt.Sprintf("load-worker-%d-%d-%d", workerID, time.Now().UnixNano(), i)
+		jobIDs[i] = fmt.Sprintf("load-worker-%d-%d-%d", workerID, time.Now().UnixNano(), i)
 	}
 
 	_, err := client.CompleteJobsFromWaitGroup(ctx, &grackle.CompleteJobsFromWaitGroupRequest{
 		NamespaceName: ns,
 		WaitGroupName: wgName,
-		ProcessIds:    processIDs,
+		JobIds:        jobIDs,
 	})
 	return err
 }

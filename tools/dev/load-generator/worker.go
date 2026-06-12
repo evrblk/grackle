@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	grackle "github.com/evrblk/evrblk-go/grackle/preview"
+	grackle "github.com/evrblk/evrblk-go/grackle/v1beta"
 	"golang.org/x/time/rate"
 )
 

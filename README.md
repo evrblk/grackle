@@ -8,7 +8,7 @@ Everblack Grackle is a distributed-synchronization-primitives-as-a-service:
 * __hierarchical locks__ (can be exclusively locked by a single process, or shared by multiple processes)
 * __weighted semaphores__ (tracks how many units of a particular resource are available)
 * __wait groups__ (merge or fan-in of millions of tasks, similar to `sync.WaitGroup` in Go)
-* __barriers__ (wait for millions of processes to reach a certain point)
+* __barriers__ (repeatedly wait for millions of processes to reach a certain point)
 
 Grackle state is durable. All holds are lease-based, with a set expiration time. Process crash will not cause dangling locks. 
 Long-running processes can extend their leases. All operations are atomic and safe to retry.
@@ -91,7 +91,7 @@ $ go tool github.com/evrblk/monstera/cmd/monstera config add-application \
   --shards-count=8
 ```
 
-This will create `./cluster_config.json` file with 3 nodes and 4 sharded application cores that are parts of Grackle. 
+This will create `./cluster_config.json` file with 3 nodes and 5 sharded application cores that are parts of Grackle. 
 Take a look inside to see how actually simple it is.
 
 Then run all components:
@@ -113,10 +113,10 @@ Use with `evrblk` CLI tool from [github.com/evrblk/evrblk-cli](https://github.co
 Example:
 
 ```shell
-$ evrblk grackle-preview list-namespaces --endpoint=localhost:8000
+$ evrblk grackle-v1beta list-namespaces --endpoint=localhost:8000
 {}
 
-$ echo '{"name": "name1"}' | evrblk grackle-preview create-namespace --endpoint=localhost:8000
+$ echo '{"name": "name1"}' | evrblk grackle-v1beta create-namespace --endpoint=localhost:8000
 {
   "namespace":  {
     "name":  "name1",
@@ -125,7 +125,7 @@ $ echo '{"name": "name1"}' | evrblk grackle-preview create-namespace --endpoint=
   }
 }
 
-$ echo '{"namespace_name": "name1"}' | evrblk grackle-preview list-locks --endpoint=localhost:8000
+$ echo '{"namespace_name": "name1"}' | evrblk grackle-v1beta list-locks --endpoint=localhost:8000
 {}
 ```
 
@@ -138,7 +138,7 @@ Example in Go:
 ```go
 import (
     evrblk "github.com/evrblk/evrblk-go"
-    grackle "github.com/evrblk/evrblk-go/grackle/preview"
+    grackle "github.com/evrblk/evrblk-go/grackle/v1beta"
 )
 
 grackleClient := grackle.NewGrackleGrpcClient("localhost:8000", evrblk.NewNoOpSigner())
@@ -150,10 +150,11 @@ createLeaseResp, err := grackleClient.CreateLockLease(context.Background(), &gra
 })
 
 acquireLockResp, err := grackleClient.AcquireLock(context.Background(), &grackle.AcquireLockRequest{
-	NamespaceName: "my_namespace",
-	LockName:      "lock1",
-	WriteLock:     true,
-	LeaseId:       createLeaseResp.Lease.Id,
+	NamespaceName:  "my_namespace",
+	LockName:       "lock1",
+	Exclusive:      true,
+	LeaseId:        createLeaseResp.Lease.Id,
+	TimeoutSeconds: 60,
 })
 ```
 

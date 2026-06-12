@@ -73,7 +73,7 @@ message AddJobsToWaitGroupResponse {
 message CompleteJobsFromWaitGroupRequest {
   NamespaceId namespace_id = 1;
   string wait_group_name = 2;
-  repeated string process_ids = 3;
+  repeated string job_ids = 3;
   int64 now = 4;
 }
 
@@ -132,7 +132,7 @@ message WaitGroupJobId {
   uint64 account_id = 1;
   uint32 namespace_id = 2;
   uint64 wait_group_id = 3;
-  string process_id = 4;
+  string job_id = 4;
 }
 
 message WaitGroupId {

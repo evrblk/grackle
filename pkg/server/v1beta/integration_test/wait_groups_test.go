@@ -1,0 +1,559 @@
+package integration_test
+
+import (
+	"context"
+	"fmt"
+	"testing"
+	"time"
+
+	gracklepb "github.com/evrblk/evrblk-go/grackle/v1beta"
+	"github.com/evrblk/grackle/pkg/server/v1beta"
+	"github.com/stretchr/testify/require"
+)
+
+func TestCreateWaitGroup(t *testing.T) {
+	t.Run("validation", func(t *testing.T) {
+		server := setupGrackleApiServer(t)
+		ctx := context.Background()
+
+		// Create namespace
+		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
+			Name: "namespace1",
+		})
+		require.NoError(t, err)
+
+		// Valid request
+		resp, err := server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
+			NamespaceName: "namespace1",
+			WaitGroupName: "waitgroup1",
+			Counter:       1,
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp.WaitGroup)
+
+		// Invalid request - invalid namespace name
+		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
+			NamespaceName: "invalid@namespace",
+			WaitGroupName: "waitgroup1",
+			Counter:       1,
+		})
+		require.Error(t, err)
+	})
+
+	t.Run("max_size_validation", func(t *testing.T) {
+		server := setupGrackleApiServer(t)
+		ctx := context.Background()
+
+		// Create namespace
+		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
+			Name: "namespace1",
+		})
+		require.NoError(t, err)
+
+		// Test valid wait group size (within limits)
+		resp, err := server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
+			NamespaceName: "namespace1",
+			WaitGroupName: "waitgroup1",
+			Counter:       uint64(v1beta.DefaultServiceLimits.MaxWaitGroupSize), // Max allowed by account limits
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp.WaitGroup)
+		require.EqualValues(t, v1beta.DefaultServiceLimits.MaxWaitGroupSize, resp.WaitGroup.Counter)
+
+		// Test wait group size exceeding account limits
+		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
+			NamespaceName: "namespace1",
+			WaitGroupName: "waitgroup2",
+			Counter:       uint64(v1beta.DefaultServiceLimits.MaxWaitGroupSize + 1), // Exceeds MaxWaitGroupSize
+		})
+		require.Error(t, err)
+		require.Contains(t, err.Error(), fmt.Sprintf("wait group size is too big, max: %d", uint64(v1beta.DefaultServiceLimits.MaxWaitGroupSize)))
+	})
+}
+
+func TestGetWaitGroup(t *testing.T) {
+	t.Run("validation", func(t *testing.T) {
+		server := setupGrackleApiServer(t)
+		ctx := context.Background()
+
+		// Create namespace
+		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
+			Name: "namespace1",
+		})
+		require.NoError(t, err)
+
+		// Create wait group
+		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
+			NamespaceName: "namespace1",
+			WaitGroupName: "waitgroup1",
+			Counter:       1,
+		})
+		require.NoError(t, err)
+
+		// Valid request
+		resp, err := server.GetWaitGroup(ctx, &gracklepb.GetWaitGroupRequest{
+			NamespaceName: "namespace1",
+			WaitGroupName: "waitgroup1",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp.WaitGroup)
+
+		// Invalid request - invalid namespace name
+		_, err = server.GetWaitGroup(ctx, &gracklepb.GetWaitGroupRequest{
+			NamespaceName: "invalid@namespace",
+			WaitGroupName: "waitgroup1",
+		})
+		require.Error(t, err)
+	})
+}
+
+func TestAddJobsToWaitGroup(t *testing.T) {
+	t.Run("validation", func(t *testing.T) {
+		server := setupGrackleApiServer(t)
+		ctx := context.Background()
+
+		// Create namespace
+		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
+			Name: "namespace1",
+		})
+		require.NoError(t, err)
+
+		// Create wait group
+		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
+			NamespaceName: "namespace1",
+			WaitGroupName: "waitgroup1",
+			Counter:       1,
+		})
+		require.NoError(t, err)
+
+		// Valid request
+		resp, err := server.AddJobsToWaitGroup(ctx, &gracklepb.AddJobsToWaitGroupRequest{
+			NamespaceName: "namespace1",
+			WaitGroupName: "waitgroup1",
+			Counter:       5,
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp.WaitGroup)
+
+		// Invalid request - invalid namespace name
+		_, err = server.AddJobsToWaitGroup(ctx, &gracklepb.AddJobsToWaitGroupRequest{
+			NamespaceName: "invalid@namespace",
+			WaitGroupName: "waitgroup1",
+			Counter:       5,
+		})
+		require.Error(t, err)
+	})
+}
+
+func TestCompleteJobsFromWaitGroup(t *testing.T) {
+	t.Run("validation", func(t *testing.T) {
+		server := setupGrackleApiServer(t)
+		ctx := context.Background()
+
+		// Create namespace
+		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
+			Name: "namespace1",
+		})
+		require.NoError(t, err)
+
+		// Create wait group
+		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
+			NamespaceName: "namespace1",
+			WaitGroupName: "waitgroup1",
+			Counter:       1,
+		})
+		require.NoError(t, err)
+
+		// Valid request
+		resp, err := server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
+			NamespaceName: "namespace1",
+			WaitGroupName: "waitgroup1",
+			JobIds:        []string{"job1", "job2"},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+
+		// Invalid request - invalid namespace name
+		_, err = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
+			NamespaceName: "invalid@namespace",
+			WaitGroupName: "waitgroup1",
+			JobIds:        []string{"job1"},
+		})
+		require.Error(t, err)
+	})
+}
+
+func TestDeleteWaitGroup(t *testing.T) {
+	t.Run("validation", func(t *testing.T) {
+		server := setupGrackleApiServer(t)
+		ctx := context.Background()
+
+		// Create namespace
+		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
+			Name: "namespace1",
+		})
+		require.NoError(t, err)
+
+		// Create wait group
+		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
+			NamespaceName: "namespace1",
+			WaitGroupName: "waitgroup1",
+			Counter:       1,
+		})
+		require.NoError(t, err)
+
+		// Valid request
+		_, err = server.DeleteWaitGroup(ctx, &gracklepb.DeleteWaitGroupRequest{
+			NamespaceName: "namespace1",
+			WaitGroupName: "waitgroup1",
+		})
+		require.NoError(t, err)
+
+		// Invalid request - invalid namespace name
+		_, err = server.DeleteWaitGroup(ctx, &gracklepb.DeleteWaitGroupRequest{
+			NamespaceName: "invalid@namespace",
+			WaitGroupName: "waitgroup1",
+		})
+		require.Error(t, err)
+	})
+}
+
+func TestListWaitGroups(t *testing.T) {
+	t.Run("validation", func(t *testing.T) {
+		server := setupGrackleApiServer(t)
+		ctx := context.Background()
+
+		// Create namespace
+		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
+			Name: "namespace1",
+		})
+		require.NoError(t, err)
+
+		// Valid request
+		resp, err := server.ListWaitGroups(ctx, &gracklepb.ListWaitGroupsRequest{
+			NamespaceName: "namespace1",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp.WaitGroups)
+
+		// Invalid request - invalid namespace name
+		_, err = server.ListWaitGroups(ctx, &gracklepb.ListWaitGroupsRequest{
+			NamespaceName: "invalid@namespace",
+		})
+		require.Error(t, err)
+	})
+
+	t.Run("pagination", func(t *testing.T) {
+		server := setupGrackleApiServer(t)
+		ctx := context.Background()
+
+		// Create namespace
+		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
+			Name: "test-namespace",
+		})
+		require.NoError(t, err)
+
+		// Create 25 wait groups to test pagination (3 pages with limit 10)
+		for i := range 25 {
+			_, err := server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
+				NamespaceName: "test-namespace",
+				WaitGroupName: fmt.Sprintf("waitgroup_%03d", i+1),
+				Description:   fmt.Sprintf("Test wait group %d", i+1),
+				Counter:       10,
+			})
+			require.NoError(t, err)
+		}
+
+		// Test forward pagination through 3 pages
+		var allWaitGroups []*gracklepb.WaitGroup
+
+		// Page 1: Get first 10 wait groups
+		resp1, err := server.ListWaitGroups(ctx, &gracklepb.ListWaitGroupsRequest{
+			NamespaceName: "test-namespace",
+			Limit:         10,
+		})
+		require.NoError(t, err)
+		require.Len(t, resp1.WaitGroups, 10)
+		require.NotEmpty(t, resp1.NextPaginationToken)
+		require.Empty(t, resp1.PreviousPaginationToken)
+
+		allWaitGroups = append(allWaitGroups, resp1.WaitGroups...)
+
+		// Page 2: Get next 10 wait groups
+		resp2, err := server.ListWaitGroups(ctx, &gracklepb.ListWaitGroupsRequest{
+			NamespaceName:   "test-namespace",
+			PaginationToken: resp1.NextPaginationToken,
+			Limit:           10,
+		})
+		require.NoError(t, err)
+		require.Len(t, resp2.WaitGroups, 10)
+		require.NotEmpty(t, resp2.NextPaginationToken)
+		require.NotEmpty(t, resp2.PreviousPaginationToken)
+
+		allWaitGroups = append(allWaitGroups, resp2.WaitGroups...)
+
+		// Page 3: Get remaining 5 wait groups
+		resp3, err := server.ListWaitGroups(ctx, &gracklepb.ListWaitGroupsRequest{
+			NamespaceName:   "test-namespace",
+			PaginationToken: resp2.NextPaginationToken,
+			Limit:           10,
+		})
+		require.NoError(t, err)
+		require.Len(t, resp3.WaitGroups, 5)
+		require.Empty(t, resp3.NextPaginationToken)
+		require.NotEmpty(t, resp3.PreviousPaginationToken)
+
+		allWaitGroups = append(allWaitGroups, resp3.WaitGroups...)
+
+		// Verify we got all 25 wait groups
+		require.Len(t, allWaitGroups, 25)
+
+		// Test backward pagination from the last page
+		resp4, err := server.ListWaitGroups(ctx, &gracklepb.ListWaitGroupsRequest{
+			NamespaceName:   "test-namespace",
+			PaginationToken: resp3.PreviousPaginationToken,
+			Limit:           10,
+		})
+		require.NoError(t, err)
+		require.Len(t, resp4.WaitGroups, 10)
+		require.NotEmpty(t, resp4.NextPaginationToken)
+		require.NotEmpty(t, resp4.PreviousPaginationToken)
+	})
+}
+
+func TestListWaitGroupCompletedJobs(t *testing.T) {
+	t.Run("validation", func(t *testing.T) {
+		server := setupGrackleApiServer(t)
+		ctx := context.Background()
+
+		// Create namespace first
+		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
+			Name: "namespace1",
+		})
+		require.NoError(t, err)
+
+		// Create wait group
+		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
+			NamespaceName: "namespace1",
+			WaitGroupName: "waitgroup1",
+			Counter:       10,
+		})
+		require.NoError(t, err)
+
+		// Valid request
+		resp, err := server.ListWaitGroupCompletedJobs(ctx, &gracklepb.ListWaitGroupCompletedJobsRequest{
+			NamespaceName: "namespace1",
+			WaitGroupName: "waitgroup1",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp.Jobs)
+
+		// Invalid request - invalid namespace name
+		_, err = server.ListWaitGroupCompletedJobs(ctx, &gracklepb.ListWaitGroupCompletedJobsRequest{
+			NamespaceName: "invalid@namespace",
+			WaitGroupName: "waitgroup1",
+		})
+		require.Error(t, err)
+	})
+
+	t.Run("pagination", func(t *testing.T) {
+		server := setupGrackleApiServer(t)
+		ctx := context.Background()
+
+		// Create namespace
+		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
+			Name: "test-namespace",
+		})
+		require.NoError(t, err)
+
+		// Create a wait group with 25 jobs
+		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
+			NamespaceName: "test-namespace",
+			WaitGroupName: "test-waitgroup",
+			Counter:       25,
+		})
+		require.NoError(t, err)
+
+		// Complete all 25 jobs
+		jobIds := make([]string, 25)
+		for i := range 25 {
+			jobIds[i] = fmt.Sprintf("job-%d", i+1)
+		}
+		_, err = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
+			NamespaceName: "test-namespace",
+			WaitGroupName: "test-waitgroup",
+			JobIds:        jobIds,
+		})
+		require.NoError(t, err)
+
+		// First page - get first 10 jobs
+		resp1, err := server.ListWaitGroupCompletedJobs(ctx, &gracklepb.ListWaitGroupCompletedJobsRequest{
+			NamespaceName: "test-namespace",
+			WaitGroupName: "test-waitgroup",
+			Limit:         10,
+		})
+		require.NoError(t, err)
+		require.Len(t, resp1.Jobs, 10)
+		require.NotEmpty(t, resp1.NextPaginationToken)
+		require.Empty(t, resp1.PreviousPaginationToken)
+
+		// Second page - get next 10 jobs
+		resp2, err := server.ListWaitGroupCompletedJobs(ctx, &gracklepb.ListWaitGroupCompletedJobsRequest{
+			NamespaceName:   "test-namespace",
+			WaitGroupName:   "test-waitgroup",
+			Limit:           10,
+			PaginationToken: resp1.NextPaginationToken,
+		})
+		require.NoError(t, err)
+		require.Len(t, resp2.Jobs, 10)
+		require.NotEmpty(t, resp2.NextPaginationToken)
+		require.NotEmpty(t, resp2.PreviousPaginationToken)
+
+		// Third page - get remaining 5 jobs
+		resp3, err := server.ListWaitGroupCompletedJobs(ctx, &gracklepb.ListWaitGroupCompletedJobsRequest{
+			NamespaceName:   "test-namespace",
+			WaitGroupName:   "test-waitgroup",
+			Limit:           10,
+			PaginationToken: resp2.NextPaginationToken,
+		})
+		require.NoError(t, err)
+		require.Len(t, resp3.Jobs, 5)
+		require.Empty(t, resp3.NextPaginationToken)
+		require.NotEmpty(t, resp3.PreviousPaginationToken)
+	})
+}
+
+func TestWaitForWaitGroup(t *testing.T) {
+	t.Run("validation", func(t *testing.T) {
+		server := setupGrackleApiServer(t)
+		ctx := context.Background()
+
+		// Create namespace first
+		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
+			Name: "namespace1",
+		})
+		require.NoError(t, err)
+
+		// Create wait group
+		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
+			NamespaceName: "namespace1",
+			WaitGroupName: "waitgroup1",
+			Counter:       10,
+		})
+		require.NoError(t, err)
+
+		// Valid request
+		_, err = server.WaitForWaitGroup(ctx, &gracklepb.WaitForWaitGroupRequest{
+			NamespaceName:  "namespace1",
+			WaitGroupName:  "waitgroup1",
+			TimeoutSeconds: 1,
+		})
+		require.NoError(t, err)
+
+		// Invalid request - invalid namespace name
+		_, err = server.WaitForWaitGroup(ctx, &gracklepb.WaitForWaitGroupRequest{
+			NamespaceName:  "invalid@namespace",
+			WaitGroupName:  "waitgroup1",
+			TimeoutSeconds: 1,
+		})
+		require.Error(t, err)
+
+		// Invalid request - timeout too high
+		_, err = server.WaitForWaitGroup(ctx, &gracklepb.WaitForWaitGroupRequest{
+			NamespaceName:  "namespace1",
+			WaitGroupName:  "waitgroup1",
+			TimeoutSeconds: 301,
+		})
+		require.Error(t, err)
+	})
+
+	t.Run("completion", func(t *testing.T) {
+		server := setupGrackleApiServer(t)
+		ctx := context.Background()
+
+		// Create namespace
+		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
+			Name: "test-namespace",
+		})
+		require.NoError(t, err)
+
+		// Create wait group with counter=2
+		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
+			NamespaceName: "test-namespace",
+			WaitGroupName: "test-wg",
+			Counter:       2,
+		})
+		require.NoError(t, err)
+
+		// Test: Wait for a wait group that completes within timeout
+		go func() {
+			time.Sleep(50 * time.Millisecond)
+			// Complete first job
+			_, _ = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
+				NamespaceName: "test-namespace",
+				WaitGroupName: "test-wg",
+				JobIds:        []string{"job1"},
+			})
+			time.Sleep(50 * time.Millisecond)
+			// Complete second job
+			_, _ = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
+				NamespaceName: "test-namespace",
+				WaitGroupName: "test-wg",
+				JobIds:        []string{"job2"},
+			})
+		}()
+
+		// Wait for completion with 1 second timeout
+		resp, err := server.WaitForWaitGroup(ctx, &gracklepb.WaitForWaitGroupRequest{
+			NamespaceName:  "test-namespace",
+			WaitGroupName:  "test-wg",
+			TimeoutSeconds: 1,
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		require.True(t, resp.Completed)
+		require.False(t, resp.TimedOut)
+		require.Equal(t, uint64(2), resp.WaitGroup.Counter)
+		require.Equal(t, uint64(2), resp.WaitGroup.Completed)
+	})
+
+	t.Run("timeout", func(t *testing.T) {
+		server := setupGrackleApiServer(t)
+		ctx := context.Background()
+
+		// Create namespace
+		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
+			Name: "test-namespace",
+		})
+		require.NoError(t, err)
+
+		// Create wait group that won't complete
+		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
+			NamespaceName: "test-namespace",
+			WaitGroupName: "test-wg-timeout",
+			Counter:       10,
+		})
+		require.NoError(t, err)
+
+		// Complete only 5 jobs
+		_, err = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
+			NamespaceName: "test-namespace",
+			WaitGroupName: "test-wg-timeout",
+			JobIds:        []string{"p1", "p2", "p3", "p4", "p5"},
+		})
+		require.NoError(t, err)
+
+		// Wait with 1 second timeout (should timeout)
+		resp, err := server.WaitForWaitGroup(ctx, &gracklepb.WaitForWaitGroupRequest{
+			NamespaceName:  "test-namespace",
+			WaitGroupName:  "test-wg-timeout",
+			TimeoutSeconds: 1,
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		require.False(t, resp.Completed)
+		require.True(t, resp.TimedOut)
+		require.Equal(t, uint64(10), resp.WaitGroup.Counter)
+		require.Equal(t, uint64(5), resp.WaitGroup.Completed)
+	})
+}

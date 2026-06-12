@@ -382,12 +382,12 @@ func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroup
 		return nil, err
 	}
 
-	for _, processId := range req.Payload.ProcessIds {
+	for _, jobId := range req.Payload.JobIds {
 		waitGroupJobId := &corepb.WaitGroupJobId{
 			AccountId:   req.Payload.NamespaceId.AccountId,
 			NamespaceId: req.Payload.NamespaceId.NamespaceId,
 			WaitGroupId: waitGroup.Id.WaitGroupId,
-			ProcessId:   processId,
+			JobId:       jobId,
 		}
 		_, err := c.jobs.Get(txn, waitGroupJobId)
 		if err != nil {

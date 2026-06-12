@@ -25,13 +25,13 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	grpc_server "google.golang.org/grpc"
 
-	gracklepb "github.com/evrblk/evrblk-go/grackle/preview"
+	gracklepb "github.com/evrblk/evrblk-go/grackle/v1beta"
 	"github.com/evrblk/grackle/pkg/barriers"
 	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/locks"
 	"github.com/evrblk/grackle/pkg/namespaces"
 	"github.com/evrblk/grackle/pkg/semaphores"
-	grackle_preview "github.com/evrblk/grackle/pkg/server/preview"
+	grackle_v1beta "github.com/evrblk/grackle/pkg/server/v1beta"
 	"github.com/evrblk/grackle/pkg/tables"
 	"github.com/evrblk/grackle/pkg/waitgroups"
 )
@@ -281,13 +281,13 @@ func main() {
 	// Start gateway if port is specified
 	var monsteraClient *monstera.Client
 	var grpcServer *grpc_server.Server
-	var grackleApiGatewayServer *grackle_preview.GrackleApiServer
+	var grackleApiGatewayServer *grackle_v1beta.GrackleApiServer
 
 	if *gatewayPort > 0 {
 		log.Printf("Starting gateway on port %d...", *gatewayPort)
 
 		// Register gateway metrics
-		grackle_preview.RegisterMetrics()
+		grackle_v1beta.RegisterMetrics()
 
 		// Create listener
 		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *gatewayPort))
@@ -312,8 +312,8 @@ func main() {
 
 		// Create Grackle API Gateway
 		grackleCoreApiClient := coreapis.NewGrackleMonsteraStub(monsteraClient)
-		grackleApiGatewayServer = grackle_preview.NewGrackleApiServer(grackleCoreApiClient)
-		gracklepb.RegisterGracklePreviewApiServer(grpcServer, grackleApiGatewayServer)
+		grackleApiGatewayServer = grackle_v1beta.NewGrackleApiServer(grackleCoreApiClient)
+		gracklepb.RegisterGrackleApiServer(grpcServer, grackleApiGatewayServer)
 
 		// Start serving in a goroutine
 		go func() {
