@@ -24,6 +24,16 @@ func init() {
 }
 
 func setupGrackleApiServer(t *testing.T) *v1beta.GrackleApiServer {
+	server, close := newGrackleApiServer(t)
+	t.Cleanup(close)
+	return server
+}
+
+// newGrackleApiServer is identical to setupGrackleApiServer but returns the
+// close func instead of registering it via t.Cleanup. Use it from synctest
+// tests where the close must run inside the bubble before synctest.Test
+// returns, so the Badger background goroutines exit and the bubble can drain.
+func newGrackleApiServer(t *testing.T) (*v1beta.GrackleApiServer, func()) {
 	dataStore, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
@@ -48,5 +58,5 @@ func setupGrackleApiServer(t *testing.T) *v1beta.GrackleApiServer {
 
 	grackleApiGatewayServer := v1beta.NewGrackleApiServer(grackleCoreApiClient)
 
-	return grackleApiGatewayServer
+	return grackleApiGatewayServer, dataStore.Close
 }

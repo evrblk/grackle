@@ -538,12 +538,11 @@ func TestWaitForWaitGroup(t *testing.T) {
 
 		go func() {
 			// Complete only 5 jobs
-			_, err = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
+			_, _ = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
 				NamespaceName: "test-namespace",
 				WaitGroupName: "test-wg-timeout",
 				JobIds:        []string{"p1", "p2", "p3", "p4", "p5"},
 			})
-			require.NoError(t, err)
 		}()
 
 		// Wait with 1 second timeout (should timeout)

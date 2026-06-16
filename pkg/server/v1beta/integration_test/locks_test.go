@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	gracklepb "github.com/evrblk/evrblk-go/grackle/v1beta"
@@ -46,62 +47,65 @@ func TestAcquireLock(t *testing.T) {
 	})
 
 	t.Run("blocking", func(t *testing.T) {
-		server := setupGrackleApiServer(t)
-		ctx := context.Background()
+		synctest.Test(t, func(t *testing.T) {
+			server, closeServer := newGrackleApiServer(t)
+			defer closeServer()
+			ctx := context.Background()
 
-		// Create namespace
-		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
-			Name: "test-namespace",
-		})
-		require.NoError(t, err)
-
-		// Create first lease and acquire the lock exclusively, making it busy
-		holderLease, err := server.CreateLockLease(ctx, &gracklepb.CreateLockLeaseRequest{
-			NamespaceName: "test-namespace",
-			ProcessId:     "holder",
-			TtlSeconds:    30,
-		})
-		require.NoError(t, err)
-
-		acqResp, err := server.AcquireLock(ctx, &gracklepb.AcquireLockRequest{
-			NamespaceName:  "test-namespace",
-			LockName:       "test-lock",
-			LeaseId:        holderLease.Lease.LeaseId,
-			Exclusive:      true,
-			TimeoutSeconds: 5,
-		})
-		require.NoError(t, err)
-		require.True(t, acqResp.Success)
-
-		// Create second lease for the waiter
-		waiterLease, err := server.CreateLockLease(ctx, &gracklepb.CreateLockLeaseRequest{
-			NamespaceName: "test-namespace",
-			ProcessId:     "waiter",
-			TtlSeconds:    30,
-		})
-		require.NoError(t, err)
-
-		// Release the holder's lock after a delay from another goroutine
-		go func() {
-			time.Sleep(500 * time.Millisecond)
-			_, _ = server.ReleaseLock(ctx, &gracklepb.ReleaseLockRequest{
-				NamespaceName: "test-namespace",
-				LockName:      "test-lock",
-				LeaseId:       holderLease.Lease.LeaseId,
+			// Create namespace
+			_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
+				Name: "test-namespace",
 			})
-		}()
+			require.NoError(t, err)
 
-		// AcquireLock should block on the busy lock and succeed once released
-		resp, err := server.AcquireLock(ctx, &gracklepb.AcquireLockRequest{
-			NamespaceName:  "test-namespace",
-			LockName:       "test-lock",
-			LeaseId:        waiterLease.Lease.LeaseId,
-			Exclusive:      true,
-			TimeoutSeconds: 10,
+			// Create first lease and acquire the lock exclusively, making it busy
+			holderLease, err := server.CreateLockLease(ctx, &gracklepb.CreateLockLeaseRequest{
+				NamespaceName: "test-namespace",
+				ProcessId:     "holder",
+				TtlSeconds:    30,
+			})
+			require.NoError(t, err)
+
+			acqResp, err := server.AcquireLock(ctx, &gracklepb.AcquireLockRequest{
+				NamespaceName:  "test-namespace",
+				LockName:       "test-lock",
+				LeaseId:        holderLease.Lease.LeaseId,
+				Exclusive:      true,
+				TimeoutSeconds: 5,
+			})
+			require.NoError(t, err)
+			require.True(t, acqResp.Success)
+
+			// Create second lease for the waiter
+			waiterLease, err := server.CreateLockLease(ctx, &gracklepb.CreateLockLeaseRequest{
+				NamespaceName: "test-namespace",
+				ProcessId:     "waiter",
+				TtlSeconds:    30,
+			})
+			require.NoError(t, err)
+
+			// Release the holder's lock after a delay from another goroutine
+			go func() {
+				time.Sleep(500 * time.Millisecond)
+				_, _ = server.ReleaseLock(ctx, &gracklepb.ReleaseLockRequest{
+					NamespaceName: "test-namespace",
+					LockName:      "test-lock",
+					LeaseId:       holderLease.Lease.LeaseId,
+				})
+			}()
+
+			// AcquireLock should block on the busy lock and succeed once released
+			resp, err := server.AcquireLock(ctx, &gracklepb.AcquireLockRequest{
+				NamespaceName:  "test-namespace",
+				LockName:       "test-lock",
+				LeaseId:        waiterLease.Lease.LeaseId,
+				Exclusive:      true,
+				TimeoutSeconds: 10,
+			})
+			require.NoError(t, err)
+			require.NotNil(t, resp)
+			require.True(t, resp.Success)
 		})
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		require.True(t, resp.Success)
 	})
 
 	t.Run("timeout", func(t *testing.T) {
