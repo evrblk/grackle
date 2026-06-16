@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	gracklepb "github.com/evrblk/evrblk-go/grackle/v1beta"
-	"github.com/evrblk/grackle/pkg/server/v1beta"
 	"github.com/stretchr/testify/require"
+
+	"github.com/evrblk/grackle/pkg/server/v1beta"
 )
 
 func TestCreateSemaphore(t *testing.T) {
@@ -152,6 +154,130 @@ func TestAcquireSemaphore(t *testing.T) {
 			TimeoutSeconds: 60,
 		})
 		require.Error(t, err)
+	})
+
+	t.Run("blocking", func(t *testing.T) {
+		server := setupGrackleApiServer(t)
+		ctx := context.Background()
+
+		// Create namespace
+		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
+			Name: "test-namespace",
+		})
+		require.NoError(t, err)
+
+		// Create semaphore with a single permit
+		_, err = server.CreateSemaphore(ctx, &gracklepb.CreateSemaphoreRequest{
+			NamespaceName: "test-namespace",
+			SemaphoreName: "test-semaphore",
+			Permits:       1,
+		})
+		require.NoError(t, err)
+
+		// Create first lease and acquire the only permit, making the semaphore busy
+		holderLease, err := server.CreateSemaphoreLease(ctx, &gracklepb.CreateSemaphoreLeaseRequest{
+			NamespaceName: "test-namespace",
+			ProcessId:     "holder",
+			TtlSeconds:    30,
+		})
+		require.NoError(t, err)
+
+		acqResp, err := server.AcquireSemaphore(ctx, &gracklepb.AcquireSemaphoreRequest{
+			NamespaceName:  "test-namespace",
+			SemaphoreName:  "test-semaphore",
+			LeaseId:        holderLease.Lease.LeaseId,
+			Weight:         1,
+			TimeoutSeconds: 5,
+		})
+		require.NoError(t, err)
+		require.True(t, acqResp.Success)
+
+		// Create second lease for the waiter
+		waiterLease, err := server.CreateSemaphoreLease(ctx, &gracklepb.CreateSemaphoreLeaseRequest{
+			NamespaceName: "test-namespace",
+			ProcessId:     "waiter",
+			TtlSeconds:    30,
+		})
+		require.NoError(t, err)
+
+		// Release the holder's permit after a delay from another goroutine
+		go func() {
+			time.Sleep(500 * time.Millisecond)
+			_, _ = server.ReleaseSemaphore(ctx, &gracklepb.ReleaseSemaphoreRequest{
+				NamespaceName: "test-namespace",
+				SemaphoreName: "test-semaphore",
+				LeaseId:       holderLease.Lease.LeaseId,
+			})
+		}()
+
+		// AcquireSemaphore should block on the busy semaphore and succeed once released
+		resp, err := server.AcquireSemaphore(ctx, &gracklepb.AcquireSemaphoreRequest{
+			NamespaceName:  "test-namespace",
+			SemaphoreName:  "test-semaphore",
+			LeaseId:        waiterLease.Lease.LeaseId,
+			Weight:         1,
+			TimeoutSeconds: 10,
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		require.True(t, resp.Success)
+	})
+
+	t.Run("timeout", func(t *testing.T) {
+		server := setupGrackleApiServer(t)
+		ctx := context.Background()
+
+		// Create namespace
+		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
+			Name: "test-namespace",
+		})
+		require.NoError(t, err)
+
+		// Create semaphore with a single permit
+		_, err = server.CreateSemaphore(ctx, &gracklepb.CreateSemaphoreRequest{
+			NamespaceName: "test-namespace",
+			SemaphoreName: "test-semaphore",
+			Permits:       1,
+		})
+		require.NoError(t, err)
+
+		// Create first lease and acquire the only permit, making the semaphore busy
+		holderLease, err := server.CreateSemaphoreLease(ctx, &gracklepb.CreateSemaphoreLeaseRequest{
+			NamespaceName: "test-namespace",
+			ProcessId:     "holder",
+			TtlSeconds:    30,
+		})
+		require.NoError(t, err)
+
+		acqResp, err := server.AcquireSemaphore(ctx, &gracklepb.AcquireSemaphoreRequest{
+			NamespaceName:  "test-namespace",
+			SemaphoreName:  "test-semaphore",
+			LeaseId:        holderLease.Lease.LeaseId,
+			Weight:         1,
+			TimeoutSeconds: 5,
+		})
+		require.NoError(t, err)
+		require.True(t, acqResp.Success)
+
+		// Create second lease for the waiter
+		waiterLease, err := server.CreateSemaphoreLease(ctx, &gracklepb.CreateSemaphoreLeaseRequest{
+			NamespaceName: "test-namespace",
+			ProcessId:     "waiter",
+			TtlSeconds:    30,
+		})
+		require.NoError(t, err)
+
+		// AcquireSemaphore should block until timeout and return Success=false since the holder never releases
+		resp, err := server.AcquireSemaphore(ctx, &gracklepb.AcquireSemaphoreRequest{
+			NamespaceName:  "test-namespace",
+			SemaphoreName:  "test-semaphore",
+			LeaseId:        waiterLease.Lease.LeaseId,
+			Weight:         1,
+			TimeoutSeconds: 2,
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		require.False(t, resp.Success)
 	})
 }
 

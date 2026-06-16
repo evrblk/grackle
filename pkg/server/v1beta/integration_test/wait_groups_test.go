@@ -7,8 +7,9 @@ import (
 	"time"
 
 	gracklepb "github.com/evrblk/evrblk-go/grackle/v1beta"
-	"github.com/evrblk/grackle/pkg/server/v1beta"
 	"github.com/stretchr/testify/require"
+
+	"github.com/evrblk/grackle/pkg/server/v1beta"
 )
 
 func TestCreateWaitGroup(t *testing.T) {
@@ -487,14 +488,14 @@ func TestWaitForWaitGroup(t *testing.T) {
 
 		// Test: Wait for a wait group that completes within timeout
 		go func() {
-			time.Sleep(50 * time.Millisecond)
+			time.Sleep(500 * time.Millisecond)
 			// Complete first job
 			_, _ = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
 				NamespaceName: "test-namespace",
 				WaitGroupName: "test-wg",
 				JobIds:        []string{"job1"},
 			})
-			time.Sleep(50 * time.Millisecond)
+			time.Sleep(500 * time.Millisecond)
 			// Complete second job
 			_, _ = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
 				NamespaceName: "test-namespace",
@@ -507,7 +508,7 @@ func TestWaitForWaitGroup(t *testing.T) {
 		resp, err := server.WaitForWaitGroup(ctx, &gracklepb.WaitForWaitGroupRequest{
 			NamespaceName:  "test-namespace",
 			WaitGroupName:  "test-wg",
-			TimeoutSeconds: 1,
+			TimeoutSeconds: 10,
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp)
@@ -535,19 +536,21 @@ func TestWaitForWaitGroup(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// Complete only 5 jobs
-		_, err = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
-			NamespaceName: "test-namespace",
-			WaitGroupName: "test-wg-timeout",
-			JobIds:        []string{"p1", "p2", "p3", "p4", "p5"},
-		})
-		require.NoError(t, err)
+		go func() {
+			// Complete only 5 jobs
+			_, err = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
+				NamespaceName: "test-namespace",
+				WaitGroupName: "test-wg-timeout",
+				JobIds:        []string{"p1", "p2", "p3", "p4", "p5"},
+			})
+			require.NoError(t, err)
+		}()
 
 		// Wait with 1 second timeout (should timeout)
 		resp, err := server.WaitForWaitGroup(ctx, &gracklepb.WaitForWaitGroupRequest{
 			NamespaceName:  "test-namespace",
 			WaitGroupName:  "test-wg-timeout",
-			TimeoutSeconds: 1,
+			TimeoutSeconds: 2,
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp)

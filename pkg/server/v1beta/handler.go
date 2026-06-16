@@ -484,8 +484,6 @@ func (s *GrackleApiServerHandler) ListWaitGroupCompletedJobs(ctx context.Context
 }
 
 func (s *GrackleApiServerHandler) AcquireLock(ctx context.Context, req *gracklepb.AcquireLockRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.AcquireLockResponse, error) {
-	now := time.Now()
-
 	// Resolve namespace by name to get its ID
 	resp1, err := s.grackleClient.GetNamespaceByName(ctx, &corepb.GetNamespaceByNameRequest{
 		AccountId:     accountId,
@@ -505,26 +503,58 @@ func (s *GrackleApiServerHandler) AcquireLock(ctx context.Context, req *gracklep
 		return nil, status.Errorf(codes.NotFound, "lease not found")
 	}
 
-	// Attempt to acquire lock (shared or exclusive)
-	resp2, err := s.grackleClient.AcquireLock(ctx, &corepb.AcquireLockRequest{
-		LockId: &corepb.LockId{
-			AccountId:   accountId,
-			NamespaceId: resp1.Namespace.Id.NamespaceId,
-			LockName:    req.LockName,
-		},
-		LeaseId:                      leaseId.LeaseId,
-		Now:                          now.UnixNano(),
-		Exclusive:                    req.Exclusive,
-		MaxNumberOfLocksPerNamespace: limits.MaxNumberOfLocksPerNamespace,
-	})
-	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
-	}
+	// Calculate absolute deadline for timeout
+	deadline := time.Now().Add(time.Duration(req.TimeoutSeconds) * time.Second)
 
-	return &gracklepb.AcquireLockResponse{
-		Lock:    lockToFront(resp2.Lock),
-		Success: resp2.Success,
-	}, nil
+	// Initialize polling with exponential backoff
+	pollInterval := 100 * time.Millisecond
+	maxPollInterval := 1 * time.Second
+
+	for {
+		// Check if context is cancelled
+		if ctx.Err() != nil {
+			return nil, status.Errorf(codes.Canceled, "req cancelled")
+		}
+
+		// Attempt to acquire lock (shared or exclusive)
+		resp2, err := s.grackleClient.AcquireLock(ctx, &corepb.AcquireLockRequest{
+			LockId: &corepb.LockId{
+				AccountId:   accountId,
+				NamespaceId: resp1.Namespace.Id.NamespaceId,
+				LockName:    req.LockName,
+			},
+			LeaseId:                      leaseId.LeaseId,
+			Now:                          time.Now().UnixNano(),
+			Exclusive:                    req.Exclusive,
+			MaxNumberOfLocksPerNamespace: limits.MaxNumberOfLocksPerNamespace,
+		})
+		if err != nil {
+			return nil, monsterax.ErrorToGRPC(err)
+		}
+
+		// Return on success or once the deadline has passed
+		timedOut := time.Now().After(deadline)
+		if resp2.Success || timedOut {
+			return &gracklepb.AcquireLockResponse{
+				Lock:    lockToFront(resp2.Lock),
+				Success: resp2.Success,
+			}, nil
+		}
+
+		// Sleep with exponential backoff, respecting deadline
+		sleepDuration := pollInterval
+		if timeUntilDeadline := time.Until(deadline); timeUntilDeadline < sleepDuration {
+			sleepDuration = timeUntilDeadline
+		}
+
+		select {
+		case <-time.After(sleepDuration):
+			// Increase poll interval with exponential backoff
+			pollInterval = min(pollInterval*2, maxPollInterval)
+		case <-ctx.Done():
+			return nil, status.Errorf(codes.Canceled, "req cancelled")
+		}
+	}
 }
 
 func (s *GrackleApiServerHandler) ReleaseLock(ctx context.Context, req *gracklepb.ReleaseLockRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.ReleaseLockResponse, error) {
@@ -832,8 +862,6 @@ func (s *GrackleApiServerHandler) GetSemaphore(ctx context.Context, req *grackle
 }
 
 func (s *GrackleApiServerHandler) AcquireSemaphore(ctx context.Context, req *gracklepb.AcquireSemaphoreRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.AcquireSemaphoreResponse, error) {
-	now := time.Now()
-
 	// Resolve namespace by name to get its ID
 	resp1, err := s.grackleClient.GetNamespaceByName(ctx, &corepb.GetNamespaceByNameRequest{
 		AccountId:     accountId,
@@ -853,22 +881,54 @@ func (s *GrackleApiServerHandler) AcquireSemaphore(ctx context.Context, req *gra
 		return nil, status.Errorf(codes.NotFound, "lease not found")
 	}
 
-	// Attempt to acquire semaphore with specified weight
-	resp2, err := s.grackleClient.AcquireSemaphore(ctx, &corepb.AcquireSemaphoreRequest{
-		NamespaceId:   resp1.Namespace.Id,
-		SemaphoreName: req.SemaphoreName,
-		LeaseId:       leaseId.LeaseId,
-		Weight:        req.Weight,
-		Now:           now.UnixNano(),
-	})
-	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
-	}
+	// Calculate absolute deadline for timeout
+	deadline := time.Now().Add(time.Duration(req.TimeoutSeconds) * time.Second)
 
-	return &gracklepb.AcquireSemaphoreResponse{
-		Semaphore: semaphoreToFront(resp2.Semaphore),
-		Success:   resp2.Success,
-	}, nil
+	// Initialize polling with exponential backoff
+	pollInterval := 100 * time.Millisecond
+	maxPollInterval := 1 * time.Second
+
+	for {
+		// Check if context is cancelled
+		if ctx.Err() != nil {
+			return nil, status.Errorf(codes.Canceled, "req cancelled")
+		}
+
+		// Attempt to acquire semaphore with specified weight
+		resp2, err := s.grackleClient.AcquireSemaphore(ctx, &corepb.AcquireSemaphoreRequest{
+			NamespaceId:   resp1.Namespace.Id,
+			SemaphoreName: req.SemaphoreName,
+			LeaseId:       leaseId.LeaseId,
+			Weight:        req.Weight,
+			Now:           time.Now().UnixNano(),
+		})
+		if err != nil {
+			return nil, monsterax.ErrorToGRPC(err)
+		}
+
+		// Return on success or once the deadline has passed
+		timedOut := time.Now().After(deadline)
+		if resp2.Success || timedOut {
+			return &gracklepb.AcquireSemaphoreResponse{
+				Semaphore: semaphoreToFront(resp2.Semaphore),
+				Success:   resp2.Success,
+			}, nil
+		}
+
+		// Sleep with exponential backoff, respecting deadline
+		sleepDuration := pollInterval
+		if timeUntilDeadline := time.Until(deadline); timeUntilDeadline < sleepDuration {
+			sleepDuration = timeUntilDeadline
+		}
+
+		select {
+		case <-time.After(sleepDuration):
+			// Increase poll interval with exponential backoff
+			pollInterval = min(pollInterval*2, maxPollInterval)
+		case <-ctx.Done():
+			return nil, status.Errorf(codes.Canceled, "req cancelled")
+		}
+	}
 }
 
 func (s *GrackleApiServerHandler) ReleaseSemaphore(ctx context.Context, req *gracklepb.ReleaseSemaphoreRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.ReleaseSemaphoreResponse, error) {
