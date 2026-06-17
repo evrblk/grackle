@@ -28,6 +28,10 @@ type Core struct {
 
 var _ coreapis.GrackleBarriersCoreApi = &Core{}
 
+// NewCore constructs a Core bound to a single shard of the barriers keyspace.
+// The given lower/upper bounds delimit the shard's local key range (used for
+// Snapshot/Restore), while globalIndexPrefix scopes cross-shard global
+// indexes such as GC records and expiration records.
 func NewCore(badgerStore *store.BadgerStore, globalIndexPrefix []byte, shardLowerBound []byte, shardUpperBound []byte) *Core {
 	return &Core{
 		badgerStore: badgerStore,
@@ -60,18 +64,26 @@ func (c *Core) ranges() []monsterax.KeyRange {
 	return ranges
 }
 
+// Snapshot returns a consistent snapshot of every key range owned by this
+// shard's barriers Core, suitable for Raft snapshot transfer.
 func (c *Core) Snapshot() monstera.ApplicationCoreSnapshot {
 	return monsterax.Snapshot(c.badgerStore, c.ranges())
 }
 
+// Restore replaces the contents of this shard's key ranges with the data read
+// from reader. Any existing keys in those ranges are removed first.
 func (c *Core) Restore(reader io.ReadCloser) error {
 	return monsterax.Restore(c.badgerStore, c.ranges(), reader)
 }
 
+// Close releases any Core-owned resources. The underlying Badger store is
+// shared across cores and is not closed here.
 func (c *Core) Close() {
 
 }
 
+// GetBarrier looks up a barrier by its full BarrierId. Returns a NotFound
+// application error if no barrier with that id exists.
 func (c *Core) GetBarrier(req *coreapis.GetBarrierRequest) (*coreapis.GetBarrierResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
@@ -99,6 +111,9 @@ func (c *Core) GetBarrier(req *coreapis.GetBarrierRequest) (*coreapis.GetBarrier
 	}, nil
 }
 
+// GetBarrierByName looks up a barrier by its (account, namespace, name)
+// triple. Returns a NotFound application error if no barrier with that name
+// exists in the given namespace.
 func (c *Core) GetBarrierByName(req *coreapis.GetBarrierByNameRequest) (*coreapis.GetBarrierByNameResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
@@ -126,6 +141,9 @@ func (c *Core) GetBarrierByName(req *coreapis.GetBarrierByNameRequest) (*coreapi
 	}, nil
 }
 
+// ListBarriers returns a page of barriers in the given namespace, ordered by
+// name. Use the returned NextPaginationToken / PreviousPaginationToken to
+// walk forward or backward through pages.
 func (c *Core) ListBarriers(req *coreapis.ListBarriersRequest) (*coreapis.ListBarriersResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
@@ -144,6 +162,9 @@ func (c *Core) ListBarriers(req *coreapis.ListBarriersRequest) (*coreapis.ListBa
 	}, nil
 }
 
+// ListBarrierParticipants returns a page of participants currently recorded
+// for the named barrier, across all generations. Returns a NotFound
+// application error if the barrier does not exist.
 func (c *Core) ListBarrierParticipants(req *coreapis.ListBarrierParticipantsRequest) (*coreapis.ListBarrierParticipantsResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
@@ -178,6 +199,11 @@ func (c *Core) ListBarrierParticipants(req *coreapis.ListBarrierParticipantsRequ
 	}, nil
 }
 
+// CreateBarrier creates a new barrier at generation 1 with the given
+// ExpectedProcesses and bumps the per-namespace barrier counter. Returns
+// AlreadyExists if a barrier with the same name already exists in the
+// namespace, or ResourceExhausted if creating it would exceed
+// MaxNumberOfBarriersPerNamespace.
 func (c *Core) CreateBarrier(req *coreapis.CreateBarrierRequest) (*coreapis.CreateBarrierResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
@@ -240,6 +266,11 @@ func (c *Core) CreateBarrier(req *coreapis.CreateBarrierRequest) (*coreapis.Crea
 	}, nil
 }
 
+// DeleteBarrier removes the named barrier and decrements the per-namespace
+// barrier counter. Deleting a barrier that does not exist is a no-op and
+// returns success. Leftover participant rows are not deleted synchronously;
+// instead a GC record is created so that RunBarriersGarbageCollection can
+// drain them in bounded batches.
 func (c *Core) DeleteBarrier(req *coreapis.DeleteBarrierRequest) (*coreapis.DeleteBarrierResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
@@ -267,7 +298,17 @@ func (c *Core) DeleteBarrier(req *coreapis.DeleteBarrierRequest) (*coreapis.Dele
 		return nil, err
 	}
 
-	// TODO put gc record for barrier
+	// Schedule asynchronous cleanup of leftover participants. The barrier record itself is already
+	// gone; GC just needs the barrier_id to drain the remaining participant rows.
+	err = c.gcRecords.Create(txn, &corepb.BarriersGarbageCollectionRecord{
+		Id: req.Payload.RecordId,
+		Record: &corepb.BarriersGarbageCollectionRecord_BarrierId{
+			BarrierId: barrier.Id,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	// Update counters
 	counters.NumberOfBarriers -= 1
@@ -286,6 +327,10 @@ func (c *Core) DeleteBarrier(req *coreapis.DeleteBarrierRequest) (*coreapis.Dele
 	}, nil
 }
 
+// UpdateBarrier updates the barrier's description and ExpectedProcesses.
+// Returns NotFound if the barrier does not exist, or InvalidArgument if the
+// new ExpectedProcesses is smaller than the number of participants that have
+// already arrived (which would leave the barrier in an inconsistent state).
 func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest) (*coreapis.UpdateBarrierResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
@@ -337,6 +382,13 @@ func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest) (*coreapis.Upda
 	}, nil
 }
 
+// ArriveAtBarrier records the given process as having reached the named
+// barrier for req.Generation, and increments ArrivedProcesses. A process
+// arriving twice for the same generation is a no-op. Returns NotFound if the
+// barrier does not exist, or InvalidArgument if req.Generation is older than
+// the barrier's current generation, or if ArrivedProcesses is already at
+// ExpectedProcesses — in the InvalidArgument cases the transaction is
+// discarded and no participant rows are persisted.
 func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest) (*coreapis.ArriveAtBarrierResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
@@ -357,6 +409,21 @@ func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest) (*coreapis.
 		return nil, err
 	}
 
+	// Reject arrivals for a generation older than the barrier's current one:
+	// the caller is referring to an already-tripped (and reused) barrier generation.
+	if req.Payload.Generation < barrier.Generation {
+		return &coreapis.ArriveAtBarrierResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.InvalidArgument,
+				"generation is older than the current barrier generation",
+				map[string]string{
+					"barrier_name":       req.Payload.BarrierName,
+					"current_generation": fmt.Sprintf("%d", barrier.Generation),
+					"request_generation": fmt.Sprintf("%d", req.Payload.Generation),
+				}),
+		}, nil
+	}
+
 	_, err = c.participants.Get(txn, barrier.Id.AccountId, barrier.Id.NamespaceId, barrier.Id.BarrierId, req.Payload.Generation, req.Payload.ProcessId)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
@@ -366,11 +433,23 @@ func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest) (*coreapis.
 		}
 	} else {
 		// This process has already arrived, nothing to do
-		// TODO
 		return &coreapis.ArriveAtBarrierResponse{
 			Payload: &corepb.ArriveAtBarrierResponse{
 				Barrier: barrier,
 			},
+		}, nil
+	}
+
+	// Reject if this arrival would push the barrier past its expected participant count.
+	if barrier.ArrivedProcesses == barrier.ExpectedProcesses {
+		return &coreapis.ArriveAtBarrierResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.InvalidArgument,
+				"too many participants arrived at the barrier",
+				map[string]string{
+					"barrier_name":       req.Payload.BarrierName,
+					"expected_processes": fmt.Sprintf("%d", barrier.ExpectedProcesses),
+				}),
 		}, nil
 	}
 
@@ -387,8 +466,6 @@ func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest) (*coreapis.
 
 	// Increment the counter of arrived processes
 	barrier.ArrivedProcesses += 1
-
-	// TODO check if barrier is reached, so we should not accept new participants
 
 	err = c.barriers.Update(txn, barrier)
 	if err != nil {
@@ -407,16 +484,158 @@ func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest) (*coreapis.
 	}, nil
 }
 
+// RunBarriersGarbageCollection performs a single bounded GC pass. It
+// processes namespace deletion records (deleting participant rows for every
+// barrier in the namespace, then the barrier itself) and barrier deletion
+// records (draining the leftover participants of a previously deleted
+// barrier). The pass stops once MaxVisited total records (participants +
+// barriers + counter rows) have been touched so that one invocation cannot
+// produce an unbounded transaction. Intended to be invoked periodically by
+// the scheduler.
 func (c *Core) RunBarriersGarbageCollection(req *coreapis.RunBarriersGarbageCollectionRequest) (*coreapis.RunBarriersGarbageCollectionResponse, error) {
-	// TODO: implement
+	txn := c.badgerStore.Update()
+	defer txn.Discard()
+
+	visited := int64(0)
+	participantsPageSize := int(req.Payload.GcRecordParticipantsPageSize)
+
+	// List one page of GC records
+	gcRecords, err := c.gcRecords.List(txn, int(req.Payload.GcRecordsPageSize))
+	if err != nil {
+		return nil, err
+	}
+
+	for _, gcRecord := range gcRecords {
+		switch r := gcRecord.Record.(type) {
+		case *corepb.BarriersGarbageCollectionRecord_NamespaceId:
+			// Delete counters for that namespace. Will not fail if counters do not exist.
+			err := c.counters.Delete(txn, r.NamespaceId.AccountId, r.NamespaceId.NamespaceId)
+			if err != nil {
+				return nil, err
+			}
+
+			// List one page of barriers for that namespace
+			result, err := c.barriers.List(txn, r.NamespaceId.AccountId, r.NamespaceId.NamespaceId, nil, int(req.Payload.GcRecordBarriersPageSize))
+			if err != nil {
+				return nil, err
+			}
+
+			allBarriersDeleted := true
+			for _, barrier := range result.barriers {
+				// Drain one page of participants first; if there are more participants than fit on the
+				// page, leave the barrier record in place and let a later GC pass continue.
+				participantsDrained, err := c.gcDeleteBarrierParticipants(txn, barrier.Id, participantsPageSize, &visited, req.Payload.MaxVisited)
+				if err != nil {
+					return nil, err
+				}
+				if visited >= req.Payload.MaxVisited {
+					goto commit
+				}
+				if !participantsDrained {
+					allBarriersDeleted = false
+					break
+				}
+
+				// All participants for this barrier are gone — delete the barrier record itself.
+				err = c.barriers.Delete(txn, barrier.Id)
+				if err != nil {
+					return nil, err
+				}
+				visited++
+				if visited >= req.Payload.MaxVisited {
+					goto commit
+				}
+			}
+
+			// Delete the GC record only when every barrier in this namespace has been fully drained
+			// (no remaining participants, no more barrier pages).
+			if allBarriersDeleted && result.nextPaginationToken == nil {
+				err := c.gcRecords.Delete(txn, gcRecord)
+				if err != nil {
+					return nil, err
+				}
+			}
+		case *corepb.BarriersGarbageCollectionRecord_BarrierId:
+			// The barrier record itself is already deleted by DeleteBarrier; we just need to drain
+			// whatever participants are still attached to its id.
+			participantsDrained, err := c.gcDeleteBarrierParticipants(txn, r.BarrierId, participantsPageSize, &visited, req.Payload.MaxVisited)
+			if err != nil {
+				return nil, err
+			}
+			if visited >= req.Payload.MaxVisited {
+				goto commit
+			}
+			if participantsDrained {
+				err = c.gcRecords.Delete(txn, gcRecord)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+	}
+
+commit:
+
+	err = txn.Commit()
+	if err != nil {
+		return nil, err
+	}
+
 	return &coreapis.RunBarriersGarbageCollectionResponse{
 		Payload: &corepb.RunBarriersGarbageCollectionResponse{},
 	}, nil
 }
 
+// BarriersDeleteNamespace records a GC marker that will, on subsequent
+// RunBarriersGarbageCollection ticks, delete every barrier and participant
+// row belonging to the given namespace. The deletion itself is asynchronous;
+// this call only enqueues the request.
 func (c *Core) BarriersDeleteNamespace(req *coreapis.BarriersDeleteNamespaceRequest) (*coreapis.BarriersDeleteNamespaceResponse, error) {
-	// TODO: implement
+	txn := c.badgerStore.Update()
+	defer txn.Discard()
+
+	// Mark the namespace as deleted
+	err := c.gcRecords.Create(txn, &corepb.BarriersGarbageCollectionRecord{
+		Id: req.Payload.RecordId,
+		Record: &corepb.BarriersGarbageCollectionRecord_NamespaceId{
+			NamespaceId: req.Payload.NamespaceId,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	err = txn.Commit()
+	if err != nil {
+		return nil, err
+	}
+
 	return &coreapis.BarriersDeleteNamespaceResponse{
 		Payload: &corepb.BarriersDeleteNamespaceResponse{},
 	}, nil
+}
+
+// gcDeleteBarrierParticipants deletes up to one page of participants for the given barrier,
+// decrementing the visit budget for each one. Returns true if the barrier has no remaining
+// participants (every page drained); false if the page-size limit or the visit budget cut the
+// run short. The caller owns the txn lifecycle.
+func (c *Core) gcDeleteBarrierParticipants(txn *store.Txn, barrierId *corepb.BarrierId, pageSize int, visited *int64, maxVisited int64) (bool, error) {
+	result, err := c.participants.List(txn, barrierId.AccountId, barrierId.NamespaceId, barrierId.BarrierId, nil, pageSize)
+	if err != nil {
+		return false, err
+	}
+
+	for _, participant := range result.participants {
+		err := c.participants.Delete(txn, barrierId.AccountId, barrierId.NamespaceId, barrierId.BarrierId, participant.Generation, participant.ProcessId)
+		if err != nil {
+			return false, err
+		}
+		*visited++
+		if *visited >= maxVisited {
+			return false, nil
+		}
+	}
+
+	// Drained iff this was the last page.
+	return result.nextPaginationToken == nil, nil
 }

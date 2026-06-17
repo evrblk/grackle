@@ -436,6 +436,48 @@ func TestCore_CompleteJobsFromWaitGroup(t *testing.T) {
 		require.NotNil(t, resp1.ApplicationError)
 		require.Equal(t, monsterax.NotFound, resp1.ApplicationError.Code)
 	})
+
+	t.Run("counter overflow", func(t *testing.T) {
+		core := newWaitGroupsCore(t)
+		now := time.Now()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+		}
+		waitGroupId := &corepb.WaitGroupId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			WaitGroupId: rand.Uint64(),
+		}
+
+		// T+0: Create wait group with a small counter
+		_ = createWaitGroup(t, core, waitGroupId, "test_wait_group", 2, now)
+
+		// Completing more jobs than the counter allows must be rejected with InvalidArgument
+		appErr := completeJobsFromWaitGroupWithError(t, core, namespaceId, "test_wait_group", []string{"job_1", "job_2", "job_3"}, now.Add(time.Minute))
+		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+
+		// The failed request must not have persisted any state: Completed stays at 0
+		// and no job rows were written.
+		wg := getWaitGroup(t, core, waitGroupId)
+		require.EqualValues(t, 2, wg.Counter)
+		require.EqualValues(t, 0, wg.Completed)
+
+		jobsList := listWaitGroupJobs(t, core, namespaceId, "test_wait_group")
+		require.Empty(t, jobsList.Jobs)
+
+		// Completing exactly Counter jobs succeeds
+		wg = completeJobsFromWaitGroup(t, core, namespaceId, "test_wait_group", []string{"job_1", "job_2"}, now.Add(2*time.Minute))
+		require.EqualValues(t, 2, wg.Completed)
+
+		// Adding more new jobs on top now overflows and must be rejected
+		appErr = completeJobsFromWaitGroupWithError(t, core, namespaceId, "test_wait_group", []string{"job_3"}, now.Add(3*time.Minute))
+		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+
+		// Re-completing already-completed jobs is a no-op and must succeed
+		wg = completeJobsFromWaitGroup(t, core, namespaceId, "test_wait_group", []string{"job_1", "job_2"}, now.Add(4*time.Minute))
+		require.EqualValues(t, 2, wg.Completed)
+	})
 }
 
 func TestCore_ListWaitGroups(t *testing.T) {
@@ -1370,4 +1412,95 @@ func newWaitGroupsCore(t *testing.T) *Core {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 	return NewCore(store, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+}
+
+func createWaitGroup(t *testing.T, core *Core, waitGroupId *corepb.WaitGroupId, name string, counter uint64, now time.Time) *corepb.WaitGroup {
+	t.Helper()
+
+	resp, err := core.CreateWaitGroup(&coreapis.CreateWaitGroupRequest{
+		Payload: &corepb.CreateWaitGroupRequest{
+			WaitGroupId:                       waitGroupId,
+			Name:                              name,
+			Description:                       "test description",
+			Counter:                           counter,
+			Now:                               now.UnixNano(),
+			ExpiresAt:                         now.Add(time.Hour).UnixNano(),
+			MaxNumberOfWaitGroupsPerNamespace: 100,
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+	require.NotNil(t, resp.Payload.WaitGroup)
+	return resp.Payload.WaitGroup
+}
+
+func completeJobsFromWaitGroup(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, waitGroupName string, jobIds []string, now time.Time) *corepb.WaitGroup {
+	t.Helper()
+
+	resp, err := core.CompleteJobsFromWaitGroup(&coreapis.CompleteJobsFromWaitGroupRequest{
+		Payload: &corepb.CompleteJobsFromWaitGroupRequest{
+			NamespaceId:   namespaceId,
+			WaitGroupName: waitGroupName,
+			JobIds:        jobIds,
+			Now:           now.UnixNano(),
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+	require.NotNil(t, resp.Payload.WaitGroup)
+	return resp.Payload.WaitGroup
+}
+
+func completeJobsFromWaitGroupWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, waitGroupName string, jobIds []string, now time.Time) *monsterax.Error {
+	t.Helper()
+
+	resp, err := core.CompleteJobsFromWaitGroup(&coreapis.CompleteJobsFromWaitGroupRequest{
+		Payload: &corepb.CompleteJobsFromWaitGroupRequest{
+			NamespaceId:   namespaceId,
+			WaitGroupName: waitGroupName,
+			JobIds:        jobIds,
+			Now:           now.UnixNano(),
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.Payload)
+	require.NotNil(t, resp.ApplicationError)
+	return resp.ApplicationError
+}
+
+func getWaitGroup(t *testing.T, core *Core, waitGroupId *corepb.WaitGroupId) *corepb.WaitGroup {
+	t.Helper()
+
+	resp, err := core.GetWaitGroup(&coreapis.GetWaitGroupRequest{
+		Payload: &corepb.GetWaitGroupRequest{
+			WaitGroupId: waitGroupId,
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+	require.NotNil(t, resp.Payload.WaitGroup)
+	return resp.Payload.WaitGroup
+}
+
+func listWaitGroupJobs(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, waitGroupName string) *corepb.ListWaitGroupJobsResponse {
+	t.Helper()
+
+	resp, err := core.ListWaitGroupJobs(&coreapis.ListWaitGroupJobsRequest{
+		Payload: &corepb.ListWaitGroupJobsRequest{
+			NamespaceId:   namespaceId,
+			WaitGroupName: waitGroupName,
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+	return resp.Payload
 }

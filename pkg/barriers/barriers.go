@@ -83,6 +83,20 @@ func (t *barriersTable) Update(txn *store.Txn, barrier *corepb.Barrier) error {
 }
 
 func (t *barriersTable) Delete(txn *store.Txn, barrierId *corepb.BarrierId) error {
+	barrier, err := t.Get(txn, barrierId)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			// Barrier doesn't exist, nothing to delete
+			return nil
+		}
+		return err
+	}
+
+	err = t.namesIndex.Delete(txn, t.namesIndexPK(barrier.Id.AccountId, barrier.Id.NamespaceId, barrier.Name))
+	if err != nil {
+		return err
+	}
+
 	return t.table.Delete(txn,
 		utils.ConcatBytes(
 			t.tablePK(barrierId.AccountId, barrierId.NamespaceId),

@@ -91,7 +91,7 @@ func (c *Core) Restore(reader io.ReadCloser) error {
 	return monsterax.Restore(c.badgerStore, c.ranges(), reader)
 }
 
-// Close releases resources held by the core. Currently a no-op; the underlying BadgerStore is
+// Close releases resources held by the core. Currently, a no-op; the underlying BadgerStore is
 // owned by the caller.
 func (c *Core) Close() {
 
@@ -758,6 +758,20 @@ func (c *Core) ReleaseSemaphore(req *coreapis.ReleaseSemaphoreRequest) (*coreapi
 		return nil, err
 	}
 
+	// Treat an expired lease the same as a missing one — its holders are already on the GC's
+	// eviction path, so Release should report the lease as gone instead of mutating state.
+	if lease.ExpiresAt <= req.Payload.Now {
+		return &coreapis.ReleaseSemaphoreResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.NotFound,
+				"lease not found",
+				map[string]string{
+					"lease_id": fmt.Sprintf("%d", req.Payload.LeaseId),
+				},
+			),
+		}, nil
+	}
+
 	semaphore, err := c.semaphores.GetByName(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, req.Payload.SemaphoreName)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
@@ -984,7 +998,7 @@ func (c *Core) RunSemaphoresGarbageCollection(req *coreapis.RunSemaphoresGarbage
 			// under-counting here is the dominant gap when a semaphore has many holders.
 			visited += int64(expiredCount)
 
-			// If semaphore still has holders it will have non zero expiration time
+			// If semaphore still has holders it will have non-zero expiration time
 			if updatedSemaphore.EarliestHolderExpiresAt != 0 {
 				// Add a semaphore into expirationRecords at new position
 				err = c.expirationRecords.Add(txn, updatedSemaphore.EarliestHolderExpiresAt, semaphore.Id)

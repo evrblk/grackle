@@ -75,6 +75,7 @@ message DeleteBarrierRequest {
   NamespaceId namespace_id = 1;
   string barrier_name = 2;
   int64 now = 3;
+  uint64 record_id = 4;
 }
 
 message DeleteBarrierResponse {}
@@ -109,8 +110,9 @@ message ListBarrierParticipantsResponse {
 message RunBarriersGarbageCollectionRequest {
   int64 now = 1;
   int64 gc_records_page_size = 2;
-  int64 gc_record_locks_page_size = 3;
-  int64 max_visited_locks = 4;
+  int64 gc_record_barriers_page_size = 3;
+  int64 gc_record_participants_page_size = 4;
+  int64 max_visited = 5;
 }
 
 message RunBarriersGarbageCollectionResponse {}
@@ -147,7 +149,10 @@ message BarriersCounter {
 
 message BarriersGarbageCollectionRecord {
   uint64 id = 1;
-  NamespaceId namespace_id = 2;
+  oneof record {
+    NamespaceId namespace_id = 2;
+    BarrierId barrier_id = 3;
+  }
 }
 
 message BarriersExpirationRecord {

@@ -682,6 +682,7 @@ type DeleteBarrierRequest struct {
 	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	BarrierName   string                 `protobuf:"bytes,2,opt,name=barrier_name,json=barrierName,proto3" json:"barrier_name,omitempty"`
 	Now           int64                  `protobuf:"varint,3,opt,name=now,proto3" json:"now,omitempty"`
+	RecordId      uint64                 `protobuf:"varint,4,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -733,6 +734,13 @@ func (x *DeleteBarrierRequest) GetBarrierName() string {
 func (x *DeleteBarrierRequest) GetNow() int64 {
 	if x != nil {
 		return x.Now
+	}
+	return 0
+}
+
+func (x *DeleteBarrierRequest) GetRecordId() uint64 {
+	if x != nil {
+		return x.RecordId
 	}
 	return 0
 }
@@ -1038,13 +1046,14 @@ func (x *ListBarrierParticipantsResponse) GetPreviousPaginationToken() *Paginati
 }
 
 type RunBarriersGarbageCollectionRequest struct {
-	state                 protoimpl.MessageState `protogen:"open.v1"`
-	Now                   int64                  `protobuf:"varint,1,opt,name=now,proto3" json:"now,omitempty"`
-	GcRecordsPageSize     int64                  `protobuf:"varint,2,opt,name=gc_records_page_size,json=gcRecordsPageSize,proto3" json:"gc_records_page_size,omitempty"`
-	GcRecordLocksPageSize int64                  `protobuf:"varint,3,opt,name=gc_record_locks_page_size,json=gcRecordLocksPageSize,proto3" json:"gc_record_locks_page_size,omitempty"`
-	MaxVisitedLocks       int64                  `protobuf:"varint,4,opt,name=max_visited_locks,json=maxVisitedLocks,proto3" json:"max_visited_locks,omitempty"`
-	unknownFields         protoimpl.UnknownFields
-	sizeCache             protoimpl.SizeCache
+	state                        protoimpl.MessageState `protogen:"open.v1"`
+	Now                          int64                  `protobuf:"varint,1,opt,name=now,proto3" json:"now,omitempty"`
+	GcRecordsPageSize            int64                  `protobuf:"varint,2,opt,name=gc_records_page_size,json=gcRecordsPageSize,proto3" json:"gc_records_page_size,omitempty"`
+	GcRecordBarriersPageSize     int64                  `protobuf:"varint,3,opt,name=gc_record_barriers_page_size,json=gcRecordBarriersPageSize,proto3" json:"gc_record_barriers_page_size,omitempty"`
+	GcRecordParticipantsPageSize int64                  `protobuf:"varint,4,opt,name=gc_record_participants_page_size,json=gcRecordParticipantsPageSize,proto3" json:"gc_record_participants_page_size,omitempty"`
+	MaxVisited                   int64                  `protobuf:"varint,5,opt,name=max_visited,json=maxVisited,proto3" json:"max_visited,omitempty"`
+	unknownFields                protoimpl.UnknownFields
+	sizeCache                    protoimpl.SizeCache
 }
 
 func (x *RunBarriersGarbageCollectionRequest) Reset() {
@@ -1091,16 +1100,23 @@ func (x *RunBarriersGarbageCollectionRequest) GetGcRecordsPageSize() int64 {
 	return 0
 }
 
-func (x *RunBarriersGarbageCollectionRequest) GetGcRecordLocksPageSize() int64 {
+func (x *RunBarriersGarbageCollectionRequest) GetGcRecordBarriersPageSize() int64 {
 	if x != nil {
-		return x.GcRecordLocksPageSize
+		return x.GcRecordBarriersPageSize
 	}
 	return 0
 }
 
-func (x *RunBarriersGarbageCollectionRequest) GetMaxVisitedLocks() int64 {
+func (x *RunBarriersGarbageCollectionRequest) GetGcRecordParticipantsPageSize() int64 {
 	if x != nil {
-		return x.MaxVisitedLocks
+		return x.GcRecordParticipantsPageSize
+	}
+	return 0
+}
+
+func (x *RunBarriersGarbageCollectionRequest) GetMaxVisited() int64 {
+	if x != nil {
+		return x.MaxVisited
 	}
 	return 0
 }
@@ -1450,9 +1466,13 @@ func (x *BarriersCounter) GetNumberOfBarriers() int64 {
 }
 
 type BarriersGarbageCollectionRecord struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	NamespaceId   *NamespaceId           `protobuf:"bytes,2,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Id    uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	// Types that are valid to be assigned to Record:
+	//
+	//	*BarriersGarbageCollectionRecord_NamespaceId
+	//	*BarriersGarbageCollectionRecord_BarrierId
+	Record        isBarriersGarbageCollectionRecord_Record `protobuf_oneof:"record"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1494,12 +1514,46 @@ func (x *BarriersGarbageCollectionRecord) GetId() uint64 {
 	return 0
 }
 
-func (x *BarriersGarbageCollectionRecord) GetNamespaceId() *NamespaceId {
+func (x *BarriersGarbageCollectionRecord) GetRecord() isBarriersGarbageCollectionRecord_Record {
 	if x != nil {
-		return x.NamespaceId
+		return x.Record
 	}
 	return nil
 }
+
+func (x *BarriersGarbageCollectionRecord) GetNamespaceId() *NamespaceId {
+	if x != nil {
+		if x, ok := x.Record.(*BarriersGarbageCollectionRecord_NamespaceId); ok {
+			return x.NamespaceId
+		}
+	}
+	return nil
+}
+
+func (x *BarriersGarbageCollectionRecord) GetBarrierId() *BarrierId {
+	if x != nil {
+		if x, ok := x.Record.(*BarriersGarbageCollectionRecord_BarrierId); ok {
+			return x.BarrierId
+		}
+	}
+	return nil
+}
+
+type isBarriersGarbageCollectionRecord_Record interface {
+	isBarriersGarbageCollectionRecord_Record()
+}
+
+type BarriersGarbageCollectionRecord_NamespaceId struct {
+	NamespaceId *NamespaceId `protobuf:"bytes,2,opt,name=namespace_id,json=namespaceId,proto3,oneof"`
+}
+
+type BarriersGarbageCollectionRecord_BarrierId struct {
+	BarrierId *BarrierId `protobuf:"bytes,3,opt,name=barrier_id,json=barrierId,proto3,oneof"`
+}
+
+func (*BarriersGarbageCollectionRecord_NamespaceId) isBarriersGarbageCollectionRecord_Record() {}
+
+func (*BarriersGarbageCollectionRecord_BarrierId) isBarriersGarbageCollectionRecord_Record() {}
 
 type BarriersExpirationRecord struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1664,11 +1718,12 @@ const file_pkg_corepb_barriers_proto_rawDesc = "" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12!\n" +
 	"\fbarrier_name\x18\x02 \x01(\tR\vbarrierName\"X\n" +
 	"\x18GetBarrierByNameResponse\x12<\n" +
-	"\abarrier\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.BarrierR\abarrier\"\x96\x01\n" +
+	"\abarrier\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.BarrierR\abarrier\"\xb3\x01\n" +
 	"\x14DeleteBarrierRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12!\n" +
 	"\fbarrier_name\x18\x02 \x01(\tR\vbarrierName\x12\x10\n" +
-	"\x03now\x18\x03 \x01(\x03R\x03now\"\x17\n" +
+	"\x03now\x18\x03 \x01(\x03R\x03now\x12\x1b\n" +
+	"\trecord_id\x18\x04 \x01(\x04R\brecordId\"\x17\n" +
 	"\x15DeleteBarrierResponse\"\xdf\x01\n" +
 	"\x13ListBarriersRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x10\n" +
@@ -1690,12 +1745,14 @@ const file_pkg_corepb_barriers_proto_rawDesc = "" +
 	"\x1fListBarrierParticipantsResponse\x12Q\n" +
 	"\fparticipants\x18\x01 \x03(\v2-.com.evrblk.grackle.corepb.BarrierParticipantR\fparticipants\x12^\n" +
 	"\x15next_pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x13nextPaginationToken\x12f\n" +
-	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"\xce\x01\n" +
+	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"\x91\x02\n" +
 	"#RunBarriersGarbageCollectionRequest\x12\x10\n" +
 	"\x03now\x18\x01 \x01(\x03R\x03now\x12/\n" +
-	"\x14gc_records_page_size\x18\x02 \x01(\x03R\x11gcRecordsPageSize\x128\n" +
-	"\x19gc_record_locks_page_size\x18\x03 \x01(\x03R\x15gcRecordLocksPageSize\x12*\n" +
-	"\x11max_visited_locks\x18\x04 \x01(\x03R\x0fmaxVisitedLocks\"&\n" +
+	"\x14gc_records_page_size\x18\x02 \x01(\x03R\x11gcRecordsPageSize\x12>\n" +
+	"\x1cgc_record_barriers_page_size\x18\x03 \x01(\x03R\x18gcRecordBarriersPageSize\x12F\n" +
+	" gc_record_participants_page_size\x18\x04 \x01(\x03R\x1cgcRecordParticipantsPageSize\x12\x1f\n" +
+	"\vmax_visited\x18\x05 \x01(\x03R\n" +
+	"maxVisited\"&\n" +
 	"$RunBarriersGarbageCollectionResponse\"\x9a\x01\n" +
 	"\x1eBarriersDeleteNamespaceRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x1b\n" +
@@ -1723,10 +1780,13 @@ const file_pkg_corepb_barriers_proto_rawDesc = "" +
 	"\n" +
 	"barrier_id\x18\x04 \x01(\x04R\tbarrierId\"?\n" +
 	"\x0fBarriersCounter\x12,\n" +
-	"\x12number_of_barriers\x18\x01 \x01(\x03R\x10numberOfBarriers\"|\n" +
+	"\x12number_of_barriers\x18\x01 \x01(\x03R\x10numberOfBarriers\"\xcf\x01\n" +
 	"\x1fBarriersGarbageCollectionRecord\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x04R\x02id\x12I\n" +
-	"\fnamespace_id\x18\x02 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\"~\n" +
+	"\x02id\x18\x01 \x01(\x04R\x02id\x12K\n" +
+	"\fnamespace_id\x18\x02 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdH\x00R\vnamespaceId\x12E\n" +
+	"\n" +
+	"barrier_id\x18\x03 \x01(\v2$.com.evrblk.grackle.corepb.BarrierIdH\x00R\tbarrierIdB\b\n" +
+	"\x06record\"~\n" +
 	"\x18BarriersExpirationRecord\x12C\n" +
 	"\n" +
 	"barrier_id\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.BarrierIdR\tbarrierId\x12\x1d\n" +
@@ -1813,12 +1873,13 @@ var file_pkg_corepb_barriers_proto_depIdxs = []int32{
 	28, // 23: com.evrblk.grackle.corepb.BarriersDeleteNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
 	23, // 24: com.evrblk.grackle.corepb.Barrier.id:type_name -> com.evrblk.grackle.corepb.BarrierId
 	28, // 25: com.evrblk.grackle.corepb.BarriersGarbageCollectionRecord.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	23, // 26: com.evrblk.grackle.corepb.BarriersExpirationRecord.barrier_id:type_name -> com.evrblk.grackle.corepb.BarrierId
-	27, // [27:27] is the sub-list for method output_type
-	27, // [27:27] is the sub-list for method input_type
-	27, // [27:27] is the sub-list for extension type_name
-	27, // [27:27] is the sub-list for extension extendee
-	0,  // [0:27] is the sub-list for field type_name
+	23, // 26: com.evrblk.grackle.corepb.BarriersGarbageCollectionRecord.barrier_id:type_name -> com.evrblk.grackle.corepb.BarrierId
+	23, // 27: com.evrblk.grackle.corepb.BarriersExpirationRecord.barrier_id:type_name -> com.evrblk.grackle.corepb.BarrierId
+	28, // [28:28] is the sub-list for method output_type
+	28, // [28:28] is the sub-list for method input_type
+	28, // [28:28] is the sub-list for extension type_name
+	28, // [28:28] is the sub-list for extension extendee
+	0,  // [0:28] is the sub-list for field type_name
 }
 
 func init() { file_pkg_corepb_barriers_proto_init() }
@@ -1828,6 +1889,10 @@ func file_pkg_corepb_barriers_proto_init() {
 	}
 	file_pkg_corepb_common_proto_init()
 	file_pkg_corepb_namespaces_proto_init()
+	file_pkg_corepb_barriers_proto_msgTypes[25].OneofWrappers = []any{
+		(*BarriersGarbageCollectionRecord_NamespaceId)(nil),
+		(*BarriersGarbageCollectionRecord_BarrierId)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

@@ -24,6 +24,7 @@ by lock/semaphore leases — see [Wait Groups](/docs/wait-groups.md).
 
 * Returns `NotFound` if the namespace does not exist.
 * Returns `NotFound` if the wait group does not exist.
+* Returns `InvalidRequest` if the call would push Completed above Counter.
 
 ```json
 {

@@ -853,6 +853,144 @@ func TestCore_AcquireLock(t *testing.T) {
 		success, _ = acquireLock(t, core, usersLock, leaseC.Id, false, now.Add(2*time.Minute))
 		require.True(t, success)
 	})
+
+	t.Run("acquire with nonexistent lease", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+		lockId := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "test_lock",
+		}
+
+		// Reference a lease that was never created.
+		fakeLease := &corepb.LeaseId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LeaseId:     rand.Uint64(),
+		}
+		appErr := acquireLockWithError(t, core, lockId, fakeLease, true, now)
+		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Contains(t, appErr.Message, "lease not found")
+
+		// No lock row should have been created.
+		lock := getLock(t, core, lockId, now)
+		require.Equal(t, corepb.LockState_UNLOCKED, lock.State)
+	})
+
+	t.Run("acquire with expired lease", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+		lockId := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "test_lock",
+		}
+
+		// 1-minute TTL lease, but the acquire happens at T+2m — after expiry.
+		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 1*time.Minute)
+		appErr := acquireLockWithError(t, core, lockId, lease.Id, true, now.Add(2*time.Minute))
+		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Contains(t, appErr.Message, "lease not found")
+
+		// Lock row was not created.
+		lock := getLock(t, core, lockId, now.Add(2*time.Minute))
+		require.Equal(t, corepb.LockState_UNLOCKED, lock.State)
+	})
+}
+
+func TestCore_CreateLockLease(t *testing.T) {
+	t.Run("creates a lease", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		lease := createLeaseWithMax(t, core, accountId, namespaceId, "process-1", now, 30*time.Minute, 10)
+		require.Equal(t, "process-1", lease.ProcessId)
+		require.EqualValues(t, now.UnixNano(), lease.CreatedAt)
+		require.EqualValues(t, now.Add(30*time.Minute).UnixNano(), lease.ExpiresAt)
+
+		// Counters reflect the new lease.
+		counters, err := core.counters.Get(core.badgerStore.View(), accountId, namespaceId)
+		require.NoError(t, err)
+		require.EqualValues(t, 1, counters.NumberOfLeases)
+	})
+
+	t.Run("max number of lock leases per namespace", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+		const maxLeases = int64(3)
+
+		// Create leases up to the limit using the same MaxNumberOfLockLeases throughout —
+		// each call must succeed.
+		for i := 0; i < int(maxLeases); i++ {
+			_ = createLeaseWithMax(t, core, accountId, namespaceId, fmt.Sprintf("process_%d", i), now, 60*time.Second, maxLeases)
+		}
+
+		// The next attempt must be rejected with ResourceExhausted.
+		appErr := createLeaseWithError(t, core, accountId, namespaceId, "process_over", now, 60*time.Second, maxLeases)
+		require.Equal(t, monsterax.ResourceExhausted, appErr.Code)
+		require.Contains(t, appErr.Message, "max number of lock leases per namespace reached")
+
+		// Counter stayed at maxLeases — the failed call left no state behind.
+		counters, err := core.counters.Get(core.badgerStore.View(), accountId, namespaceId)
+		require.NoError(t, err)
+		require.EqualValues(t, maxLeases, counters.NumberOfLeases)
+
+		// The limit is per-namespace: a different namespace under the same account still accepts new leases.
+		_ = createLeaseWithMax(t, core, accountId, rand.Uint32(), "process_other_ns", now, 60*time.Second, maxLeases)
+
+		// And per-account: a different account is also unaffected.
+		_ = createLeaseWithMax(t, core, rand.Uint64(), namespaceId, "process_other_account", now, 60*time.Second, maxLeases)
+	})
+}
+
+func TestCore_GetLockLease(t *testing.T) {
+	t.Run("returns valid lease", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+
+		got := getLockLease(t, core, lease.Id, now)
+		require.Equal(t, lease.Id.LeaseId, got.Id.LeaseId)
+		require.Equal(t, lease.ExpiresAt, got.ExpiresAt)
+	})
+
+	t.Run("nonexistent lease", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+
+		appErr := getLockLeaseWithError(t, core, &corepb.LeaseId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+			LeaseId:     rand.Uint64(),
+		}, now)
+		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Contains(t, appErr.Message, "lease not found")
+	})
+
+	t.Run("expired lease", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		// 1-minute TTL lease, read at T+2m.
+		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 1*time.Minute)
+		appErr := getLockLeaseWithError(t, core, lease.Id, now.Add(2*time.Minute))
+		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Contains(t, appErr.Message, "lease not found")
+	})
 }
 
 func TestCore_GetLock(t *testing.T) {
@@ -1889,6 +2027,56 @@ func TestCore_RevokeLockLease(t *testing.T) {
 		require.NotNil(t, resp.ApplicationError)
 		require.Equal(t, monsterax.NotFound, resp.ApplicationError.Code)
 	})
+
+	t.Run("nonexistent lease", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+
+		// Revoking a lease that was never created is a no-op (idempotent success).
+		revokeLockLease(t, core, &corepb.LeaseId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+			LeaseId:     rand.Uint64(),
+		}, now)
+	})
+
+	t.Run("expired lease", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+		lockId := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "test_lock",
+		}
+
+		// 1-minute TTL lease holding an exclusive lock.
+		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 1*time.Minute)
+		success, _ := acquireLock(t, core, lockId, lease.Id, true, now)
+		require.True(t, success)
+
+		counters, err := core.counters.Get(core.badgerStore.View(), accountId, namespaceId)
+		require.NoError(t, err)
+		require.EqualValues(t, 1, counters.NumberOfLocks)
+		require.EqualValues(t, 1, counters.NumberOfLeases)
+
+		// T+2m: lease has expired. Revoke still proceeds and releases the held lock.
+		revokeLockLease(t, core, lease.Id, now.Add(2*time.Minute))
+
+		// Lease is gone.
+		appErr := getLockLeaseWithError(t, core, lease.Id, now.Add(2*time.Minute))
+		require.Equal(t, monsterax.NotFound, appErr.Code)
+
+		// Lock held by the expired lease is released; counters reflect the revocation.
+		lock := getLock(t, core, lockId, now.Add(2*time.Minute))
+		require.Equal(t, corepb.LockState_UNLOCKED, lock.State)
+
+		counters, err = core.counters.Get(core.badgerStore.View(), accountId, namespaceId)
+		require.NoError(t, err)
+		require.EqualValues(t, 0, counters.NumberOfLocks)
+		require.EqualValues(t, 0, counters.NumberOfLeases)
+	})
 }
 
 func TestCore_RevokeLockLease_ReleasesSharedLocks(t *testing.T) {
@@ -2119,6 +2307,247 @@ func TestCore_RefreshLockLease(t *testing.T) {
 	})
 }
 
+func TestCore_ListLockLeases(t *testing.T) {
+	t.Run("lists multiple leases", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+		lease3 := createLease(t, core, accountId, namespaceId, "process-3", now, 60*time.Minute)
+
+		resp := listLockLeases(t, core, &corepb.NamespaceId{AccountId: accountId, NamespaceId: namespaceId}, now)
+		require.Len(t, resp.Leases, 3)
+
+		leaseIds := make(map[uint64]bool)
+		for _, lease := range resp.Leases {
+			leaseIds[lease.Id.LeaseId] = true
+		}
+		require.True(t, leaseIds[lease1.Id.LeaseId])
+		require.True(t, leaseIds[lease2.Id.LeaseId])
+		require.True(t, leaseIds[lease3.Id.LeaseId])
+	})
+
+	t.Run("filters out expired leases", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		expiringLease := createLease(t, core, accountId, namespaceId, "process-1", now, 1*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 5*time.Minute)
+		lease3 := createLease(t, core, accountId, namespaceId, "process-3", now, 10*time.Minute)
+
+		// T+2m: the 1-minute lease has expired; the other two are still alive.
+		futureTime := now.Add(2 * time.Minute)
+		resp := listLockLeases(t, core, &corepb.NamespaceId{AccountId: accountId, NamespaceId: namespaceId}, futureTime)
+		require.Len(t, resp.Leases, 2)
+
+		leaseIds := make(map[uint64]bool)
+		for _, lease := range resp.Leases {
+			leaseIds[lease.Id.LeaseId] = true
+		}
+		require.False(t, leaseIds[expiringLease.Id.LeaseId])
+		require.True(t, leaseIds[lease2.Id.LeaseId])
+		require.True(t, leaseIds[lease3.Id.LeaseId])
+	})
+
+	t.Run("scoped to namespace", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		nsA := rand.Uint32()
+		nsB := rand.Uint32()
+
+		ownLease := createLease(t, core, accountId, nsA, "process-1", now, 60*time.Minute)
+		otherLease := createLease(t, core, accountId, nsB, "process-2", now, 60*time.Minute)
+
+		resp := listLockLeases(t, core, &corepb.NamespaceId{AccountId: accountId, NamespaceId: nsA}, now)
+		require.Len(t, resp.Leases, 1)
+		require.Equal(t, ownLease.Id.LeaseId, resp.Leases[0].Id.LeaseId)
+		require.NotEqual(t, otherLease.Id.LeaseId, resp.Leases[0].Id.LeaseId)
+	})
+
+	t.Run("returns empty list for namespace with no leases", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+
+		resp := listLockLeases(t, core, &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+		}, now)
+		require.Empty(t, resp.Leases)
+	})
+}
+
+func TestCore_ListLockLeasesByProcessId(t *testing.T) {
+	t.Run("lists leases for specific process", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		// Two leases for process-1, one lease for process-2.
+		lease1a := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease1b := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+
+		resp := listLockLeasesByProcessId(t, core, &corepb.NamespaceId{AccountId: accountId, NamespaceId: namespaceId}, "process-1", now)
+		require.Len(t, resp.Leases, 2)
+
+		leaseIds := make(map[uint64]bool)
+		for _, lease := range resp.Leases {
+			require.Equal(t, "process-1", lease.ProcessId)
+			leaseIds[lease.Id.LeaseId] = true
+		}
+		require.True(t, leaseIds[lease1a.Id.LeaseId])
+		require.True(t, leaseIds[lease1b.Id.LeaseId])
+		require.False(t, leaseIds[lease2.Id.LeaseId])
+	})
+
+	t.Run("filters out expired leases", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		_ = createLease(t, core, accountId, namespaceId, "process-1", now, 1*time.Minute) // expires by T+2m
+		stillAlive := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
+
+		futureTime := now.Add(2 * time.Minute)
+		resp := listLockLeasesByProcessId(t, core, &corepb.NamespaceId{AccountId: accountId, NamespaceId: namespaceId}, "process-1", futureTime)
+		require.Len(t, resp.Leases, 1)
+		require.Equal(t, stillAlive.Id.LeaseId, resp.Leases[0].Id.LeaseId)
+	})
+
+	t.Run("returns empty list for process with no leases", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		// A lease exists for a different process.
+		_ = createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+
+		resp := listLockLeasesByProcessId(t, core, &corepb.NamespaceId{AccountId: accountId, NamespaceId: namespaceId}, "process-other", now)
+		require.Empty(t, resp.Leases)
+	})
+}
+
+func TestCore_ListLocksByLeaseId(t *testing.T) {
+	t.Run("lists locks held by lease", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+
+		// lease1 acquires 3 locks, lease2 acquires 2.
+		lockIds := make([]*corepb.LockId, 5)
+		for i := 0; i < 5; i++ {
+			lockIds[i] = &corepb.LockId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId,
+				LockName:    fmt.Sprintf("test_lock_%d", i),
+			}
+		}
+		for i := 0; i < 3; i++ {
+			success, _ := acquireLock(t, core, lockIds[i], lease1.Id, true, now)
+			require.True(t, success)
+		}
+		for i := 3; i < 5; i++ {
+			success, _ := acquireLock(t, core, lockIds[i], lease2.Id, true, now)
+			require.True(t, success)
+		}
+
+		resp := listLocksByLeaseId(t, core, lease1.Id, now)
+		require.Len(t, resp.Locks, 3)
+
+		lockNames := make(map[string]bool)
+		for _, lock := range resp.Locks {
+			lockNames[lock.Id.LockName] = true
+		}
+		require.True(t, lockNames["test_lock_0"])
+		require.True(t, lockNames["test_lock_1"])
+		require.True(t, lockNames["test_lock_2"])
+		require.False(t, lockNames["test_lock_3"])
+		require.False(t, lockNames["test_lock_4"])
+	})
+
+	t.Run("returns shared lock held by lease alongside others", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+		lockId := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "shared_lock",
+		}
+
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+
+		// Both leases acquire a shared lock.
+		success, _ := acquireLock(t, core, lockId, lease1.Id, false, now)
+		require.True(t, success)
+		success, _ = acquireLock(t, core, lockId, lease2.Id, false, now)
+		require.True(t, success)
+
+		// lease1's view returns the shared lock.
+		resp := listLocksByLeaseId(t, core, lease1.Id, now)
+		require.Len(t, resp.Locks, 1)
+		require.Equal(t, "shared_lock", resp.Locks[0].Id.LockName)
+
+		// After lease1 releases, its view becomes empty; lease2 still sees the lock.
+		_ = releaseLock(t, core, lockId, lease1.Id, now)
+
+		resp1After := listLocksByLeaseId(t, core, lease1.Id, now)
+		require.Empty(t, resp1After.Locks)
+
+		resp2 := listLocksByLeaseId(t, core, lease2.Id, now)
+		require.Len(t, resp2.Locks, 1)
+	})
+
+	t.Run("filters out expired locks", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+		lockId := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "test_lock",
+		}
+
+		// 1-minute lease, acquire a lock under it, then list at T+2m.
+		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 1*time.Minute)
+		success, _ := acquireLock(t, core, lockId, lease.Id, true, now)
+		require.True(t, success)
+
+		// The lock holders expired with the lease; ListLocksByLeaseId filters out unlocked rows.
+		resp := listLocksByLeaseId(t, core, lease.Id, now.Add(2*time.Minute))
+		require.Empty(t, resp.Locks)
+	})
+
+	t.Run("returns empty list for lease with no locks", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+
+		// Lease exists but never acquired any locks.
+		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+
+		resp := listLocksByLeaseId(t, core, lease.Id, now)
+		require.Empty(t, resp.Locks)
+	})
+}
+
 func newLocksCore(t *testing.T) *Core {
 	badgerStore, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
@@ -2209,4 +2638,169 @@ func getLock(t *testing.T, core *Core, lockId *corepb.LockId, now time.Time) *co
 	require.NotNil(t, resp.Payload.Lock)
 
 	return resp.Payload.Lock
+}
+
+func acquireLockWithError(t *testing.T, core *Core, lockId *corepb.LockId, leaseId *corepb.LeaseId, exclusive bool, now time.Time) *monsterax.Error {
+	t.Helper()
+
+	resp, err := core.AcquireLock(&coreapis.AcquireLockRequest{
+		Payload: &corepb.AcquireLockRequest{
+			LockId:                       lockId,
+			LeaseId:                      leaseId.LeaseId,
+			Now:                          now.UnixNano(),
+			Exclusive:                    exclusive,
+			MaxNumberOfLocksPerNamespace: 2_000,
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.Payload)
+	require.NotNil(t, resp.ApplicationError)
+
+	return resp.ApplicationError
+}
+
+func createLeaseWithMax(t *testing.T, core *Core, accountId uint64, namespaceId uint32, processId string, now time.Time, ttl time.Duration, maxNumberOfLockLeases int64) *corepb.Lease {
+	t.Helper()
+
+	resp, err := core.CreateLockLease(&coreapis.CreateLockLeaseRequest{
+		Payload: &corepb.CreateLockLeaseRequest{
+			LeaseId: &corepb.LeaseId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId,
+				LeaseId:     rand.Uint64(),
+			},
+			ProcessId:             processId,
+			TtlSeconds:            uint64(ttl.Seconds()),
+			Now:                   now.UnixNano(),
+			MaxNumberOfLockLeases: maxNumberOfLockLeases,
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+	require.NotNil(t, resp.Payload.Lease)
+	return resp.Payload.Lease
+}
+
+func createLeaseWithError(t *testing.T, core *Core, accountId uint64, namespaceId uint32, processId string, now time.Time, ttl time.Duration, maxNumberOfLockLeases int64) *monsterax.Error {
+	t.Helper()
+
+	resp, err := core.CreateLockLease(&coreapis.CreateLockLeaseRequest{
+		Payload: &corepb.CreateLockLeaseRequest{
+			LeaseId: &corepb.LeaseId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId,
+				LeaseId:     rand.Uint64(),
+			},
+			ProcessId:             processId,
+			TtlSeconds:            uint64(ttl.Seconds()),
+			Now:                   now.UnixNano(),
+			MaxNumberOfLockLeases: maxNumberOfLockLeases,
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.Payload)
+	require.NotNil(t, resp.ApplicationError)
+	return resp.ApplicationError
+}
+
+func getLockLease(t *testing.T, core *Core, leaseId *corepb.LeaseId, now time.Time) *corepb.Lease {
+	t.Helper()
+
+	resp, err := core.GetLockLease(&coreapis.GetLockLeaseRequest{
+		Payload: &corepb.GetLockLeaseRequest{
+			LeaseId: leaseId,
+			Now:     now.UnixNano(),
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+	require.NotNil(t, resp.Payload.Lease)
+	return resp.Payload.Lease
+}
+
+func getLockLeaseWithError(t *testing.T, core *Core, leaseId *corepb.LeaseId, now time.Time) *monsterax.Error {
+	t.Helper()
+
+	resp, err := core.GetLockLease(&coreapis.GetLockLeaseRequest{
+		Payload: &corepb.GetLockLeaseRequest{
+			LeaseId: leaseId,
+			Now:     now.UnixNano(),
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.Payload)
+	require.NotNil(t, resp.ApplicationError)
+	return resp.ApplicationError
+}
+
+func revokeLockLease(t *testing.T, core *Core, leaseId *corepb.LeaseId, now time.Time) {
+	t.Helper()
+
+	resp, err := core.RevokeLockLease(&coreapis.RevokeLockLeaseRequest{
+		Payload: &corepb.RevokeLockLeaseRequest{
+			LeaseId: leaseId,
+			Now:     now.UnixNano(),
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+}
+
+func listLockLeases(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, now time.Time) *corepb.ListLockLeasesResponse {
+	t.Helper()
+
+	resp, err := core.ListLockLeases(&coreapis.ListLockLeasesRequest{
+		Payload: &corepb.ListLockLeasesRequest{
+			NamespaceId: namespaceId,
+			Now:         now.UnixNano(),
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+	return resp.Payload
+}
+
+func listLockLeasesByProcessId(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, processId string, now time.Time) *corepb.ListLockLeasesByProcessIdResponse {
+	t.Helper()
+
+	resp, err := core.ListLockLeasesByProcessId(&coreapis.ListLockLeasesByProcessIdRequest{
+		Payload: &corepb.ListLockLeasesByProcessIdRequest{
+			NamespaceId: namespaceId,
+			ProcessId:   processId,
+			Now:         now.UnixNano(),
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+	return resp.Payload
+}
+
+func listLocksByLeaseId(t *testing.T, core *Core, leaseId *corepb.LeaseId, now time.Time) *corepb.ListLocksByLeaseIdResponse {
+	t.Helper()
+
+	resp, err := core.ListLocksByLeaseId(&coreapis.ListLocksByLeaseIdRequest{
+		Payload: &corepb.ListLocksByLeaseIdRequest{
+			LeaseId: leaseId,
+			Now:     now.UnixNano(),
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+	return resp.Payload
 }

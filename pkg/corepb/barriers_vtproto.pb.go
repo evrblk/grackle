@@ -660,6 +660,11 @@ func (m *DeleteBarrierRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) 
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
+	if m.RecordId != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.RecordId))
+		i--
+		dAtA[i] = 0x20
+	}
 	if m.Now != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Now))
 		i--
@@ -1011,13 +1016,18 @@ func (m *RunBarriersGarbageCollectionRequest) MarshalToSizedBufferVT(dAtA []byte
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if m.MaxVisitedLocks != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.MaxVisitedLocks))
+	if m.MaxVisited != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.MaxVisited))
+		i--
+		dAtA[i] = 0x28
+	}
+	if m.GcRecordParticipantsPageSize != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.GcRecordParticipantsPageSize))
 		i--
 		dAtA[i] = 0x20
 	}
-	if m.GcRecordLocksPageSize != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.GcRecordLocksPageSize))
+	if m.GcRecordBarriersPageSize != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.GcRecordBarriersPageSize))
 		i--
 		dAtA[i] = 0x18
 	}
@@ -1356,6 +1366,30 @@ func (m *BarriersGarbageCollectionRecord) MarshalToSizedBufferVT(dAtA []byte) (i
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
+	if vtmsg, ok := m.Record.(interface {
+		MarshalToSizedBufferVT([]byte) (int, error)
+	}); ok {
+		size, err := vtmsg.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+	}
+	if m.Id != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Id))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *BarriersGarbageCollectionRecord_NamespaceId) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *BarriersGarbageCollectionRecord_NamespaceId) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	if m.NamespaceId != nil {
 		size, err := m.NamespaceId.MarshalToSizedBufferVT(dAtA[:i])
 		if err != nil {
@@ -1366,14 +1400,27 @@ func (m *BarriersGarbageCollectionRecord) MarshalToSizedBufferVT(dAtA []byte) (i
 		i--
 		dAtA[i] = 0x12
 	}
-	if m.Id != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Id))
+	return len(dAtA) - i, nil
+}
+func (m *BarriersGarbageCollectionRecord_BarrierId) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *BarriersGarbageCollectionRecord_BarrierId) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.BarrierId != nil {
+		size, err := m.BarrierId.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0x1a
 	}
 	return len(dAtA) - i, nil
 }
-
 func (m *BarriersExpirationRecord) MarshalVT() (dAtA []byte, err error) {
 	if m == nil {
 		return nil, nil
@@ -1713,6 +1760,9 @@ func (m *DeleteBarrierRequest) SizeVT() (n int) {
 	if m.Now != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.Now))
 	}
+	if m.RecordId != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.RecordId))
+	}
 	n += len(m.unknownFields)
 	return n
 }
@@ -1839,11 +1889,14 @@ func (m *RunBarriersGarbageCollectionRequest) SizeVT() (n int) {
 	if m.GcRecordsPageSize != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.GcRecordsPageSize))
 	}
-	if m.GcRecordLocksPageSize != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.GcRecordLocksPageSize))
+	if m.GcRecordBarriersPageSize != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.GcRecordBarriersPageSize))
 	}
-	if m.MaxVisitedLocks != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.MaxVisitedLocks))
+	if m.GcRecordParticipantsPageSize != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.GcRecordParticipantsPageSize))
+	}
+	if m.MaxVisited != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.MaxVisited))
 	}
 	n += len(m.unknownFields)
 	return n
@@ -1970,14 +2023,37 @@ func (m *BarriersGarbageCollectionRecord) SizeVT() (n int) {
 	if m.Id != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.Id))
 	}
-	if m.NamespaceId != nil {
-		l = m.NamespaceId.SizeVT()
-		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	if vtmsg, ok := m.Record.(interface{ SizeVT() int }); ok {
+		n += vtmsg.SizeVT()
 	}
 	n += len(m.unknownFields)
 	return n
 }
 
+func (m *BarriersGarbageCollectionRecord_NamespaceId) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.NamespaceId != nil {
+		l = m.NamespaceId.SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
+func (m *BarriersGarbageCollectionRecord_BarrierId) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.BarrierId != nil {
+		l = m.BarrierId.SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	return n
+}
 func (m *BarriersExpirationRecord) SizeVT() (n int) {
 	if m == nil {
 		return 0
@@ -3583,6 +3659,25 @@ func (m *DeleteBarrierRequest) UnmarshalVT(dAtA []byte) error {
 					break
 				}
 			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecordId", wireType)
+			}
+			m.RecordId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RecordId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -4393,9 +4488,9 @@ func (m *RunBarriersGarbageCollectionRequest) UnmarshalVT(dAtA []byte) error {
 			}
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field GcRecordLocksPageSize", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field GcRecordBarriersPageSize", wireType)
 			}
-			m.GcRecordLocksPageSize = 0
+			m.GcRecordBarriersPageSize = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return protohelpers.ErrIntOverflow
@@ -4405,16 +4500,16 @@ func (m *RunBarriersGarbageCollectionRequest) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.GcRecordLocksPageSize |= int64(b&0x7F) << shift
+				m.GcRecordBarriersPageSize |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 4:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxVisitedLocks", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field GcRecordParticipantsPageSize", wireType)
 			}
-			m.MaxVisitedLocks = 0
+			m.GcRecordParticipantsPageSize = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return protohelpers.ErrIntOverflow
@@ -4424,7 +4519,26 @@ func (m *RunBarriersGarbageCollectionRequest) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.MaxVisitedLocks |= int64(b&0x7F) << shift
+				m.GcRecordParticipantsPageSize |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxVisited", wireType)
+			}
+			m.MaxVisited = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxVisited |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5198,11 +5312,57 @@ func (m *BarriersGarbageCollectionRecord) UnmarshalVT(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.NamespaceId == nil {
-				m.NamespaceId = &NamespaceId{}
+			if oneof, ok := m.Record.(*BarriersGarbageCollectionRecord_NamespaceId); ok {
+				if err := oneof.NamespaceId.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &NamespaceId{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Record = &BarriersGarbageCollectionRecord_NamespaceId{NamespaceId: v}
 			}
-			if err := m.NamespaceId.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
-				return err
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BarrierId", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if oneof, ok := m.Record.(*BarriersGarbageCollectionRecord_BarrierId); ok {
+				if err := oneof.BarrierId.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+			} else {
+				v := &BarrierId{}
+				if err := v.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+					return err
+				}
+				m.Record = &BarriersGarbageCollectionRecord_BarrierId{BarrierId: v}
 			}
 			iNdEx = postIndex
 		default:

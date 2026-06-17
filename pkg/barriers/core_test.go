@@ -33,7 +33,7 @@ func TestCore_CreateBarrier(t *testing.T) {
 		}
 
 		// T+0: Create barrier
-		barrier := createBarrier(t, core, barrierId, "test_barrier", 3, now)
+		barrier := createBarrier(t, core, barrierId, "test_barrier", 3, 10, now)
 
 		require.Equal(t, barrierId.BarrierId, barrier.Id.BarrierId)
 		require.Equal(t, "test_barrier", barrier.Name)
@@ -58,7 +58,7 @@ func TestCore_CreateBarrier(t *testing.T) {
 		}
 
 		// T+0: Create first barrier
-		_ = createBarrier(t, core, barrierId1, barrierName, 3, now)
+		_ = createBarrier(t, core, barrierId1, barrierName, 3, 10, now)
 
 		// T+1m: Try to create another barrier with the same name - should fail
 		barrierId2 := &corepb.BarrierId{
@@ -67,23 +67,10 @@ func TestCore_CreateBarrier(t *testing.T) {
 			BarrierId:   rand.Uint64(),
 		}
 
-		resp1, err := core.CreateBarrier(&coreapis.CreateBarrierRequest{
-			Payload: &corepb.CreateBarrierRequest{
-				BarrierId:                       barrierId2,
-				Name:                            barrierName,
-				Description:                     "Second barrier",
-				ExpectedProcesses:               5,
-				MaxNumberOfBarriersPerNamespace: 10,
-				Now:                             now.Add(time.Minute).UnixNano(),
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.Payload)
-		require.NotNil(t, resp1.ApplicationError)
-		require.Equal(t, monsterax.AlreadyExists, resp1.ApplicationError.Code)
-		require.Contains(t, resp1.ApplicationError.Message, "already exists")
+		appErr := createBarrierWithError(t, core, barrierId2, barrierName, 5, 10, now.Add(time.Minute))
+		require.NotNil(t, appErr)
+		require.Equal(t, monsterax.AlreadyExists, appErr.Code)
+		require.Contains(t, appErr.Message, "already exists")
 
 		// Verify the first barrier is still accessible and unchanged
 		barrier := getBarrier(t, core, barrierId1)
@@ -106,21 +93,7 @@ func TestCore_CreateBarrier(t *testing.T) {
 				BarrierId:   rand.Uint64(),
 			}
 
-			resp1, err := core.CreateBarrier(&coreapis.CreateBarrierRequest{
-				Payload: &corepb.CreateBarrierRequest{
-					BarrierId:                       barrierId,
-					Name:                            fmt.Sprintf("barrier_%d", i),
-					Description:                     fmt.Sprintf("Barrier %d", i),
-					ExpectedProcesses:               3,
-					MaxNumberOfBarriersPerNamespace: maxBarriers,
-					Now:                             now.UnixNano(),
-				},
-			})
-
-			require.NoError(t, err)
-			require.NotNil(t, resp1)
-			require.NotNil(t, resp1.Payload)
-			require.NotNil(t, resp1.Payload.Barrier)
+			_ = createBarrier(t, core, barrierId, fmt.Sprintf("barrier_%d", i), 3, maxBarriers, now)
 		}
 
 		// Try to create one more barrier - should fail
@@ -130,23 +103,10 @@ func TestCore_CreateBarrier(t *testing.T) {
 			BarrierId:   rand.Uint64(),
 		}
 
-		resp2, err := core.CreateBarrier(&coreapis.CreateBarrierRequest{
-			Payload: &corepb.CreateBarrierRequest{
-				BarrierId:                       barrierId,
-				Name:                            "barrier_exceeding_limit",
-				Description:                     "Exceeding limit",
-				ExpectedProcesses:               3,
-				MaxNumberOfBarriersPerNamespace: maxBarriers,
-				Now:                             now.Add(time.Minute).UnixNano(),
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp2)
-		require.Nil(t, resp2.Payload)
-		require.NotNil(t, resp2.ApplicationError)
-		require.Equal(t, monsterax.ResourceExhausted, resp2.ApplicationError.Code)
-		require.Contains(t, resp2.ApplicationError.Message, "max number of barriers per namespace reached")
+		appErr := createBarrierWithError(t, core, barrierId, "barrier_exceeding_limit", 3, maxBarriers, now.Add(time.Minute))
+		require.NotNil(t, appErr)
+		require.Equal(t, monsterax.ResourceExhausted, appErr.Code)
+		require.Contains(t, appErr.Message, "max number of barriers per namespace reached")
 	})
 }
 
@@ -161,7 +121,7 @@ func TestCore_GetBarrier(t *testing.T) {
 		}
 
 		// T+0: Create barrier
-		_ = createBarrier(t, core, barrierId, "test_barrier", 3, now)
+		_ = createBarrier(t, core, barrierId, "test_barrier", 3, 10, now)
 
 		// T+1m: Get barrier
 		barrier := getBarrier(t, core, barrierId)
@@ -182,18 +142,10 @@ func TestCore_GetBarrier(t *testing.T) {
 		}
 
 		// Get nonexistent barrier
-		resp1, err := core.GetBarrier(&coreapis.GetBarrierRequest{
-			Payload: &corepb.GetBarrierRequest{
-				BarrierId: barrierId,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.Payload)
-		require.NotNil(t, resp1.ApplicationError)
-		require.Equal(t, monsterax.NotFound, resp1.ApplicationError.Code)
-		require.Contains(t, resp1.ApplicationError.Message, "barrier not found")
+		appErr := getBarrierWithError(t, core, barrierId)
+		require.NotNil(t, appErr)
+		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Contains(t, appErr.Message, "barrier not found")
 	})
 }
 
@@ -212,20 +164,13 @@ func TestCore_GetBarrierByName(t *testing.T) {
 		}
 
 		// T+0: Create barrier
-		_ = createBarrier(t, core, barrierId, "named_barrier", 3, now)
+		_ = createBarrier(t, core, barrierId, "named_barrier", 3, 10, now)
 
 		// T+1m: Get barrier by name
-		resp1, err := core.GetBarrierByName(&coreapis.GetBarrierByNameRequest{
-			Payload: &corepb.GetBarrierByNameRequest{
-				NamespaceId: namespaceId,
-				BarrierName: "named_barrier",
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp1.Payload.Barrier)
-		require.Equal(t, barrierId.BarrierId, resp1.Payload.Barrier.Id.BarrierId)
-		require.Equal(t, "named_barrier", resp1.Payload.Barrier.Name)
+		resp := getBarrierByName(t, core, namespaceId, "named_barrier")
+		require.NotNil(t, resp.Barrier)
+		require.Equal(t, barrierId.BarrierId, resp.Barrier.Id.BarrierId)
+		require.Equal(t, "named_barrier", resp.Barrier.Name)
 	})
 
 	t.Run("get nonexistent barrier", func(t *testing.T) {
@@ -236,19 +181,9 @@ func TestCore_GetBarrierByName(t *testing.T) {
 		}
 
 		// Get nonexistent barrier by name
-		resp1, err := core.GetBarrierByName(&coreapis.GetBarrierByNameRequest{
-			Payload: &corepb.GetBarrierByNameRequest{
-				NamespaceId: namespaceId,
-				BarrierName: "nonexistent_barrier",
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.Payload)
-		require.NotNil(t, resp1.ApplicationError)
-		require.Equal(t, monsterax.NotFound, resp1.ApplicationError.Code)
-		require.Contains(t, resp1.ApplicationError.Message, "barrier not found")
+		appErr := getBarrierByNameWithError(t, core, namespaceId, "nonexistent_barrier")
+		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Contains(t, appErr.Message, "barrier not found")
 	})
 }
 
@@ -261,15 +196,8 @@ func TestCore_ListBarriers(t *testing.T) {
 		}
 
 		// List barriers in empty namespace
-		response, err := core.ListBarriers(&coreapis.ListBarriersRequest{
-			Payload: &corepb.ListBarriersRequest{
-				NamespaceId: namespaceId,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, response)
-		require.Empty(t, response.Payload.Barriers)
+		resp := listBarriers(t, core, namespaceId)
+		require.Empty(t, resp.Barriers)
 	})
 
 	t.Run("multiple barriers", func(t *testing.T) {
@@ -288,19 +216,12 @@ func TestCore_ListBarriers(t *testing.T) {
 				BarrierId:   rand.Uint64(),
 			}
 
-			_ = createBarrier(t, core, barrierId, fmt.Sprintf("barrier_%d", i), uint64(i+1), now)
+			_ = createBarrier(t, core, barrierId, fmt.Sprintf("barrier_%d", i), uint64(i+1), 10, now)
 		}
 
 		// List barriers
-		listResponse, err := core.ListBarriers(&coreapis.ListBarriersRequest{
-			Payload: &corepb.ListBarriersRequest{
-				NamespaceId: namespaceId,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, listResponse)
-		require.Len(t, listResponse.Payload.Barriers, 5)
+		resp := listBarriers(t, core, namespaceId)
+		require.Len(t, resp.Barriers, 5)
 	})
 
 	t.Run("multiple namespaces", func(t *testing.T) {
@@ -324,7 +245,7 @@ func TestCore_ListBarriers(t *testing.T) {
 				BarrierId:   rand.Uint64(),
 			}
 
-			_ = createBarrier(t, core, barrierId, fmt.Sprintf("barrier_ns1_%d", i), 3, now)
+			_ = createBarrier(t, core, barrierId, fmt.Sprintf("barrier_ns1_%d", i), 3, 10, now)
 		}
 
 		// Create barriers in namespace 2
@@ -335,30 +256,16 @@ func TestCore_ListBarriers(t *testing.T) {
 				BarrierId:   rand.Uint64(),
 			}
 
-			_ = createBarrier(t, core, barrierId, fmt.Sprintf("barrier_ns2_%d", i), 5, now)
+			_ = createBarrier(t, core, barrierId, fmt.Sprintf("barrier_ns2_%d", i), 5, 10, now)
 		}
 
 		// List barriers in namespace 1
-		listResponse1, err := core.ListBarriers(&coreapis.ListBarriersRequest{
-			Payload: &corepb.ListBarriersRequest{
-				NamespaceId: namespaceId1,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, listResponse1)
-		require.Len(t, listResponse1.Payload.Barriers, 3)
+		resp1 := listBarriers(t, core, namespaceId1)
+		require.Len(t, resp1.Barriers, 3)
 
 		// List barriers in namespace 2
-		listResponse2, err := core.ListBarriers(&coreapis.ListBarriersRequest{
-			Payload: &corepb.ListBarriersRequest{
-				NamespaceId: namespaceId2,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, listResponse2)
-		require.Len(t, listResponse2.Payload.Barriers, 2)
+		resp2 := listBarriers(t, core, namespaceId2)
+		require.Len(t, resp2.Barriers, 2)
 	})
 }
 
@@ -378,34 +285,14 @@ func TestCore_DeleteBarrier(t *testing.T) {
 		}
 
 		// T+0: Create barrier
-		_ = createBarrier(t, core, barrierId, "test_barrier", 3, now)
+		_ = createBarrier(t, core, barrierId, "test_barrier", 3, 10, now)
 
 		// T+1m: Delete barrier
-		resp1, err := core.DeleteBarrier(&coreapis.DeleteBarrierRequest{
-			Payload: &corepb.DeleteBarrierRequest{
-				NamespaceId: namespaceId,
-				BarrierName: "test_barrier",
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.ApplicationError)
-		require.NotNil(t, resp1.Payload)
+		_ = deleteBarrier(t, core, namespaceId, "test_barrier", rand.Uint64(), now.Add(time.Minute))
 
 		// T+2m: Try to get deleted barrier
-		resp2, err := core.GetBarrierByName(&coreapis.GetBarrierByNameRequest{
-			Payload: &corepb.GetBarrierByNameRequest{
-				NamespaceId: namespaceId,
-				BarrierName: "test_barrier",
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp2)
-		require.Nil(t, resp2.Payload)
-		require.NotNil(t, resp2.ApplicationError)
-		require.Contains(t, resp2.ApplicationError.Message, "barrier not found")
+		appErr := getBarrierByNameWithError(t, core, namespaceId, "test_barrier")
+		require.Contains(t, appErr.Message, "barrier not found")
 	})
 
 	t.Run("delete nonexistent barrier", func(t *testing.T) {
@@ -416,16 +303,7 @@ func TestCore_DeleteBarrier(t *testing.T) {
 		}
 
 		// Delete nonexistent barrier - should not error
-		deleteResponse, err := core.DeleteBarrier(&coreapis.DeleteBarrierRequest{
-			Payload: &corepb.DeleteBarrierRequest{
-				NamespaceId: namespaceId,
-				BarrierName: "nonexistent_barrier",
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, deleteResponse)
-		require.Nil(t, deleteResponse.ApplicationError)
+		_ = deleteBarrier(t, core, namespaceId, "nonexistent_barrier", rand.Uint64(), time.Now())
 	})
 
 	t.Run("updates counter", func(t *testing.T) {
@@ -444,29 +322,15 @@ func TestCore_DeleteBarrier(t *testing.T) {
 				BarrierId:   rand.Uint64(),
 			}
 
-			_ = createBarrier(t, core, barrierId, fmt.Sprintf("barrier_%d", i), 3, now)
+			_ = createBarrier(t, core, barrierId, fmt.Sprintf("barrier_%d", i), 3, 10, now)
 		}
 
 		// List barriers - should have 2
-		listResponse1, err := core.ListBarriers(&coreapis.ListBarriersRequest{
-			Payload: &corepb.ListBarriersRequest{
-				NamespaceId: namespaceId,
-			},
-		})
-
-		require.NoError(t, err)
-		require.Len(t, listResponse1.Payload.Barriers, 2)
+		resp1 := listBarriers(t, core, namespaceId)
+		require.Len(t, resp1.Barriers, 2)
 
 		// Delete one barrier
-		deleteResponse, err := core.DeleteBarrier(&coreapis.DeleteBarrierRequest{
-			Payload: &corepb.DeleteBarrierRequest{
-				NamespaceId: namespaceId,
-				BarrierName: "barrier_0",
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, deleteResponse)
+		_ = deleteBarrier(t, core, namespaceId, "barrier_0", rand.Uint64(), now)
 
 		// Create another barrier - should succeed because we now have room
 		barrierId := &corepb.BarrierId{
@@ -475,7 +339,7 @@ func TestCore_DeleteBarrier(t *testing.T) {
 			BarrierId:   rand.Uint64(),
 		}
 
-		_ = createBarrier(t, core, barrierId, "barrier_new", 3, now.Add(time.Minute))
+		_ = createBarrier(t, core, barrierId, "barrier_new", 3, 10, now.Add(time.Minute))
 	})
 }
 
@@ -490,7 +354,7 @@ func TestCore_UpdateBarrier(t *testing.T) {
 		}
 
 		// T+0: Create barrier
-		barrier := createBarrier(t, core, barrierId, "test_barrier", 3, now)
+		barrier := createBarrier(t, core, barrierId, "test_barrier", 3, 10, now)
 
 		require.Equal(t, "Test barrier description", barrier.Description)
 		require.EqualValues(t, 3, barrier.ExpectedProcesses)
@@ -498,21 +362,12 @@ func TestCore_UpdateBarrier(t *testing.T) {
 
 		// T+1m: Update barrier
 		updateTime := now.Add(time.Minute)
-		updateResponse, err := core.UpdateBarrier(&coreapis.UpdateBarrierRequest{
-			Payload: &corepb.UpdateBarrierRequest{
-				BarrierId:         barrierId,
-				Description:       "Updated description",
-				ExpectedProcesses: 5,
-				Now:               updateTime.UnixNano(),
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, updateResponse.Payload.Barrier)
-		require.Equal(t, "Updated description", updateResponse.Payload.Barrier.Description)
-		require.EqualValues(t, 5, updateResponse.Payload.Barrier.ExpectedProcesses)
-		require.Equal(t, updateTime.UnixNano(), updateResponse.Payload.Barrier.UpdatedAt)
-		require.Equal(t, now.UnixNano(), updateResponse.Payload.Barrier.CreatedAt) // CreatedAt should not change
+		resp := updateBarrier(t, core, barrierId, "Updated description", 5, updateTime)
+		require.NotNil(t, resp.Barrier)
+		require.Equal(t, "Updated description", resp.Barrier.Description)
+		require.EqualValues(t, 5, resp.Barrier.ExpectedProcesses)
+		require.Equal(t, updateTime.UnixNano(), resp.Barrier.UpdatedAt)
+		require.Equal(t, now.UnixNano(), resp.Barrier.CreatedAt) // CreatedAt should not change
 
 		// T+2m: Get barrier to verify update persisted
 		barrier = getBarrier(t, core, barrierId)
@@ -532,21 +387,9 @@ func TestCore_UpdateBarrier(t *testing.T) {
 		}
 
 		// Try to update a barrier that doesn't exist
-		resp1, err := core.UpdateBarrier(&coreapis.UpdateBarrierRequest{
-			Payload: &corepb.UpdateBarrierRequest{
-				BarrierId:         barrierId,
-				Description:       "Updated description",
-				ExpectedProcesses: 5,
-				Now:               now.UnixNano(),
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.Payload)
-		require.NotNil(t, resp1.ApplicationError)
-		require.Equal(t, monsterax.NotFound, resp1.ApplicationError.Code)
-		require.Contains(t, resp1.ApplicationError.Message, "barrier not found")
+		appErr := updateBarrierWithError(t, core, barrierId, "Updated description", 5, now)
+		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Contains(t, appErr.Message, "barrier not found")
 	})
 
 	t.Run("cannot reduce expected_processes below arrived_processes", func(t *testing.T) {
@@ -563,7 +406,7 @@ func TestCore_UpdateBarrier(t *testing.T) {
 		}
 
 		// T+0: Create barrier with expected_processes = 5
-		_ = createBarrier(t, core, barrierId, "test_barrier", 5, now)
+		_ = createBarrier(t, core, barrierId, "test_barrier", 5, 10, now)
 
 		// T+1m: Have 3 processes arrive at the barrier
 		for i := range 3 {
@@ -571,47 +414,20 @@ func TestCore_UpdateBarrier(t *testing.T) {
 		}
 
 		// T+2m: Try to update expected_processes to 2 (less than 3 arrived processes)
-		resp1, err := core.UpdateBarrier(&coreapis.UpdateBarrierRequest{
-			Payload: &corepb.UpdateBarrierRequest{
-				BarrierId:         barrierId,
-				Description:       "Updated description",
-				ExpectedProcesses: 2,
-				Now:               now.Add(2 * time.Minute).UnixNano(),
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.NotNil(t, resp1.ApplicationError)
-		require.Contains(t, resp1.ApplicationError.Message, "there are currently more arrived processes than the new expected processes")
+		appErr := updateBarrierWithError(t, core, barrierId, "Updated description", 2, now.Add(2*time.Minute))
+		require.NotNil(t, appErr)
+		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Contains(t, appErr.Message, "there are currently more arrived processes than the new expected processes")
 
 		// T+3m: Update to expected_processes = 3 (equal to arrived_processes) should succeed
-		updateResponse, err := core.UpdateBarrier(&coreapis.UpdateBarrierRequest{
-			Payload: &corepb.UpdateBarrierRequest{
-				BarrierId:         barrierId,
-				Description:       "Updated description",
-				ExpectedProcesses: 3,
-				Now:               now.Add(3 * time.Minute).UnixNano(),
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, updateResponse.Payload.Barrier)
-		require.EqualValues(t, 3, updateResponse.Payload.Barrier.ExpectedProcesses)
+		resp1 := updateBarrier(t, core, barrierId, "Updated description", 3, now.Add(3*time.Minute))
+		require.NotNil(t, resp1.Barrier)
+		require.EqualValues(t, 3, resp1.Barrier.ExpectedProcesses)
 
 		// T+4m: Update to expected_processes = 10 (greater than arrived_processes) should succeed
-		updateResponse2, err := core.UpdateBarrier(&coreapis.UpdateBarrierRequest{
-			Payload: &corepb.UpdateBarrierRequest{
-				BarrierId:         barrierId,
-				Description:       "Updated description again",
-				ExpectedProcesses: 10,
-				Now:               now.Add(4 * time.Minute).UnixNano(),
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, updateResponse2.Payload.Barrier)
-		require.EqualValues(t, 10, updateResponse2.Payload.Barrier.ExpectedProcesses)
+		resp2 := updateBarrier(t, core, barrierId, "Updated description again", 10, now.Add(4*time.Minute))
+		require.NotNil(t, resp2.Barrier)
+		require.EqualValues(t, 10, resp2.Barrier.ExpectedProcesses)
 	})
 }
 
@@ -630,7 +446,7 @@ func TestCore_ArriveAtBarrier(t *testing.T) {
 		}
 
 		// T+0: Create barrier
-		_ = createBarrier(t, core, barrierId, "test_barrier", 3, now)
+		_ = createBarrier(t, core, barrierId, "test_barrier", 3, 10, now)
 
 		// T+1m: First process arrives
 		_ = arriveAtBarrier(t, core, namespaceId, "test_barrier", "process_1", 1, now.Add(time.Minute))
@@ -673,7 +489,7 @@ func TestCore_ArriveAtBarrier(t *testing.T) {
 		}
 
 		// T+0: Create barrier
-		_ = createBarrier(t, core, barrierId, "test_barrier", 3, now)
+		_ = createBarrier(t, core, barrierId, "test_barrier", 3, 10, now)
 
 		// T+1m: Process arrives
 		_ = arriveAtBarrier(t, core, namespaceId, "test_barrier", "process_1", 1, now.Add(time.Minute))
@@ -695,22 +511,83 @@ func TestCore_ArriveAtBarrier(t *testing.T) {
 		}
 
 		// Try to arrive at nonexistent barrier
-		resp1, err := core.ArriveAtBarrier(&coreapis.ArriveAtBarrierRequest{
-			Payload: &corepb.ArriveAtBarrierRequest{
-				NamespaceId: namespaceId,
-				BarrierName: "nonexistent_barrier",
-				ProcessId:   "process_1",
-				Generation:  1,
-				Now:         now.UnixNano(),
-			},
-		})
+		err := arriveAtBarrierWithError(t, core, namespaceId, "nonexistent_barrier", "process_1", 1, now)
+		require.NotNil(t, err)
+		require.Equal(t, monsterax.NotFound, err.Code)
+		require.Contains(t, err.Message, "barrier not found")
+	})
 
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.Payload)
-		require.NotNil(t, resp1.ApplicationError)
-		require.Equal(t, monsterax.NotFound, resp1.ApplicationError.Code)
-		require.Contains(t, resp1.ApplicationError.Message, "barrier not found")
+	t.Run("overflow", func(t *testing.T) {
+		core := newBarriersCore(t)
+		now := time.Now()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+		}
+		barrierId := &corepb.BarrierId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			BarrierId:   rand.Uint64(),
+		}
+
+		// T+0: Create barrier expecting 2 participants
+		_ = createBarrier(t, core, barrierId, "test_barrier", 2, 10, now)
+
+		// T+1m, T+2m: Fill the barrier exactly
+		_ = arriveAtBarrier(t, core, namespaceId, "test_barrier", "process_1", 1, now.Add(time.Minute))
+		_ = arriveAtBarrier(t, core, namespaceId, "test_barrier", "process_2", 1, now.Add(2*time.Minute))
+
+		// T+3m: A third arrival must be rejected
+		appErr := arriveAtBarrierWithError(t, core, namespaceId, "test_barrier", "process_3", 1, now.Add(3*time.Minute))
+		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+
+		// The failed arrival must not have persisted any state: counter stays at 2
+		// and no new participant row was written.
+		barrier := getBarrier(t, core, barrierId)
+		require.EqualValues(t, 2, barrier.ArrivedProcesses)
+		require.EqualValues(t, 2, barrier.ExpectedProcesses)
+
+		resp := listBarrierParticipants(t, core, namespaceId, "test_barrier")
+		require.Len(t, resp.Participants, 2)
+		participantIds := make([]string, len(resp.Participants))
+		for i, p := range resp.Participants {
+			participantIds[i] = p.ProcessId
+		}
+		require.NotContains(t, participantIds, "process_3")
+	})
+
+	t.Run("old generation", func(t *testing.T) {
+		core := newBarriersCore(t)
+		now := time.Now()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+		}
+		barrierId := &corepb.BarrierId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			BarrierId:   rand.Uint64(),
+		}
+
+		// T+0: Create barrier — initial generation is 1
+		_ = createBarrier(t, core, barrierId, "test_barrier", 3, 10, now)
+
+		// Arrival with a generation older than the current one must be rejected
+		appErr := arriveAtBarrierWithError(t, core, namespaceId, "test_barrier", "process_1", 0, now.Add(time.Minute))
+		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Contains(t, appErr.Message, "generation")
+
+		// No state should have been persisted
+		barrier := getBarrier(t, core, barrierId)
+		require.EqualValues(t, 0, barrier.ArrivedProcesses)
+
+		resp := listBarrierParticipants(t, core, namespaceId, "test_barrier")
+		require.Empty(t, resp.Participants)
+
+		// Arrival with the current generation still succeeds
+		_ = arriveAtBarrier(t, core, namespaceId, "test_barrier", "process_1", 1, now.Add(2*time.Minute))
+		barrier = getBarrier(t, core, barrierId)
+		require.EqualValues(t, 1, barrier.ArrivedProcesses)
 	})
 }
 
@@ -729,7 +606,7 @@ func TestCore_ListBarrierParticipants(t *testing.T) {
 		}
 
 		// T+0: Create barrier
-		_ = createBarrier(t, core, barrierId, "test_barrier", 3, now)
+		_ = createBarrier(t, core, barrierId, "test_barrier", 3, 10, now)
 
 		// Have multiple processes arrive
 		for i := range 3 {
@@ -737,22 +614,12 @@ func TestCore_ListBarrierParticipants(t *testing.T) {
 		}
 
 		// List participants
-		resp1, err := core.ListBarrierParticipants(&coreapis.ListBarrierParticipantsRequest{
-			Payload: &corepb.ListBarrierParticipantsRequest{
-				NamespaceId: namespaceId,
-				BarrierName: "test_barrier",
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.ApplicationError)
-		require.NotNil(t, resp1.Payload)
-		require.Len(t, resp1.Payload.Participants, 3)
+		resp := listBarrierParticipants(t, core, namespaceId, "test_barrier")
+		require.Len(t, resp.Participants, 3)
 
 		// Verify all participants are present
-		participantIds := make([]string, len(resp1.Payload.Participants))
-		for i, participant := range resp1.Payload.Participants {
+		participantIds := make([]string, len(resp.Participants))
+		for i, participant := range resp.Participants {
 			participantIds[i] = participant.ProcessId
 			require.EqualValues(t, 1, participant.Generation)
 		}
@@ -776,21 +643,11 @@ func TestCore_ListBarrierParticipants(t *testing.T) {
 		}
 
 		// T+0: Create barrier
-		_ = createBarrier(t, core, barrierId, "test_barrier", 3, now)
+		_ = createBarrier(t, core, barrierId, "test_barrier", 3, 10, now)
 
 		// List participants before any have arrived
-		resp1, err := core.ListBarrierParticipants(&coreapis.ListBarrierParticipantsRequest{
-			Payload: &corepb.ListBarrierParticipantsRequest{
-				NamespaceId: namespaceId,
-				BarrierName: "test_barrier",
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.ApplicationError)
-		require.NotNil(t, resp1.Payload)
-		require.Empty(t, resp1.Payload.Participants)
+		resp1 := listBarrierParticipants(t, core, namespaceId, "test_barrier")
+		require.Empty(t, resp1.Participants)
 	})
 
 	t.Run("nonexistent barrier", func(t *testing.T) {
@@ -801,19 +658,9 @@ func TestCore_ListBarrierParticipants(t *testing.T) {
 		}
 
 		// Try to list participants of nonexistent barrier
-		resp1, err := core.ListBarrierParticipants(&coreapis.ListBarrierParticipantsRequest{
-			Payload: &corepb.ListBarrierParticipantsRequest{
-				NamespaceId: namespaceId,
-				BarrierName: "nonexistent_barrier",
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.Payload)
-		require.NotNil(t, resp1.ApplicationError)
-		require.Contains(t, resp1.ApplicationError.Message, "barrier not found")
-		require.Equal(t, monsterax.NotFound, resp1.ApplicationError.Code)
+		appErr := listBarrierParticipantsWithError(t, core, namespaceId, "nonexistent_barrier")
+		require.Contains(t, appErr.Message, "barrier not found")
+		require.Equal(t, monsterax.NotFound, appErr.Code)
 	})
 }
 
@@ -834,7 +681,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 	core2 := newBarriersCore(t)
 
 	// T+0: Create barrier
-	_ = createBarrier(t, core1, barrierId, "test_barrier", 3, now)
+	_ = createBarrier(t, core1, barrierId, "test_barrier", 3, 10, now)
 
 	// T+1m: First process arrives
 	_ = arriveAtBarrier(t, core1, namespaceId, "test_barrier", "process_1", 1, now.Add(time.Minute))
@@ -861,29 +708,147 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 	require.EqualValues(t, 1, barrier.ArrivedProcesses) // Only process_1 arrived before snapshot
 
 	// List participants in restored state
-	listResponse, err := core2.ListBarrierParticipants(&coreapis.ListBarrierParticipantsRequest{
-		Payload: &corepb.ListBarrierParticipantsRequest{
-			NamespaceId: namespaceId,
-			BarrierName: "test_barrier",
-		},
-	})
-
-	require.NoError(t, err)
-	require.NotNil(t, listResponse)
-	require.Len(t, listResponse.Payload.Participants, 1)
-	require.Equal(t, "process_1", listResponse.Payload.Participants[0].ProcessId)
+	resp := listBarrierParticipants(t, core2, namespaceId, "test_barrier")
+	require.Len(t, resp.Participants, 1)
+	require.Equal(t, "process_1", resp.Participants[0].ProcessId)
 
 	// Verify that the original core has different state (it should have 2 participants)
-	listResponse2, err := core1.ListBarrierParticipants(&coreapis.ListBarrierParticipantsRequest{
-		Payload: &corepb.ListBarrierParticipantsRequest{
-			NamespaceId: namespaceId,
-			BarrierName: "test_barrier",
-		},
+	resp2 := listBarrierParticipants(t, core1, namespaceId, "test_barrier")
+	require.Len(t, resp2.Participants, 2)
+}
+
+func TestCore_RunBarriersGarbageCollection(t *testing.T) {
+	t.Run("delete_barrier_drains_participants", func(t *testing.T) {
+		core := newBarriersCore(t)
+		now := time.Now()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+		}
+		barrierId := &corepb.BarrierId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			BarrierId:   rand.Uint64(),
+		}
+
+		// Barrier with enough participants that a single GC pass cannot drain everything.
+		const expectedParticipants = 25
+		_ = createBarrier(t, core, barrierId, "barrier_to_delete", expectedParticipants, 10, now)
+		for i := range expectedParticipants {
+			_ = arriveAtBarrier(t, core, namespaceId, "barrier_to_delete", fmt.Sprintf("process_%d", i), 1, now)
+		}
+
+		// Sibling barrier in the same namespace — must survive GC.
+		siblingId := &corepb.BarrierId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			BarrierId:   rand.Uint64(),
+		}
+		_ = createBarrier(t, core, siblingId, "barrier_to_keep", 2, 10, now)
+		_ = arriveAtBarrier(t, core, namespaceId, "barrier_to_keep", "alive_process", 1, now)
+
+		// Delete the target barrier — enqueues a barrier-scoped GC record. The barrier row is
+		// gone immediately, but participants are left for the GC to drain.
+		_ = deleteBarrier(t, core, namespaceId, "barrier_to_delete", rand.Uint64(), now)
+
+		// The barrier row itself is already gone.
+		appErr := getBarrierWithError(t, core, barrierId)
+		require.Equal(t, monsterax.NotFound, appErr.Code)
+
+		// Run GC with a tight budget (5 visits per pass) — must take multiple iterations to drain.
+		const maxVisitedPerPass = int64(5)
+		passes := 0
+		for ; passes < 100; passes++ {
+			runBarriersGarbageCollection(t, core, now, 10, 10, 100, maxVisitedPerPass)
+
+			// Detect completion by checking whether any GC record is left.
+			txn := core.badgerStore.View()
+			records, err := core.gcRecords.List(txn, 10)
+			txn.Discard()
+			require.NoError(t, err)
+			if len(records) == 0 {
+				break
+			}
+		}
+		require.Greater(t, passes, 1, "GC should require more than one pass to drain %d participants with budget %d", expectedParticipants, maxVisitedPerPass)
+		require.Less(t, passes, 100, "GC did not converge within 100 passes")
+
+		// The deleted barrier's participants must all be gone. Since the barrier row is also
+		// gone, ListBarrierParticipants returns NotFound — drill in via the lower-level helper.
+		txn := core.badgerStore.View()
+		leftover, err := core.participants.List(txn, barrierId.AccountId, barrierId.NamespaceId, barrierId.BarrierId, nil, 100)
+		txn.Discard()
+		require.NoError(t, err)
+		require.Empty(t, leftover.participants)
+
+		// The sibling barrier and its participant must still be intact.
+		sibling := getBarrier(t, core, siblingId)
+		require.EqualValues(t, 1, sibling.ArrivedProcesses)
+		siblingParticipants := listBarrierParticipants(t, core, namespaceId, "barrier_to_keep")
+		require.Len(t, siblingParticipants.Participants, 1)
 	})
 
-	require.NoError(t, err)
-	require.NotNil(t, listResponse2)
-	require.Len(t, listResponse2.Payload.Participants, 2)
+	t.Run("delete_namespace_drains_everything", func(t *testing.T) {
+		core := newBarriersCore(t)
+		now := time.Now()
+
+		// Two namespaces: one will be deleted, the other must survive.
+		deletedNs := &corepb.NamespaceId{AccountId: rand.Uint64(), NamespaceId: rand.Uint32()}
+		keepNs := &corepb.NamespaceId{AccountId: deletedNs.AccountId, NamespaceId: rand.Uint32()}
+
+		// Populate the doomed namespace with two barriers, each with several participants.
+		for i := range 2 {
+			barrierId := &corepb.BarrierId{
+				AccountId:   deletedNs.AccountId,
+				NamespaceId: deletedNs.NamespaceId,
+				BarrierId:   rand.Uint64(),
+			}
+			name := fmt.Sprintf("doomed_barrier_%d", i)
+			_ = createBarrier(t, core, barrierId, name, 10, 10, now)
+			for j := range 6 {
+				_ = arriveAtBarrier(t, core, deletedNs, name, fmt.Sprintf("p_%d_%d", i, j), 1, now)
+			}
+		}
+
+		// Populate the keep namespace with one barrier.
+		keepBarrierId := &corepb.BarrierId{
+			AccountId:   keepNs.AccountId,
+			NamespaceId: keepNs.NamespaceId,
+			BarrierId:   rand.Uint64(),
+		}
+		_ = createBarrier(t, core, keepBarrierId, "keep_barrier", 3, 10, now)
+		_ = arriveAtBarrier(t, core, keepNs, "keep_barrier", "alive", 1, now)
+
+		// Mark the doomed namespace for deletion.
+		barriersDeleteNamespace(t, core, deletedNs, rand.Uint64(), now)
+
+		// Run GC with a tight budget until everything drains.
+		const maxVisitedPerPass = int64(4)
+		passes := 0
+		for ; passes < 100; passes++ {
+			runBarriersGarbageCollection(t, core, now, 10, 10, 100, maxVisitedPerPass)
+
+			txn := core.badgerStore.View()
+			records, err := core.gcRecords.List(txn, 10)
+			txn.Discard()
+			require.NoError(t, err)
+			if len(records) == 0 {
+				break
+			}
+		}
+		require.Greater(t, passes, 1, "GC should require multiple passes under a tight budget")
+		require.Less(t, passes, 100, "GC did not converge within 100 passes")
+
+		// The deleted namespace must contain no barriers and no participants.
+		deletedBarriers := listBarriers(t, core, deletedNs)
+		require.Empty(t, deletedBarriers.Barriers)
+
+		// The keep namespace must be intact.
+		keepBarriers := listBarriers(t, core, keepNs)
+		require.Len(t, keepBarriers.Barriers, 1)
+		keepParticipants := listBarrierParticipants(t, core, keepNs, "keep_barrier")
+		require.Len(t, keepParticipants.Participants, 1)
+	})
 }
 
 func newBarriersCore(t *testing.T) *Core {
@@ -894,7 +859,7 @@ func newBarriersCore(t *testing.T) *Core {
 	return NewCore(badgerStore, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 }
 
-func createBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, name string, expectedProcesses uint64, now time.Time) *corepb.Barrier {
+func createBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, name string, expectedProcesses uint64, maxNumberOfBarriersPerNamespace int64, now time.Time) *corepb.Barrier {
 	t.Helper()
 
 	resp, err := core.CreateBarrier(&coreapis.CreateBarrierRequest{
@@ -903,7 +868,7 @@ func createBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, name s
 			Name:                            name,
 			Description:                     "Test barrier description",
 			ExpectedProcesses:               expectedProcesses,
-			MaxNumberOfBarriersPerNamespace: 10,
+			MaxNumberOfBarriersPerNamespace: maxNumberOfBarriersPerNamespace,
 			Now:                             now.UnixNano(),
 		},
 	})
@@ -915,6 +880,28 @@ func createBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, name s
 	require.Equal(t, barrierId.BarrierId, resp.Payload.Barrier.Id.BarrierId)
 
 	return resp.Payload.Barrier
+}
+
+func createBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierId, name string, expectedProcesses uint64, maxNumberOfBarriersPerNamespace int64, now time.Time) *monsterax.Error {
+	t.Helper()
+
+	resp, err := core.CreateBarrier(&coreapis.CreateBarrierRequest{
+		Payload: &corepb.CreateBarrierRequest{
+			BarrierId:                       barrierId,
+			Name:                            name,
+			Description:                     "Test barrier description",
+			ExpectedProcesses:               expectedProcesses,
+			MaxNumberOfBarriersPerNamespace: maxNumberOfBarriersPerNamespace,
+			Now:                             now.UnixNano(),
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.Payload)
+	require.NotNil(t, resp.ApplicationError)
+
+	return resp.ApplicationError
 }
 
 func arriveAtBarrier(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, barrierName string, processId string, generation uint64, now time.Time) *corepb.Barrier {
@@ -939,6 +926,27 @@ func arriveAtBarrier(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, 
 	return resp.Payload.Barrier
 }
 
+func arriveAtBarrierWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, barrierName string, processId string, generation uint64, now time.Time) *monsterax.Error {
+	t.Helper()
+
+	resp, err := core.ArriveAtBarrier(&coreapis.ArriveAtBarrierRequest{
+		Payload: &corepb.ArriveAtBarrierRequest{
+			NamespaceId: namespaceId,
+			BarrierName: barrierName,
+			ProcessId:   processId,
+			Generation:  generation,
+			Now:         now.UnixNano(),
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.NotNil(t, resp.ApplicationError)
+	require.Nil(t, resp.Payload)
+
+	return resp.ApplicationError
+}
+
 func getBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId) *corepb.Barrier {
 	t.Helper()
 
@@ -955,4 +963,206 @@ func getBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId) *corepb.B
 	require.NotNil(t, resp.Payload.Barrier)
 
 	return resp.Payload.Barrier
+}
+
+func getBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierId) *monsterax.Error {
+	t.Helper()
+
+	resp, err := core.GetBarrier(&coreapis.GetBarrierRequest{
+		Payload: &corepb.GetBarrierRequest{
+			BarrierId: barrierId,
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.NotNil(t, resp.ApplicationError)
+	require.Nil(t, resp.Payload)
+
+	return resp.ApplicationError
+}
+
+func listBarriers(t *testing.T, core *Core, namespaceId *corepb.NamespaceId) *corepb.ListBarriersResponse {
+	t.Helper()
+
+	resp, err := core.ListBarriers(&coreapis.ListBarriersRequest{
+		Payload: &corepb.ListBarriersRequest{
+			NamespaceId: namespaceId,
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+
+	return resp.Payload
+}
+
+func listBarrierParticipants(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, barrierName string) *corepb.ListBarrierParticipantsResponse {
+	t.Helper()
+
+	resp, err := core.ListBarrierParticipants(&coreapis.ListBarrierParticipantsRequest{
+		Payload: &corepb.ListBarrierParticipantsRequest{
+			NamespaceId: namespaceId,
+			BarrierName: barrierName,
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+
+	return resp.Payload
+}
+
+func listBarrierParticipantsWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, barrierName string) *monsterax.Error {
+	t.Helper()
+
+	resp, err := core.ListBarrierParticipants(&coreapis.ListBarrierParticipantsRequest{
+		Payload: &corepb.ListBarrierParticipantsRequest{
+			NamespaceId: namespaceId,
+			BarrierName: barrierName,
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.Payload)
+	require.NotNil(t, resp.ApplicationError)
+
+	return resp.ApplicationError
+}
+
+func updateBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, description string, expectedProcesses uint64, now time.Time) *corepb.UpdateBarrierResponse {
+	t.Helper()
+
+	resp, err := core.UpdateBarrier(&coreapis.UpdateBarrierRequest{
+		Payload: &corepb.UpdateBarrierRequest{
+			BarrierId:         barrierId,
+			Description:       description,
+			ExpectedProcesses: expectedProcesses,
+			Now:               now.UnixNano(),
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+
+	return resp.Payload
+}
+
+func updateBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierId, description string, expectedProcesses uint64, now time.Time) *monsterax.Error {
+	t.Helper()
+
+	resp, err := core.UpdateBarrier(&coreapis.UpdateBarrierRequest{
+		Payload: &corepb.UpdateBarrierRequest{
+			BarrierId:         barrierId,
+			Description:       description,
+			ExpectedProcesses: expectedProcesses,
+			Now:               now.UnixNano(),
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.Payload)
+	require.NotNil(t, resp.ApplicationError)
+
+	return resp.ApplicationError
+}
+
+func getBarrierByName(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, barrierName string) *corepb.GetBarrierByNameResponse {
+	t.Helper()
+
+	resp, err := core.GetBarrierByName(&coreapis.GetBarrierByNameRequest{
+		Payload: &corepb.GetBarrierByNameRequest{
+			NamespaceId: namespaceId,
+			BarrierName: barrierName,
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+
+	return resp.Payload
+}
+
+func getBarrierByNameWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, barrierName string) *monsterax.Error {
+	t.Helper()
+
+	resp, err := core.GetBarrierByName(&coreapis.GetBarrierByNameRequest{
+		Payload: &corepb.GetBarrierByNameRequest{
+			NamespaceId: namespaceId,
+			BarrierName: barrierName,
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.Payload)
+	require.NotNil(t, resp.ApplicationError)
+
+	return resp.ApplicationError
+}
+
+func deleteBarrier(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, barrierName string, recordId uint64, now time.Time) *corepb.DeleteBarrierResponse {
+	t.Helper()
+
+	resp, err := core.DeleteBarrier(&coreapis.DeleteBarrierRequest{
+		Payload: &corepb.DeleteBarrierRequest{
+			NamespaceId: namespaceId,
+			BarrierName: barrierName,
+			RecordId:    recordId,
+			Now:         now.UnixNano(),
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+
+	return resp.Payload
+}
+
+func barriersDeleteNamespace(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, recordId uint64, now time.Time) {
+	t.Helper()
+
+	resp, err := core.BarriersDeleteNamespace(&coreapis.BarriersDeleteNamespaceRequest{
+		Payload: &corepb.BarriersDeleteNamespaceRequest{
+			NamespaceId: namespaceId,
+			RecordId:    recordId,
+			Now:         now.UnixNano(),
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+}
+
+func runBarriersGarbageCollection(t *testing.T, core *Core, now time.Time, gcRecordsPageSize, gcRecordBarriersPageSize, gcRecordParticipantsPageSize, maxVisited int64) {
+	t.Helper()
+
+	resp, err := core.RunBarriersGarbageCollection(&coreapis.RunBarriersGarbageCollectionRequest{
+		Payload: &corepb.RunBarriersGarbageCollectionRequest{
+			Now:                          now.UnixNano(),
+			GcRecordsPageSize:            gcRecordsPageSize,
+			GcRecordBarriersPageSize:     gcRecordBarriersPageSize,
+			GcRecordParticipantsPageSize: gcRecordParticipantsPageSize,
+			MaxVisited:                   maxVisited,
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
 }

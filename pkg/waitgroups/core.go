@@ -28,6 +28,10 @@ type Core struct {
 
 var _ coreapis.GrackleWaitGroupsCoreApi = &Core{}
 
+// NewCore constructs a Core bound to a single shard of the wait-groups
+// keyspace. The given lower/upper bounds delimit the shard's local key range
+// (used for Snapshot/Restore), while shardGlobalIndexPrefix scopes
+// cross-shard global indexes such as GC records.
 func NewCore(badgerStore *store.BadgerStore, shardGlobalIndexPrefix []byte, shardLowerBound []byte, shardUpperBound []byte) *Core {
 	return &Core{
 		badgerStore: badgerStore,
@@ -60,18 +64,26 @@ func (c *Core) ranges() []monsterax.KeyRange {
 	return ranges
 }
 
+// Snapshot returns a consistent snapshot of every key range owned by this
+// shard's wait-groups Core, suitable for Raft snapshot transfer.
 func (c *Core) Snapshot() monstera.ApplicationCoreSnapshot {
 	return monsterax.Snapshot(c.badgerStore, c.ranges())
 }
 
+// Restore replaces the contents of this shard's key ranges with the data read
+// from reader. Any existing keys in those ranges are removed first.
 func (c *Core) Restore(reader io.ReadCloser) error {
 	return monsterax.Restore(c.badgerStore, c.ranges(), reader)
 }
 
+// Close releases any Core-owned resources. The underlying Badger store is
+// shared across cores and is not closed here.
 func (c *Core) Close() {
 
 }
 
+// GetWaitGroup looks up a wait group by its full WaitGroupId. Returns a
+// NotFound application error if no wait group with that id exists.
 func (c *Core) GetWaitGroup(req *coreapis.GetWaitGroupRequest) (*coreapis.GetWaitGroupResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
@@ -99,6 +111,9 @@ func (c *Core) GetWaitGroup(req *coreapis.GetWaitGroupRequest) (*coreapis.GetWai
 	}, nil
 }
 
+// GetWaitGroupByName looks up a wait group by its name.
+// Returns a NotFound application error if no wait group with that name
+// exists in the given namespace.
 func (c *Core) GetWaitGroupByName(req *coreapis.GetWaitGroupByNameRequest) (*coreapis.GetWaitGroupByNameResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
@@ -126,6 +141,9 @@ func (c *Core) GetWaitGroupByName(req *coreapis.GetWaitGroupByNameRequest) (*cor
 	}, nil
 }
 
+// ListWaitGroups returns a page of wait groups in the given namespace,
+// ordered by name. Use the returned NextPaginationToken / PreviousPaginationToken
+// to walk forward or backward through pages.
 func (c *Core) ListWaitGroups(req *coreapis.ListWaitGroupsRequest) (*coreapis.ListWaitGroupsResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
@@ -144,6 +162,9 @@ func (c *Core) ListWaitGroups(req *coreapis.ListWaitGroupsRequest) (*coreapis.Li
 	}, nil
 }
 
+// ListWaitGroupJobs returns a page of completed jobs for the named wait
+// group. Returns a NotFound application error if the wait group does not
+// exist.
 func (c *Core) ListWaitGroupJobs(req *coreapis.ListWaitGroupJobsRequest) (*coreapis.ListWaitGroupJobsResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
@@ -178,6 +199,10 @@ func (c *Core) ListWaitGroupJobs(req *coreapis.ListWaitGroupJobsRequest) (*corea
 	}, nil
 }
 
+// CreateWaitGroup creates a new wait group with the given counter and bumps
+// the per-namespace wait-group counter. Returns AlreadyExists if a wait group
+// with the same name already exists in the namespace, or ResourceExhausted
+// if creating it would exceed MaxNumberOfWaitGroupsPerNamespace.
 func (c *Core) CreateWaitGroup(req *coreapis.CreateWaitGroupRequest) (*coreapis.CreateWaitGroupResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
@@ -256,6 +281,9 @@ func (c *Core) CreateWaitGroup(req *coreapis.CreateWaitGroupRequest) (*coreapis.
 	}, nil
 }
 
+// DeleteWaitGroup removes the named wait group and schedules its completed
+// jobs for asynchronous deletion via a GC record. Deleting a wait group that
+// does not exist is a no-op and returns success.
 func (c *Core) DeleteWaitGroup(req *coreapis.DeleteWaitGroupRequest) (*coreapis.DeleteWaitGroupResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
@@ -311,6 +339,9 @@ func (c *Core) DeleteWaitGroup(req *coreapis.DeleteWaitGroupRequest) (*coreapis.
 	}, nil
 }
 
+// AddJobsToWaitGroup grows the wait group's expected-job counter by
+// req.Counter. Returns NotFound if the wait group does not exist, or
+// ResourceExhausted if the resulting counter would exceed MaxWaitGroupSize.
 func (c *Core) AddJobsToWaitGroup(req *coreapis.AddJobsToWaitGroupRequest) (*coreapis.AddJobsToWaitGroupResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
@@ -362,6 +393,12 @@ func (c *Core) AddJobsToWaitGroup(req *coreapis.AddJobsToWaitGroupRequest) (*cor
 	}, nil
 }
 
+// CompleteJobsFromWaitGroup marks each given job id as completed in the
+// named wait group, incrementing the Completed counter once per previously
+// unseen job id (re-completing an already-completed job is a no-op).
+// Returns NotFound if the wait group does not exist, or InvalidArgument if
+// the call would push Completed above Counter — in the latter case the
+// transaction is discarded and no jobs are persisted.
 func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroupRequest) (*coreapis.CompleteJobsFromWaitGroupResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
@@ -409,6 +446,20 @@ func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroup
 		}
 	}
 
+	// Reject if completing these jobs would overflow the wait group counter.
+	if waitGroup.Completed > waitGroup.Counter {
+		return &coreapis.CompleteJobsFromWaitGroupResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.InvalidArgument,
+				"too many jobs to be marked completed",
+				map[string]string{
+					"wait_group_name": req.Payload.WaitGroupName,
+					"counter":         fmt.Sprintf("%d", waitGroup.Counter),
+					"completed":       fmt.Sprintf("%d", waitGroup.Completed),
+				}),
+		}, nil
+	}
+
 	waitGroup.UpdatedAt = req.Payload.Now
 
 	err = c.waitGroups.Update(txn, waitGroup)
@@ -428,6 +479,11 @@ func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroup
 	}, nil
 }
 
+// RunWaitGroupsGarbageCollection processes one page of pending GC records,
+// deleting the wait groups and jobs they reference. Each record is bounded
+// by req.MaxDeletedObjects across the whole call; records that fully drain
+// within their budget are themselves removed, otherwise they remain and are
+// resumed on the next GC tick.
 func (c *Core) RunWaitGroupsGarbageCollection(req *coreapis.RunWaitGroupsGarbageCollectionRequest) (*coreapis.RunWaitGroupsGarbageCollectionResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
@@ -481,6 +537,10 @@ func (c *Core) RunWaitGroupsGarbageCollection(req *coreapis.RunWaitGroupsGarbage
 	}, nil
 }
 
+// WaitGroupsDeleteNamespace records a GC marker that will, on subsequent
+// RunWaitGroupsGarbageCollection ticks, delete every wait group and job
+// belonging to the given namespace. The deletion itself is asynchronous;
+// this call only enqueues the request.
 func (c *Core) WaitGroupsDeleteNamespace(req *coreapis.WaitGroupsDeleteNamespaceRequest) (*coreapis.WaitGroupsDeleteNamespaceResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()

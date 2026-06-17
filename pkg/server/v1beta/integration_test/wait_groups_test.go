@@ -161,7 +161,7 @@ func TestCompleteJobsFromWaitGroup(t *testing.T) {
 		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
 			NamespaceName: "namespace1",
 			WaitGroupName: "waitgroup1",
-			Counter:       1,
+			Counter:       2,
 		})
 		require.NoError(t, err)
 
@@ -181,6 +181,65 @@ func TestCompleteJobsFromWaitGroup(t *testing.T) {
 			JobIds:        []string{"job1"},
 		})
 		require.Error(t, err)
+	})
+
+	t.Run("overflow", func(t *testing.T) {
+		server := setupGrackleApiServer(t)
+		ctx := context.Background()
+
+		// Create namespace
+		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
+			Name: "namespace1",
+		})
+		require.NoError(t, err)
+
+		// Create wait group with a small counter
+		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
+			NamespaceName: "namespace1",
+			WaitGroupName: "waitgroup1",
+			Counter:       2,
+		})
+		require.NoError(t, err)
+
+		// Completing more jobs than the counter allows must fail
+		_, err = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
+			NamespaceName: "namespace1",
+			WaitGroupName: "waitgroup1",
+			JobIds:        []string{"job1", "job2", "job3"},
+		})
+		require.Error(t, err)
+
+		// The failed request must not have persisted any jobs
+		resp, err := server.GetWaitGroup(ctx, &gracklepb.GetWaitGroupRequest{
+			NamespaceName: "namespace1",
+			WaitGroupName: "waitgroup1",
+		})
+		require.NoError(t, err)
+		require.EqualValues(t, 0, resp.WaitGroup.Completed)
+
+		// Completing exactly Counter jobs succeeds
+		_, err = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
+			NamespaceName: "namespace1",
+			WaitGroupName: "waitgroup1",
+			JobIds:        []string{"job1", "job2"},
+		})
+		require.NoError(t, err)
+
+		// Adding more new jobs on top now overflows and must fail
+		_, err = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
+			NamespaceName: "namespace1",
+			WaitGroupName: "waitgroup1",
+			JobIds:        []string{"job3"},
+		})
+		require.Error(t, err)
+
+		// Re-completing already-completed jobs is a no-op and must succeed
+		_, err = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
+			NamespaceName: "namespace1",
+			WaitGroupName: "waitgroup1",
+			JobIds:        []string{"job1", "job2"},
+		})
+		require.NoError(t, err)
 	})
 }
 

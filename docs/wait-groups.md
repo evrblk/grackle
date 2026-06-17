@@ -17,7 +17,7 @@ A wait group has two numbers:
   `AddJobsToWaitGroup`. There is no API to decrease it.
 - `completed` — the number of distinct jobs reported done via `CompleteJobsFromWaitGroup`.
 
-The group is **complete** when `completed >= counter`. You do not need to know all job IDs upfront
+The group is **complete** when `completed == counter`. You do not need to know all job IDs upfront
 — only the total count. A wait group can have millions of jobs.
 
 ### Jobs and job IDs

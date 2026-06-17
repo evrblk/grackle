@@ -32,6 +32,10 @@ type Core struct {
 
 var _ coreapis.GrackleLocksCoreApi = &Core{}
 
+// NewCore constructs a Core bound to a single shard of the locks keyspace.
+// The given lower/upper bounds delimit the shard's local key range (used for
+// Snapshot/Restore), while shardGlobalIndexPrefix scopes cross-shard global
+// indexes such as lease secondary indexes and GC records.
 func NewCore(badgerStore *store.BadgerStore, shardGlobalIndexPrefix []byte, shardLowerBound []byte, shardUpperBound []byte) *Core {
 	return &Core{
 		badgerStore: badgerStore,
@@ -71,18 +75,29 @@ func (c *Core) ranges() []monsterax.KeyRange {
 	return ranges
 }
 
+// Snapshot returns a consistent snapshot of every key range owned by this
+// shard's locks Core, suitable for Raft snapshot transfer.
 func (c *Core) Snapshot() monstera.ApplicationCoreSnapshot {
 	return monsterax.Snapshot(c.badgerStore, c.ranges())
 }
 
+// Restore replaces the contents of this shard's key ranges with the data read
+// from reader. Any existing keys in those ranges are removed first.
 func (c *Core) Restore(reader io.ReadCloser) error {
 	return monsterax.Restore(c.badgerStore, c.ranges(), reader)
 }
 
+// Close releases any Core-owned resources. The underlying Badger store is
+// shared across cores and is not closed here.
 func (c *Core) Close() {
 
 }
 
+// GetLock returns the current state of the named lock. If no record exists,
+// a synthetic UNLOCKED lock is returned (this is not an error). Expired
+// holders are evicted as a side effect: if eviction leaves the lock with no
+// holders, the lock row is deleted and the per-namespace lock counter is
+// decremented; otherwise the surviving-holders set is written back.
 func (c *Core) GetLock(req *coreapis.GetLockRequest) (*coreapis.GetLockResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
@@ -156,6 +171,10 @@ func (c *Core) GetLock(req *coreapis.GetLockRequest) (*coreapis.GetLockResponse,
 	}, nil
 }
 
+// ListLocks returns a page of locks in the given namespace. Locks whose
+// holders have all expired (as observed against req.Now) are filtered out of
+// the result. Unlike GetLock, this is a read-only view and does not delete
+// expired rows — that is left to the GC.
 func (c *Core) ListLocks(req *coreapis.ListLocksRequest) (*coreapis.ListLocksResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
@@ -186,6 +205,9 @@ func (c *Core) ListLocks(req *coreapis.ListLocksRequest) (*coreapis.ListLocksRes
 	}, nil
 }
 
+// DeleteLock unconditionally removes the lock record, regardless of current
+// holders, and updates ancestor counters and the per-namespace lock counter.
+// Deleting a lock that does not exist is a no-op and returns success.
 func (c *Core) DeleteLock(req *coreapis.DeleteLockRequest) (*coreapis.DeleteLockResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
@@ -236,6 +258,14 @@ func (c *Core) DeleteLock(req *coreapis.DeleteLockRequest) (*coreapis.DeleteLock
 	}, nil
 }
 
+// AcquireLock attempts to acquire the named lock for the given lease in
+// either shared or exclusive mode. If the lease already holds the lock, its
+// LockedAt is refreshed and the call succeeds. If the lock is held in an
+// incompatible mode (e.g. shared lock requested while held exclusively, or
+// any conflicting hierarchical ancestor/descendant lock), Payload.Success is
+// false and no state changes. Returns a NotFound application error if the
+// lease is missing or expired, or ResourceExhausted if creating a new lock
+// would exceed MaxNumberOfLocksPerNamespace.
 func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest) (*coreapis.AcquireLockResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
@@ -446,6 +476,13 @@ func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest) (*coreapis.AcquireL
 	}, nil
 }
 
+// ReleaseLock drops the given lease's hold on the named lock. For shared
+// locks only that lease's holder entry is removed; the lock row is deleted
+// once the last holder leaves. For exclusive locks the row is deleted if
+// (and only if) the lease in question is the current holder; a release by a
+// non-holder lease is a no-op. Releasing a non-existent lock returns a
+// synthetic UNLOCKED lock without error. Expired holders are evicted before
+// the release is applied.
 func (c *Core) ReleaseLock(req *coreapis.ReleaseLockRequest) (*coreapis.ReleaseLockResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
@@ -571,6 +608,11 @@ func (c *Core) ReleaseLock(req *coreapis.ReleaseLockRequest) (*coreapis.ReleaseL
 	}, nil
 }
 
+// RunLocksGarbageCollection processes one page of pending GC work: deletes
+// locks tied to namespaces marked for removal, and reaps expired leases
+// (along with any locks they still hold). The amount of work per call is
+// bounded by req.MaxVisitedLocks; records that fully drain within budget are
+// removed, otherwise they are left for the next GC tick.
 func (c *Core) RunLocksGarbageCollection(req *coreapis.RunLocksGarbageCollectionRequest) (*coreapis.RunLocksGarbageCollectionResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
@@ -726,6 +768,10 @@ commit:
 	}, nil
 }
 
+// LocksDeleteNamespace records a GC marker that will, on subsequent
+// RunLocksGarbageCollection ticks, delete every lock and lease belonging to
+// the given namespace. The deletion itself is asynchronous; this call only
+// enqueues the request.
 func (c *Core) LocksDeleteNamespace(req *coreapis.LocksDeleteNamespaceRequest) (*coreapis.LocksDeleteNamespaceResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
@@ -749,6 +795,9 @@ func (c *Core) LocksDeleteNamespace(req *coreapis.LocksDeleteNamespaceRequest) (
 	}, nil
 }
 
+// CreateLockLease creates a new lease for the given process with TTL of
+// req.TtlSeconds and bumps the per-namespace lease counter. Returns
+// ResourceExhausted if creating it would exceed MaxNumberOfLockLeases.
 func (c *Core) CreateLockLease(req *coreapis.CreateLockLeaseRequest) (*coreapis.CreateLockLeaseResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
@@ -809,6 +858,8 @@ func (c *Core) CreateLockLease(req *coreapis.CreateLockLeaseRequest) (*coreapis.
 	}, nil
 }
 
+// GetLockLease returns the lease with the given id. Returns NotFound if the
+// lease does not exist or has already expired as of req.Now.
 func (c *Core) GetLockLease(req *coreapis.GetLockLeaseRequest) (*coreapis.GetLockLeaseResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
@@ -849,6 +900,9 @@ func (c *Core) GetLockLease(req *coreapis.GetLockLeaseRequest) (*coreapis.GetLoc
 	}, nil
 }
 
+// ListLockLeases returns a page of leases in the given namespace, filtering
+// out leases that have already expired as of req.Now. Expired rows are not
+// deleted here — that is left to the GC.
 func (c *Core) ListLockLeases(req *coreapis.ListLockLeasesRequest) (*coreapis.ListLockLeasesResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
@@ -872,6 +926,10 @@ func (c *Core) ListLockLeases(req *coreapis.ListLockLeasesRequest) (*coreapis.Li
 	}, nil
 }
 
+// RefreshLockLease extends the lease's expiration to req.Now +
+// req.TtlSeconds. If the lease has already expired by the time the call is
+// processed, it is revoked (releasing all locks it still held) and the call
+// returns NotFound; otherwise the new expiration is persisted.
 func (c *Core) RefreshLockLease(req *coreapis.RefreshLockLeaseRequest) (*coreapis.RefreshLockLeaseResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
@@ -937,6 +995,9 @@ func (c *Core) RefreshLockLease(req *coreapis.RefreshLockLeaseRequest) (*coreapi
 	}, nil
 }
 
+// RevokeLockLease deletes the lease and synchronously releases every lock
+// it currently holds, updating per-namespace counters and ancestor entries.
+// Revoking a non-existent lease is a no-op and returns success.
 func (c *Core) RevokeLockLease(req *coreapis.RevokeLockLeaseRequest) (*coreapis.RevokeLockLeaseResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
@@ -969,6 +1030,9 @@ func (c *Core) RevokeLockLease(req *coreapis.RevokeLockLeaseRequest) (*coreapis.
 	}, nil
 }
 
+// ListLockLeasesByProcessId returns a page of leases in the given namespace
+// that belong to req.ProcessId, filtering out leases that have already
+// expired as of req.Now.
 func (c *Core) ListLockLeasesByProcessId(req *coreapis.ListLockLeasesByProcessIdRequest) (*coreapis.ListLockLeasesByProcessIdResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
@@ -992,6 +1056,9 @@ func (c *Core) ListLockLeasesByProcessId(req *coreapis.ListLockLeasesByProcessId
 	}, nil
 }
 
+// ListLocksByLeaseId returns a page of locks currently held by the given
+// lease. The result is not filtered by lease expiration — callers that care
+// about staleness should consult GetLockLease.
 func (c *Core) ListLocksByLeaseId(req *coreapis.ListLocksByLeaseIdRequest) (*coreapis.ListLocksByLeaseIdResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()

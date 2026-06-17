@@ -18,7 +18,7 @@ A barrier has two numbers:
   creation and changeable via `UpdateBarrier`.
 - `arrived_processes` — how many distinct peers have arrived so far in the current generation.
 
-The barrier **releases** when `arrived_processes >= expected_processes`. Unlike a wait group there
+The barrier **releases** when `arrived_processes == expected_processes`. Unlike a wait group there
 is no producer/observer split — every participant both contributes to and waits on the same
 barrier.
 

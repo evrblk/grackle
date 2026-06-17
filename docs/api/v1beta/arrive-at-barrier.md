@@ -27,6 +27,8 @@ generation is a no-op.
 
 * Returns `NotFound` if the namespace does not exist.
 * Returns `NotFound` if the barrier does not exist.
+* Returns `InvalidRequest` if the call would push ArrivedProcesses above ExpectedProcesses.
+* Returns `InvalidArgument` if the generation is older than the current barrier generation.
 
 __Not yet released:__
 
