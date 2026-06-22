@@ -108,6 +108,22 @@ func TestCore_CreateBarrier(t *testing.T) {
 		require.Equal(t, monsterax.ResourceExhausted, appErr.Code)
 		require.Contains(t, appErr.Message, "max number of barriers per namespace reached")
 	})
+
+	t.Run("cannot create with zero expected_processes", func(t *testing.T) {
+		core := newBarriersCore(t)
+		now := time.Now()
+		barrierId := &corepb.BarrierId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+			BarrierId:   rand.Uint64(),
+		}
+
+		// A barrier expecting zero processes could never trip, so it is rejected.
+		appErr := createBarrierWithError(t, core, barrierId, "test_barrier", 0, 10, now)
+		require.NotNil(t, appErr)
+		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Contains(t, appErr.Message, "expected processes must be greater than 0")
+	})
 }
 
 func TestCore_GetBarrier(t *testing.T) {
@@ -493,6 +509,64 @@ func TestCore_UpdateBarrier(t *testing.T) {
 		appErr := updateBarrierWithError(t, core, barrierId, "Updated description", 5, 99, now.Add(time.Minute))
 		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
 		require.Contains(t, appErr.Message, "version mismatch")
+	})
+
+	t.Run("shrinking expected_processes to arrived_processes trips the barrier", func(t *testing.T) {
+		core := newBarriersCore(t)
+		now := time.Now()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+		}
+		barrierId := &corepb.BarrierId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			BarrierId:   rand.Uint64(),
+		}
+
+		// T+0: Create barrier expecting 3 processes
+		_ = createBarrier(t, core, barrierId, "test_barrier", 3, 10, now)
+
+		// T+1m: Two of the three processes arrive (arrived=2, generation=1)
+		_ = arriveAtBarrier(t, core, namespaceId, "test_barrier", "process-0", 1, now.Add(time.Minute))
+		barrier := arriveAtBarrier(t, core, namespaceId, "test_barrier", "process-1", 1, now.Add(time.Minute))
+		require.EqualValues(t, 2, barrier.ArrivedProcesses)
+		require.EqualValues(t, 1, barrier.Generation)
+
+		// T+2m: The third worker is decommissioned, so shrink expected_processes to the 2 that
+		// have arrived. This satisfies the release condition, so the barrier must trip rather than
+		// wedge: arrived resets to 0 and the generation advances.
+		resp := updateBarrier(t, core, barrierId, "scaled down", 2, 1, now.Add(2*time.Minute))
+		require.EqualValues(t, 2, resp.Barrier.ExpectedProcesses)
+		require.EqualValues(t, 0, resp.Barrier.ArrivedProcesses)
+		require.EqualValues(t, 2, resp.Barrier.Generation)
+
+		// The barrier is usable again: arrivals at the new generation are accepted, not rejected
+		// by the "too many participants arrived" guard.
+		barrier = arriveAtBarrier(t, core, namespaceId, "test_barrier", "process-0", 2, now.Add(3*time.Minute))
+		require.EqualValues(t, 1, barrier.ArrivedProcesses)
+		require.EqualValues(t, 2, barrier.Generation)
+	})
+
+	t.Run("cannot update expected_processes to zero", func(t *testing.T) {
+		core := newBarriersCore(t)
+		now := time.Now()
+		barrierId := &corepb.BarrierId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+			BarrierId:   rand.Uint64(),
+		}
+
+		_ = createBarrier(t, core, barrierId, "test_barrier", 3, 10, now)
+
+		appErr := updateBarrierWithError(t, core, barrierId, "wedge me", 0, 1, now.Add(time.Minute))
+		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Contains(t, appErr.Message, "expected processes must be greater than 0")
+
+		// The rejected update did not change anything
+		barrier := getBarrier(t, core, barrierId)
+		require.EqualValues(t, 3, barrier.ExpectedProcesses)
+		require.EqualValues(t, 1, barrier.Version)
 	})
 }
 

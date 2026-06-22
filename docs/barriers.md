@@ -15,7 +15,9 @@ with `CreateBarrier` before processes can arrive or wait on it.
 A barrier has two numbers:
 
 - `expected_processes` — how many distinct peers must arrive before the barrier releases. Set at
-  creation and changeable via `UpdateBarrier`.
+  creation and changeable via `UpdateBarrier`; it must stay greater than 0, and lowering it to the
+  current `arrived_processes` trips the barrier immediately (handy when a peer is decommissioned and
+  will never arrive).
 - `arrived_processes` — how many distinct peers have arrived so far in the current generation.
 
 The barrier **releases** when `arrived_processes == expected_processes`. Unlike a wait group there

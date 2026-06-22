@@ -6,7 +6,8 @@ Safe to retry — duplicate calls fail with `AlreadyExists`.
 
 ## Request
 
-* `expected_processes` is how many peers must arrive before the barrier releases.
+* `expected_processes` is how many peers must arrive before the barrier releases. It must be greater
+  than 0.
 * `expires_at` is an absolute timestamp after which the barrier and its participant records 
   are reaped by GC regardless of state.
 * `metadata` is an optional, opaque map of string key/value pairs stored alongside the barrier —

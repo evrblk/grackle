@@ -208,6 +208,18 @@ func (c *Core) CreateBarrier(req *coreapis.CreateBarrierRequest) (*coreapis.Crea
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
+	// A barrier that expects zero processes can never trip; reject it outright.
+	if req.Payload.ExpectedProcesses == 0 {
+		return &coreapis.CreateBarrierResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.InvalidArgument,
+				"expected processes must be greater than 0",
+				map[string]string{
+					"barrier_name": req.Payload.Name,
+				}),
+		}, nil
+	}
+
 	// Get counters for that namespace
 	counters, err := c.counters.Get(txn, req.Payload.BarrierId.AccountId, req.Payload.BarrierId.NamespaceId)
 	if err != nil {
@@ -330,9 +342,12 @@ func (c *Core) DeleteBarrier(req *coreapis.DeleteBarrierRequest) (*coreapis.Dele
 }
 
 // UpdateBarrier updates the barrier's description and ExpectedProcesses.
-// Returns NotFound if the barrier does not exist, or InvalidArgument if the
-// new ExpectedProcesses is smaller than the number of participants that have
-// already arrived (which would leave the barrier in an inconsistent state).
+// Returns NotFound if the barrier does not exist, or InvalidArgument if
+// ExpectedProcesses is 0 or is smaller than the number of participants that
+// have already arrived (which would leave the barrier in an inconsistent
+// state). Lowering ExpectedProcesses to exactly ArrivedProcesses trips the
+// barrier (resetting arrived and advancing the generation) rather than leaving
+// it wedged — see the trip logic below.
 func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest) (*coreapis.UpdateBarrierResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
@@ -367,6 +382,18 @@ func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest) (*coreapis.Upda
 		}, nil
 	}
 
+	// A barrier that expects zero processes can never trip; reject it outright.
+	if req.Payload.ExpectedProcesses == 0 {
+		return &coreapis.UpdateBarrierResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.InvalidArgument,
+				"expected processes must be greater than 0",
+				map[string]string{
+					"barrier_id": ids.EncodeBarrierId(req.Payload.BarrierId),
+				}),
+		}, nil
+	}
+
 	// If there are currently more arrived processes than the new expected processes
 	if barrier.ArrivedProcesses > req.Payload.ExpectedProcesses {
 		return &coreapis.UpdateBarrierResponse{
@@ -382,6 +409,16 @@ func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest) (*coreapis.Upda
 	barrier.UpdatedAt = req.Payload.Now
 	barrier.Metadata = req.Payload.Metadata
 	barrier.Version += 1
+
+	// Lowering ExpectedProcesses down to the number of already-arrived processes satisfies the
+	// release condition, but the trip logic only runs on arrival (in ArriveAtBarrier). Without
+	// tripping here the barrier would wedge: it can no longer trip on its own, and the next
+	// ArriveAtBarrier is rejected by the ArrivedProcesses >= ExpectedProcesses guard. Trip it now —
+	// reset arrived and advance the generation — exactly as the final arrival would.
+	if barrier.ArrivedProcesses >= barrier.ExpectedProcesses {
+		barrier.ArrivedProcesses = 0
+		barrier.Generation += 1
+	}
 
 	err = c.barriers.Update(txn, barrier)
 	if err != nil {
