@@ -704,8 +704,10 @@ func TestWaitAtBarrier(t *testing.T) {
 		require.True(t, resp.AllArrived)
 		require.False(t, resp.TimedOut)
 		require.Equal(t, uint64(3), resp.Barrier.ExpectedProcesses)
-		require.Equal(t, uint64(3), resp.Barrier.ArrivedProcesses)
-		require.Equal(t, uint64(1), resp.Barrier.Generation)
+		// The barrier auto-trips on the third arrival: ArrivedProcesses is reset to 0
+		// and Generation advances from 1 to 2.
+		require.Equal(t, uint64(0), resp.Barrier.ArrivedProcesses)
+		require.Equal(t, uint64(2), resp.Barrier.Generation)
 		require.Equal(t, uint64(2), resp.NextGeneration)
 	})
 

@@ -383,12 +383,14 @@ func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest) (*coreapis.Upda
 }
 
 // ArriveAtBarrier records the given process as having reached the named
-// barrier for req.Generation, and increments ArrivedProcesses. A process
+// barrier for req.Generation, and increments ArrivedProcesses. When the
+// increment makes ArrivedProcesses equal to ExpectedProcesses the barrier
+// auto-trips: ArrivedProcesses is reset to 0 and Generation is incremented,
+// releasing anyone polling WaitAtBarrier at the old generation. A process
 // arriving twice for the same generation is a no-op. Returns NotFound if the
 // barrier does not exist, or InvalidArgument if req.Generation is older than
-// the barrier's current generation, or if ArrivedProcesses is already at
-// ExpectedProcesses — in the InvalidArgument cases the transaction is
-// discarded and no participant rows are persisted.
+// the barrier's current generation; in the InvalidArgument case the
+// transaction is discarded and no participant rows are persisted.
 func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest) (*coreapis.ArriveAtBarrierResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
@@ -440,8 +442,10 @@ func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest) (*coreapis.
 		}, nil
 	}
 
-	// Reject if this arrival would push the barrier past its expected participant count.
-	if barrier.ArrivedProcesses == barrier.ExpectedProcesses {
+	// Defense in depth: auto-trip below should make this unreachable, since ArrivedProcesses
+	// is reset to 0 the moment it would reach ExpectedProcesses. If we ever observe the
+	// invariant broken, reject loudly rather than silently overflowing the counter.
+	if barrier.ArrivedProcesses >= barrier.ExpectedProcesses {
 		return &coreapis.ArriveAtBarrierResponse{
 			ApplicationError: monsterax.NewErrorWithContext(
 				monsterax.InvalidArgument,
@@ -466,6 +470,15 @@ func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest) (*coreapis.
 
 	// Increment the counter of arrived processes
 	barrier.ArrivedProcesses += 1
+
+	// Auto-trip on the last expected arrival: reset the counter and advance the generation
+	// so any waiter polling WaitAtBarrier at the old generation observes the trip.
+	if barrier.ArrivedProcesses == barrier.ExpectedProcesses {
+		barrier.ArrivedProcesses = 0
+		barrier.Generation += 1
+	}
+
+	barrier.UpdatedAt = req.Payload.Now
 
 	err = c.barriers.Update(txn, barrier)
 	if err != nil {

@@ -1257,19 +1257,27 @@ func (s *GrackleApiServerHandler) WaitAtBarrier(ctx context.Context, req *grackl
 			return nil, monsterax.ErrorToGRPC(err)
 		}
 
-		// Check completion and timeout conditions
-		allArrived := resp2.Barrier.ArrivedProcesses >= resp2.Barrier.ExpectedProcesses &&
-			resp2.Barrier.Generation == req.ExpectedGeneration
+		// The barrier auto-trips inside ArriveAtBarrier by advancing Generation. From the
+		// waiter's perspective, the trip has happened iff the barrier's current Generation
+		// is strictly greater than the one we were registered to wait at.
+		allArrived := resp2.Barrier.Generation > req.ExpectedGeneration
 
 		// Check if timeout has been reached
 		timedOut := time.Now().After(deadline)
 
 		if timedOut || allArrived {
-			// Return the last known state
+			// On a successful trip the barrier's Generation is already the new "current"
+			// generation; that's the value clients should use for the next round. On a
+			// timeout, no trip happened — fall back to ExpectedGeneration+1 so the caller
+			// still has a hint at where the next round would land.
+			nextGeneration := resp2.Barrier.Generation
+			if !allArrived {
+				nextGeneration = req.ExpectedGeneration + 1
+			}
 			return &gracklepb.WaitAtBarrierResponse{
 				Barrier:        barrierToFront(resp2.Barrier),
 				AllArrived:     allArrived,
-				NextGeneration: resp2.Barrier.Generation + 1,
+				NextGeneration: nextGeneration,
 				TimedOut:       timedOut,
 			}, nil
 		}

@@ -10,7 +10,7 @@ import (
 	gracklepb "github.com/evrblk/evrblk-go/grackle/v1beta"
 	"github.com/stretchr/testify/require"
 
-	"github.com/evrblk/grackle/pkg/server/v1beta"
+	"github.com/evrblk/grackle/pkg/grackle"
 )
 
 func TestCreateSemaphore(t *testing.T) {
@@ -56,20 +56,20 @@ func TestCreateSemaphore(t *testing.T) {
 		resp, err := server.CreateSemaphore(ctx, &gracklepb.CreateSemaphoreRequest{
 			NamespaceName: "namespace1",
 			SemaphoreName: "semaphore1",
-			Permits:       uint64(v1beta.DefaultServiceLimits.MaxNumberOfSemaphoreHolders), // Max allowed by account limits
+			Permits:       uint64(grackle.DefaultServiceLimits.MaxNumberOfSemaphoreHolders), // Max allowed by account limits
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp.Semaphore)
-		require.EqualValues(t, v1beta.DefaultServiceLimits.MaxNumberOfSemaphoreHolders, resp.Semaphore.Permits)
+		require.EqualValues(t, grackle.DefaultServiceLimits.MaxNumberOfSemaphoreHolders, resp.Semaphore.Permits)
 
 		// Test semaphore size exceeding account limits
 		_, err = server.CreateSemaphore(ctx, &gracklepb.CreateSemaphoreRequest{
 			NamespaceName: "namespace1",
 			SemaphoreName: "semaphore2",
-			Permits:       uint64(v1beta.DefaultServiceLimits.MaxNumberOfSemaphoreHolders + 1), // Exceeds MaxNumberOfSemaphoreHolders
+			Permits:       uint64(grackle.DefaultServiceLimits.MaxNumberOfSemaphoreHolders + 1), // Exceeds MaxNumberOfSemaphoreHolders
 		})
 		require.Error(t, err)
-		require.Contains(t, err.Error(), fmt.Sprintf("semaphore size is too big, max: %d", v1beta.DefaultServiceLimits.MaxNumberOfSemaphoreHolders))
+		require.Contains(t, err.Error(), fmt.Sprintf("semaphore size is too big, max: %d", grackle.DefaultServiceLimits.MaxNumberOfSemaphoreHolders))
 	})
 }
 
@@ -389,20 +389,20 @@ func TestUpdateSemaphore(t *testing.T) {
 		resp, err := server.UpdateSemaphore(ctx, &gracklepb.UpdateSemaphoreRequest{
 			NamespaceName: "namespace1",
 			SemaphoreName: "semaphore1",
-			Permits:       uint64(v1beta.DefaultServiceLimits.MaxNumberOfSemaphoreHolders), // Max allowed by account limits
+			Permits:       uint64(grackle.DefaultServiceLimits.MaxNumberOfSemaphoreHolders), // Max allowed by account limits
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp.Semaphore)
-		require.EqualValues(t, v1beta.DefaultServiceLimits.MaxNumberOfSemaphoreHolders, resp.Semaphore.Permits)
+		require.EqualValues(t, grackle.DefaultServiceLimits.MaxNumberOfSemaphoreHolders, resp.Semaphore.Permits)
 
 		// Test update exceeding account limits
 		_, err = server.UpdateSemaphore(ctx, &gracklepb.UpdateSemaphoreRequest{
 			NamespaceName: "namespace1",
 			SemaphoreName: "semaphore1",
-			Permits:       uint64(v1beta.DefaultServiceLimits.MaxNumberOfSemaphoreHolders + 1), // Exceeds MaxNumberOfSemaphoreHolders
+			Permits:       uint64(grackle.DefaultServiceLimits.MaxNumberOfSemaphoreHolders + 1), // Exceeds MaxNumberOfSemaphoreHolders
 		})
 		require.Error(t, err)
-		require.Contains(t, err.Error(), fmt.Sprintf("semaphore size is too big, max: %d", v1beta.DefaultServiceLimits.MaxNumberOfSemaphoreHolders))
+		require.Contains(t, err.Error(), fmt.Sprintf("semaphore size is too big, max: %d", grackle.DefaultServiceLimits.MaxNumberOfSemaphoreHolders))
 	})
 }
 

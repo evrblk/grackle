@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/evrblk/evrblk-go/authn"
+	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/metrics"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -153,4 +155,32 @@ func extractServiceAndMethod(grpcPath string) (string, string) {
 		method = matches[2]
 	}
 	return service, method
+}
+
+type MonitoringMiddleware struct {
+}
+
+func (m *MonitoringMiddleware) Unary(
+	ctx context.Context,
+	req interface{},
+	info *grpc.UnaryServerInfo,
+	handler grpc.UnaryHandler,
+) (interface{}, error) {
+	_, method := extractServiceAndMethod(info.FullMethod)
+
+	totalRequestsCounter.WithLabelValues(method).Inc()
+
+	defer monsterax.MeasureSince(requestsDuration.WithLabelValues(method), time.Now())
+
+	resp, err := handler(ctx, req)
+
+	if err != nil {
+		failedRequestsCounter.WithLabelValues(method, metrics.FromGrpcError(err)).Inc()
+	}
+
+	return resp, err
+}
+
+func NewMonitoringMiddleware() *MonitoringMiddleware {
+	return &MonitoringMiddleware{}
 }

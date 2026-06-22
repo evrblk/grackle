@@ -445,34 +445,37 @@ func TestCore_ArriveAtBarrier(t *testing.T) {
 			BarrierId:   rand.Uint64(),
 		}
 
-		// T+0: Create barrier
+		// T+0: Create barrier expecting 3 participants (initial generation is 1)
 		_ = createBarrier(t, core, barrierId, "test_barrier", 3, 10, now)
 
 		// T+1m: First process arrives
 		_ = arriveAtBarrier(t, core, namespaceId, "test_barrier", "process_1", 1, now.Add(time.Minute))
 
-		// Get barrier and verify arrived processes count
 		barrier := getBarrier(t, core, barrierId)
-
 		require.EqualValues(t, 1, barrier.ArrivedProcesses)
 		require.EqualValues(t, 3, barrier.ExpectedProcesses)
+		require.EqualValues(t, 1, barrier.Generation)
 
 		// T+2m: Second process arrives
 		_ = arriveAtBarrier(t, core, namespaceId, "test_barrier", "process_2", 1, now.Add(2*time.Minute))
 
-		// Get barrier and verify arrived processes count
 		barrier = getBarrier(t, core, barrierId)
-
 		require.EqualValues(t, 2, barrier.ArrivedProcesses)
+		require.EqualValues(t, 1, barrier.Generation)
 
-		// T+3m: Third process arrives
+		// T+3m: Third process arrives — this is the last expected arrival, so the
+		// barrier auto-trips: ArrivedProcesses resets to 0 and Generation advances.
 		_ = arriveAtBarrier(t, core, namespaceId, "test_barrier", "process_3", 1, now.Add(3*time.Minute))
 
-		// Get barrier and verify all processes have arrived
 		barrier = getBarrier(t, core, barrierId)
-
-		require.EqualValues(t, 3, barrier.ArrivedProcesses)
+		require.EqualValues(t, 0, barrier.ArrivedProcesses)
 		require.EqualValues(t, 3, barrier.ExpectedProcesses)
+		require.EqualValues(t, 2, barrier.Generation)
+
+		// All three participant rows from generation 1 are preserved (clients can read
+		// them e.g. via ListBarrierParticipants until GC reaps the barrier).
+		resp := listBarrierParticipants(t, core, namespaceId, "test_barrier")
+		require.Len(t, resp.Participants, 3)
 	})
 
 	t.Run("arrive twice", func(t *testing.T) {
@@ -517,7 +520,7 @@ func TestCore_ArriveAtBarrier(t *testing.T) {
 		require.Contains(t, err.Message, "barrier not found")
 	})
 
-	t.Run("overflow", func(t *testing.T) {
+	t.Run("auto trip on last arrival", func(t *testing.T) {
 		core := newBarriersCore(t)
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
@@ -533,27 +536,56 @@ func TestCore_ArriveAtBarrier(t *testing.T) {
 		// T+0: Create barrier expecting 2 participants
 		_ = createBarrier(t, core, barrierId, "test_barrier", 2, 10, now)
 
-		// T+1m, T+2m: Fill the barrier exactly
+		// T+1m: First arrival — counter goes to 1, no trip yet.
 		_ = arriveAtBarrier(t, core, namespaceId, "test_barrier", "process_1", 1, now.Add(time.Minute))
-		_ = arriveAtBarrier(t, core, namespaceId, "test_barrier", "process_2", 1, now.Add(2*time.Minute))
-
-		// T+3m: A third arrival must be rejected
-		appErr := arriveAtBarrierWithError(t, core, namespaceId, "test_barrier", "process_3", 1, now.Add(3*time.Minute))
-		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
-
-		// The failed arrival must not have persisted any state: counter stays at 2
-		// and no new participant row was written.
 		barrier := getBarrier(t, core, barrierId)
-		require.EqualValues(t, 2, barrier.ArrivedProcesses)
-		require.EqualValues(t, 2, barrier.ExpectedProcesses)
+		require.EqualValues(t, 1, barrier.ArrivedProcesses)
+		require.EqualValues(t, 1, barrier.Generation)
 
+		// T+2m: Second arrival is the last expected one — auto-trip.
+		_ = arriveAtBarrier(t, core, namespaceId, "test_barrier", "process_2", 1, now.Add(2*time.Minute))
+		barrier = getBarrier(t, core, barrierId)
+		require.EqualValues(t, 0, barrier.ArrivedProcesses)
+		require.EqualValues(t, 2, barrier.ExpectedProcesses)
+		require.EqualValues(t, 2, barrier.Generation)
+
+		// Both participant rows from generation 1 are preserved.
 		resp := listBarrierParticipants(t, core, namespaceId, "test_barrier")
 		require.Len(t, resp.Participants, 2)
-		participantIds := make([]string, len(resp.Participants))
-		for i, p := range resp.Participants {
-			participantIds[i] = p.ProcessId
+
+		// T+3m: A third process that still references generation 1 is now stale and
+		// must be rejected (the trip already happened, generation moved to 2).
+		appErr := arriveAtBarrierWithError(t, core, namespaceId, "test_barrier", "process_3", 1, now.Add(3*time.Minute))
+		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Contains(t, appErr.Message, "generation")
+
+		// The next round at generation 2 starts clean.
+		_ = arriveAtBarrier(t, core, namespaceId, "test_barrier", "process_1", 2, now.Add(4*time.Minute))
+		barrier = getBarrier(t, core, barrierId)
+		require.EqualValues(t, 1, barrier.ArrivedProcesses)
+		require.EqualValues(t, 2, barrier.Generation)
+	})
+
+	t.Run("auto trip with single expected process", func(t *testing.T) {
+		core := newBarriersCore(t)
+		now := time.Now()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
 		}
-		require.NotContains(t, participantIds, "process_3")
+		barrierId := &corepb.BarrierId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			BarrierId:   rand.Uint64(),
+		}
+
+		// Single-participant barrier: the first arrival is also the trip.
+		_ = createBarrier(t, core, barrierId, "test_barrier", 1, 10, now)
+		_ = arriveAtBarrier(t, core, namespaceId, "test_barrier", "process_1", 1, now.Add(time.Minute))
+
+		barrier := getBarrier(t, core, barrierId)
+		require.EqualValues(t, 0, barrier.ArrivedProcesses)
+		require.EqualValues(t, 2, barrier.Generation)
 	})
 
 	t.Run("old generation", func(t *testing.T) {

@@ -7,9 +7,8 @@ import (
 	"time"
 
 	gracklepb "github.com/evrblk/evrblk-go/grackle/v1beta"
+	"github.com/evrblk/grackle/pkg/grackle"
 	"github.com/stretchr/testify/require"
-
-	"github.com/evrblk/grackle/pkg/server/v1beta"
 )
 
 func TestCreateWaitGroup(t *testing.T) {
@@ -55,20 +54,20 @@ func TestCreateWaitGroup(t *testing.T) {
 		resp, err := server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
 			NamespaceName: "namespace1",
 			WaitGroupName: "waitgroup1",
-			Counter:       uint64(v1beta.DefaultServiceLimits.MaxWaitGroupSize), // Max allowed by account limits
+			Counter:       uint64(grackle.DefaultServiceLimits.MaxWaitGroupSize), // Max allowed by account limits
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp.WaitGroup)
-		require.EqualValues(t, v1beta.DefaultServiceLimits.MaxWaitGroupSize, resp.WaitGroup.Counter)
+		require.EqualValues(t, grackle.DefaultServiceLimits.MaxWaitGroupSize, resp.WaitGroup.Counter)
 
 		// Test wait group size exceeding account limits
 		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
 			NamespaceName: "namespace1",
 			WaitGroupName: "waitgroup2",
-			Counter:       uint64(v1beta.DefaultServiceLimits.MaxWaitGroupSize + 1), // Exceeds MaxWaitGroupSize
+			Counter:       uint64(grackle.DefaultServiceLimits.MaxWaitGroupSize + 1), // Exceeds MaxWaitGroupSize
 		})
 		require.Error(t, err)
-		require.Contains(t, err.Error(), fmt.Sprintf("wait group size is too big, max: %d", uint64(v1beta.DefaultServiceLimits.MaxWaitGroupSize)))
+		require.Contains(t, err.Error(), fmt.Sprintf("wait group size is too big, max: %d", uint64(grackle.DefaultServiceLimits.MaxWaitGroupSize)))
 	})
 }
 

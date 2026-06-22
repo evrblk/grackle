@@ -16,3 +16,19 @@ type ServiceLimits struct {
 	ControlPlaneUpdateRequestRate     int64
 	DataPlaneRequestRate              int64
 }
+
+var (
+	DefaultServiceLimits = ServiceLimits{
+		MaxNumberOfNamespaces:             100_000,
+		MaxNumberOfWaitGroupsPerNamespace: 1_000_000,
+		MaxNumberOfLocksPerNamespace:      1_000_000,
+		MaxNumberOfSemaphoresPerNamespace: 1_000_000,
+		MaxNumberOfBarriersPerNamespace:   1_000_000,
+		MaxNumberOfSharedLockHolders:      1_000,
+		MaxNumberOfSemaphoreHolders:       1_000,
+		MaxNumberOfLockLeases:             1_000_000,
+		MaxNumberOfSemaphoreLeases:        1_000_000,
+		MaxWaitGroupSize:                  100_000_000,
+		MaxNumberOfBarrierParticipants:    1_000_000,
+	}
+)
