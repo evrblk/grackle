@@ -56,6 +56,12 @@ it; it only stores it on the lease so callers can later enumerate leases by `pro
 "what does this worker currently hold?" The acquire/release surface does **not** take `process_id`
 — it takes `lease_id`.
 
+### Metadata
+Each lock holder carries an optional `metadata` map (string → string), attached on `AcquireLock`
+and returned with the holder on `GetLock` / `ListLocks`. (Metadata lives on the holder, not on the
+lock itself, since a shared lock can have many holders.) Metadata is opaque to Grackle — see
+[Metadata](/docs/api-overview.md#metadata) for the shared semantics and limits.
+
 ## Example workflow
 
 Process `host-123/pid-4567` creates a lease. `ttl_seconds` is added to "now" server-side.

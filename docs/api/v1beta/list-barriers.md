@@ -21,6 +21,7 @@ Read-only and safe to retry.
 
 * Returns `NotFound` if the namespace does not exist.
 * Non-empty `next_pagination_token` indicates more pages are available.
+* `metadata` is the optional, opaque map stored with each barrier — see [Metadata](/docs/api-overview.md#metadata).
 
 ```json
 {
@@ -33,7 +34,10 @@ Read-only and safe to retry.
       "generation": 1,
       "version": 1,
       "created_at": 1718150400000000000,
-      "updated_at": 1718150420000000000
+      "updated_at": 1718150420000000000,
+      "metadata": {
+        "phase": "map"
+      }
     }
   ],
   "next_pagination_token": "",

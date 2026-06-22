@@ -105,6 +105,7 @@ func (c *Core) CreateNamespace(req *coreapis.CreateNamespaceRequest) (*coreapis.
 		Description: req.Payload.Description,
 		CreatedAt:   req.Payload.Now,
 		UpdatedAt:   req.Payload.Now,
+		Metadata:    req.Payload.Metadata,
 	}
 
 	err = c.namespaces.Create(txn, namespace)
@@ -152,6 +153,7 @@ func (c *Core) UpdateNamespace(req *coreapis.UpdateNamespaceRequest) (*coreapis.
 
 	namespace.Description = req.Payload.Description
 	namespace.UpdatedAt = req.Payload.Now
+	namespace.Metadata = req.Payload.Metadata
 
 	err = c.namespaces.Update(txn, namespace)
 	if err != nil {

@@ -17,7 +17,7 @@ Read-only and safe to retry.
   "semaphore_name": "partner_1",
   "pagination_token": "",
   "limit": 100
-})
+}
 ```
 
 ## Response
@@ -26,6 +26,7 @@ Read-only and safe to retry.
 * Returns `NotFound` if the semaphore does not exist.
 * Holders whose lease has already expired by call time are filtered out of the response.
 * Non-empty `next_pagination_token` indicates more pages are available.
+* `metadata` is the optional, opaque map attached to each holder — see [Metadata](/docs/api-overview.md#metadata).
 
 ```json
 {
@@ -33,12 +34,18 @@ Read-only and safe to retry.
     {
       "lease_id": "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
       "weight": 3,
-      "locked_at": 1695826239671432000
+      "locked_at": 1695826239671432000,
+      "metadata": {
+        "host": "worker-7"
+      }
     },
     {
       "lease_id": "ls_qB7XwYzAaaaaaaaaaaaaaaaaaaaa",
       "weight": 2,
-      "locked_at": 1695826240120000000
+      "locked_at": 1695826240120000000,
+      "metadata": {
+        "host": "worker-9"
+      }
     }
   ],
   "next_pagination_token": "",

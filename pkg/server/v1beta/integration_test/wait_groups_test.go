@@ -11,6 +11,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// completeJobs builds a slice of CompleteJobRequest from plain job ids
+// (without metadata), which is the common case in these tests.
+func completeJobs(jobIds []string) []*gracklepb.CompleteJobRequest {
+	jobs := make([]*gracklepb.CompleteJobRequest, len(jobIds))
+	for i, jobId := range jobIds {
+		jobs[i] = &gracklepb.CompleteJobRequest{JobId: jobId}
+	}
+	return jobs
+}
+
 func TestCreateWaitGroup(t *testing.T) {
 	t.Run("validation", func(t *testing.T) {
 		server := setupGrackleApiServer(t)
@@ -168,7 +178,7 @@ func TestCompleteJobsFromWaitGroup(t *testing.T) {
 		resp, err := server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
 			NamespaceName: "namespace1",
 			WaitGroupName: "waitgroup1",
-			JobIds:        []string{"job1", "job2"},
+			Jobs:          completeJobs([]string{"job1", "job2"}),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp)
@@ -177,7 +187,7 @@ func TestCompleteJobsFromWaitGroup(t *testing.T) {
 		_, err = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
 			NamespaceName: "invalid@namespace",
 			WaitGroupName: "waitgroup1",
-			JobIds:        []string{"job1"},
+			Jobs:          completeJobs([]string{"job1"}),
 		})
 		require.Error(t, err)
 	})
@@ -204,7 +214,7 @@ func TestCompleteJobsFromWaitGroup(t *testing.T) {
 		_, err = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
 			NamespaceName: "namespace1",
 			WaitGroupName: "waitgroup1",
-			JobIds:        []string{"job1", "job2", "job3"},
+			Jobs:          completeJobs([]string{"job1", "job2", "job3"}),
 		})
 		require.Error(t, err)
 
@@ -220,7 +230,7 @@ func TestCompleteJobsFromWaitGroup(t *testing.T) {
 		_, err = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
 			NamespaceName: "namespace1",
 			WaitGroupName: "waitgroup1",
-			JobIds:        []string{"job1", "job2"},
+			Jobs:          completeJobs([]string{"job1", "job2"}),
 		})
 		require.NoError(t, err)
 
@@ -228,7 +238,7 @@ func TestCompleteJobsFromWaitGroup(t *testing.T) {
 		_, err = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
 			NamespaceName: "namespace1",
 			WaitGroupName: "waitgroup1",
-			JobIds:        []string{"job3"},
+			Jobs:          completeJobs([]string{"job3"}),
 		})
 		require.Error(t, err)
 
@@ -236,7 +246,7 @@ func TestCompleteJobsFromWaitGroup(t *testing.T) {
 		_, err = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
 			NamespaceName: "namespace1",
 			WaitGroupName: "waitgroup1",
-			JobIds:        []string{"job1", "job2"},
+			Jobs:          completeJobs([]string{"job1", "job2"}),
 		})
 		require.NoError(t, err)
 	})
@@ -441,7 +451,7 @@ func TestListWaitGroupCompletedJobs(t *testing.T) {
 		_, err = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
 			NamespaceName: "test-namespace",
 			WaitGroupName: "test-waitgroup",
-			JobIds:        jobIds,
+			Jobs:          completeJobs(jobIds),
 		})
 		require.NoError(t, err)
 
@@ -551,14 +561,14 @@ func TestWaitForWaitGroup(t *testing.T) {
 			_, _ = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
 				NamespaceName: "test-namespace",
 				WaitGroupName: "test-wg",
-				JobIds:        []string{"job1"},
+				Jobs:          completeJobs([]string{"job1"}),
 			})
 			time.Sleep(500 * time.Millisecond)
 			// Complete second job
 			_, _ = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
 				NamespaceName: "test-namespace",
 				WaitGroupName: "test-wg",
-				JobIds:        []string{"job2"},
+				Jobs:          completeJobs([]string{"job2"}),
 			})
 		}()
 
@@ -599,7 +609,7 @@ func TestWaitForWaitGroup(t *testing.T) {
 			_, _ = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
 				NamespaceName: "test-namespace",
 				WaitGroupName: "test-wg-timeout",
-				JobIds:        []string{"p1", "p2", "p3", "p4", "p5"},
+				Jobs:          completeJobs([]string{"p1", "p2", "p3", "p4", "p5"}),
 			})
 		}()
 

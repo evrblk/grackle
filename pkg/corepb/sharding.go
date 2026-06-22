@@ -232,6 +232,12 @@ func (r *ListWaitGroupJobsRequest) ShardKey() []byte {
 	return sharding.ByAccountAndNamespace(r.NamespaceId.AccountId, r.NamespaceId.NamespaceId)
 }
 
+// UpdateWaitGroupRequest
+
+func (r *UpdateWaitGroupRequest) ShardKey() []byte {
+	return sharding.ByAccountAndNamespace(r.WaitGroupId.AccountId, r.WaitGroupId.NamespaceId)
+}
+
 // ReleaseLockRequest
 
 func (r *ReleaseLockRequest) ShardKey() []byte {

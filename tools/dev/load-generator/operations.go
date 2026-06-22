@@ -278,17 +278,19 @@ func executeCompleteWaitGroupJobs(ctx context.Context, client grackle.GrackleApi
 	}
 	wgName := waitgroups[rng.Intn(len(waitgroups))]
 
-	// Random number of job IDs (1 to batch size)
+	// Random number of jobs (1 to batch size)
 	numProcesses := rng.Intn(config.WaitGroupJobBatchSize) + 1
-	jobIDs := make([]string, numProcesses)
+	jobs := make([]*grackle.CompleteJobRequest, numProcesses)
 	for i := range numProcesses {
-		jobIDs[i] = fmt.Sprintf("load-worker-%d-%d-%d", workerID, time.Now().UnixNano(), i)
+		jobs[i] = &grackle.CompleteJobRequest{
+			JobId: fmt.Sprintf("load-worker-%d-%d-%d", workerID, time.Now().UnixNano(), i),
+		}
 	}
 
 	_, err := client.CompleteJobsFromWaitGroup(ctx, &grackle.CompleteJobsFromWaitGroupRequest{
 		NamespaceName: ns,
 		WaitGroupName: wgName,
-		JobIds:        jobIDs,
+		Jobs:          jobs,
 	})
 	return err
 }

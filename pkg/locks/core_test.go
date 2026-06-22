@@ -903,6 +903,52 @@ func TestCore_AcquireLock(t *testing.T) {
 	})
 }
 
+func TestCore_LockHolderMetadata(t *testing.T) {
+	core := newLocksCore(t)
+	now := time.Now()
+	accountId := rand.Uint64()
+	namespaceId := rand.Uint32()
+	lockId := &corepb.LockId{
+		AccountId:   accountId,
+		NamespaceId: namespaceId,
+		LockName:    "test_lock",
+	}
+
+	// Create lease with 60 minute TTL
+	lease := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+
+	metadata := map[string]string{"host": "node-1", "pid": "1234"}
+
+	// T+0: Acquire exclusive lock with metadata
+	resp, err := core.AcquireLock(&coreapis.AcquireLockRequest{
+		Payload: &corepb.AcquireLockRequest{
+			LockId:                       lockId,
+			LeaseId:                      lease.Id.LeaseId,
+			Now:                          now.UnixNano(),
+			Exclusive:                    true,
+			Metadata:                     metadata,
+			MaxNumberOfLocksPerNamespace: 2_000,
+		},
+	})
+
+	require.NoError(t, err)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+	require.NotNil(t, resp.Payload.Lock)
+	require.True(t, resp.Payload.Success)
+	require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, resp.Payload.Lock.State)
+	require.Len(t, resp.Payload.Lock.LockHolders, 1)
+
+	// Metadata is present on the holder in the AcquireLock response.
+	require.Equal(t, metadata, resp.Payload.Lock.LockHolders[0].Metadata)
+
+	// And it is persisted: a subsequent GetLock returns the same holder metadata.
+	lock := getLock(t, core, lockId, now.Add(time.Minute))
+	require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, lock.State)
+	require.Len(t, lock.LockHolders, 1)
+	require.Equal(t, metadata, lock.LockHolders[0].Metadata)
+}
+
 func TestCore_CreateLockLease(t *testing.T) {
 	t.Run("creates a lease", func(t *testing.T) {
 		core := newLocksCore(t)

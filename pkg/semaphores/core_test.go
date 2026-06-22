@@ -890,6 +890,94 @@ func TestCore_CreateSemaphore(t *testing.T) {
 	})
 }
 
+func TestCore_SemaphoreMetadata(t *testing.T) {
+	core := newSemaphoresCore(t)
+	now := time.Now()
+	accountId := rand.Uint64()
+	namespaceId := &corepb.NamespaceId{
+		AccountId:   accountId,
+		NamespaceId: rand.Uint32(),
+	}
+	semaphoreId := &corepb.SemaphoreId{
+		AccountId:   namespaceId.AccountId,
+		NamespaceId: namespaceId.NamespaceId,
+		SemaphoreId: rand.Uint64(),
+	}
+
+	// T+0: Create semaphore with metadata.
+	createMetadata := map[string]string{"team": "search"}
+	createResp, err := core.CreateSemaphore(&coreapis.CreateSemaphoreRequest{
+		Payload: &corepb.CreateSemaphoreRequest{
+			SemaphoreId:                       semaphoreId,
+			Name:                              "test_semaphore",
+			Description:                       "test description",
+			Permits:                           5,
+			Now:                               now.UnixNano(),
+			MaxNumberOfSemaphoresPerNamespace: 10000,
+			Metadata:                          createMetadata,
+		},
+	})
+	require.NoError(t, err)
+	require.Nil(t, createResp.ApplicationError)
+	require.NotNil(t, createResp.Payload)
+	require.NotNil(t, createResp.Payload.Semaphore)
+	require.Equal(t, createMetadata, createResp.Payload.Semaphore.Metadata)
+	require.EqualValues(t, 5, createResp.Payload.Semaphore.Permits)
+
+	// T+1m: Metadata is persisted and read back via GetSemaphore.
+	semaphore := getSemaphore(t, core, semaphoreId, now.Add(time.Minute))
+	require.Equal(t, createMetadata, semaphore.Metadata)
+
+	// T+1m: Metadata is also read back via GetSemaphoreByName.
+	semaphore = getSemaphoreByName(t, core, namespaceId, "test_semaphore", now.Add(time.Minute))
+	require.Equal(t, createMetadata, semaphore.Metadata)
+
+	// T+2m: Update semaphore with new metadata.
+	updateMetadata := map[string]string{"team": "search", "env": "prod"}
+	updateResp, err := core.UpdateSemaphore(&coreapis.UpdateSemaphoreRequest{
+		Payload: &corepb.UpdateSemaphoreRequest{
+			NamespaceId:   namespaceId,
+			SemaphoreName: "test_semaphore",
+			Description:   "updated description",
+			Permits:       5,
+			Now:           now.Add(2 * time.Minute).UnixNano(),
+			Metadata:      updateMetadata,
+		},
+	})
+	require.NoError(t, err)
+	require.Nil(t, updateResp.ApplicationError)
+	require.NotNil(t, updateResp.Payload)
+	require.NotNil(t, updateResp.Payload.Semaphore)
+	require.Equal(t, updateMetadata, updateResp.Payload.Semaphore.Metadata)
+
+	// T+3m: Updated metadata is persisted.
+	semaphore = getSemaphore(t, core, semaphoreId, now.Add(3*time.Minute))
+	require.Equal(t, updateMetadata, semaphore.Metadata)
+
+	// T+4m: Create a lease and acquire the semaphore with holder metadata.
+	holderMetadata := map[string]string{"host": "node-2"}
+	lease := createLease(t, core, accountId, namespaceId.NamespaceId, "process_1", now.Add(4*time.Minute), 60*time.Minute)
+	acquireResp, err := core.AcquireSemaphore(&coreapis.AcquireSemaphoreRequest{
+		Payload: &corepb.AcquireSemaphoreRequest{
+			NamespaceId:   namespaceId,
+			SemaphoreName: "test_semaphore",
+			Weight:        1,
+			Now:           now.Add(4 * time.Minute).UnixNano(),
+			LeaseId:       lease.Id.LeaseId,
+			Metadata:      holderMetadata,
+		},
+	})
+	require.NoError(t, err)
+	require.Nil(t, acquireResp.ApplicationError)
+	require.NotNil(t, acquireResp.Payload)
+	require.True(t, acquireResp.Payload.Success)
+
+	// T+5m: Holder metadata round-trips through ListSemaphoreHolders.
+	list := listSemaphoreHolders(t, core, namespaceId, "test_semaphore", now.Add(5*time.Minute))
+	require.Len(t, list.Holders, 1)
+	require.Equal(t, holderMetadata, list.Holders[0].Metadata)
+}
+
 func TestCore_DeleteSemaphore(t *testing.T) {
 	t.Run("delete existing semaphore", func(t *testing.T) {
 		core := newSemaphoresCore(t)

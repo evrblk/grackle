@@ -22,6 +22,7 @@ func namespaceToFront(namespace *corepb.Namespace) *gracklepb.Namespace {
 		CreatedAt:   namespace.CreatedAt,
 		UpdatedAt:   namespace.UpdatedAt,
 		Version:     namespace.Version,
+		Metadata:    namespace.Metadata,
 	}
 }
 
@@ -49,7 +50,29 @@ func waitGroupJobToFront(job *corepb.WaitGroupJob) *gracklepb.WaitGroupJob {
 	return &gracklepb.WaitGroupJob{
 		JobId:       job.Id.JobId,
 		CompletedAt: job.CompletedAt,
+		Metadata:    job.Metadata,
 	}
+}
+
+// completeJobToCore converts a public CompleteJobRequest (job id + metadata)
+// into its core counterpart.
+func completeJobToCore(job *gracklepb.CompleteJobRequest) *corepb.CompleteJobRequest {
+	if job == nil {
+		return nil
+	}
+
+	return &corepb.CompleteJobRequest{
+		JobId:    job.JobId,
+		Metadata: job.Metadata,
+	}
+}
+
+func completeJobsToCore(jobs []*gracklepb.CompleteJobRequest) []*corepb.CompleteJobRequest {
+	coreJobs := make([]*corepb.CompleteJobRequest, len(jobs))
+	for i, job := range jobs {
+		coreJobs[i] = completeJobToCore(job)
+	}
+	return coreJobs
 }
 
 func waitGroupToFront(waitGroup *corepb.WaitGroup) *gracklepb.WaitGroup {
@@ -66,6 +89,7 @@ func waitGroupToFront(waitGroup *corepb.WaitGroup) *gracklepb.WaitGroup {
 		Completed:   waitGroup.Completed,
 		ExpiresAt:   waitGroup.ExpiresAt,
 		Version:     waitGroup.Version,
+		Metadata:    waitGroup.Metadata,
 	}
 }
 
@@ -110,6 +134,7 @@ func lockHolderToFront(lockHolder *corepb.LockHolder, accountId uint64, namespac
 			LeaseId:     lockHolder.LeaseId,
 		}),
 		LockedAt: lockHolder.LockedAt,
+		Metadata: lockHolder.Metadata,
 	}
 }
 
@@ -135,6 +160,7 @@ func semaphoreToFront(semaphore *corepb.Semaphore) *gracklepb.Semaphore {
 		Version:            semaphore.Version,
 		ActiveHolds:        semaphore.ActiveHolds,
 		ActiveHoldersCount: semaphore.ActiveHoldersCount,
+		Metadata:           semaphore.Metadata,
 	}
 }
 
@@ -159,6 +185,7 @@ func semaphoreHolderToFront(holder *corepb.SemaphoreHolder) *gracklepb.Semaphore
 		}),
 		LockedAt: holder.LockedAt,
 		Weight:   holder.Weight,
+		Metadata: holder.Metadata,
 	}
 }
 
@@ -184,6 +211,7 @@ func barrierToFront(barrier *corepb.Barrier) *gracklepb.Barrier {
 		CreatedAt:         barrier.CreatedAt,
 		UpdatedAt:         barrier.UpdatedAt,
 		Version:           barrier.Version,
+		Metadata:          barrier.Metadata,
 	}
 }
 
@@ -200,7 +228,11 @@ func barrierParticipantToFront(participant *corepb.BarrierParticipant) *gracklep
 		return nil
 	}
 
-	return &gracklepb.BarrierParticipant{}
+	return &gracklepb.BarrierParticipant{
+		ProcessId: participant.ProcessId,
+		ArrivedAt: participant.ArrivedAt,
+		Metadata:  participant.Metadata,
+	}
 }
 
 func barrierParticipantsToFront(participants []*corepb.BarrierParticipant) []*gracklepb.BarrierParticipant {

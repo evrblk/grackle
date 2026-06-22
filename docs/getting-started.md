@@ -143,3 +143,5 @@ acquireLockResp, err := grackleClient.AcquireLock(context.Background(), &grackle
 	TimeoutSeconds: 60,
 })
 ```
+
+Conventions shared across all the APIs are described in the [API overview](/docs/api-overview.md).

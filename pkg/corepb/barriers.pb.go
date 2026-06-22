@@ -27,8 +27,9 @@ type CreateBarrierRequest struct {
 	Name                            string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Description                     string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	ExpectedProcesses               uint64                 `protobuf:"varint,4,opt,name=expected_processes,json=expectedProcesses,proto3" json:"expected_processes,omitempty"`
-	Now                             int64                  `protobuf:"varint,5,opt,name=now,proto3" json:"now,omitempty"`
-	MaxNumberOfBarriersPerNamespace int64                  `protobuf:"varint,6,opt,name=max_number_of_barriers_per_namespace,json=maxNumberOfBarriersPerNamespace,proto3" json:"max_number_of_barriers_per_namespace,omitempty"`
+	Metadata                        map[string]string      `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Now                             int64                  `protobuf:"varint,6,opt,name=now,proto3" json:"now,omitempty"`
+	MaxNumberOfBarriersPerNamespace int64                  `protobuf:"varint,7,opt,name=max_number_of_barriers_per_namespace,json=maxNumberOfBarriersPerNamespace,proto3" json:"max_number_of_barriers_per_namespace,omitempty"`
 	unknownFields                   protoimpl.UnknownFields
 	sizeCache                       protoimpl.SizeCache
 }
@@ -89,6 +90,13 @@ func (x *CreateBarrierRequest) GetExpectedProcesses() uint64 {
 		return x.ExpectedProcesses
 	}
 	return 0
+}
+
+func (x *CreateBarrierRequest) GetMetadata() map[string]string {
+	if x != nil {
+		return x.Metadata
+	}
+	return nil
 }
 
 func (x *CreateBarrierRequest) GetNow() int64 {
@@ -154,7 +162,8 @@ type UpdateBarrierRequest struct {
 	BarrierId         *BarrierId             `protobuf:"bytes,1,opt,name=barrier_id,json=barrierId,proto3" json:"barrier_id,omitempty"`
 	Description       string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
 	ExpectedProcesses uint64                 `protobuf:"varint,3,opt,name=expected_processes,json=expectedProcesses,proto3" json:"expected_processes,omitempty"`
-	Now               int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
+	Metadata          map[string]string      `protobuf:"bytes,4,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Now               int64                  `protobuf:"varint,5,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -208,6 +217,13 @@ func (x *UpdateBarrierRequest) GetExpectedProcesses() uint64 {
 		return x.ExpectedProcesses
 	}
 	return 0
+}
+
+func (x *UpdateBarrierRequest) GetMetadata() map[string]string {
+	if x != nil {
+		return x.Metadata
+	}
+	return nil
 }
 
 func (x *UpdateBarrierRequest) GetNow() int64 {
@@ -267,7 +283,8 @@ type ArriveAtBarrierRequest struct {
 	BarrierName   string                 `protobuf:"bytes,2,opt,name=barrier_name,json=barrierName,proto3" json:"barrier_name,omitempty"`
 	ProcessId     string                 `protobuf:"bytes,3,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
 	Generation    uint64                 `protobuf:"varint,4,opt,name=generation,proto3" json:"generation,omitempty"`
-	Now           int64                  `protobuf:"varint,5,opt,name=now,proto3" json:"now,omitempty"`
+	Metadata      map[string]string      `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Now           int64                  `protobuf:"varint,6,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -328,6 +345,13 @@ func (x *ArriveAtBarrierRequest) GetGeneration() uint64 {
 		return x.Generation
 	}
 	return 0
+}
+
+func (x *ArriveAtBarrierRequest) GetMetadata() map[string]string {
+	if x != nil {
+		return x.Metadata
+	}
+	return nil
 }
 
 func (x *ArriveAtBarrierRequest) GetNow() int64 {
@@ -1264,6 +1288,7 @@ type Barrier struct {
 	ArrivedProcesses  uint64                 `protobuf:"varint,7,opt,name=arrived_processes,json=arrivedProcesses,proto3" json:"arrived_processes,omitempty"`
 	Generation        uint64                 `protobuf:"varint,8,opt,name=generation,proto3" json:"generation,omitempty"`
 	Version           uint64                 `protobuf:"varint,9,opt,name=version,proto3" json:"version,omitempty"`
+	Metadata          map[string]string      `protobuf:"bytes,10,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -1359,6 +1384,13 @@ func (x *Barrier) GetVersion() uint64 {
 		return x.Version
 	}
 	return 0
+}
+
+func (x *Barrier) GetMetadata() map[string]string {
+	if x != nil {
+		return x.Metadata
+	}
+	return nil
 }
 
 type BarrierId struct {
@@ -1612,6 +1644,7 @@ type BarrierParticipant struct {
 	ProcessId     string                 `protobuf:"bytes,1,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
 	ArrivedAt     int64                  `protobuf:"varint,2,opt,name=arrived_at,json=arrivedAt,proto3" json:"arrived_at,omitempty"`
 	Generation    uint64                 `protobuf:"varint,3,opt,name=generation,proto3" json:"generation,omitempty"`
+	Metadata      map[string]string      `protobuf:"bytes,4,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1667,29 +1700,44 @@ func (x *BarrierParticipant) GetGeneration() uint64 {
 	return 0
 }
 
+func (x *BarrierParticipant) GetMetadata() map[string]string {
+	if x != nil {
+		return x.Metadata
+	}
+	return nil
+}
+
 var File_pkg_corepb_barriers_proto protoreflect.FileDescriptor
 
 const file_pkg_corepb_barriers_proto_rawDesc = "" +
 	"\n" +
-	"\x19pkg/corepb/barriers.proto\x12\x19com.evrblk.grackle.corepb\x1a\x17pkg/corepb/common.proto\x1a\x1bpkg/corepb/namespaces.proto\"\xa1\x02\n" +
+	"\x19pkg/corepb/barriers.proto\x12\x19com.evrblk.grackle.corepb\x1a\x17pkg/corepb/common.proto\x1a\x1bpkg/corepb/namespaces.proto\"\xb9\x03\n" +
 	"\x14CreateBarrierRequest\x12C\n" +
 	"\n" +
 	"barrier_id\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.BarrierIdR\tbarrierId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12-\n" +
-	"\x12expected_processes\x18\x04 \x01(\x04R\x11expectedProcesses\x12\x10\n" +
-	"\x03now\x18\x05 \x01(\x03R\x03now\x12M\n" +
-	"$max_number_of_barriers_per_namespace\x18\x06 \x01(\x03R\x1fmaxNumberOfBarriersPerNamespace\"U\n" +
+	"\x12expected_processes\x18\x04 \x01(\x04R\x11expectedProcesses\x12Y\n" +
+	"\bmetadata\x18\x05 \x03(\v2=.com.evrblk.grackle.corepb.CreateBarrierRequest.MetadataEntryR\bmetadata\x12\x10\n" +
+	"\x03now\x18\x06 \x01(\x03R\x03now\x12M\n" +
+	"$max_number_of_barriers_per_namespace\x18\a \x01(\x03R\x1fmaxNumberOfBarriersPerNamespace\x1a;\n" +
+	"\rMetadataEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"U\n" +
 	"\x15CreateBarrierResponse\x12<\n" +
-	"\abarrier\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.BarrierR\abarrier\"\xbe\x01\n" +
+	"\abarrier\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.BarrierR\abarrier\"\xd6\x02\n" +
 	"\x14UpdateBarrierRequest\x12C\n" +
 	"\n" +
 	"barrier_id\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.BarrierIdR\tbarrierId\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12-\n" +
-	"\x12expected_processes\x18\x03 \x01(\x04R\x11expectedProcesses\x12\x10\n" +
-	"\x03now\x18\x04 \x01(\x03R\x03now\"U\n" +
+	"\x12expected_processes\x18\x03 \x01(\x04R\x11expectedProcesses\x12Y\n" +
+	"\bmetadata\x18\x04 \x03(\v2=.com.evrblk.grackle.corepb.UpdateBarrierRequest.MetadataEntryR\bmetadata\x12\x10\n" +
+	"\x03now\x18\x05 \x01(\x03R\x03now\x1a;\n" +
+	"\rMetadataEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"U\n" +
 	"\x15UpdateBarrierResponse\x12<\n" +
-	"\abarrier\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.BarrierR\abarrier\"\xd7\x01\n" +
+	"\abarrier\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.BarrierR\abarrier\"\xf1\x02\n" +
 	"\x16ArriveAtBarrierRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12!\n" +
 	"\fbarrier_name\x18\x02 \x01(\tR\vbarrierName\x12\x1d\n" +
@@ -1697,8 +1745,12 @@ const file_pkg_corepb_barriers_proto_rawDesc = "" +
 	"process_id\x18\x03 \x01(\tR\tprocessId\x12\x1e\n" +
 	"\n" +
 	"generation\x18\x04 \x01(\x04R\n" +
-	"generation\x12\x10\n" +
-	"\x03now\x18\x05 \x01(\x03R\x03now\"W\n" +
+	"generation\x12[\n" +
+	"\bmetadata\x18\x05 \x03(\v2?.com.evrblk.grackle.corepb.ArriveAtBarrierRequest.MetadataEntryR\bmetadata\x12\x10\n" +
+	"\x03now\x18\x06 \x01(\x03R\x03now\x1a;\n" +
+	"\rMetadataEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"W\n" +
 	"\x17ArriveAtBarrierResponse\x12<\n" +
 	"\abarrier\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.BarrierR\abarrier\"\xb5\x01\n" +
 	"\x14WaitAtBarrierRequest\x12I\n" +
@@ -1758,7 +1810,7 @@ const file_pkg_corepb_barriers_proto_rawDesc = "" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x1b\n" +
 	"\trecord_id\x18\x02 \x01(\x04R\brecordId\x12\x10\n" +
 	"\x03now\x18\x03 \x01(\x03R\x03now\"!\n" +
-	"\x1fBarriersDeleteNamespaceResponse\"\xc9\x02\n" +
+	"\x1fBarriersDeleteNamespaceResponse\"\xd4\x03\n" +
 	"\aBarrier\x124\n" +
 	"\x02id\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.BarrierIdR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
@@ -1772,7 +1824,12 @@ const file_pkg_corepb_barriers_proto_rawDesc = "" +
 	"\n" +
 	"generation\x18\b \x01(\x04R\n" +
 	"generation\x12\x18\n" +
-	"\aversion\x18\t \x01(\x04R\aversion\"l\n" +
+	"\aversion\x18\t \x01(\x04R\aversion\x12L\n" +
+	"\bmetadata\x18\n" +
+	" \x03(\v20.com.evrblk.grackle.corepb.Barrier.MetadataEntryR\bmetadata\x1a;\n" +
+	"\rMetadataEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"l\n" +
 	"\tBarrierId\x12\x1d\n" +
 	"\n" +
 	"account_id\x18\x01 \x01(\x04R\taccountId\x12!\n" +
@@ -1791,7 +1848,7 @@ const file_pkg_corepb_barriers_proto_rawDesc = "" +
 	"\n" +
 	"barrier_id\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.BarrierIdR\tbarrierId\x12\x1d\n" +
 	"\n" +
-	"expires_at\x18\x02 \x01(\x03R\texpiresAt\"r\n" +
+	"expires_at\x18\x02 \x01(\x03R\texpiresAt\"\x88\x02\n" +
 	"\x12BarrierParticipant\x12\x1d\n" +
 	"\n" +
 	"process_id\x18\x01 \x01(\tR\tprocessId\x12\x1d\n" +
@@ -1799,7 +1856,11 @@ const file_pkg_corepb_barriers_proto_rawDesc = "" +
 	"arrived_at\x18\x02 \x01(\x03R\tarrivedAt\x12\x1e\n" +
 	"\n" +
 	"generation\x18\x03 \x01(\x04R\n" +
-	"generationB&Z$github.com/evrblk/grackle/pkg/corepbb\x06proto3"
+	"generation\x12W\n" +
+	"\bmetadata\x18\x04 \x03(\v2;.com.evrblk.grackle.corepb.BarrierParticipant.MetadataEntryR\bmetadata\x1a;\n" +
+	"\rMetadataEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B&Z$github.com/evrblk/grackle/pkg/corepbb\x06proto3"
 
 var (
 	file_pkg_corepb_barriers_proto_rawDescOnce sync.Once
@@ -1813,7 +1874,7 @@ func file_pkg_corepb_barriers_proto_rawDescGZIP() []byte {
 	return file_pkg_corepb_barriers_proto_rawDescData
 }
 
-var file_pkg_corepb_barriers_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
+var file_pkg_corepb_barriers_proto_msgTypes = make([]protoimpl.MessageInfo, 33)
 var file_pkg_corepb_barriers_proto_goTypes = []any{
 	(*CreateBarrierRequest)(nil),                 // 0: com.evrblk.grackle.corepb.CreateBarrierRequest
 	(*CreateBarrierResponse)(nil),                // 1: com.evrblk.grackle.corepb.CreateBarrierResponse
@@ -1843,43 +1904,53 @@ var file_pkg_corepb_barriers_proto_goTypes = []any{
 	(*BarriersGarbageCollectionRecord)(nil),      // 25: com.evrblk.grackle.corepb.BarriersGarbageCollectionRecord
 	(*BarriersExpirationRecord)(nil),             // 26: com.evrblk.grackle.corepb.BarriersExpirationRecord
 	(*BarrierParticipant)(nil),                   // 27: com.evrblk.grackle.corepb.BarrierParticipant
-	(*NamespaceId)(nil),                          // 28: com.evrblk.grackle.corepb.NamespaceId
-	(*PaginationToken)(nil),                      // 29: com.evrblk.grackle.corepb.PaginationToken
+	nil,                                          // 28: com.evrblk.grackle.corepb.CreateBarrierRequest.MetadataEntry
+	nil,                                          // 29: com.evrblk.grackle.corepb.UpdateBarrierRequest.MetadataEntry
+	nil,                                          // 30: com.evrblk.grackle.corepb.ArriveAtBarrierRequest.MetadataEntry
+	nil,                                          // 31: com.evrblk.grackle.corepb.Barrier.MetadataEntry
+	nil,                                          // 32: com.evrblk.grackle.corepb.BarrierParticipant.MetadataEntry
+	(*NamespaceId)(nil),                          // 33: com.evrblk.grackle.corepb.NamespaceId
+	(*PaginationToken)(nil),                      // 34: com.evrblk.grackle.corepb.PaginationToken
 }
 var file_pkg_corepb_barriers_proto_depIdxs = []int32{
 	23, // 0: com.evrblk.grackle.corepb.CreateBarrierRequest.barrier_id:type_name -> com.evrblk.grackle.corepb.BarrierId
-	22, // 1: com.evrblk.grackle.corepb.CreateBarrierResponse.barrier:type_name -> com.evrblk.grackle.corepb.Barrier
-	23, // 2: com.evrblk.grackle.corepb.UpdateBarrierRequest.barrier_id:type_name -> com.evrblk.grackle.corepb.BarrierId
-	22, // 3: com.evrblk.grackle.corepb.UpdateBarrierResponse.barrier:type_name -> com.evrblk.grackle.corepb.Barrier
-	28, // 4: com.evrblk.grackle.corepb.ArriveAtBarrierRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	22, // 5: com.evrblk.grackle.corepb.ArriveAtBarrierResponse.barrier:type_name -> com.evrblk.grackle.corepb.Barrier
-	28, // 6: com.evrblk.grackle.corepb.WaitAtBarrierRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	22, // 7: com.evrblk.grackle.corepb.WaitAtBarrierResponse.barrier:type_name -> com.evrblk.grackle.corepb.Barrier
-	23, // 8: com.evrblk.grackle.corepb.GetBarrierRequest.barrier_id:type_name -> com.evrblk.grackle.corepb.BarrierId
-	22, // 9: com.evrblk.grackle.corepb.GetBarrierResponse.barrier:type_name -> com.evrblk.grackle.corepb.Barrier
-	28, // 10: com.evrblk.grackle.corepb.GetBarrierByNameRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	22, // 11: com.evrblk.grackle.corepb.GetBarrierByNameResponse.barrier:type_name -> com.evrblk.grackle.corepb.Barrier
-	28, // 12: com.evrblk.grackle.corepb.DeleteBarrierRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	28, // 13: com.evrblk.grackle.corepb.ListBarriersRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	29, // 14: com.evrblk.grackle.corepb.ListBarriersRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	22, // 15: com.evrblk.grackle.corepb.ListBarriersResponse.barriers:type_name -> com.evrblk.grackle.corepb.Barrier
-	29, // 16: com.evrblk.grackle.corepb.ListBarriersResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	29, // 17: com.evrblk.grackle.corepb.ListBarriersResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	28, // 18: com.evrblk.grackle.corepb.ListBarrierParticipantsRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	29, // 19: com.evrblk.grackle.corepb.ListBarrierParticipantsRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	27, // 20: com.evrblk.grackle.corepb.ListBarrierParticipantsResponse.participants:type_name -> com.evrblk.grackle.corepb.BarrierParticipant
-	29, // 21: com.evrblk.grackle.corepb.ListBarrierParticipantsResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	29, // 22: com.evrblk.grackle.corepb.ListBarrierParticipantsResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	28, // 23: com.evrblk.grackle.corepb.BarriersDeleteNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	23, // 24: com.evrblk.grackle.corepb.Barrier.id:type_name -> com.evrblk.grackle.corepb.BarrierId
-	28, // 25: com.evrblk.grackle.corepb.BarriersGarbageCollectionRecord.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	23, // 26: com.evrblk.grackle.corepb.BarriersGarbageCollectionRecord.barrier_id:type_name -> com.evrblk.grackle.corepb.BarrierId
-	23, // 27: com.evrblk.grackle.corepb.BarriersExpirationRecord.barrier_id:type_name -> com.evrblk.grackle.corepb.BarrierId
-	28, // [28:28] is the sub-list for method output_type
-	28, // [28:28] is the sub-list for method input_type
-	28, // [28:28] is the sub-list for extension type_name
-	28, // [28:28] is the sub-list for extension extendee
-	0,  // [0:28] is the sub-list for field type_name
+	28, // 1: com.evrblk.grackle.corepb.CreateBarrierRequest.metadata:type_name -> com.evrblk.grackle.corepb.CreateBarrierRequest.MetadataEntry
+	22, // 2: com.evrblk.grackle.corepb.CreateBarrierResponse.barrier:type_name -> com.evrblk.grackle.corepb.Barrier
+	23, // 3: com.evrblk.grackle.corepb.UpdateBarrierRequest.barrier_id:type_name -> com.evrblk.grackle.corepb.BarrierId
+	29, // 4: com.evrblk.grackle.corepb.UpdateBarrierRequest.metadata:type_name -> com.evrblk.grackle.corepb.UpdateBarrierRequest.MetadataEntry
+	22, // 5: com.evrblk.grackle.corepb.UpdateBarrierResponse.barrier:type_name -> com.evrblk.grackle.corepb.Barrier
+	33, // 6: com.evrblk.grackle.corepb.ArriveAtBarrierRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	30, // 7: com.evrblk.grackle.corepb.ArriveAtBarrierRequest.metadata:type_name -> com.evrblk.grackle.corepb.ArriveAtBarrierRequest.MetadataEntry
+	22, // 8: com.evrblk.grackle.corepb.ArriveAtBarrierResponse.barrier:type_name -> com.evrblk.grackle.corepb.Barrier
+	33, // 9: com.evrblk.grackle.corepb.WaitAtBarrierRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	22, // 10: com.evrblk.grackle.corepb.WaitAtBarrierResponse.barrier:type_name -> com.evrblk.grackle.corepb.Barrier
+	23, // 11: com.evrblk.grackle.corepb.GetBarrierRequest.barrier_id:type_name -> com.evrblk.grackle.corepb.BarrierId
+	22, // 12: com.evrblk.grackle.corepb.GetBarrierResponse.barrier:type_name -> com.evrblk.grackle.corepb.Barrier
+	33, // 13: com.evrblk.grackle.corepb.GetBarrierByNameRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	22, // 14: com.evrblk.grackle.corepb.GetBarrierByNameResponse.barrier:type_name -> com.evrblk.grackle.corepb.Barrier
+	33, // 15: com.evrblk.grackle.corepb.DeleteBarrierRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	33, // 16: com.evrblk.grackle.corepb.ListBarriersRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	34, // 17: com.evrblk.grackle.corepb.ListBarriersRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	22, // 18: com.evrblk.grackle.corepb.ListBarriersResponse.barriers:type_name -> com.evrblk.grackle.corepb.Barrier
+	34, // 19: com.evrblk.grackle.corepb.ListBarriersResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	34, // 20: com.evrblk.grackle.corepb.ListBarriersResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	33, // 21: com.evrblk.grackle.corepb.ListBarrierParticipantsRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	34, // 22: com.evrblk.grackle.corepb.ListBarrierParticipantsRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	27, // 23: com.evrblk.grackle.corepb.ListBarrierParticipantsResponse.participants:type_name -> com.evrblk.grackle.corepb.BarrierParticipant
+	34, // 24: com.evrblk.grackle.corepb.ListBarrierParticipantsResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	34, // 25: com.evrblk.grackle.corepb.ListBarrierParticipantsResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	33, // 26: com.evrblk.grackle.corepb.BarriersDeleteNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	23, // 27: com.evrblk.grackle.corepb.Barrier.id:type_name -> com.evrblk.grackle.corepb.BarrierId
+	31, // 28: com.evrblk.grackle.corepb.Barrier.metadata:type_name -> com.evrblk.grackle.corepb.Barrier.MetadataEntry
+	33, // 29: com.evrblk.grackle.corepb.BarriersGarbageCollectionRecord.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	23, // 30: com.evrblk.grackle.corepb.BarriersGarbageCollectionRecord.barrier_id:type_name -> com.evrblk.grackle.corepb.BarrierId
+	23, // 31: com.evrblk.grackle.corepb.BarriersExpirationRecord.barrier_id:type_name -> com.evrblk.grackle.corepb.BarrierId
+	32, // 32: com.evrblk.grackle.corepb.BarrierParticipant.metadata:type_name -> com.evrblk.grackle.corepb.BarrierParticipant.MetadataEntry
+	33, // [33:33] is the sub-list for method output_type
+	33, // [33:33] is the sub-list for method input_type
+	33, // [33:33] is the sub-list for extension type_name
+	33, // [33:33] is the sub-list for extension extendee
+	0,  // [0:33] is the sub-list for field type_name
 }
 
 func init() { file_pkg_corepb_barriers_proto_init() }
@@ -1899,7 +1970,7 @@ func file_pkg_corepb_barriers_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_corepb_barriers_proto_rawDesc), len(file_pkg_corepb_barriers_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   28,
+			NumMessages:   33,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -11,7 +11,8 @@ message AcquireLockRequest {
   LockId lock_id = 1;
   uint64 lease_id = 2;
   bool exclusive = 3;
-  int64 now = 4;
+  map<string, string> metadata = 4;
+  int64 now = 5;
   int64 max_number_of_locks_per_namespace = 6;
 }
 
@@ -164,6 +165,7 @@ message Lock {
 message LockHolder {
   uint64 lease_id = 1;
   int64 locked_at = 2;
+  map<string, string> metadata = 3;
 }
 
 enum LockState {

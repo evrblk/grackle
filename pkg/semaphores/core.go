@@ -142,6 +142,7 @@ func (c *Core) CreateSemaphore(req *coreapis.CreateSemaphoreRequest) (*coreapis.
 		Permits:     req.Payload.Permits,
 		CreatedAt:   req.Payload.Now,
 		UpdatedAt:   req.Payload.Now,
+		Metadata:    req.Payload.Metadata,
 	}
 
 	appError, err := c.semaphores.Create(txn, semaphore)
@@ -218,6 +219,7 @@ func (c *Core) UpdateSemaphore(req *coreapis.UpdateSemaphoreRequest) (*coreapis.
 	updatedSemaphore.Description = req.Payload.Description
 	updatedSemaphore.Permits = req.Payload.Permits
 	updatedSemaphore.UpdatedAt = req.Payload.Now
+	updatedSemaphore.Metadata = req.Payload.Metadata
 
 	// Reconcile expirationRecords when the prune changed which holder expires first. Without
 	// this, the global expiration index keeps a row pointing at the old earliest timestamp;
@@ -632,6 +634,7 @@ func (c *Core) AcquireSemaphore(req *coreapis.AcquireSemaphoreRequest) (*coreapi
 					ExpiresAt: lease.ExpiresAt,
 					LockedAt:  req.Payload.Now,
 					Weight:    req.Payload.Weight,
+					Metadata:  req.Payload.Metadata,
 				}
 
 				err = c.holders.Create(txn, newHolder)
@@ -677,6 +680,7 @@ func (c *Core) AcquireSemaphore(req *coreapis.AcquireSemaphoreRequest) (*coreapi
 			// Update expiration time (extend lock)
 			existingHolder.ExpiresAt = lease.ExpiresAt
 			existingHolder.LockedAt = req.Payload.Now
+			existingHolder.Metadata = req.Payload.Metadata
 
 			// Update earliest expiration if this holder expires earlier
 			if updatedSemaphore.EarliestHolderExpiresAt == 0 || existingHolder.ExpiresAt < updatedSemaphore.EarliestHolderExpiresAt {

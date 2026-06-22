@@ -22,6 +22,7 @@ Read-only and safe to retry.
 * Returns `NotFound` if the namespace does not exist.
 * Non-empty `next_pagination_token` indicates more pages are available.
 * Returns current values of `active_holds` and `active_holders_count`.
+* `metadata` is the optional, opaque map stored with each semaphore — see [Metadata](/docs/api-overview.md#metadata).
 
 ```json
 {
@@ -34,7 +35,10 @@ Read-only and safe to retry.
       "active_holders_count": 1,
       "version": 1,
       "created_at": 1695826239671432000,
-      "updated_at": 1695826239671432000
+      "updated_at": 1695826239671432000,
+      "metadata": {
+        "vendor": "partner-1"
+      }
     }
   ],
   "next_pagination_token": "bXlsb25ndG9rZW4yCg==",

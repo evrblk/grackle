@@ -7,10 +7,16 @@ Safe to retry — duplicate calls fail with `AlreadyExists` rather than creating
 
 ## Request
 
+* `metadata` is an optional, opaque map of string key/value pairs stored alongside the namespace —
+  see [Metadata](/docs/api-overview.md#metadata).
+
 ```json
 {
   "name": "UserObjects",
-  "description": "Per-user objects"
+  "description": "Per-user objects",
+  "metadata": {
+    "team": "search"
+  }
 }
 ```
 
@@ -25,7 +31,10 @@ Safe to retry — duplicate calls fail with `AlreadyExists` rather than creating
     "description": "Per-user objects",
     "version": 1,
     "created_at": 1695826239671432000,
-    "updated_at": 1695826239671432000
+    "updated_at": 1695826239671432000,
+    "metadata": {
+      "team": "search"
+    }
   }
 }
 ```

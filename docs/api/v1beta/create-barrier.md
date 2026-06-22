@@ -9,6 +9,8 @@ Safe to retry — duplicate calls fail with `AlreadyExists`.
 * `expected_processes` is how many peers must arrive before the barrier releases.
 * `expires_at` is an absolute timestamp after which the barrier and its participant records 
   are reaped by GC regardless of state.
+* `metadata` is an optional, opaque map of string key/value pairs stored alongside the barrier —
+  see [Metadata](/docs/api-overview.md#metadata).
 
 ```json
 {
@@ -16,7 +18,10 @@ Safe to retry — duplicate calls fail with `AlreadyExists`.
   "barrier_name": "phase_1_complete",
   "description": "End of map phase",
   "expected_processes": 4,
-  "expires_at": 1718236800000000000
+  "expires_at": 1718236800000000000,
+  "metadata": {
+    "phase": "map"
+  }
 }
 ```
 
@@ -36,7 +41,10 @@ Safe to retry — duplicate calls fail with `AlreadyExists`.
     "generation": 1,
     "version": 1,
     "created_at": 1718150400000000000,
-    "updated_at": 1718150400000000000
+    "updated_at": 1718150400000000000,
+    "metadata": {
+      "phase": "map"
+    }
   }
 }
 ```

@@ -62,6 +62,12 @@ There are two ways to interact with a barrier:
   does not register an arrival — peers usually call `ArriveAtBarrier` first, then
   `WaitAtBarrier`.
 
+### Metadata
+A barrier carries an optional `metadata` map (string → string) set on `CreateBarrier` and replaced
+by `UpdateBarrier`. Each arriving process can also attach its own `metadata` on `ArriveAtBarrier`,
+which is returned with the participant by `ListBarrierParticipants`. Metadata is opaque to
+Grackle — see [Metadata](/docs/api-overview.md#metadata) for the shared semantics and limits.
+
 ## Example workflow
 
 The coordinator creates a barrier for 4 worker shards that need to meet at end-of-phase.

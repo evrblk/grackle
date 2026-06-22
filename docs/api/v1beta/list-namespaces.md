@@ -14,12 +14,13 @@ Read-only and safe to retry.
 {
   "pagination_token": "",
   "limit": 100
-})
+}
 ```
 
 ## Response
 
 * Non-empty `next_pagination_token` indicates more pages are available.
+* `metadata` is the optional, opaque map stored with each namespace — see [Metadata](/docs/api-overview.md#metadata).
 
 ```json
 {
@@ -29,7 +30,10 @@ Read-only and safe to retry.
       "description": "Per-user objects",
       "version": 1,
       "created_at": 1695826239671432000,
-      "updated_at": 1695826239671432000
+      "updated_at": 1695826239671432000,
+      "metadata": {
+        "team": "search"
+      }
     }
   ],
   "next_pagination_token": "bXlsb25ndG9rZW4yCg==",

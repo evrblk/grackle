@@ -13,13 +13,18 @@ generation is a no-op.
 * `process_id` is a free-form string identifying the peer.
 * `expected_generation` must match the barrier's current generation; arriving for a past or
   future generation is rejected.
+* `metadata` is an optional, opaque map of string key/value pairs attached to this participant —
+  see [Metadata](/docs/api-overview.md#metadata).
 
 ```json
 {
   "namespace_name": "pipelines",
   "barrier_name": "phase_1_complete",
   "process_id": "shard-0",
-  "expected_generation": 1
+  "expected_generation": 1,
+  "metadata": {
+    "host": "node-1"
+  }
 }
 ```
 

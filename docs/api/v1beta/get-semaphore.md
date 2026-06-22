@@ -19,6 +19,7 @@ Safe to retry.
 * Returns `NotFound` if the semaphore does not exist.
 * Returned `active_holds` and `active_holders_count` reflect any holders
 whose lease has expired by the time of the call.
+* `metadata` is the optional, opaque map stored with the semaphore — see [Metadata](/docs/api-overview.md#metadata).
 
 ```json
 {
@@ -30,7 +31,10 @@ whose lease has expired by the time of the call.
     "active_holders_count": 1,
     "version": 1,
     "created_at": 1695826239671432000,
-    "updated_at": 1695826239671432000
+    "updated_at": 1695826239671432000,
+    "metadata": {
+      "vendor": "partner-1"
+    }
   }
 }
 ```

@@ -212,6 +212,19 @@ func (m *BarriersGarbageCollectionRecord) MarshalBinary() (data []byte, err erro
 	return m.MarshalVT()
 }
 
+// CompleteJobRequest
+
+var _ encoding.BinaryMarshaler = (*CompleteJobRequest)(nil)
+var _ encoding.BinaryUnmarshaler = (*CompleteJobRequest)(nil)
+
+func (m *CompleteJobRequest) UnmarshalBinary(data []byte) error {
+	return m.UnmarshalVT(data)
+}
+
+func (m *CompleteJobRequest) MarshalBinary() (data []byte, err error) {
+	return m.MarshalVT()
+}
+
 // CompleteJobsFromWaitGroupRequest
 
 var _ encoding.BinaryMarshaler = (*CompleteJobsFromWaitGroupRequest)(nil)
@@ -1808,6 +1821,32 @@ func (m *UpdateSemaphoreResponse) UnmarshalBinary(data []byte) error {
 }
 
 func (m *UpdateSemaphoreResponse) MarshalBinary() (data []byte, err error) {
+	return m.MarshalVT()
+}
+
+// UpdateWaitGroupRequest
+
+var _ encoding.BinaryMarshaler = (*UpdateWaitGroupRequest)(nil)
+var _ encoding.BinaryUnmarshaler = (*UpdateWaitGroupRequest)(nil)
+
+func (m *UpdateWaitGroupRequest) UnmarshalBinary(data []byte) error {
+	return m.UnmarshalVT(data)
+}
+
+func (m *UpdateWaitGroupRequest) MarshalBinary() (data []byte, err error) {
+	return m.MarshalVT()
+}
+
+// UpdateWaitGroupResponse
+
+var _ encoding.BinaryMarshaler = (*UpdateWaitGroupResponse)(nil)
+var _ encoding.BinaryUnmarshaler = (*UpdateWaitGroupResponse)(nil)
+
+func (m *UpdateWaitGroupResponse) UnmarshalBinary(data []byte) error {
+	return m.UnmarshalVT(data)
+}
+
+func (m *UpdateWaitGroupResponse) MarshalBinary() (data []byte, err error) {
 	return m.MarshalVT()
 }
 

@@ -15,6 +15,7 @@ Read-only and safe to retry.
 ## Response
 
 * Returns `NotFound` if the namespace does not exist.
+* `metadata` is the optional, opaque map stored with the namespace — see [Metadata](/docs/api-overview.md#metadata).
 
 ```json
 {
@@ -23,7 +24,10 @@ Read-only and safe to retry.
     "description": "Per-user objects",
     "version": 1,
     "created_at": 1695826239671432000,
-    "updated_at": 1695826239671432000
+    "updated_at": 1695826239671432000,
+    "metadata": {
+      "team": "search"
+    }
   }
 }
 ```

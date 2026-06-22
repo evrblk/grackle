@@ -2,6 +2,7 @@ package v1beta
 
 import (
 	"encoding/base64"
+	"fmt"
 	"testing"
 	"time"
 
@@ -9,6 +10,81 @@ import (
 
 	gracklepb "github.com/evrblk/evrblk-go/grackle/v1beta"
 )
+
+func TestValidateMetadata(t *testing.T) {
+	longKey := string(make([]byte, maxMetadataKeyLength+1))
+	longValue := string(make([]byte, maxMetadataValueLength+1))
+
+	tests := []struct {
+		name        string
+		metadata    map[string]string
+		shouldError bool
+	}{
+		{name: "nil metadata", metadata: nil, shouldError: false},
+		{name: "empty metadata", metadata: map[string]string{}, shouldError: false},
+		{name: "valid metadata", metadata: map[string]string{"team": "search", "env": "prod"}, shouldError: false},
+		{name: "valid empty value", metadata: map[string]string{"key": ""}, shouldError: false},
+		{name: "too many entries", metadata: func() map[string]string {
+			m := make(map[string]string, maxMetadataEntries+1)
+			for i := 0; i <= maxMetadataEntries; i++ {
+				m[fmt.Sprintf("key-%d", i)] = "v"
+			}
+			return m
+		}(), shouldError: true},
+		{name: "empty key", metadata: map[string]string{"": "value"}, shouldError: true},
+		{name: "key too long", metadata: map[string]string{longKey: "value"}, shouldError: true},
+		{name: "value too long", metadata: map[string]string{"key": longValue}, shouldError: true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := validateMetadata(test.metadata, "Metadata")
+			if test.shouldError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+// TestValidateMetadataThroughRequests verifies that metadata limits are
+// enforced by the request-level validators that accept metadata, including the
+// per-job metadata on CompleteJobsFromWaitGroupRequest.
+func TestValidateMetadataThroughRequests(t *testing.T) {
+	tooMany := make(map[string]string, maxMetadataEntries+1)
+	for i := 0; i <= maxMetadataEntries; i++ {
+		tooMany[fmt.Sprintf("key-%d", i)] = "v"
+	}
+
+	t.Run("create namespace rejects oversized metadata", func(t *testing.T) {
+		require.Error(t, ValidateCreateNamespaceRequest(&gracklepb.CreateNamespaceRequest{
+			Name:     "validname",
+			Metadata: tooMany,
+		}))
+		require.NoError(t, ValidateCreateNamespaceRequest(&gracklepb.CreateNamespaceRequest{
+			Name:     "validname",
+			Metadata: map[string]string{"team": "search"},
+		}))
+	})
+
+	t.Run("complete jobs rejects oversized job metadata", func(t *testing.T) {
+		require.Error(t, ValidateCompleteJobsFromWaitGroupRequest(&gracklepb.CompleteJobsFromWaitGroupRequest{
+			NamespaceName: "validname",
+			WaitGroupName: "validwaitgroup",
+			Jobs: []*gracklepb.CompleteJobRequest{
+				{JobId: "job1", Metadata: tooMany},
+			},
+		}))
+		require.NoError(t, ValidateCompleteJobsFromWaitGroupRequest(&gracklepb.CompleteJobsFromWaitGroupRequest{
+			NamespaceName: "validname",
+			WaitGroupName: "validwaitgroup",
+			Jobs: []*gracklepb.CompleteJobRequest{
+				{JobId: "job1", Metadata: map[string]string{"worker": "w1"}},
+			},
+		}))
+	})
+}
 
 func TestValidateCreateNamespaceRequest(t *testing.T) {
 	tests := []struct {
@@ -931,7 +1007,7 @@ func TestValidateCompleteJobsFromWaitGroupRequest(t *testing.T) {
 			name: "empty namespace name",
 			request: &gracklepb.CompleteJobsFromWaitGroupRequest{
 				WaitGroupName: "validname",
-				JobIds:        []string{"job1"},
+				Jobs:          []*gracklepb.CompleteJobRequest{{JobId: "job1"}},
 			},
 			shouldError: true,
 		},
@@ -939,7 +1015,7 @@ func TestValidateCompleteJobsFromWaitGroupRequest(t *testing.T) {
 			name: "empty wait group name",
 			request: &gracklepb.CompleteJobsFromWaitGroupRequest{
 				NamespaceName: "validname",
-				JobIds:        []string{"job1"},
+				Jobs:          []*gracklepb.CompleteJobRequest{{JobId: "job1"}},
 			},
 			shouldError: true,
 		},
@@ -948,7 +1024,7 @@ func TestValidateCompleteJobsFromWaitGroupRequest(t *testing.T) {
 			request: &gracklepb.CompleteJobsFromWaitGroupRequest{
 				NamespaceName: string(make([]byte, 129)),
 				WaitGroupName: "validname",
-				JobIds:        []string{"job1"},
+				Jobs:          []*gracklepb.CompleteJobRequest{{JobId: "job1"}},
 			},
 			shouldError: true,
 		},
@@ -957,7 +1033,7 @@ func TestValidateCompleteJobsFromWaitGroupRequest(t *testing.T) {
 			request: &gracklepb.CompleteJobsFromWaitGroupRequest{
 				NamespaceName: "validname",
 				WaitGroupName: string(make([]byte, 129)),
-				JobIds:        []string{"job1"},
+				Jobs:          []*gracklepb.CompleteJobRequest{{JobId: "job1"}},
 			},
 			shouldError: true,
 		},
@@ -966,7 +1042,7 @@ func TestValidateCompleteJobsFromWaitGroupRequest(t *testing.T) {
 			request: &gracklepb.CompleteJobsFromWaitGroupRequest{
 				NamespaceName: "invalid name",
 				WaitGroupName: "validname",
-				JobIds:        []string{"job1"},
+				Jobs:          []*gracklepb.CompleteJobRequest{{JobId: "job1"}},
 			},
 			shouldError: true,
 		},
@@ -975,7 +1051,7 @@ func TestValidateCompleteJobsFromWaitGroupRequest(t *testing.T) {
 			request: &gracklepb.CompleteJobsFromWaitGroupRequest{
 				NamespaceName: "validname",
 				WaitGroupName: "invalid name",
-				JobIds:        []string{"job1"},
+				Jobs:          []*gracklepb.CompleteJobRequest{{JobId: "job1"}},
 			},
 			shouldError: true,
 		},
@@ -984,7 +1060,7 @@ func TestValidateCompleteJobsFromWaitGroupRequest(t *testing.T) {
 			request: &gracklepb.CompleteJobsFromWaitGroupRequest{
 				NamespaceName: "validname",
 				WaitGroupName: "validwaitgroup",
-				JobIds:        make([]string, 51),
+				Jobs:          make([]*gracklepb.CompleteJobRequest, 51),
 			},
 			shouldError: true,
 		},
@@ -993,7 +1069,7 @@ func TestValidateCompleteJobsFromWaitGroupRequest(t *testing.T) {
 			request: &gracklepb.CompleteJobsFromWaitGroupRequest{
 				NamespaceName: "validname",
 				WaitGroupName: "validwaitgroup",
-				JobIds:        []string{"invalid job id"},
+				Jobs:          []*gracklepb.CompleteJobRequest{{JobId: "invalid job id"}},
 			},
 			shouldError: true,
 		},
@@ -1002,7 +1078,7 @@ func TestValidateCompleteJobsFromWaitGroupRequest(t *testing.T) {
 			request: &gracklepb.CompleteJobsFromWaitGroupRequest{
 				NamespaceName: "validname",
 				WaitGroupName: "validwaitgroup",
-				JobIds:        []string{"job1", "job2"},
+				Jobs:          []*gracklepb.CompleteJobRequest{{JobId: "job1"}, {JobId: "job2"}},
 			},
 			shouldError: false,
 		},

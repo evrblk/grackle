@@ -13,7 +13,8 @@ message CreateSemaphoreRequest {
   string description = 3;
   int64 now = 4;
   uint64 permits = 5;
-  int64 max_number_of_semaphores_per_namespace = 6;
+  map<string, string> metadata = 6;
+  int64 max_number_of_semaphores_per_namespace = 7;
 }
 
 message CreateSemaphoreResponse {
@@ -71,6 +72,7 @@ message AcquireSemaphoreRequest {
   uint64 lease_id = 3;
   uint64 weight = 4;
   int64 now = 5;
+  map<string, string> metadata = 6;
 }
 
 message AcquireSemaphoreResponse {
@@ -95,6 +97,7 @@ message UpdateSemaphoreRequest {
   string description = 3;
   uint64 permits = 4;
   int64 now = 5;
+  map<string, string> metadata = 6;
 }
 
 message UpdateSemaphoreResponse {
@@ -216,9 +219,10 @@ message Semaphore {
   int64 updated_at = 5;
   uint64 version = 6;
   uint64 permits = 7;
-  uint64 active_holds = 8;
-  uint64 active_holders_count = 9;
-  int64 earliest_holder_expires_at = 10;
+  map<string, string> metadata = 8;
+  uint64 active_holds = 9;
+  uint64 active_holders_count = 10;
+  int64 earliest_holder_expires_at = 11;
 }
 
 message SemaphoreHolder {
@@ -226,6 +230,7 @@ message SemaphoreHolder {
   int64 locked_at = 2;
   int64 expires_at = 3;
   uint64 weight = 4;
+  map<string, string> metadata = 5;
 }
 
 message SemaphoreHolderId {

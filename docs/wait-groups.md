@@ -46,6 +46,12 @@ leases.
 `timed_out: true`). Many callers can wait on the same group at the same time; all of them are
 released together when it completes.
 
+### Metadata
+A wait group carries an optional `metadata` map (string → string) set on `CreateWaitGroup` and
+replaced by `UpdateWaitGroup`. Each completed job can also carry its own `metadata`, supplied on
+`CompleteJobsFromWaitGroup` and returned by `ListWaitGroupCompletedJobs`. Metadata is opaque to
+Grackle — see [Metadata](/docs/api-overview.md#metadata) for the shared semantics and limits.
+
 ## Example workflow
 
 The producer creates a wait group for a batch of 100 jobs and gives it an absolute deadline.
@@ -58,7 +64,8 @@ CreateWaitGroupRequest:
   "wait_group_name": "batch_2026_06_12",
   "description": "Daily ETL batch",
   "counter": 100,
-  "expires_at": 1718236800000000000
+  "expires_at": 1718236800000000000,
+  "metadata": { "team": "data", "pipeline": "etl" }
 }
 ```
 
@@ -73,7 +80,8 @@ CreateWaitGroupResponse:
     "version": 1,
     "created_at": 1718150400000000000,
     "updated_at": 1718150400000000000,
-    "expires_at": 1718236800000000000
+    "expires_at": 1718236800000000000,
+    "metadata": { "team": "data", "pipeline": "etl" }
   }
 }
 ```
@@ -101,18 +109,19 @@ AddJobsToWaitGroupResponse:
 }
 ```
 
-Workers report jobs as they finish. The call accepts a batch of `job_ids` and is idempotent —
-reporting the same id again is a no-op for `completed`.
+Workers report jobs as they finish. The call accepts a batch of `jobs`, each with a `job_id` and
+optional `metadata`, and is idempotent — reporting the same id again is a no-op for `completed`
+(the first reported metadata for a job id is the one that is kept).
 
 CompleteJobsFromWaitGroupRequest:
 ```json
 {
   "namespace_name": "pipelines",
   "wait_group_name": "batch_2026_06_12",
-  "job_ids": [
-    "shard-0",
-    "shard-1",
-    "shard-2"
+  "jobs": [
+    { "job_id": "shard-0", "metadata": { "worker": "worker-7" } },
+    { "job_id": "shard-1" },
+    { "job_id": "shard-2" }
   ]
 }
 ```
@@ -173,6 +182,37 @@ A timed-out caller can simply call `WaitForWaitGroup` again — the group contin
 in the background. Inspect the current state at any time with `GetWaitGroup`, or enumerate which
 jobs have checked in with `ListWaitGroupCompletedJobs`.
 
+`UpdateWaitGroup` revises a group's mutable attributes — its `description`, its `expires_at`
+deadline, and its `metadata`. The name, `counter`, and `completed` count are immutable (grow the
+counter with `AddJobsToWaitGroup` instead). Pushing `expires_at` further out is the way to give a
+slow batch more time before GC reaps it; the expiration schedule is reconciled atomically.
+Metadata is replaced wholesale — an update that omits `metadata` clears it.
+
+UpdateWaitGroupRequest:
+```json
+{
+  "namespace_name": "pipelines",
+  "wait_group_name": "batch_2026_06_12",
+  "description": "Daily ETL batch (extended)",
+  "expires_at": 1718323200000000000,
+  "metadata": { "team": "data", "pipeline": "etl", "priority": "high" }
+}
+```
+
+UpdateWaitGroupResponse:
+```json
+{
+  "wait_group": {
+    "name": "batch_2026_06_12",
+    "description": "Daily ETL batch (extended)",
+    "counter": 110,
+    "completed": 73,
+    "expires_at": 1718323200000000000,
+    "metadata": { "team": "data", "pipeline": "etl", "priority": "high" }
+  }
+}
+```
+
 `DeleteWaitGroup` removes the group (and its jobs are cleaned up asynchronously by GC). A wait
 group that reaches its `expires_at` is deleted automatically.
 
@@ -190,6 +230,7 @@ know when the fan-in is done.
 ## API reference
 
 * [CreateWaitGroup](/docs/api/v1beta/create-wait-group.md)
+* [UpdateWaitGroup](/docs/api/v1beta/update-wait-group.md)
 * [ListWaitGroups](/docs/api/v1beta/list-wait-groups.md)
 * [GetWaitGroup](/docs/api/v1beta/get-wait-group.md)
 * [DeleteWaitGroup](/docs/api/v1beta/delete-wait-group.md)

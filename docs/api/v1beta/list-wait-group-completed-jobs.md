@@ -26,17 +26,24 @@ Read-only and safe to retry.
 * Returns `NotFound` if the namespace does not exist.
 * Only completed jobs appear — pending ones are not stored.
 * Non-empty `next_pagination_token` indicates more pages are available.
+* `metadata` is the optional, opaque map attached to each completed job — see [Metadata](/docs/api-overview.md#metadata).
 
 ```json
 {
   "jobs": [
     {
       "job_id": "shard-0",
-      "completed_at": 1718150410000000000
+      "completed_at": 1718150410000000000,
+      "metadata": {
+        "host": "worker-7"
+      }
     },
     {
       "job_id": "shard-1",
-      "completed_at": 1718150412000000000
+      "completed_at": 1718150412000000000,
+      "metadata": {
+        "host": "worker-9"
+      }
     }
   ],
   "next_pagination_token": "",

@@ -1,6 +1,8 @@
 # UpdateNamespace
 
-Updates a namespace's `description`. The namespace name itself cannot be changed.
+Updates a namespace's `description` and `metadata`. The namespace name itself cannot be changed.
+`metadata` is an optional, opaque map of string key/value pairs; it is replaced wholesale, so an
+update sent without it clears the existing metadata — see [Metadata](/docs/api-overview.md#metadata).
 
 Safe to retry.
 
@@ -9,7 +11,10 @@ Safe to retry.
 ```json
 {
   "namespace_name": "UserObjects",
-  "description": "Updated description"
+  "description": "Updated description",
+  "metadata": {
+    "team": "identity"
+  }
 }
 ```
 
@@ -25,7 +30,10 @@ Safe to retry.
     "description": "Updated description",
     "version": 2,
     "created_at": 1695826239671432000,
-    "updated_at": 1695826239925421000
+    "updated_at": 1695826239925421000,
+    "metadata": {
+      "team": "identity"
+    }
   }
 }
 ```

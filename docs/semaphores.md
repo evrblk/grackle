@@ -45,6 +45,12 @@ it; it only stores it on the lease so callers can later enumerate leases by `pro
 "what does this worker currently hold?" The acquire/release surface does **not** take `process_id`
 — it takes `lease_id`.
 
+### Metadata
+A semaphore carries an optional `metadata` map (string → string) set on `CreateSemaphore` and
+replaced by `UpdateSemaphore`. Each holder can also attach its own `metadata` on `AcquireSemaphore`,
+which is returned with the holder by `ListSemaphoreHolders`. Metadata is opaque to Grackle — see
+[Metadata](/docs/api-overview.md#metadata) for the shared semantics and limits.
+
 ## Example workflow
 
 Define a new semaphore. `permits` must be > 0. (Assuming that a namespace `third_parties` already 

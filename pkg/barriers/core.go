@@ -235,6 +235,7 @@ func (c *Core) CreateBarrier(req *coreapis.CreateBarrierRequest) (*coreapis.Crea
 		Generation:        1,
 		CreatedAt:         req.Payload.Now,
 		UpdatedAt:         req.Payload.Now,
+		Metadata:          req.Payload.Metadata,
 	}
 
 	appErr, err := c.barriers.Create(txn, barrier)
@@ -364,6 +365,7 @@ func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest) (*coreapis.Upda
 	barrier.Description = req.Payload.Description
 	barrier.ExpectedProcesses = req.Payload.ExpectedProcesses
 	barrier.UpdatedAt = req.Payload.Now
+	barrier.Metadata = req.Payload.Metadata
 
 	err = c.barriers.Update(txn, barrier)
 	if err != nil {
@@ -461,6 +463,7 @@ func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest) (*coreapis.
 		ProcessId:  req.Payload.ProcessId,
 		Generation: req.Payload.Generation,
 		ArrivedAt:  req.Payload.Now,
+		Metadata:   req.Payload.Metadata,
 	}
 
 	err = c.participants.Create(txn, barrier.Id.AccountId, barrier.Id.NamespaceId, barrier.Id.BarrierId, participant)

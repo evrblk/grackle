@@ -623,6 +623,94 @@ func TestCore_ArriveAtBarrier(t *testing.T) {
 	})
 }
 
+func TestCore_BarrierMetadata(t *testing.T) {
+	core := newBarriersCore(t)
+	now := time.Now()
+	namespaceId := &corepb.NamespaceId{
+		AccountId:   rand.Uint64(),
+		NamespaceId: rand.Uint32(),
+	}
+	barrierId := &corepb.BarrierId{
+		AccountId:   namespaceId.AccountId,
+		NamespaceId: namespaceId.NamespaceId,
+		BarrierId:   rand.Uint64(),
+	}
+
+	// T+0: Create barrier with metadata. ExpectedProcesses is 2 so that a single
+	// arrival below does not auto-trip and clear the participant rows.
+	createMetadata := map[string]string{"team": "search", "tier": "gold"}
+	createResp, err := core.CreateBarrier(&coreapis.CreateBarrierRequest{
+		Payload: &corepb.CreateBarrierRequest{
+			BarrierId:                       barrierId,
+			Name:                            "metadata_barrier",
+			Description:                     "Test barrier description",
+			ExpectedProcesses:               2,
+			MaxNumberOfBarriersPerNamespace: 10,
+			Metadata:                        createMetadata,
+			Now:                             now.UnixNano(),
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, createResp)
+	require.Nil(t, createResp.ApplicationError)
+	require.NotNil(t, createResp.Payload)
+	require.NotNil(t, createResp.Payload.Barrier)
+	require.Equal(t, createMetadata, createResp.Payload.Barrier.Metadata)
+
+	// Get the barrier and verify metadata persisted.
+	barrier := getBarrier(t, core, barrierId)
+	require.Equal(t, createMetadata, barrier.Metadata)
+
+	// T+1m: Update barrier with new metadata.
+	updateMetadata := map[string]string{"team": "search", "tier": "platinum"}
+	updateTime := now.Add(time.Minute)
+	updateResp, err := core.UpdateBarrier(&coreapis.UpdateBarrierRequest{
+		Payload: &corepb.UpdateBarrierRequest{
+			BarrierId:         barrierId,
+			Description:       "Updated description",
+			ExpectedProcesses: 2,
+			Metadata:          updateMetadata,
+			Now:               updateTime.UnixNano(),
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, updateResp)
+	require.Nil(t, updateResp.ApplicationError)
+	require.NotNil(t, updateResp.Payload)
+	require.NotNil(t, updateResp.Payload.Barrier)
+	require.Equal(t, updateMetadata, updateResp.Payload.Barrier.Metadata)
+
+	// Get the barrier again and verify the new metadata persisted.
+	barrier = getBarrier(t, core, barrierId)
+	require.Equal(t, updateMetadata, barrier.Metadata)
+
+	// T+2m: A process arrives with participant metadata. ExpectedProcesses is 2,
+	// so this single arrival does not trip the barrier and the participant remains
+	// queryable at generation 1.
+	participantMetadata := map[string]string{"host": "node-1"}
+	arriveResp, err := core.ArriveAtBarrier(&coreapis.ArriveAtBarrierRequest{
+		Payload: &corepb.ArriveAtBarrierRequest{
+			NamespaceId: namespaceId,
+			BarrierName: "metadata_barrier",
+			ProcessId:   "process_1",
+			Generation:  1,
+			Metadata:    participantMetadata,
+			Now:         now.Add(2 * time.Minute).UnixNano(),
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, arriveResp)
+	require.Nil(t, arriveResp.ApplicationError)
+	require.NotNil(t, arriveResp.Payload)
+
+	// List participants for generation 1 and verify the participant metadata round-trips.
+	listResp := listBarrierParticipants(t, core, namespaceId, "metadata_barrier")
+	require.Len(t, listResp.Participants, 1)
+	require.Equal(t, "process_1", listResp.Participants[0].ProcessId)
+	require.EqualValues(t, 1, listResp.Participants[0].Generation)
+	require.Equal(t, participantMetadata, listResp.Participants[0].Metadata)
+}
+
 func TestCore_ListBarrierParticipants(t *testing.T) {
 	t.Run("multiple participants", func(t *testing.T) {
 		core := newBarriersCore(t)

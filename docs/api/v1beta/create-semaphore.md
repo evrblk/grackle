@@ -8,13 +8,18 @@ Safe to retry — duplicate calls fail with `AlreadyExists` rather than creating
 
 * `permits` is the total capacity — the upper bound on how many units of the 
   resource may be held at once.
+* `metadata` is an optional, opaque map of string key/value pairs stored alongside the semaphore —
+  see [Metadata](/docs/api-overview.md#metadata).
 
 ```json
 {
   "namespace_name": "third_parties",
   "semaphore_name": "partner_1",
   "description": "Partner 1 API",
-  "permits": 20
+  "permits": 20,
+  "metadata": {
+    "vendor": "partner-1"
+  }
 }
 ```
 
@@ -34,7 +39,10 @@ Safe to retry — duplicate calls fail with `AlreadyExists` rather than creating
     "active_holders_count": 0,
     "version": 1,
     "created_at": 1695826239671432000,
-    "updated_at": 1695826239671432000
+    "updated_at": 1695826239671432000,
+    "metadata": {
+      "vendor": "partner-1"
+    }
   }
 }
 ```

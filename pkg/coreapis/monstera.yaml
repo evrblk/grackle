@@ -165,6 +165,9 @@ cores:
       - name: WaitGroupsDeleteNamespace
         method_number: 6
         sharded: true
+      - name: UpdateWaitGroup
+        method_number: 7
+        sharded: true
 
   - name: GrackleBarriers
     events:

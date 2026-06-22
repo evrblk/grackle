@@ -25,6 +25,10 @@ const (
 	maxLeaseIdLength         = 64
 	maxLeaseTtlSeconds       = 300 // 5 minutes
 
+	maxMetadataEntries     = 32
+	maxMetadataKeyLength   = 128
+	maxMetadataValueLength = 256
+
 	nameRegex     = "^[-_0-9a-zA-Z]*$"
 	lockNameRegex = "^[-_0-9a-zA-Z//]*$"
 )
@@ -35,6 +39,10 @@ func ValidateCreateNamespaceRequest(req *gracklepb.CreateNamespaceRequest) error
 	}
 
 	if err := validateDescription(req.Description, "CreateNamespaceRequest.Description"); err != nil {
+		return err
+	}
+
+	if err := validateMetadata(req.Metadata, "CreateNamespaceRequest.Metadata"); err != nil {
 		return err
 	}
 
@@ -55,6 +63,10 @@ func ValidateUpdateNamespaceRequest(req *gracklepb.UpdateNamespaceRequest) error
 	}
 
 	if err := validateDescription(req.Description, "UpdateNamespaceRequest.Description"); err != nil {
+		return err
+	}
+
+	if err := validateMetadata(req.Metadata, "UpdateNamespaceRequest.Metadata"); err != nil {
 		return err
 	}
 
@@ -92,6 +104,10 @@ func ValidateCreateWaitGroupRequest(req *gracklepb.CreateWaitGroupRequest) error
 
 	if req.Counter <= 0 {
 		return invalid("CreateWaitGroupRequest.Counter", "must be greater than 0")
+	}
+
+	if err := validateMetadata(req.Metadata, "CreateWaitGroupRequest.Metadata"); err != nil {
+		return err
 	}
 
 	return nil
@@ -194,11 +210,17 @@ func ValidateCompleteJobsFromWaitGroupRequest(req *gracklepb.CompleteJobsFromWai
 		return err
 	}
 
-	if len(req.JobIds) > maxCompleteJobBatchSize {
-		return invalid("CompleteJobFromWaitGroupRequest.JobIds", fmt.Sprintf("exceeds max batch size (%d)", maxCompleteJobBatchSize))
+	if len(req.Jobs) > maxCompleteJobBatchSize {
+		return invalid("CompleteJobsFromWaitGroupRequest.Jobs", fmt.Sprintf("exceeds max batch size (%d)", maxCompleteJobBatchSize))
 	}
-	for i, jobId := range req.JobIds {
-		if err := validateJobId(jobId, fmt.Sprintf("CompleteJobFromWaitGroupRequest.JobIds[%d]", i)); err != nil {
+	for i, job := range req.Jobs {
+		if job == nil {
+			return invalid(fmt.Sprintf("CompleteJobsFromWaitGroupRequest.Jobs[%d]", i), "must not be nil")
+		}
+		if err := validateJobId(job.JobId, fmt.Sprintf("CompleteJobsFromWaitGroupRequest.Jobs[%d].JobId", i)); err != nil {
+			return err
+		}
+		if err := validateMetadata(job.Metadata, fmt.Sprintf("CompleteJobsFromWaitGroupRequest.Jobs[%d].Metadata", i)); err != nil {
 			return err
 		}
 	}
@@ -275,6 +297,10 @@ func ValidateAcquireLockRequest(req *gracklepb.AcquireLockRequest) error {
 		return err
 	}
 
+	if err := validateMetadata(req.Metadata, "AcquireLockRequest.Metadata"); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -289,6 +315,10 @@ func ValidateCreateSemaphoreRequest(req *gracklepb.CreateSemaphoreRequest) error
 
 	if req.Permits <= 0 {
 		return invalid("CreateSemaphoreRequest.Permits", "must be greater than 0")
+	}
+
+	if err := validateMetadata(req.Metadata, "CreateSemaphoreRequest.Metadata"); err != nil {
+		return err
 	}
 
 	return nil
@@ -333,6 +363,10 @@ func ValidateUpdateSemaphoreRequest(req *gracklepb.UpdateSemaphoreRequest) error
 
 	if req.Permits <= 0 {
 		return invalid("UpdateSemaphoreRequest.Permits", "must be greater than 0")
+	}
+
+	if err := validateMetadata(req.Metadata, "UpdateSemaphoreRequest.Metadata"); err != nil {
+		return err
 	}
 
 	return nil
@@ -407,6 +441,10 @@ func ValidateAcquireSemaphoreRequest(req *gracklepb.AcquireSemaphoreRequest) err
 		return invalid("AcquireSemaphoreRequest.Weight", "must be greater than 0")
 	}
 
+	if err := validateMetadata(req.Metadata, "AcquireSemaphoreRequest.Metadata"); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -429,6 +467,10 @@ func ValidateCreateBarrierRequest(req *gracklepb.CreateBarrierRequest) error {
 
 	if req.ExpiresAt <= 0 {
 		return invalid("CreateBarrierRequest.ExpiresAt", "must be greater than 0")
+	}
+
+	if err := validateMetadata(req.Metadata, "CreateBarrierRequest.Metadata"); err != nil {
+		return err
 	}
 
 	return nil
@@ -491,6 +533,10 @@ func ValidateUpdateBarrierRequest(req *gracklepb.UpdateBarrierRequest) error {
 		return invalid("UpdateBarrierRequest.ExpectedProcesses", "must be greater than 0")
 	}
 
+	if err := validateMetadata(req.Metadata, "UpdateBarrierRequest.Metadata"); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -509,6 +555,10 @@ func ValidateArriveAtBarrierRequest(req *gracklepb.ArriveAtBarrierRequest) error
 
 	if req.ExpectedGeneration <= 0 {
 		return invalid("ArriveAtBarrierRequest.ExpectedGeneration", "must be greater than 0")
+	}
+
+	if err := validateMetadata(req.Metadata, "ArriveAtBarrierRequest.Metadata"); err != nil {
+		return err
 	}
 
 	return nil
@@ -734,6 +784,26 @@ func validateLeaseId(value string, fieldName string) error {
 	_, err := ids.DecodeLeaseId(value)
 	if err != nil {
 		return invalid(fieldName, "must be a valid lease ID")
+	}
+
+	return nil
+}
+
+// validateMetadata enforces the limits on a user-supplied metadata map: the
+// number of entries, and the length of each key and value. An empty or nil
+// map is always valid.
+func validateMetadata(metadata map[string]string, fieldName string) error {
+	if len(metadata) > maxMetadataEntries {
+		return invalid(fieldName, fmt.Sprintf("exceeds max number of entries (%d)", maxMetadataEntries))
+	}
+
+	for key, value := range metadata {
+		if len(key) == 0 || len(key) > maxMetadataKeyLength {
+			return invalid(fieldName, fmt.Sprintf("key length must be between 1 and %d characters", maxMetadataKeyLength))
+		}
+		if len(value) > maxMetadataValueLength {
+			return invalid(fieldName, fmt.Sprintf("value for key %q exceeds max length (%d)", key, maxMetadataValueLength))
+		}
 	}
 
 	return nil

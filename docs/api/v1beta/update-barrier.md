@@ -10,12 +10,18 @@ Safe to retry.
 
 ## Request
 
+* `metadata` is an optional, opaque map of string key/value pairs stored alongside the barrier —
+  see [Metadata](/docs/api-overview.md#metadata).
+
 ```json
 {
   "namespace_name": "pipelines",
   "barrier_name": "phase_1_complete",
   "description": "End of map phase (scaled)",
-  "expected_processes": 6
+  "expected_processes": 6,
+  "metadata": {
+    "phase": "map"
+  }
 }
 ```
 
@@ -34,7 +40,10 @@ Safe to retry.
     "generation": 1,
     "version": 2,
     "created_at": 1718150400000000000,
-    "updated_at": 1718150460000000000
+    "updated_at": 1718150460000000000,
+    "metadata": {
+      "phase": "map"
+    }
   }
 }
 ```

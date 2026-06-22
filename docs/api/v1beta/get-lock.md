@@ -18,6 +18,7 @@ Read-only and safe to retry.
 * Returns `NotFound` if the namespace does not exist.
 * Always returns a value, even if the lock has never been acquired — in that
 case the response shows `state: UNLOCKED` and an empty holders list.
+* Each holder's `metadata` is the optional, opaque map attached at acquire time — see [Metadata](/docs/api-overview.md#metadata).
 
 __Currently held:__
 
@@ -30,7 +31,10 @@ __Currently held:__
     "lock_holders": [
       {
         "lease_id": "ll_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
-        "locked_at": 1695826239671432000
+        "locked_at": 1695826239671432000,
+        "metadata": {
+          "host": "node-1"
+        }
       }
     ]
   }

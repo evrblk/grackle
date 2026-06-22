@@ -368,6 +368,7 @@ func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest) (*coreapis.AcquireL
 	lockHolder := &corepb.LockHolder{
 		LeaseId:  req.Payload.LeaseId,
 		LockedAt: req.Payload.Now,
+		Metadata: req.Payload.Metadata,
 	}
 
 	switch updatedLock.State {

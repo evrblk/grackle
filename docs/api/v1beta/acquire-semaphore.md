@@ -12,6 +12,8 @@ create a second holder.
 
 * `timeout_seconds` tells the server how long to wait for permits to free up before giving up.
 * The call blocks server-side, so set client/RPC timeouts comfortably above `timeout_seconds`.
+* `metadata` is an optional, opaque map of string key/value pairs attached to this holder —
+  see [Metadata](/docs/api-overview.md#metadata).
 
 ```json
 {
@@ -19,7 +21,10 @@ create a second holder.
   "semaphore_name": "partner_1",
   "lease_id": "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
   "weight": 3,
-  "timeout_seconds": 60
+  "timeout_seconds": 60,
+  "metadata": {
+    "host": "worker-7"
+  }
 }
 ```
 

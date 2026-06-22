@@ -28,17 +28,24 @@ Read-only and safe to retry.
 * Returns `NotFound` if the barrier does not exist.
 * Returns `NotFound` if the namespace does not exist.
 * Non-empty `next_pagination_token` indicates more pages are available.
+* `metadata` is the optional, opaque map attached to each participant — see [Metadata](/docs/api-overview.md#metadata).
 
 ```json
 {
   "participants": [
     {
       "process_id": "shard-0",
-      "arrived_at": 1718150410000000000
+      "arrived_at": 1718150410000000000,
+      "metadata": {
+        "host": "node-1"
+      }
     },
     {
       "process_id": "shard-1",
-      "arrived_at": 1718150412000000000
+      "arrived_at": 1718150412000000000,
+      "metadata": {
+        "host": "node-2"
+      }
     }
   ],
   "next_pagination_token": "",

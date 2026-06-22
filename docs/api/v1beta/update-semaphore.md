@@ -7,12 +7,18 @@ Safe to retry.
 
 ## Request
 
+* `metadata` is an optional, opaque map of string key/value pairs stored alongside the semaphore —
+  see [Metadata](/docs/api-overview.md#metadata).
+
 ```json
 {
   "namespace_name": "third_parties",
   "semaphore_name": "partner_1",
   "description": "Partner 1 API (raised capacity)",
-  "permits": 30
+  "permits": 30,
+  "metadata": {
+    "vendor": "partner-1"
+  }
 }
 ```
 
@@ -35,7 +41,10 @@ Safe to retry.
     "active_holders_count": 1,
     "version": 2,
     "created_at": 1695826239671432000,
-    "updated_at": 1695826239925421000
+    "updated_at": 1695826239925421000,
+    "metadata": {
+      "vendor": "partner-1"
+    }
   }
 }
 ```

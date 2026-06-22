@@ -250,6 +250,7 @@ func (c *Core) CreateWaitGroup(req *coreapis.CreateWaitGroupRequest) (*coreapis.
 		CreatedAt:   req.Payload.Now,
 		UpdatedAt:   req.Payload.Now,
 		ExpiresAt:   req.Payload.ExpiresAt,
+		Metadata:    req.Payload.Metadata,
 	}
 
 	err = c.waitGroups.Create(txn, waitGroup)
@@ -276,6 +277,68 @@ func (c *Core) CreateWaitGroup(req *coreapis.CreateWaitGroupRequest) (*coreapis.
 
 	return &coreapis.CreateWaitGroupResponse{
 		Payload: &corepb.CreateWaitGroupResponse{
+			WaitGroup: waitGroup,
+		},
+	}, nil
+}
+
+// UpdateWaitGroup updates the description, expiration time, and metadata of an
+// existing wait group. The wait group's name, counter, and completed count are
+// immutable and are left untouched. When ExpiresAt changes the global
+// expiration index is reconciled (the old entry is removed and a new one
+// added) so that garbage collection fires at the new time rather than the old
+// one. Returns NotFound if the wait group does not exist.
+func (c *Core) UpdateWaitGroup(req *coreapis.UpdateWaitGroupRequest) (*coreapis.UpdateWaitGroupResponse, error) {
+	txn := c.badgerStore.Update()
+	defer txn.Discard()
+
+	waitGroup, err := c.waitGroups.Get(txn, req.Payload.WaitGroupId)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			return &coreapis.UpdateWaitGroupResponse{
+				ApplicationError: monsterax.NewErrorWithContext(
+					monsterax.NotFound,
+					"wait group not found",
+					map[string]string{
+						"wait_group_id": ids.EncodeWaitGroupId(req.Payload.WaitGroupId),
+					}),
+			}, nil
+		}
+
+		return nil, err
+	}
+
+	// Reconcile the global expiration index when expires_at changes. Without
+	// this the index keeps pointing at the old timestamp and GC would fire at
+	// the wrong time.
+	if waitGroup.ExpiresAt != req.Payload.ExpiresAt {
+		err = c.expirationRecords.Delete(txn, waitGroup.ExpiresAt, waitGroup.Id)
+		if err != nil {
+			return nil, err
+		}
+		err = c.expirationRecords.Add(txn, req.Payload.ExpiresAt, waitGroup.Id)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	waitGroup.Description = req.Payload.Description
+	waitGroup.ExpiresAt = req.Payload.ExpiresAt
+	waitGroup.Metadata = req.Payload.Metadata
+	waitGroup.UpdatedAt = req.Payload.Now
+
+	err = c.waitGroups.Update(txn, waitGroup)
+	if err != nil {
+		return nil, err
+	}
+
+	err = txn.Commit()
+	if err != nil {
+		return nil, err
+	}
+
+	return &coreapis.UpdateWaitGroupResponse{
+		Payload: &corepb.UpdateWaitGroupResponse{
 			WaitGroup: waitGroup,
 		},
 	}, nil
@@ -419,12 +482,12 @@ func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroup
 		return nil, err
 	}
 
-	for _, jobId := range req.Payload.JobIds {
+	for _, job := range req.Payload.Jobs {
 		waitGroupJobId := &corepb.WaitGroupJobId{
 			AccountId:   req.Payload.NamespaceId.AccountId,
 			NamespaceId: req.Payload.NamespaceId.NamespaceId,
 			WaitGroupId: waitGroup.Id.WaitGroupId,
-			JobId:       jobId,
+			JobId:       job.JobId,
 		}
 		_, err := c.jobs.Get(txn, waitGroupJobId)
 		if err != nil {
@@ -432,6 +495,7 @@ func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroup
 				waitGroupJob := &corepb.WaitGroupJob{
 					Id:          waitGroupJobId,
 					CompletedAt: req.Payload.Now,
+					Metadata:    job.Metadata,
 				}
 				err := c.jobs.Create(txn, waitGroupJob)
 				if err != nil {

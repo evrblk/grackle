@@ -18,6 +18,7 @@ Read-only and safe to retry.
 * Returns `NotFound` if the namespace does not exist.
 * Returns the current `generation`, `arrived_processes`, and `expected_processes`.
 * Returns `NotFound` if the barrier does not exist (including after `expires_at`).
+* `metadata` is the optional, opaque map stored with the barrier — see [Metadata](/docs/api-overview.md#metadata).
 
 ```json
 {
@@ -29,7 +30,10 @@ Read-only and safe to retry.
     "generation": 1,
     "version": 1,
     "created_at": 1718150400000000000,
-    "updated_at": 1718150420000000000
+    "updated_at": 1718150420000000000,
+    "metadata": {
+      "phase": "map"
+    }
   }
 }
 ```

@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/dave/jennifer v1.7.1
-	github.com/evrblk/evrblk-go v0.0.0-20260612191933-efd09b7b9f9f
+	github.com/evrblk/evrblk-go v0.0.0-20260622152314-22ef9bbc2142
 	github.com/evrblk/monstera v0.0.0-20260610153412-ffd2127186cd
 	github.com/evrblk/yellowstone-common v0.0.0-20260317193758-e5d4f0d6d632
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10

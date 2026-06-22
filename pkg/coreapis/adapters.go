@@ -1127,6 +1127,24 @@ func (a *GrackleWaitGroupsCoreAdapter) Update(appRequestBytes []byte) (*monstera
 			return nil, err
 		}
 		appResponse.Data = methodResponseBytes
+	case 7:
+		payload := corepb.UpdateWaitGroupRequest{}
+		err := payload.UnmarshalBinary(appRequest.Data)
+		if err != nil {
+			return nil, err
+		}
+		methodResponse, err := a.grackleWaitGroupsCore.UpdateWaitGroup(&UpdateWaitGroupRequest{Payload: &payload})
+		if err != nil {
+			return nil, err
+		}
+		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "UpdateWaitGroup", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "UpdateWaitGroup", a.shardId, a.replicaId).Inc()
+		appResponse.Error = methodResponse.ApplicationError
+		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		if err != nil {
+			return nil, err
+		}
+		appResponse.Data = methodResponseBytes
 	default:
 		return nil, fmt.Errorf("no matching handlers")
 	}

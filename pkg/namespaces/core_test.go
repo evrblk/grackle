@@ -528,6 +528,51 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 	})
 }
 
+func TestCore_NamespaceMetadata(t *testing.T) {
+	core := newNamespacesCore(t)
+	now := time.Now()
+	namespaceId := &corepb.NamespaceId{
+		AccountId:   rand.Uint64(),
+		NamespaceId: rand.Uint32(),
+	}
+
+	// Create namespace with metadata
+	resp1, err := core.CreateNamespace(&coreapis.CreateNamespaceRequest{
+		Payload: &corepb.CreateNamespaceRequest{
+			NamespaceId:           namespaceId,
+			Name:                  "test_namespace",
+			Description:           "test description",
+			Now:                   now.UnixNano(),
+			Metadata:              map[string]string{"team": "search", "cost-center": "1234"},
+			MaxNumberOfNamespaces: 100,
+		},
+	})
+	require.NoError(t, err)
+	require.Nil(t, resp1.ApplicationError)
+	require.Equal(t, map[string]string{"team": "search", "cost-center": "1234"}, resp1.Payload.Namespace.Metadata)
+
+	// Get namespace and confirm metadata persisted
+	ns := getNamespaceByName(t, core, namespaceId.AccountId, "test_namespace")
+	require.Equal(t, map[string]string{"team": "search", "cost-center": "1234"}, ns.Metadata)
+
+	// Update namespace metadata
+	resp2, err := core.UpdateNamespace(&coreapis.UpdateNamespaceRequest{
+		Payload: &corepb.UpdateNamespaceRequest{
+			NamespaceId: namespaceId,
+			Description: "updated description",
+			Now:         now.Add(time.Minute).UnixNano(),
+			Metadata:    map[string]string{"team": "search", "cost-center": "5678"},
+		},
+	})
+	require.NoError(t, err)
+	require.Nil(t, resp2.ApplicationError)
+	require.Equal(t, map[string]string{"team": "search", "cost-center": "5678"}, resp2.Payload.Namespace.Metadata)
+
+	// Confirm the updated metadata is persisted
+	ns = getNamespaceByName(t, core, namespaceId.AccountId, "test_namespace")
+	require.Equal(t, map[string]string{"team": "search", "cost-center": "5678"}, ns.Metadata)
+}
+
 func newNamespacesCore(t *testing.T) *Core {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)

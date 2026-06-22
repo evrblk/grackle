@@ -37,6 +37,7 @@ func (s *GrackleApiServerHandler) CreateNamespace(ctx context.Context, req *grac
 		Name:                  req.Name,
 		Description:           req.Description,
 		Now:                   now.UnixNano(),
+		Metadata:              req.Metadata,
 		MaxNumberOfNamespaces: limits.MaxNumberOfNamespaces,
 	})
 	if err != nil {
@@ -80,6 +81,7 @@ func (s *GrackleApiServerHandler) UpdateNamespace(ctx context.Context, req *grac
 		NamespaceId: resp1.Namespace.Id,
 		Description: req.Description,
 		Now:         now.UnixNano(),
+		Metadata:    req.Metadata,
 	})
 	if err != nil {
 		return nil, monsterax.ErrorToGRPC(err)
@@ -221,6 +223,7 @@ func (s *GrackleApiServerHandler) CreateWaitGroup(ctx context.Context, req *grac
 		Now:                               now.UnixNano(),
 		Counter:                           req.Counter,
 		ExpiresAt:                         req.ExpiresAt,
+		Metadata:                          req.Metadata,
 		MaxNumberOfWaitGroupsPerNamespace: limits.MaxNumberOfWaitGroupsPerNamespace,
 	})
 	if err != nil {
@@ -361,7 +364,7 @@ func (s *GrackleApiServerHandler) CompleteJobsFromWaitGroup(ctx context.Context,
 	resp2, err := s.grackleClient.CompleteJobsFromWaitGroup(ctx, &corepb.CompleteJobsFromWaitGroupRequest{
 		NamespaceId:   resp1.Namespace.Id,
 		WaitGroupName: req.WaitGroupName,
-		JobIds:        req.JobIds,
+		Jobs:          completeJobsToCore(req.Jobs),
 		Now:           now.UnixNano(),
 	})
 	if err != nil {
@@ -526,6 +529,7 @@ func (s *GrackleApiServerHandler) AcquireLock(ctx context.Context, req *gracklep
 			LeaseId:                      leaseId.LeaseId,
 			Now:                          time.Now().UnixNano(),
 			Exclusive:                    req.Exclusive,
+			Metadata:                     req.Metadata,
 			MaxNumberOfLocksPerNamespace: limits.MaxNumberOfLocksPerNamespace,
 		})
 		if err != nil {
@@ -730,6 +734,7 @@ func (s *GrackleApiServerHandler) CreateSemaphore(ctx context.Context, req *grac
 		Description:                       req.Description,
 		Now:                               now.UnixNano(),
 		Permits:                           req.Permits,
+		Metadata:                          req.Metadata,
 		MaxNumberOfSemaphoresPerNamespace: limits.MaxNumberOfSemaphoresPerNamespace,
 	})
 	if err != nil {
@@ -901,6 +906,7 @@ func (s *GrackleApiServerHandler) AcquireSemaphore(ctx context.Context, req *gra
 			LeaseId:       leaseId.LeaseId,
 			Weight:        req.Weight,
 			Now:           time.Now().UnixNano(),
+			Metadata:      req.Metadata,
 		})
 		if err != nil {
 			return nil, monsterax.ErrorToGRPC(err)
@@ -994,6 +1000,7 @@ func (s *GrackleApiServerHandler) UpdateSemaphore(ctx context.Context, req *grac
 		Description:   req.Description,
 		Now:           now.UnixNano(),
 		Permits:       req.Permits,
+		Metadata:      req.Metadata,
 	})
 	if err != nil {
 		return nil, monsterax.ErrorToGRPC(err)
@@ -1050,6 +1057,7 @@ func (s *GrackleApiServerHandler) CreateBarrier(ctx context.Context, req *grackl
 		Description:                     req.Description,
 		ExpectedProcesses:               req.ExpectedProcesses,
 		Now:                             now.UnixNano(),
+		Metadata:                        req.Metadata,
 		MaxNumberOfBarriersPerNamespace: limits.MaxNumberOfBarriersPerNamespace,
 	})
 	if err != nil {
@@ -1180,6 +1188,7 @@ func (s *GrackleApiServerHandler) UpdateBarrier(ctx context.Context, req *grackl
 		Description:       req.Description,
 		ExpectedProcesses: req.ExpectedProcesses,
 		Now:               now.UnixNano(),
+		Metadata:          req.Metadata,
 	})
 	if err != nil {
 		return nil, monsterax.ErrorToGRPC(err)
@@ -1209,6 +1218,7 @@ func (s *GrackleApiServerHandler) ArriveAtBarrier(ctx context.Context, req *grac
 		ProcessId:   req.ProcessId,
 		Generation:  req.ExpectedGeneration,
 		Now:         now.UnixNano(),
+		Metadata:    req.Metadata,
 	})
 	if err != nil {
 		return nil, monsterax.ErrorToGRPC(err)

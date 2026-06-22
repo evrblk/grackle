@@ -16,6 +16,8 @@ Re-acquiring under the same `lease_id` is always allowed and just refreshes the 
 * `timeout_seconds` tells the server how long to wait for an incompatible holder to release before
 giving up. 
 * The call blocks server-side, so set client/RPC timeouts comfortably above `timeout_seconds`.
+* `metadata` is an optional, opaque map of string key/value pairs attached to this lock holder —
+  see [Metadata](/docs/api-overview.md#metadata).
 
 ```json
 {
@@ -23,7 +25,10 @@ giving up.
   "lock_name": "users/123/profile",
   "exclusive": true,
   "lease_id": "ll_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
-  "timeout_seconds": 60
+  "timeout_seconds": 60,
+  "metadata": {
+    "host": "node-1"
+  }
 }
 ```
 
@@ -46,7 +51,10 @@ __Success:__
     "lock_holders": [
       {
         "lease_id": "ll_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
-        "locked_at": 1695826239671432000
+        "locked_at": 1695826239671432000,
+        "metadata": {
+          "host": "node-1"
+        }
       }
     ]
   },
@@ -65,7 +73,10 @@ __Held by someone else:__
     "lock_holders": [
       {
         "lease_id": "ll_qB7XwYzAaaaaaaaaaaaaaaaaaaaa",
-        "locked_at": 1695826200000000000
+        "locked_at": 1695826200000000000,
+        "metadata": {
+          "host": "node-2"
+        }
       }
     ]
   },

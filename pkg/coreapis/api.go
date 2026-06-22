@@ -106,6 +106,8 @@ type RunWaitGroupsGarbageCollectionRequest = monsterax.UpdateUnshardedRequest[*c
 type RunWaitGroupsGarbageCollectionResponse = monsterax.UpdateResponse[*corepb.RunWaitGroupsGarbageCollectionResponse]
 type WaitGroupsDeleteNamespaceRequest = monsterax.UpdateRequest[*corepb.WaitGroupsDeleteNamespaceRequest]
 type WaitGroupsDeleteNamespaceResponse = monsterax.UpdateResponse[*corepb.WaitGroupsDeleteNamespaceResponse]
+type UpdateWaitGroupRequest = monsterax.UpdateRequest[*corepb.UpdateWaitGroupRequest]
+type UpdateWaitGroupResponse = monsterax.UpdateResponse[*corepb.UpdateWaitGroupResponse]
 type GetBarrierRequest = monsterax.ReadRequest[*corepb.GetBarrierRequest]
 type GetBarrierResponse = monsterax.ReadResponse[*corepb.GetBarrierResponse]
 type GetBarrierByNameRequest = monsterax.ReadRequest[*corepb.GetBarrierByNameRequest]
@@ -179,6 +181,7 @@ type GrackleClientApi interface {
 	DeleteWaitGroup(ctx context.Context, req *corepb.DeleteWaitGroupRequest) (*corepb.DeleteWaitGroupResponse, error)
 	RunWaitGroupsGarbageCollection(ctx context.Context, req *corepb.RunWaitGroupsGarbageCollectionRequest, shardId string) (*corepb.RunWaitGroupsGarbageCollectionResponse, error)
 	WaitGroupsDeleteNamespace(ctx context.Context, req *corepb.WaitGroupsDeleteNamespaceRequest) (*corepb.WaitGroupsDeleteNamespaceResponse, error)
+	UpdateWaitGroup(ctx context.Context, req *corepb.UpdateWaitGroupRequest) (*corepb.UpdateWaitGroupResponse, error)
 
 	GetBarrier(ctx context.Context, req *corepb.GetBarrierRequest) (*corepb.GetBarrierResponse, error)
 	GetBarrierByName(ctx context.Context, req *corepb.GetBarrierByNameRequest) (*corepb.GetBarrierByNameResponse, error)
@@ -263,6 +266,7 @@ type GrackleWaitGroupsCoreApi interface {
 	DeleteWaitGroup(req *DeleteWaitGroupRequest) (*DeleteWaitGroupResponse, error)
 	RunWaitGroupsGarbageCollection(req *RunWaitGroupsGarbageCollectionRequest) (*RunWaitGroupsGarbageCollectionResponse, error)
 	WaitGroupsDeleteNamespace(req *WaitGroupsDeleteNamespaceRequest) (*WaitGroupsDeleteNamespaceResponse, error)
+	UpdateWaitGroup(req *UpdateWaitGroupRequest) (*UpdateWaitGroupResponse, error)
 }
 
 type GrackleBarriersCoreApi interface {

@@ -11,7 +11,8 @@ message CreateNamespaceRequest {
   string name = 2;
   string description = 3;
   int64 now = 4;
-  int64 max_number_of_namespaces = 5;
+  map<string, string> metadata = 5;
+  int64 max_number_of_namespaces = 6;
 }
 
 message CreateNamespaceResponse {
@@ -57,7 +58,8 @@ message DeleteNamespaceResponse {}
 message UpdateNamespaceRequest {
   NamespaceId namespace_id = 1;
   string description = 2;
-  int64 now = 3;
+  map<string, string> metadata = 3;
+  int64 now = 4;
 }
 
 message UpdateNamespaceResponse {
@@ -71,6 +73,7 @@ message Namespace {
   int64 created_at = 4;
   int64 updated_at = 5;
   uint64 version = 6;
+  map<string, string> metadata = 7;
 }
 
 message NamespaceId {

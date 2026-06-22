@@ -1,10 +1,14 @@
 # CompleteJobsFromWaitGroup
 
-Marks a batch of jobs as completed. Each `job_id` is recorded once; reporting the same id again
-is a no-op for `completed` (the call is idempotent per `job_id`).
+Marks a batch of jobs as completed. Each entry in `jobs` has a `job_id` and an optional `metadata`
+map. A `job_id` is recorded once; reporting the same id again is a no-op for `completed` (the call
+is idempotent per `job_id`, and the metadata stored is the one from the first time the id was
+reported).
 
 `job_id` values are unique within a single wait group. They are independent of `process_id` used
-by lock/semaphore leases — see [Wait Groups](/docs/wait-groups.md).
+by lock/semaphore leases — see [Wait Groups](/docs/wait-groups.md). The optional per-job `metadata`
+is opaque to Grackle and is returned by `ListWaitGroupCompletedJobs` — see
+[Metadata](/docs/api-overview.md#metadata).
 
 ## Request
 
@@ -12,10 +16,10 @@ by lock/semaphore leases — see [Wait Groups](/docs/wait-groups.md).
 {
   "namespace_name": "pipelines",
   "wait_group_name": "batch_2026_06_12",
-  "job_ids": [
-    "shard-0",
-    "shard-1",
-    "shard-2"
+  "jobs": [
+    { "job_id": "shard-0", "metadata": { "worker": "worker-7" } },
+    { "job_id": "shard-1" },
+    { "job_id": "shard-2" }
   ]
 }
 ```

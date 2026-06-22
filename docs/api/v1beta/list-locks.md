@@ -22,6 +22,7 @@ Read-only and safe to retry.
 
 * Returns `NotFound` if the namespace does not exist.
 * Non-empty `next_pagination_token` indicates more pages are available.
+* Each holder's `metadata` is the optional, opaque map attached at acquire time — see [Metadata](/docs/api-overview.md#metadata).
 
 ```json
 {
@@ -33,7 +34,10 @@ Read-only and safe to retry.
       "lock_holders": [
         {
           "lease_id": "ll_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
-          "locked_at": 1695826239671432000
+          "locked_at": 1695826239671432000,
+          "metadata": {
+            "host": "node-1"
+          }
         }
       ]
     }

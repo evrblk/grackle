@@ -27,7 +27,8 @@ type CreateNamespaceRequest struct {
 	Name                  string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Description           string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	Now                   int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
-	MaxNumberOfNamespaces int64                  `protobuf:"varint,5,opt,name=max_number_of_namespaces,json=maxNumberOfNamespaces,proto3" json:"max_number_of_namespaces,omitempty"`
+	Metadata              map[string]string      `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	MaxNumberOfNamespaces int64                  `protobuf:"varint,6,opt,name=max_number_of_namespaces,json=maxNumberOfNamespaces,proto3" json:"max_number_of_namespaces,omitempty"`
 	unknownFields         protoimpl.UnknownFields
 	sizeCache             protoimpl.SizeCache
 }
@@ -88,6 +89,13 @@ func (x *CreateNamespaceRequest) GetNow() int64 {
 		return x.Now
 	}
 	return 0
+}
+
+func (x *CreateNamespaceRequest) GetMetadata() map[string]string {
+	if x != nil {
+		return x.Metadata
+	}
+	return nil
 }
 
 func (x *CreateNamespaceRequest) GetMaxNumberOfNamespaces() int64 {
@@ -537,7 +545,8 @@ type UpdateNamespaceRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Now           int64                  `protobuf:"varint,3,opt,name=now,proto3" json:"now,omitempty"`
+	Metadata      map[string]string      `protobuf:"bytes,3,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Now           int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -584,6 +593,13 @@ func (x *UpdateNamespaceRequest) GetDescription() string {
 		return x.Description
 	}
 	return ""
+}
+
+func (x *UpdateNamespaceRequest) GetMetadata() map[string]string {
+	if x != nil {
+		return x.Metadata
+	}
+	return nil
 }
 
 func (x *UpdateNamespaceRequest) GetNow() int64 {
@@ -645,6 +661,7 @@ type Namespace struct {
 	CreatedAt     int64                  `protobuf:"varint,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     int64                  `protobuf:"varint,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	Version       uint64                 `protobuf:"varint,6,opt,name=version,proto3" json:"version,omitempty"`
+	Metadata      map[string]string      `protobuf:"bytes,7,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -719,6 +736,13 @@ func (x *Namespace) GetVersion() uint64 {
 		return x.Version
 	}
 	return 0
+}
+
+func (x *Namespace) GetMetadata() map[string]string {
+	if x != nil {
+		return x.Metadata
+	}
+	return nil
 }
 
 type NamespaceId struct {
@@ -821,13 +845,17 @@ var File_pkg_corepb_namespaces_proto protoreflect.FileDescriptor
 
 const file_pkg_corepb_namespaces_proto_rawDesc = "" +
 	"\n" +
-	"\x1bpkg/corepb/namespaces.proto\x12\x19com.evrblk.grackle.corepb\x1a\x17pkg/corepb/common.proto\"\xe4\x01\n" +
+	"\x1bpkg/corepb/namespaces.proto\x12\x19com.evrblk.grackle.corepb\x1a\x17pkg/corepb/common.proto\"\xfe\x02\n" +
 	"\x16CreateNamespaceRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x10\n" +
-	"\x03now\x18\x04 \x01(\x03R\x03now\x127\n" +
-	"\x18max_number_of_namespaces\x18\x05 \x01(\x03R\x15maxNumberOfNamespaces\"]\n" +
+	"\x03now\x18\x04 \x01(\x03R\x03now\x12[\n" +
+	"\bmetadata\x18\x05 \x03(\v2?.com.evrblk.grackle.corepb.CreateNamespaceRequest.MetadataEntryR\bmetadata\x127\n" +
+	"\x18max_number_of_namespaces\x18\x06 \x01(\x03R\x15maxNumberOfNamespaces\x1a;\n" +
+	"\rMetadataEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"]\n" +
 	"\x17CreateNamespaceResponse\x12B\n" +
 	"\tnamespace\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.NamespaceR\tnamespace\"\xa3\x01\n" +
 	"\x15ListNamespacesRequest\x12\x1d\n" +
@@ -854,13 +882,17 @@ const file_pkg_corepb_namespaces_proto_rawDesc = "" +
 	"\x16DeleteNamespaceRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x10\n" +
 	"\x03now\x18\x02 \x01(\x03R\x03now\"\x19\n" +
-	"\x17DeleteNamespaceResponse\"\x97\x01\n" +
+	"\x17DeleteNamespaceResponse\"\xb1\x02\n" +
 	"\x16UpdateNamespaceRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12 \n" +
-	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x10\n" +
-	"\x03now\x18\x03 \x01(\x03R\x03now\"]\n" +
+	"\vdescription\x18\x02 \x01(\tR\vdescription\x12[\n" +
+	"\bmetadata\x18\x03 \x03(\v2?.com.evrblk.grackle.corepb.UpdateNamespaceRequest.MetadataEntryR\bmetadata\x12\x10\n" +
+	"\x03now\x18\x04 \x01(\x03R\x03now\x1a;\n" +
+	"\rMetadataEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"]\n" +
 	"\x17UpdateNamespaceResponse\x12B\n" +
-	"\tnamespace\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.NamespaceR\tnamespace\"\xd1\x01\n" +
+	"\tnamespace\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.NamespaceR\tnamespace\"\xde\x02\n" +
 	"\tNamespace\x126\n" +
 	"\x02id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
@@ -869,7 +901,11 @@ const file_pkg_corepb_namespaces_proto_rawDesc = "" +
 	"created_at\x18\x04 \x01(\x03R\tcreatedAt\x12\x1d\n" +
 	"\n" +
 	"updated_at\x18\x05 \x01(\x03R\tupdatedAt\x12\x18\n" +
-	"\aversion\x18\x06 \x01(\x04R\aversion\"O\n" +
+	"\aversion\x18\x06 \x01(\x04R\aversion\x12N\n" +
+	"\bmetadata\x18\a \x03(\v22.com.evrblk.grackle.corepb.Namespace.MetadataEntryR\bmetadata\x1a;\n" +
+	"\rMetadataEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"O\n" +
 	"\vNamespaceId\x12\x1d\n" +
 	"\n" +
 	"account_id\x18\x01 \x01(\x04R\taccountId\x12!\n" +
@@ -889,7 +925,7 @@ func file_pkg_corepb_namespaces_proto_rawDescGZIP() []byte {
 	return file_pkg_corepb_namespaces_proto_rawDescData
 }
 
-var file_pkg_corepb_namespaces_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_pkg_corepb_namespaces_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_pkg_corepb_namespaces_proto_goTypes = []any{
 	(*CreateNamespaceRequest)(nil),     // 0: com.evrblk.grackle.corepb.CreateNamespaceRequest
 	(*CreateNamespaceResponse)(nil),    // 1: com.evrblk.grackle.corepb.CreateNamespaceResponse
@@ -906,27 +942,33 @@ var file_pkg_corepb_namespaces_proto_goTypes = []any{
 	(*Namespace)(nil),                  // 12: com.evrblk.grackle.corepb.Namespace
 	(*NamespaceId)(nil),                // 13: com.evrblk.grackle.corepb.NamespaceId
 	(*NamespacesCounter)(nil),          // 14: com.evrblk.grackle.corepb.NamespacesCounter
-	(*PaginationToken)(nil),            // 15: com.evrblk.grackle.corepb.PaginationToken
+	nil,                                // 15: com.evrblk.grackle.corepb.CreateNamespaceRequest.MetadataEntry
+	nil,                                // 16: com.evrblk.grackle.corepb.UpdateNamespaceRequest.MetadataEntry
+	nil,                                // 17: com.evrblk.grackle.corepb.Namespace.MetadataEntry
+	(*PaginationToken)(nil),            // 18: com.evrblk.grackle.corepb.PaginationToken
 }
 var file_pkg_corepb_namespaces_proto_depIdxs = []int32{
 	13, // 0: com.evrblk.grackle.corepb.CreateNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	12, // 1: com.evrblk.grackle.corepb.CreateNamespaceResponse.namespace:type_name -> com.evrblk.grackle.corepb.Namespace
-	15, // 2: com.evrblk.grackle.corepb.ListNamespacesRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	12, // 3: com.evrblk.grackle.corepb.ListNamespacesResponse.namespaces:type_name -> com.evrblk.grackle.corepb.Namespace
-	15, // 4: com.evrblk.grackle.corepb.ListNamespacesResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	15, // 5: com.evrblk.grackle.corepb.ListNamespacesResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	13, // 6: com.evrblk.grackle.corepb.GetNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	12, // 7: com.evrblk.grackle.corepb.GetNamespaceResponse.namespace:type_name -> com.evrblk.grackle.corepb.Namespace
-	12, // 8: com.evrblk.grackle.corepb.GetNamespaceByNameResponse.namespace:type_name -> com.evrblk.grackle.corepb.Namespace
-	13, // 9: com.evrblk.grackle.corepb.DeleteNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	13, // 10: com.evrblk.grackle.corepb.UpdateNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	12, // 11: com.evrblk.grackle.corepb.UpdateNamespaceResponse.namespace:type_name -> com.evrblk.grackle.corepb.Namespace
-	13, // 12: com.evrblk.grackle.corepb.Namespace.id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	13, // [13:13] is the sub-list for method output_type
-	13, // [13:13] is the sub-list for method input_type
-	13, // [13:13] is the sub-list for extension type_name
-	13, // [13:13] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	15, // 1: com.evrblk.grackle.corepb.CreateNamespaceRequest.metadata:type_name -> com.evrblk.grackle.corepb.CreateNamespaceRequest.MetadataEntry
+	12, // 2: com.evrblk.grackle.corepb.CreateNamespaceResponse.namespace:type_name -> com.evrblk.grackle.corepb.Namespace
+	18, // 3: com.evrblk.grackle.corepb.ListNamespacesRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	12, // 4: com.evrblk.grackle.corepb.ListNamespacesResponse.namespaces:type_name -> com.evrblk.grackle.corepb.Namespace
+	18, // 5: com.evrblk.grackle.corepb.ListNamespacesResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	18, // 6: com.evrblk.grackle.corepb.ListNamespacesResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	13, // 7: com.evrblk.grackle.corepb.GetNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	12, // 8: com.evrblk.grackle.corepb.GetNamespaceResponse.namespace:type_name -> com.evrblk.grackle.corepb.Namespace
+	12, // 9: com.evrblk.grackle.corepb.GetNamespaceByNameResponse.namespace:type_name -> com.evrblk.grackle.corepb.Namespace
+	13, // 10: com.evrblk.grackle.corepb.DeleteNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	13, // 11: com.evrblk.grackle.corepb.UpdateNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	16, // 12: com.evrblk.grackle.corepb.UpdateNamespaceRequest.metadata:type_name -> com.evrblk.grackle.corepb.UpdateNamespaceRequest.MetadataEntry
+	12, // 13: com.evrblk.grackle.corepb.UpdateNamespaceResponse.namespace:type_name -> com.evrblk.grackle.corepb.Namespace
+	13, // 14: com.evrblk.grackle.corepb.Namespace.id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	17, // 15: com.evrblk.grackle.corepb.Namespace.metadata:type_name -> com.evrblk.grackle.corepb.Namespace.MetadataEntry
+	16, // [16:16] is the sub-list for method output_type
+	16, // [16:16] is the sub-list for method input_type
+	16, // [16:16] is the sub-list for extension type_name
+	16, // [16:16] is the sub-list for extension extendee
+	0,  // [0:16] is the sub-list for field type_name
 }
 
 func init() { file_pkg_corepb_namespaces_proto_init() }
@@ -941,7 +983,7 @@ func file_pkg_corepb_namespaces_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_corepb_namespaces_proto_rawDesc), len(file_pkg_corepb_namespaces_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   15,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
