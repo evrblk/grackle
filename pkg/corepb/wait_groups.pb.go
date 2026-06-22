@@ -166,14 +166,17 @@ func (x *CreateWaitGroupResponse) GetWaitGroup() *WaitGroup {
 }
 
 type UpdateWaitGroupRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	WaitGroupId   *WaitGroupId           `protobuf:"bytes,1,opt,name=wait_group_id,json=waitGroupId,proto3" json:"wait_group_id,omitempty"`
-	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Now           int64                  `protobuf:"varint,3,opt,name=now,proto3" json:"now,omitempty"`
-	ExpiresAt     int64                  `protobuf:"varint,4,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	Metadata      map[string]string      `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	NamespaceId     *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
+	WaitGroupName   string                 `protobuf:"bytes,2,opt,name=wait_group_name,json=waitGroupName,proto3" json:"wait_group_name,omitempty"`
+	Description     string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	Now             int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
+	ExpiresAt       int64                  `protobuf:"varint,5,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	Counter         uint64                 `protobuf:"varint,6,opt,name=counter,proto3" json:"counter,omitempty"`
+	Metadata        map[string]string      `protobuf:"bytes,7,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	ExpectedVersion uint64                 `protobuf:"varint,8,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *UpdateWaitGroupRequest) Reset() {
@@ -206,11 +209,18 @@ func (*UpdateWaitGroupRequest) Descriptor() ([]byte, []int) {
 	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *UpdateWaitGroupRequest) GetWaitGroupId() *WaitGroupId {
+func (x *UpdateWaitGroupRequest) GetNamespaceId() *NamespaceId {
 	if x != nil {
-		return x.WaitGroupId
+		return x.NamespaceId
 	}
 	return nil
+}
+
+func (x *UpdateWaitGroupRequest) GetWaitGroupName() string {
+	if x != nil {
+		return x.WaitGroupName
+	}
+	return ""
 }
 
 func (x *UpdateWaitGroupRequest) GetDescription() string {
@@ -234,11 +244,25 @@ func (x *UpdateWaitGroupRequest) GetExpiresAt() int64 {
 	return 0
 }
 
+func (x *UpdateWaitGroupRequest) GetCounter() uint64 {
+	if x != nil {
+		return x.Counter
+	}
+	return 0
+}
+
 func (x *UpdateWaitGroupRequest) GetMetadata() map[string]string {
 	if x != nil {
 		return x.Metadata
 	}
 	return nil
+}
+
+func (x *UpdateWaitGroupRequest) GetExpectedVersion() uint64 {
+	if x != nil {
+		return x.ExpectedVersion
+	}
+	return 0
 }
 
 type UpdateWaitGroupResponse struct {
@@ -685,126 +709,6 @@ func (*DeleteWaitGroupResponse) Descriptor() ([]byte, []int) {
 	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{11}
 }
 
-type AddJobsToWaitGroupRequest struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	NamespaceId      *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	WaitGroupName    string                 `protobuf:"bytes,2,opt,name=wait_group_name,json=waitGroupName,proto3" json:"wait_group_name,omitempty"`
-	Counter          uint64                 `protobuf:"varint,3,opt,name=counter,proto3" json:"counter,omitempty"`
-	Now              int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
-	MaxWaitGroupSize int64                  `protobuf:"varint,5,opt,name=max_wait_group_size,json=maxWaitGroupSize,proto3" json:"max_wait_group_size,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
-}
-
-func (x *AddJobsToWaitGroupRequest) Reset() {
-	*x = AddJobsToWaitGroupRequest{}
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[12]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *AddJobsToWaitGroupRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*AddJobsToWaitGroupRequest) ProtoMessage() {}
-
-func (x *AddJobsToWaitGroupRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[12]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use AddJobsToWaitGroupRequest.ProtoReflect.Descriptor instead.
-func (*AddJobsToWaitGroupRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{12}
-}
-
-func (x *AddJobsToWaitGroupRequest) GetNamespaceId() *NamespaceId {
-	if x != nil {
-		return x.NamespaceId
-	}
-	return nil
-}
-
-func (x *AddJobsToWaitGroupRequest) GetWaitGroupName() string {
-	if x != nil {
-		return x.WaitGroupName
-	}
-	return ""
-}
-
-func (x *AddJobsToWaitGroupRequest) GetCounter() uint64 {
-	if x != nil {
-		return x.Counter
-	}
-	return 0
-}
-
-func (x *AddJobsToWaitGroupRequest) GetNow() int64 {
-	if x != nil {
-		return x.Now
-	}
-	return 0
-}
-
-func (x *AddJobsToWaitGroupRequest) GetMaxWaitGroupSize() int64 {
-	if x != nil {
-		return x.MaxWaitGroupSize
-	}
-	return 0
-}
-
-type AddJobsToWaitGroupResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	WaitGroup     *WaitGroup             `protobuf:"bytes,1,opt,name=wait_group,json=waitGroup,proto3" json:"wait_group,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *AddJobsToWaitGroupResponse) Reset() {
-	*x = AddJobsToWaitGroupResponse{}
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[13]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *AddJobsToWaitGroupResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*AddJobsToWaitGroupResponse) ProtoMessage() {}
-
-func (x *AddJobsToWaitGroupResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[13]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use AddJobsToWaitGroupResponse.ProtoReflect.Descriptor instead.
-func (*AddJobsToWaitGroupResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{13}
-}
-
-func (x *AddJobsToWaitGroupResponse) GetWaitGroup() *WaitGroup {
-	if x != nil {
-		return x.WaitGroup
-	}
-	return nil
-}
-
 type CompleteJobsFromWaitGroupRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
@@ -817,7 +721,7 @@ type CompleteJobsFromWaitGroupRequest struct {
 
 func (x *CompleteJobsFromWaitGroupRequest) Reset() {
 	*x = CompleteJobsFromWaitGroupRequest{}
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[14]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -829,7 +733,7 @@ func (x *CompleteJobsFromWaitGroupRequest) String() string {
 func (*CompleteJobsFromWaitGroupRequest) ProtoMessage() {}
 
 func (x *CompleteJobsFromWaitGroupRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[14]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -842,7 +746,7 @@ func (x *CompleteJobsFromWaitGroupRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CompleteJobsFromWaitGroupRequest.ProtoReflect.Descriptor instead.
 func (*CompleteJobsFromWaitGroupRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{14}
+	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *CompleteJobsFromWaitGroupRequest) GetNamespaceId() *NamespaceId {
@@ -883,7 +787,7 @@ type CompleteJobRequest struct {
 
 func (x *CompleteJobRequest) Reset() {
 	*x = CompleteJobRequest{}
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[15]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -895,7 +799,7 @@ func (x *CompleteJobRequest) String() string {
 func (*CompleteJobRequest) ProtoMessage() {}
 
 func (x *CompleteJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[15]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -908,7 +812,7 @@ func (x *CompleteJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CompleteJobRequest.ProtoReflect.Descriptor instead.
 func (*CompleteJobRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{15}
+	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *CompleteJobRequest) GetJobId() string {
@@ -934,7 +838,7 @@ type CompleteJobsFromWaitGroupResponse struct {
 
 func (x *CompleteJobsFromWaitGroupResponse) Reset() {
 	*x = CompleteJobsFromWaitGroupResponse{}
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[16]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -946,7 +850,7 @@ func (x *CompleteJobsFromWaitGroupResponse) String() string {
 func (*CompleteJobsFromWaitGroupResponse) ProtoMessage() {}
 
 func (x *CompleteJobsFromWaitGroupResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[16]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -959,7 +863,7 @@ func (x *CompleteJobsFromWaitGroupResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use CompleteJobsFromWaitGroupResponse.ProtoReflect.Descriptor instead.
 func (*CompleteJobsFromWaitGroupResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{16}
+	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *CompleteJobsFromWaitGroupResponse) GetWaitGroup() *WaitGroup {
@@ -981,7 +885,7 @@ type ListWaitGroupJobsRequest struct {
 
 func (x *ListWaitGroupJobsRequest) Reset() {
 	*x = ListWaitGroupJobsRequest{}
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[17]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -993,7 +897,7 @@ func (x *ListWaitGroupJobsRequest) String() string {
 func (*ListWaitGroupJobsRequest) ProtoMessage() {}
 
 func (x *ListWaitGroupJobsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[17]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1006,7 +910,7 @@ func (x *ListWaitGroupJobsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListWaitGroupJobsRequest.ProtoReflect.Descriptor instead.
 func (*ListWaitGroupJobsRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{17}
+	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ListWaitGroupJobsRequest) GetNamespaceId() *NamespaceId {
@@ -1048,7 +952,7 @@ type ListWaitGroupJobsResponse struct {
 
 func (x *ListWaitGroupJobsResponse) Reset() {
 	*x = ListWaitGroupJobsResponse{}
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[18]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1060,7 +964,7 @@ func (x *ListWaitGroupJobsResponse) String() string {
 func (*ListWaitGroupJobsResponse) ProtoMessage() {}
 
 func (x *ListWaitGroupJobsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[18]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1073,7 +977,7 @@ func (x *ListWaitGroupJobsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListWaitGroupJobsResponse.ProtoReflect.Descriptor instead.
 func (*ListWaitGroupJobsResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{18}
+	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *ListWaitGroupJobsResponse) GetJobs() []*WaitGroupJob {
@@ -1109,7 +1013,7 @@ type RunWaitGroupsGarbageCollectionRequest struct {
 
 func (x *RunWaitGroupsGarbageCollectionRequest) Reset() {
 	*x = RunWaitGroupsGarbageCollectionRequest{}
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[19]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1121,7 +1025,7 @@ func (x *RunWaitGroupsGarbageCollectionRequest) String() string {
 func (*RunWaitGroupsGarbageCollectionRequest) ProtoMessage() {}
 
 func (x *RunWaitGroupsGarbageCollectionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[19]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1134,7 +1038,7 @@ func (x *RunWaitGroupsGarbageCollectionRequest) ProtoReflect() protoreflect.Mess
 
 // Deprecated: Use RunWaitGroupsGarbageCollectionRequest.ProtoReflect.Descriptor instead.
 func (*RunWaitGroupsGarbageCollectionRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{19}
+	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *RunWaitGroupsGarbageCollectionRequest) GetNow() int64 {
@@ -1173,7 +1077,7 @@ type RunWaitGroupsGarbageCollectionResponse struct {
 
 func (x *RunWaitGroupsGarbageCollectionResponse) Reset() {
 	*x = RunWaitGroupsGarbageCollectionResponse{}
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[20]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1185,7 +1089,7 @@ func (x *RunWaitGroupsGarbageCollectionResponse) String() string {
 func (*RunWaitGroupsGarbageCollectionResponse) ProtoMessage() {}
 
 func (x *RunWaitGroupsGarbageCollectionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[20]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1198,7 +1102,7 @@ func (x *RunWaitGroupsGarbageCollectionResponse) ProtoReflect() protoreflect.Mes
 
 // Deprecated: Use RunWaitGroupsGarbageCollectionResponse.ProtoReflect.Descriptor instead.
 func (*RunWaitGroupsGarbageCollectionResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{20}
+	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{18}
 }
 
 type WaitGroupsDeleteNamespaceRequest struct {
@@ -1212,7 +1116,7 @@ type WaitGroupsDeleteNamespaceRequest struct {
 
 func (x *WaitGroupsDeleteNamespaceRequest) Reset() {
 	*x = WaitGroupsDeleteNamespaceRequest{}
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[21]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1224,7 +1128,7 @@ func (x *WaitGroupsDeleteNamespaceRequest) String() string {
 func (*WaitGroupsDeleteNamespaceRequest) ProtoMessage() {}
 
 func (x *WaitGroupsDeleteNamespaceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[21]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1237,7 +1141,7 @@ func (x *WaitGroupsDeleteNamespaceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WaitGroupsDeleteNamespaceRequest.ProtoReflect.Descriptor instead.
 func (*WaitGroupsDeleteNamespaceRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{21}
+	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *WaitGroupsDeleteNamespaceRequest) GetRecordId() uint64 {
@@ -1269,7 +1173,7 @@ type WaitGroupsDeleteNamespaceResponse struct {
 
 func (x *WaitGroupsDeleteNamespaceResponse) Reset() {
 	*x = WaitGroupsDeleteNamespaceResponse{}
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[22]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1281,7 +1185,7 @@ func (x *WaitGroupsDeleteNamespaceResponse) String() string {
 func (*WaitGroupsDeleteNamespaceResponse) ProtoMessage() {}
 
 func (x *WaitGroupsDeleteNamespaceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[22]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1294,7 +1198,7 @@ func (x *WaitGroupsDeleteNamespaceResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use WaitGroupsDeleteNamespaceResponse.ProtoReflect.Descriptor instead.
 func (*WaitGroupsDeleteNamespaceResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{22}
+	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{20}
 }
 
 type WaitGroup struct {
@@ -1315,7 +1219,7 @@ type WaitGroup struct {
 
 func (x *WaitGroup) Reset() {
 	*x = WaitGroup{}
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[23]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1327,7 +1231,7 @@ func (x *WaitGroup) String() string {
 func (*WaitGroup) ProtoMessage() {}
 
 func (x *WaitGroup) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[23]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1340,7 +1244,7 @@ func (x *WaitGroup) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WaitGroup.ProtoReflect.Descriptor instead.
 func (*WaitGroup) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{23}
+	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *WaitGroup) GetId() *WaitGroupId {
@@ -1424,7 +1328,7 @@ type WaitGroupJob struct {
 
 func (x *WaitGroupJob) Reset() {
 	*x = WaitGroupJob{}
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[24]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1436,7 +1340,7 @@ func (x *WaitGroupJob) String() string {
 func (*WaitGroupJob) ProtoMessage() {}
 
 func (x *WaitGroupJob) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[24]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1449,7 +1353,7 @@ func (x *WaitGroupJob) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WaitGroupJob.ProtoReflect.Descriptor instead.
 func (*WaitGroupJob) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{24}
+	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *WaitGroupJob) GetId() *WaitGroupJobId {
@@ -1485,7 +1389,7 @@ type WaitGroupJobId struct {
 
 func (x *WaitGroupJobId) Reset() {
 	*x = WaitGroupJobId{}
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[25]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1497,7 +1401,7 @@ func (x *WaitGroupJobId) String() string {
 func (*WaitGroupJobId) ProtoMessage() {}
 
 func (x *WaitGroupJobId) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[25]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1510,7 +1414,7 @@ func (x *WaitGroupJobId) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WaitGroupJobId.ProtoReflect.Descriptor instead.
 func (*WaitGroupJobId) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{25}
+	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *WaitGroupJobId) GetAccountId() uint64 {
@@ -1552,7 +1456,7 @@ type WaitGroupId struct {
 
 func (x *WaitGroupId) Reset() {
 	*x = WaitGroupId{}
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[26]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1564,7 +1468,7 @@ func (x *WaitGroupId) String() string {
 func (*WaitGroupId) ProtoMessage() {}
 
 func (x *WaitGroupId) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[26]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1577,7 +1481,7 @@ func (x *WaitGroupId) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WaitGroupId.ProtoReflect.Descriptor instead.
 func (*WaitGroupId) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{26}
+	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *WaitGroupId) GetAccountId() uint64 {
@@ -1610,7 +1514,7 @@ type WaitGroupsCounter struct {
 
 func (x *WaitGroupsCounter) Reset() {
 	*x = WaitGroupsCounter{}
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[27]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1622,7 +1526,7 @@ func (x *WaitGroupsCounter) String() string {
 func (*WaitGroupsCounter) ProtoMessage() {}
 
 func (x *WaitGroupsCounter) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[27]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1635,7 +1539,7 @@ func (x *WaitGroupsCounter) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WaitGroupsCounter.ProtoReflect.Descriptor instead.
 func (*WaitGroupsCounter) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{27}
+	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *WaitGroupsCounter) GetNumberOfWaitGroups() int64 {
@@ -1659,7 +1563,7 @@ type WaitGroupsGarbageCollectionRecord struct {
 
 func (x *WaitGroupsGarbageCollectionRecord) Reset() {
 	*x = WaitGroupsGarbageCollectionRecord{}
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[28]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1671,7 +1575,7 @@ func (x *WaitGroupsGarbageCollectionRecord) String() string {
 func (*WaitGroupsGarbageCollectionRecord) ProtoMessage() {}
 
 func (x *WaitGroupsGarbageCollectionRecord) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[28]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1684,7 +1588,7 @@ func (x *WaitGroupsGarbageCollectionRecord) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use WaitGroupsGarbageCollectionRecord.ProtoReflect.Descriptor instead.
 func (*WaitGroupsGarbageCollectionRecord) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{28}
+	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *WaitGroupsGarbageCollectionRecord) GetId() uint64 {
@@ -1745,7 +1649,7 @@ type WaitGroupsExpirationRecord struct {
 
 func (x *WaitGroupsExpirationRecord) Reset() {
 	*x = WaitGroupsExpirationRecord{}
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[29]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1757,7 +1661,7 @@ func (x *WaitGroupsExpirationRecord) String() string {
 func (*WaitGroupsExpirationRecord) ProtoMessage() {}
 
 func (x *WaitGroupsExpirationRecord) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[29]
+	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1770,7 +1674,7 @@ func (x *WaitGroupsExpirationRecord) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WaitGroupsExpirationRecord.ProtoReflect.Descriptor instead.
 func (*WaitGroupsExpirationRecord) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{29}
+	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *WaitGroupsExpirationRecord) GetWaitGroupId() *WaitGroupId {
@@ -1807,14 +1711,17 @@ const file_pkg_corepb_wait_groups_proto_rawDesc = "" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"^\n" +
 	"\x17CreateWaitGroupResponse\x12C\n" +
 	"\n" +
-	"wait_group\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.WaitGroupR\twaitGroup\"\xd1\x02\n" +
-	"\x16UpdateWaitGroupRequest\x12J\n" +
-	"\rwait_group_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.WaitGroupIdR\vwaitGroupId\x12 \n" +
-	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x10\n" +
-	"\x03now\x18\x03 \x01(\x03R\x03now\x12\x1d\n" +
+	"wait_group\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.WaitGroupR\twaitGroup\"\xbd\x03\n" +
+	"\x16UpdateWaitGroupRequest\x12I\n" +
+	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12&\n" +
+	"\x0fwait_group_name\x18\x02 \x01(\tR\rwaitGroupName\x12 \n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x10\n" +
+	"\x03now\x18\x04 \x01(\x03R\x03now\x12\x1d\n" +
 	"\n" +
-	"expires_at\x18\x04 \x01(\x03R\texpiresAt\x12[\n" +
-	"\bmetadata\x18\x05 \x03(\v2?.com.evrblk.grackle.corepb.UpdateWaitGroupRequest.MetadataEntryR\bmetadata\x1a;\n" +
+	"expires_at\x18\x05 \x01(\x03R\texpiresAt\x12\x18\n" +
+	"\acounter\x18\x06 \x01(\x04R\acounter\x12[\n" +
+	"\bmetadata\x18\a \x03(\v2?.com.evrblk.grackle.corepb.UpdateWaitGroupRequest.MetadataEntryR\bmetadata\x12)\n" +
+	"\x10expected_version\x18\b \x01(\x04R\x0fexpectedVersion\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"^\n" +
@@ -1845,16 +1752,7 @@ const file_pkg_corepb_wait_groups_proto_rawDesc = "" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12&\n" +
 	"\x0fwait_group_name\x18\x02 \x01(\tR\rwaitGroupName\x12\x1b\n" +
 	"\trecord_id\x18\x03 \x01(\x04R\brecordId\"\x19\n" +
-	"\x17DeleteWaitGroupResponse\"\xe9\x01\n" +
-	"\x19AddJobsToWaitGroupRequest\x12I\n" +
-	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12&\n" +
-	"\x0fwait_group_name\x18\x02 \x01(\tR\rwaitGroupName\x12\x18\n" +
-	"\acounter\x18\x03 \x01(\x04R\acounter\x12\x10\n" +
-	"\x03now\x18\x04 \x01(\x03R\x03now\x12-\n" +
-	"\x13max_wait_group_size\x18\x05 \x01(\x03R\x10maxWaitGroupSize\"a\n" +
-	"\x1aAddJobsToWaitGroupResponse\x12C\n" +
-	"\n" +
-	"wait_group\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.WaitGroupR\twaitGroup\"\xea\x01\n" +
+	"\x17DeleteWaitGroupResponse\"\xea\x01\n" +
 	" CompleteJobsFromWaitGroupRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12&\n" +
 	"\x0fwait_group_name\x18\x02 \x01(\tR\rwaitGroupName\x12A\n" +
@@ -1949,7 +1847,7 @@ func file_pkg_corepb_wait_groups_proto_rawDescGZIP() []byte {
 	return file_pkg_corepb_wait_groups_proto_rawDescData
 }
 
-var file_pkg_corepb_wait_groups_proto_msgTypes = make([]protoimpl.MessageInfo, 35)
+var file_pkg_corepb_wait_groups_proto_msgTypes = make([]protoimpl.MessageInfo, 33)
 var file_pkg_corepb_wait_groups_proto_goTypes = []any{
 	(*CreateWaitGroupRequest)(nil),                 // 0: com.evrblk.grackle.corepb.CreateWaitGroupRequest
 	(*CreateWaitGroupResponse)(nil),                // 1: com.evrblk.grackle.corepb.CreateWaitGroupResponse
@@ -1963,73 +1861,69 @@ var file_pkg_corepb_wait_groups_proto_goTypes = []any{
 	(*GetWaitGroupByNameResponse)(nil),             // 9: com.evrblk.grackle.corepb.GetWaitGroupByNameResponse
 	(*DeleteWaitGroupRequest)(nil),                 // 10: com.evrblk.grackle.corepb.DeleteWaitGroupRequest
 	(*DeleteWaitGroupResponse)(nil),                // 11: com.evrblk.grackle.corepb.DeleteWaitGroupResponse
-	(*AddJobsToWaitGroupRequest)(nil),              // 12: com.evrblk.grackle.corepb.AddJobsToWaitGroupRequest
-	(*AddJobsToWaitGroupResponse)(nil),             // 13: com.evrblk.grackle.corepb.AddJobsToWaitGroupResponse
-	(*CompleteJobsFromWaitGroupRequest)(nil),       // 14: com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupRequest
-	(*CompleteJobRequest)(nil),                     // 15: com.evrblk.grackle.corepb.CompleteJobRequest
-	(*CompleteJobsFromWaitGroupResponse)(nil),      // 16: com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupResponse
-	(*ListWaitGroupJobsRequest)(nil),               // 17: com.evrblk.grackle.corepb.ListWaitGroupJobsRequest
-	(*ListWaitGroupJobsResponse)(nil),              // 18: com.evrblk.grackle.corepb.ListWaitGroupJobsResponse
-	(*RunWaitGroupsGarbageCollectionRequest)(nil),  // 19: com.evrblk.grackle.corepb.RunWaitGroupsGarbageCollectionRequest
-	(*RunWaitGroupsGarbageCollectionResponse)(nil), // 20: com.evrblk.grackle.corepb.RunWaitGroupsGarbageCollectionResponse
-	(*WaitGroupsDeleteNamespaceRequest)(nil),       // 21: com.evrblk.grackle.corepb.WaitGroupsDeleteNamespaceRequest
-	(*WaitGroupsDeleteNamespaceResponse)(nil),      // 22: com.evrblk.grackle.corepb.WaitGroupsDeleteNamespaceResponse
-	(*WaitGroup)(nil),                              // 23: com.evrblk.grackle.corepb.WaitGroup
-	(*WaitGroupJob)(nil),                           // 24: com.evrblk.grackle.corepb.WaitGroupJob
-	(*WaitGroupJobId)(nil),                         // 25: com.evrblk.grackle.corepb.WaitGroupJobId
-	(*WaitGroupId)(nil),                            // 26: com.evrblk.grackle.corepb.WaitGroupId
-	(*WaitGroupsCounter)(nil),                      // 27: com.evrblk.grackle.corepb.WaitGroupsCounter
-	(*WaitGroupsGarbageCollectionRecord)(nil),      // 28: com.evrblk.grackle.corepb.WaitGroupsGarbageCollectionRecord
-	(*WaitGroupsExpirationRecord)(nil),             // 29: com.evrblk.grackle.corepb.WaitGroupsExpirationRecord
-	nil,                                            // 30: com.evrblk.grackle.corepb.CreateWaitGroupRequest.MetadataEntry
-	nil,                                            // 31: com.evrblk.grackle.corepb.UpdateWaitGroupRequest.MetadataEntry
-	nil,                                            // 32: com.evrblk.grackle.corepb.CompleteJobRequest.MetadataEntry
-	nil,                                            // 33: com.evrblk.grackle.corepb.WaitGroup.MetadataEntry
-	nil,                                            // 34: com.evrblk.grackle.corepb.WaitGroupJob.MetadataEntry
-	(*NamespaceId)(nil),                            // 35: com.evrblk.grackle.corepb.NamespaceId
-	(*PaginationToken)(nil),                        // 36: com.evrblk.grackle.corepb.PaginationToken
+	(*CompleteJobsFromWaitGroupRequest)(nil),       // 12: com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupRequest
+	(*CompleteJobRequest)(nil),                     // 13: com.evrblk.grackle.corepb.CompleteJobRequest
+	(*CompleteJobsFromWaitGroupResponse)(nil),      // 14: com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupResponse
+	(*ListWaitGroupJobsRequest)(nil),               // 15: com.evrblk.grackle.corepb.ListWaitGroupJobsRequest
+	(*ListWaitGroupJobsResponse)(nil),              // 16: com.evrblk.grackle.corepb.ListWaitGroupJobsResponse
+	(*RunWaitGroupsGarbageCollectionRequest)(nil),  // 17: com.evrblk.grackle.corepb.RunWaitGroupsGarbageCollectionRequest
+	(*RunWaitGroupsGarbageCollectionResponse)(nil), // 18: com.evrblk.grackle.corepb.RunWaitGroupsGarbageCollectionResponse
+	(*WaitGroupsDeleteNamespaceRequest)(nil),       // 19: com.evrblk.grackle.corepb.WaitGroupsDeleteNamespaceRequest
+	(*WaitGroupsDeleteNamespaceResponse)(nil),      // 20: com.evrblk.grackle.corepb.WaitGroupsDeleteNamespaceResponse
+	(*WaitGroup)(nil),                              // 21: com.evrblk.grackle.corepb.WaitGroup
+	(*WaitGroupJob)(nil),                           // 22: com.evrblk.grackle.corepb.WaitGroupJob
+	(*WaitGroupJobId)(nil),                         // 23: com.evrblk.grackle.corepb.WaitGroupJobId
+	(*WaitGroupId)(nil),                            // 24: com.evrblk.grackle.corepb.WaitGroupId
+	(*WaitGroupsCounter)(nil),                      // 25: com.evrblk.grackle.corepb.WaitGroupsCounter
+	(*WaitGroupsGarbageCollectionRecord)(nil),      // 26: com.evrblk.grackle.corepb.WaitGroupsGarbageCollectionRecord
+	(*WaitGroupsExpirationRecord)(nil),             // 27: com.evrblk.grackle.corepb.WaitGroupsExpirationRecord
+	nil,                                            // 28: com.evrblk.grackle.corepb.CreateWaitGroupRequest.MetadataEntry
+	nil,                                            // 29: com.evrblk.grackle.corepb.UpdateWaitGroupRequest.MetadataEntry
+	nil,                                            // 30: com.evrblk.grackle.corepb.CompleteJobRequest.MetadataEntry
+	nil,                                            // 31: com.evrblk.grackle.corepb.WaitGroup.MetadataEntry
+	nil,                                            // 32: com.evrblk.grackle.corepb.WaitGroupJob.MetadataEntry
+	(*NamespaceId)(nil),                            // 33: com.evrblk.grackle.corepb.NamespaceId
+	(*PaginationToken)(nil),                        // 34: com.evrblk.grackle.corepb.PaginationToken
 }
 var file_pkg_corepb_wait_groups_proto_depIdxs = []int32{
-	26, // 0: com.evrblk.grackle.corepb.CreateWaitGroupRequest.wait_group_id:type_name -> com.evrblk.grackle.corepb.WaitGroupId
-	30, // 1: com.evrblk.grackle.corepb.CreateWaitGroupRequest.metadata:type_name -> com.evrblk.grackle.corepb.CreateWaitGroupRequest.MetadataEntry
-	23, // 2: com.evrblk.grackle.corepb.CreateWaitGroupResponse.wait_group:type_name -> com.evrblk.grackle.corepb.WaitGroup
-	26, // 3: com.evrblk.grackle.corepb.UpdateWaitGroupRequest.wait_group_id:type_name -> com.evrblk.grackle.corepb.WaitGroupId
-	31, // 4: com.evrblk.grackle.corepb.UpdateWaitGroupRequest.metadata:type_name -> com.evrblk.grackle.corepb.UpdateWaitGroupRequest.MetadataEntry
-	23, // 5: com.evrblk.grackle.corepb.UpdateWaitGroupResponse.wait_group:type_name -> com.evrblk.grackle.corepb.WaitGroup
-	35, // 6: com.evrblk.grackle.corepb.ListWaitGroupsRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	36, // 7: com.evrblk.grackle.corepb.ListWaitGroupsRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	23, // 8: com.evrblk.grackle.corepb.ListWaitGroupsResponse.wait_groups:type_name -> com.evrblk.grackle.corepb.WaitGroup
-	36, // 9: com.evrblk.grackle.corepb.ListWaitGroupsResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	36, // 10: com.evrblk.grackle.corepb.ListWaitGroupsResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	26, // 11: com.evrblk.grackle.corepb.GetWaitGroupRequest.wait_group_id:type_name -> com.evrblk.grackle.corepb.WaitGroupId
-	23, // 12: com.evrblk.grackle.corepb.GetWaitGroupResponse.wait_group:type_name -> com.evrblk.grackle.corepb.WaitGroup
-	35, // 13: com.evrblk.grackle.corepb.GetWaitGroupByNameRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	23, // 14: com.evrblk.grackle.corepb.GetWaitGroupByNameResponse.wait_group:type_name -> com.evrblk.grackle.corepb.WaitGroup
-	35, // 15: com.evrblk.grackle.corepb.DeleteWaitGroupRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	35, // 16: com.evrblk.grackle.corepb.AddJobsToWaitGroupRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	23, // 17: com.evrblk.grackle.corepb.AddJobsToWaitGroupResponse.wait_group:type_name -> com.evrblk.grackle.corepb.WaitGroup
-	35, // 18: com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	15, // 19: com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupRequest.jobs:type_name -> com.evrblk.grackle.corepb.CompleteJobRequest
-	32, // 20: com.evrblk.grackle.corepb.CompleteJobRequest.metadata:type_name -> com.evrblk.grackle.corepb.CompleteJobRequest.MetadataEntry
-	23, // 21: com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupResponse.wait_group:type_name -> com.evrblk.grackle.corepb.WaitGroup
-	35, // 22: com.evrblk.grackle.corepb.ListWaitGroupJobsRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	36, // 23: com.evrblk.grackle.corepb.ListWaitGroupJobsRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	24, // 24: com.evrblk.grackle.corepb.ListWaitGroupJobsResponse.jobs:type_name -> com.evrblk.grackle.corepb.WaitGroupJob
-	36, // 25: com.evrblk.grackle.corepb.ListWaitGroupJobsResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	36, // 26: com.evrblk.grackle.corepb.ListWaitGroupJobsResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	35, // 27: com.evrblk.grackle.corepb.WaitGroupsDeleteNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	26, // 28: com.evrblk.grackle.corepb.WaitGroup.id:type_name -> com.evrblk.grackle.corepb.WaitGroupId
-	33, // 29: com.evrblk.grackle.corepb.WaitGroup.metadata:type_name -> com.evrblk.grackle.corepb.WaitGroup.MetadataEntry
-	25, // 30: com.evrblk.grackle.corepb.WaitGroupJob.id:type_name -> com.evrblk.grackle.corepb.WaitGroupJobId
-	34, // 31: com.evrblk.grackle.corepb.WaitGroupJob.metadata:type_name -> com.evrblk.grackle.corepb.WaitGroupJob.MetadataEntry
-	35, // 32: com.evrblk.grackle.corepb.WaitGroupsGarbageCollectionRecord.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	26, // 33: com.evrblk.grackle.corepb.WaitGroupsGarbageCollectionRecord.wait_group_id:type_name -> com.evrblk.grackle.corepb.WaitGroupId
-	26, // 34: com.evrblk.grackle.corepb.WaitGroupsExpirationRecord.wait_group_id:type_name -> com.evrblk.grackle.corepb.WaitGroupId
-	35, // [35:35] is the sub-list for method output_type
-	35, // [35:35] is the sub-list for method input_type
-	35, // [35:35] is the sub-list for extension type_name
-	35, // [35:35] is the sub-list for extension extendee
-	0,  // [0:35] is the sub-list for field type_name
+	24, // 0: com.evrblk.grackle.corepb.CreateWaitGroupRequest.wait_group_id:type_name -> com.evrblk.grackle.corepb.WaitGroupId
+	28, // 1: com.evrblk.grackle.corepb.CreateWaitGroupRequest.metadata:type_name -> com.evrblk.grackle.corepb.CreateWaitGroupRequest.MetadataEntry
+	21, // 2: com.evrblk.grackle.corepb.CreateWaitGroupResponse.wait_group:type_name -> com.evrblk.grackle.corepb.WaitGroup
+	33, // 3: com.evrblk.grackle.corepb.UpdateWaitGroupRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	29, // 4: com.evrblk.grackle.corepb.UpdateWaitGroupRequest.metadata:type_name -> com.evrblk.grackle.corepb.UpdateWaitGroupRequest.MetadataEntry
+	21, // 5: com.evrblk.grackle.corepb.UpdateWaitGroupResponse.wait_group:type_name -> com.evrblk.grackle.corepb.WaitGroup
+	33, // 6: com.evrblk.grackle.corepb.ListWaitGroupsRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	34, // 7: com.evrblk.grackle.corepb.ListWaitGroupsRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	21, // 8: com.evrblk.grackle.corepb.ListWaitGroupsResponse.wait_groups:type_name -> com.evrblk.grackle.corepb.WaitGroup
+	34, // 9: com.evrblk.grackle.corepb.ListWaitGroupsResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	34, // 10: com.evrblk.grackle.corepb.ListWaitGroupsResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	24, // 11: com.evrblk.grackle.corepb.GetWaitGroupRequest.wait_group_id:type_name -> com.evrblk.grackle.corepb.WaitGroupId
+	21, // 12: com.evrblk.grackle.corepb.GetWaitGroupResponse.wait_group:type_name -> com.evrblk.grackle.corepb.WaitGroup
+	33, // 13: com.evrblk.grackle.corepb.GetWaitGroupByNameRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	21, // 14: com.evrblk.grackle.corepb.GetWaitGroupByNameResponse.wait_group:type_name -> com.evrblk.grackle.corepb.WaitGroup
+	33, // 15: com.evrblk.grackle.corepb.DeleteWaitGroupRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	33, // 16: com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	13, // 17: com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupRequest.jobs:type_name -> com.evrblk.grackle.corepb.CompleteJobRequest
+	30, // 18: com.evrblk.grackle.corepb.CompleteJobRequest.metadata:type_name -> com.evrblk.grackle.corepb.CompleteJobRequest.MetadataEntry
+	21, // 19: com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupResponse.wait_group:type_name -> com.evrblk.grackle.corepb.WaitGroup
+	33, // 20: com.evrblk.grackle.corepb.ListWaitGroupJobsRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	34, // 21: com.evrblk.grackle.corepb.ListWaitGroupJobsRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	22, // 22: com.evrblk.grackle.corepb.ListWaitGroupJobsResponse.jobs:type_name -> com.evrblk.grackle.corepb.WaitGroupJob
+	34, // 23: com.evrblk.grackle.corepb.ListWaitGroupJobsResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	34, // 24: com.evrblk.grackle.corepb.ListWaitGroupJobsResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	33, // 25: com.evrblk.grackle.corepb.WaitGroupsDeleteNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	24, // 26: com.evrblk.grackle.corepb.WaitGroup.id:type_name -> com.evrblk.grackle.corepb.WaitGroupId
+	31, // 27: com.evrblk.grackle.corepb.WaitGroup.metadata:type_name -> com.evrblk.grackle.corepb.WaitGroup.MetadataEntry
+	23, // 28: com.evrblk.grackle.corepb.WaitGroupJob.id:type_name -> com.evrblk.grackle.corepb.WaitGroupJobId
+	32, // 29: com.evrblk.grackle.corepb.WaitGroupJob.metadata:type_name -> com.evrblk.grackle.corepb.WaitGroupJob.MetadataEntry
+	33, // 30: com.evrblk.grackle.corepb.WaitGroupsGarbageCollectionRecord.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	24, // 31: com.evrblk.grackle.corepb.WaitGroupsGarbageCollectionRecord.wait_group_id:type_name -> com.evrblk.grackle.corepb.WaitGroupId
+	24, // 32: com.evrblk.grackle.corepb.WaitGroupsExpirationRecord.wait_group_id:type_name -> com.evrblk.grackle.corepb.WaitGroupId
+	33, // [33:33] is the sub-list for method output_type
+	33, // [33:33] is the sub-list for method input_type
+	33, // [33:33] is the sub-list for extension type_name
+	33, // [33:33] is the sub-list for extension extendee
+	0,  // [0:33] is the sub-list for field type_name
 }
 
 func init() { file_pkg_corepb_wait_groups_proto_init() }
@@ -2039,7 +1933,7 @@ func file_pkg_corepb_wait_groups_proto_init() {
 	}
 	file_pkg_corepb_common_proto_init()
 	file_pkg_corepb_namespaces_proto_init()
-	file_pkg_corepb_wait_groups_proto_msgTypes[28].OneofWrappers = []any{
+	file_pkg_corepb_wait_groups_proto_msgTypes[26].OneofWrappers = []any{
 		(*WaitGroupsGarbageCollectionRecord_NamespaceId)(nil),
 		(*WaitGroupsGarbageCollectionRecord_WaitGroupId)(nil),
 	}
@@ -2049,7 +1943,7 @@ func file_pkg_corepb_wait_groups_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_corepb_wait_groups_proto_rawDesc), len(file_pkg_corepb_wait_groups_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   35,
+			NumMessages:   33,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

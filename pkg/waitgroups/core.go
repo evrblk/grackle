@@ -251,6 +251,7 @@ func (c *Core) CreateWaitGroup(req *coreapis.CreateWaitGroupRequest) (*coreapis.
 		UpdatedAt:   req.Payload.Now,
 		ExpiresAt:   req.Payload.ExpiresAt,
 		Metadata:    req.Payload.Metadata,
+		Version:     1,
 	}
 
 	err = c.waitGroups.Create(txn, waitGroup)
@@ -282,17 +283,18 @@ func (c *Core) CreateWaitGroup(req *coreapis.CreateWaitGroupRequest) (*coreapis.
 	}, nil
 }
 
-// UpdateWaitGroup updates the description, expiration time, and metadata of an
-// existing wait group. The wait group's name, counter, and completed count are
+// UpdateWaitGroup updates the description, expiration time, counter, and metadata
+// of an existing wait group. The wait group's name, and completed count are
 // immutable and are left untouched. When ExpiresAt changes the global
 // expiration index is reconciled (the old entry is removed and a new one
 // added) so that garbage collection fires at the new time rather than the old
-// one. Returns NotFound if the wait group does not exist.
+// one. It is not allowed to shrink counter below the current number of completed
+// jobs. Returns NotFound if the wait group does not exist.
 func (c *Core) UpdateWaitGroup(req *coreapis.UpdateWaitGroupRequest) (*coreapis.UpdateWaitGroupResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
-	waitGroup, err := c.waitGroups.Get(txn, req.Payload.WaitGroupId)
+	waitGroup, err := c.waitGroups.GetByName(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, req.Payload.WaitGroupName)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.UpdateWaitGroupResponse{
@@ -300,12 +302,40 @@ func (c *Core) UpdateWaitGroup(req *coreapis.UpdateWaitGroupRequest) (*coreapis.
 					monsterax.NotFound,
 					"wait group not found",
 					map[string]string{
-						"wait_group_id": ids.EncodeWaitGroupId(req.Payload.WaitGroupId),
+						"wait_group_name": req.Payload.WaitGroupName,
 					}),
 			}, nil
 		}
 
 		return nil, err
+	}
+
+	if waitGroup.Version != req.Payload.ExpectedVersion {
+		return &coreapis.UpdateWaitGroupResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.InvalidArgument,
+				"version mismatch",
+				map[string]string{
+					"wait_group_name":  req.Payload.WaitGroupName,
+					"actual_version":   fmt.Sprintf("%d", waitGroup.Version),
+					"expected_version": fmt.Sprintf("%d", req.Payload.ExpectedVersion),
+				},
+			),
+		}, nil
+	}
+
+	if waitGroup.Completed > req.Payload.Counter {
+		return &coreapis.UpdateWaitGroupResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.InvalidArgument,
+				"there are currently more completed processes than the new counter",
+				map[string]string{
+					"wait_group_name": req.Payload.WaitGroupName,
+					"completed":       fmt.Sprintf("%d", waitGroup.Completed),
+					"new_counter":     fmt.Sprintf("%d", req.Payload.Counter),
+				},
+			),
+		}, nil
 	}
 
 	// Reconcile the global expiration index when expires_at changes. Without
@@ -326,6 +356,8 @@ func (c *Core) UpdateWaitGroup(req *coreapis.UpdateWaitGroupRequest) (*coreapis.
 	waitGroup.ExpiresAt = req.Payload.ExpiresAt
 	waitGroup.Metadata = req.Payload.Metadata
 	waitGroup.UpdatedAt = req.Payload.Now
+	waitGroup.Version += 1
+	waitGroup.Counter = req.Payload.Counter
 
 	err = c.waitGroups.Update(txn, waitGroup)
 	if err != nil {
@@ -402,60 +434,6 @@ func (c *Core) DeleteWaitGroup(req *coreapis.DeleteWaitGroupRequest) (*coreapis.
 	}, nil
 }
 
-// AddJobsToWaitGroup grows the wait group's expected-job counter by
-// req.Counter. Returns NotFound if the wait group does not exist, or
-// ResourceExhausted if the resulting counter would exceed MaxWaitGroupSize.
-func (c *Core) AddJobsToWaitGroup(req *coreapis.AddJobsToWaitGroupRequest) (*coreapis.AddJobsToWaitGroupResponse, error) {
-	txn := c.badgerStore.Update()
-	defer txn.Discard()
-
-	waitGroup, err := c.waitGroups.GetByName(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, req.Payload.WaitGroupName)
-	if err != nil {
-		if errors.Is(err, store.ErrNotFound) {
-			return &coreapis.AddJobsToWaitGroupResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
-					"wait group not found",
-					map[string]string{
-						"wait_group_name": req.Payload.WaitGroupName,
-					}),
-			}, nil
-		}
-
-		return nil, err
-	}
-
-	// Check if wait group is too big
-	if waitGroup.Counter+req.Payload.Counter > uint64(req.Payload.MaxWaitGroupSize) {
-		return &coreapis.AddJobsToWaitGroupResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.ResourceExhausted,
-				"wait group counter is too big",
-				map[string]string{"limit": fmt.Sprintf("%d", req.Payload.MaxWaitGroupSize)},
-			),
-		}, nil
-	}
-
-	waitGroup.Counter += req.Payload.Counter
-	waitGroup.UpdatedAt = req.Payload.Now
-
-	err = c.waitGroups.Update(txn, waitGroup)
-	if err != nil {
-		return nil, err
-	}
-
-	err = txn.Commit()
-	if err != nil {
-		return nil, err
-	}
-
-	return &coreapis.AddJobsToWaitGroupResponse{
-		Payload: &corepb.AddJobsToWaitGroupResponse{
-			WaitGroup: waitGroup,
-		},
-	}, nil
-}
-
 // CompleteJobsFromWaitGroup marks each given job id as completed in the
 // named wait group, incrementing the Completed counter once per previously
 // unseen job id (re-completing an already-completed job is a no-op).
@@ -502,7 +480,7 @@ func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroup
 					return nil, err
 				}
 
-				// Increment counter only if we haven't seen this process_id before
+				// Increment counter only if we haven't seen this job_id before
 				waitGroup.Completed++
 			} else {
 				return nil, err

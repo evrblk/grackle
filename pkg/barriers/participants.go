@@ -68,10 +68,10 @@ type listParticipantResult struct {
 	previousPaginationToken *corepb.PaginationToken
 }
 
-func (t *participantsTable) List(txn *store.Txn, accountId uint64, namespaceId uint32, semaphoreId uint64,
+func (t *participantsTable) List(txn *store.Txn, accountId uint64, namespaceId uint32, barrierId uint64,
 	paginationToken *corepb.PaginationToken, limit int) (*listParticipantResult, error) {
 	result, err := t.table.ListPaginated(txn,
-		t.tablePK(accountId, namespaceId, semaphoreId),
+		t.tablePK(accountId, namespaceId, barrierId),
 		pagination.CoreToMonstera(paginationToken),
 		limit)
 	if err != nil {

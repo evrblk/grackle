@@ -6,8 +6,9 @@ option go_package = "github.com/evrblk/grackle/pkg/corepb";
 
 message PaginationToken {
   enum Type {
-    NEXT = 0;
-    PREVIOUS = 1;
+    INVALID = 0;
+    NEXT = 1;
+    PREVIOUS = 2;
   }
 
   Type type = 1;
@@ -25,4 +26,5 @@ message Lease {
   string process_id = 2;
   int64 created_at = 3;
   int64 expires_at = 4;
+  map<string, string> metadata = 5;
 }

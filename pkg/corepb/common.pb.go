@@ -24,19 +24,22 @@ const (
 type PaginationToken_Type int32
 
 const (
-	PaginationToken_NEXT     PaginationToken_Type = 0
-	PaginationToken_PREVIOUS PaginationToken_Type = 1
+	PaginationToken_INVALID  PaginationToken_Type = 0
+	PaginationToken_NEXT     PaginationToken_Type = 1
+	PaginationToken_PREVIOUS PaginationToken_Type = 2
 )
 
 // Enum value maps for PaginationToken_Type.
 var (
 	PaginationToken_Type_name = map[int32]string{
-		0: "NEXT",
-		1: "PREVIOUS",
+		0: "INVALID",
+		1: "NEXT",
+		2: "PREVIOUS",
 	}
 	PaginationToken_Type_value = map[string]int32{
-		"NEXT":     0,
-		"PREVIOUS": 1,
+		"INVALID":  0,
+		"NEXT":     1,
+		"PREVIOUS": 2,
 	}
 )
 
@@ -109,7 +112,7 @@ func (x *PaginationToken) GetType() PaginationToken_Type {
 	if x != nil {
 		return x.Type
 	}
-	return PaginationToken_NEXT
+	return PaginationToken_INVALID
 }
 
 func (x *PaginationToken) GetValue() []byte {
@@ -185,6 +188,7 @@ type Lease struct {
 	ProcessId     string                 `protobuf:"bytes,2,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
 	CreatedAt     int64                  `protobuf:"varint,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	ExpiresAt     int64                  `protobuf:"varint,4,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	Metadata      map[string]string      `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -247,22 +251,30 @@ func (x *Lease) GetExpiresAt() int64 {
 	return 0
 }
 
+func (x *Lease) GetMetadata() map[string]string {
+	if x != nil {
+		return x.Metadata
+	}
+	return nil
+}
+
 var File_pkg_corepb_common_proto protoreflect.FileDescriptor
 
 const file_pkg_corepb_common_proto_rawDesc = "" +
 	"\n" +
-	"\x17pkg/corepb/common.proto\x12\x19com.evrblk.grackle.corepb\"\x8c\x01\n" +
+	"\x17pkg/corepb/common.proto\x12\x19com.evrblk.grackle.corepb\"\x99\x01\n" +
 	"\x0fPaginationToken\x12C\n" +
 	"\x04type\x18\x01 \x01(\x0e2/.com.evrblk.grackle.corepb.PaginationToken.TypeR\x04type\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\fR\x05value\"\x1e\n" +
-	"\x04Type\x12\b\n" +
-	"\x04NEXT\x10\x00\x12\f\n" +
-	"\bPREVIOUS\x10\x01\"f\n" +
+	"\x05value\x18\x02 \x01(\fR\x05value\"+\n" +
+	"\x04Type\x12\v\n" +
+	"\aINVALID\x10\x00\x12\b\n" +
+	"\x04NEXT\x10\x01\x12\f\n" +
+	"\bPREVIOUS\x10\x02\"f\n" +
 	"\aLeaseId\x12\x1d\n" +
 	"\n" +
 	"account_id\x18\x01 \x01(\x04R\taccountId\x12!\n" +
 	"\fnamespace_id\x18\x02 \x01(\rR\vnamespaceId\x12\x19\n" +
-	"\blease_id\x18\x03 \x01(\x04R\aleaseId\"\x98\x01\n" +
+	"\blease_id\x18\x03 \x01(\x04R\aleaseId\"\xa1\x02\n" +
 	"\x05Lease\x122\n" +
 	"\x02id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\x02id\x12\x1d\n" +
 	"\n" +
@@ -270,7 +282,11 @@ const file_pkg_corepb_common_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x03 \x01(\x03R\tcreatedAt\x12\x1d\n" +
 	"\n" +
-	"expires_at\x18\x04 \x01(\x03R\texpiresAtB&Z$github.com/evrblk/grackle/pkg/corepbb\x06proto3"
+	"expires_at\x18\x04 \x01(\x03R\texpiresAt\x12J\n" +
+	"\bmetadata\x18\x05 \x03(\v2..com.evrblk.grackle.corepb.Lease.MetadataEntryR\bmetadata\x1a;\n" +
+	"\rMetadataEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B&Z$github.com/evrblk/grackle/pkg/corepbb\x06proto3"
 
 var (
 	file_pkg_corepb_common_proto_rawDescOnce sync.Once
@@ -285,21 +301,23 @@ func file_pkg_corepb_common_proto_rawDescGZIP() []byte {
 }
 
 var file_pkg_corepb_common_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_pkg_corepb_common_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_pkg_corepb_common_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_pkg_corepb_common_proto_goTypes = []any{
 	(PaginationToken_Type)(0), // 0: com.evrblk.grackle.corepb.PaginationToken.Type
 	(*PaginationToken)(nil),   // 1: com.evrblk.grackle.corepb.PaginationToken
 	(*LeaseId)(nil),           // 2: com.evrblk.grackle.corepb.LeaseId
 	(*Lease)(nil),             // 3: com.evrblk.grackle.corepb.Lease
+	nil,                       // 4: com.evrblk.grackle.corepb.Lease.MetadataEntry
 }
 var file_pkg_corepb_common_proto_depIdxs = []int32{
 	0, // 0: com.evrblk.grackle.corepb.PaginationToken.type:type_name -> com.evrblk.grackle.corepb.PaginationToken.Type
 	2, // 1: com.evrblk.grackle.corepb.Lease.id:type_name -> com.evrblk.grackle.corepb.LeaseId
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	4, // 2: com.evrblk.grackle.corepb.Lease.metadata:type_name -> com.evrblk.grackle.corepb.Lease.MetadataEntry
+	3, // [3:3] is the sub-list for method output_type
+	3, // [3:3] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_pkg_corepb_common_proto_init() }
@@ -313,7 +331,7 @@ func file_pkg_corepb_common_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_corepb_common_proto_rawDesc), len(file_pkg_corepb_common_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   3,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -351,18 +351,20 @@ func TestUpdateSemaphore(t *testing.T) {
 
 		// Valid request
 		resp, err := server.UpdateSemaphore(ctx, &gracklepb.UpdateSemaphoreRequest{
-			NamespaceName: "namespace1",
-			SemaphoreName: "semaphore1",
-			Permits:       10,
+			NamespaceName:   "namespace1",
+			SemaphoreName:   "semaphore1",
+			Permits:         10,
+			ExpectedVersion: 1,
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp.Semaphore)
 
 		// Invalid request - invalid namespace name
 		_, err = server.UpdateSemaphore(ctx, &gracklepb.UpdateSemaphoreRequest{
-			NamespaceName: "invalid@namespace",
-			SemaphoreName: "semaphore1",
-			Permits:       10,
+			NamespaceName:   "invalid@namespace",
+			SemaphoreName:   "semaphore1",
+			Permits:         10,
+			ExpectedVersion: 2,
 		})
 		require.Error(t, err)
 	})
@@ -387,9 +389,10 @@ func TestUpdateSemaphore(t *testing.T) {
 
 		// Test valid update (within limits)
 		resp, err := server.UpdateSemaphore(ctx, &gracklepb.UpdateSemaphoreRequest{
-			NamespaceName: "namespace1",
-			SemaphoreName: "semaphore1",
-			Permits:       uint64(grackle.DefaultServiceLimits.MaxNumberOfSemaphoreHolders), // Max allowed by account limits
+			NamespaceName:   "namespace1",
+			SemaphoreName:   "semaphore1",
+			Permits:         uint64(grackle.DefaultServiceLimits.MaxNumberOfSemaphoreHolders), // Max allowed by account limits
+			ExpectedVersion: 1,
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp.Semaphore)
@@ -397,9 +400,10 @@ func TestUpdateSemaphore(t *testing.T) {
 
 		// Test update exceeding account limits
 		_, err = server.UpdateSemaphore(ctx, &gracklepb.UpdateSemaphoreRequest{
-			NamespaceName: "namespace1",
-			SemaphoreName: "semaphore1",
-			Permits:       uint64(grackle.DefaultServiceLimits.MaxNumberOfSemaphoreHolders + 1), // Exceeds MaxNumberOfSemaphoreHolders
+			NamespaceName:   "namespace1",
+			SemaphoreName:   "semaphore1",
+			Permits:         uint64(grackle.DefaultServiceLimits.MaxNumberOfSemaphoreHolders + 1), // Exceeds MaxNumberOfSemaphoreHolders
+			ExpectedVersion: 1,
 		})
 		require.Error(t, err)
 		require.Contains(t, err.Error(), fmt.Sprintf("semaphore size is too big, max: %d", grackle.DefaultServiceLimits.MaxNumberOfSemaphoreHolders))

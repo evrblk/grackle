@@ -12,16 +12,28 @@ wait groups and barriers.
 Durations are the exception: lease TTLs and blocking-call timeouts are expressed in **seconds**
 (`ttl_seconds`, `timeout_seconds`), because they are relative offsets rather than points in time.
 
-## Updates replace the whole record
+## Updates
 
 `Update*` calls (`UpdateNamespace`, `UpdateWaitGroup`, `UpdateSemaphore`, `UpdateBarrier`) perform a
 **full replacement** of the entity's mutable fields with the values in the request — they are not
 partial patches and do not merge deltas. A field left at its zero value in the request is written
-as that zero value: omitting `metadata` clears it, sending an empty `description` blanks it.
+as that zero value: omitting `metadata` clears it, sending an empty `description` blanks it. Send the
+complete desired state of every mutable field, not just the ones you intend to change. Immutable
+fields (a namespace's name, a wait group's `counter`, etc.) are not part of the update surface — see
+each primitive's page for what is mutable.
 
-The practical rule: read-modify-write. Send the complete desired state of every mutable field, not
-just the ones you intend to change. Immutable fields (a namespace's name, a wait group's `counter`,
-etc.) are not part of the update surface — see each primitive's page for what is mutable.
+Updates are guarded against lost updates with optimistic concurrency control. Every updatable entity
+carries a `version` field: it is `1` when the entity is created, is incremented by one on every
+successful update, and is returned on reads and in the response of each create/update call. Each
+`Update*` request carries an `expected_version` field, and the update is applied only if it matches
+the entity's current `version`. On a match the entity is updated and its `version` is bumped; on a
+mismatch the call is rejected with an `InvalidArgument` "version mismatch" error and **nothing is
+changed**.
+
+Together these make the read-modify-write cycle safe under concurrency: read the entity (which yields
+its `version`), modify the mutable fields, then send the complete desired state back with that
+`version` as `expected_version`. If the update is rejected with a version mismatch, another writer
+committed a change after your read — re-read the latest state and retry.
 
 ## Metadata
 
@@ -49,7 +61,7 @@ Every `List*` endpoint returns results one page at a time.
 
 **Request.** Two fields control paging:
 
-* `limit` — the maximum number of entries to return in the page. Valid range is 1–100; if it is 0
+* `limit` — the maximum number of entries to return in the page. Valid range is 1–250; if it is 0
   or omitted, the default page size of 100 is used.
 * `pagination_token` — an opaque cursor identifying where the page starts. Leave it empty to fetch
   the first page.

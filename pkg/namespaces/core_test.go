@@ -185,7 +185,7 @@ func TestCore_GetNamespaceByName(t *testing.T) {
 
 		// Update namespace
 		updateTime := now.Add(time.Hour)
-		_ = updateNamespace(t, core, namespaceId, "updated description", updateTime)
+		_ = updateNamespace(t, core, accountId, "test_namespace", "updated description", 1, updateTime)
 
 		// Get namespace by name and verify update
 		namespace := getNamespaceByName(t, core, accountId, "test_namespace")
@@ -262,7 +262,7 @@ func TestCore_UpdateNamespace(t *testing.T) {
 
 		// Update the namespace
 		updateTime := time.Now().Add(time.Hour)
-		namespace := updateNamespace(t, core, namespaceId, "updated description", updateTime)
+		namespace := updateNamespace(t, core, accountId, "namespace_1", "updated description", 1, updateTime)
 		require.Equal(t, "updated description", namespace.Description)
 		require.Equal(t, updateTime.UnixNano(), namespace.UpdatedAt)
 		require.Equal(t, now.UnixNano(), namespace.CreatedAt)
@@ -276,13 +276,73 @@ func TestCore_UpdateNamespace(t *testing.T) {
 	t.Run("update nonexistent namespace", func(t *testing.T) {
 		core := newNamespacesCore(t)
 		now := time.Now()
+
+		appErr := updateNamespaceWithError(t, core, rand.Uint64(), "nonexistent_namespace", "updated description", 2, now)
+		require.Equal(t, monsterax.NotFound, appErr.Code)
+	})
+
+	t.Run("version increments on each successful update", func(t *testing.T) {
+		core := newNamespacesCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
-			AccountId:   rand.Uint64(),
+			AccountId:   accountId,
 			NamespaceId: rand.Uint32(),
 		}
 
-		appErr := updateNamespaceWithError(t, core, namespaceId, "updated description", now)
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		// A freshly created namespace starts at version 1
+		created := createNamespace(t, core, namespaceId, "namespace_1", 20, now)
+		require.EqualValues(t, 1, created.Version)
+
+		// Updating with the matching current version succeeds and bumps the version
+		updated := updateNamespace(t, core, accountId, "namespace_1", "desc v2", 1, now.Add(time.Minute))
+		require.EqualValues(t, 2, updated.Version)
+
+		// The next update must use the new version
+		updated = updateNamespace(t, core, accountId, "namespace_1", "desc v3", 2, now.Add(2*time.Minute))
+		require.EqualValues(t, 3, updated.Version)
+	})
+
+	t.Run("update with stale version", func(t *testing.T) {
+		core := newNamespacesCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
+
+		_ = createNamespace(t, core, namespaceId, "namespace_1", 20, now)
+
+		// First update with version 1 succeeds (namespace is now at version 2)
+		_ = updateNamespace(t, core, accountId, "namespace_1", "desc v2", 1, now.Add(time.Minute))
+
+		// Reusing the stale version 1 is rejected with a version mismatch
+		appErr := updateNamespaceWithError(t, core, accountId, "namespace_1", "desc v3", 1, now.Add(2*time.Minute))
+		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Contains(t, appErr.Message, "version mismatch")
+
+		// The rejected update did not change anything
+		namespace := getNamespace(t, core, namespaceId)
+		require.Equal(t, "desc v2", namespace.Description)
+		require.EqualValues(t, 2, namespace.Version)
+	})
+
+	t.Run("update with future version", func(t *testing.T) {
+		core := newNamespacesCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint32(),
+		}
+
+		_ = createNamespace(t, core, namespaceId, "namespace_1", 20, now)
+
+		// Passing a version the namespace has never reached is rejected
+		appErr := updateNamespaceWithError(t, core, accountId, "namespace_1", "desc", 99, now.Add(time.Minute))
+		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Contains(t, appErr.Message, "version mismatch")
 	})
 }
 
@@ -303,7 +363,7 @@ func TestCore_DeleteNamespace(t *testing.T) {
 		_ = getNamespace(t, core, namespaceId)
 
 		// Delete the namespace
-		_ = deleteNamespace(t, core, namespaceId, now)
+		_ = deleteNamespace(t, core, accountId, "test_namespace", now)
 
 		// Verify the namespace no longer exists
 		appErr := getNamespaceWithError(t, core, namespaceId)
@@ -313,12 +373,8 @@ func TestCore_DeleteNamespace(t *testing.T) {
 	t.Run("delete nonexistent namespace", func(t *testing.T) {
 		core := newNamespacesCore(t)
 		now := time.Now()
-		namepsaceId := &corepb.NamespaceId{
-			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
-		}
 
-		_ = deleteNamespace(t, core, namepsaceId, now)
+		_ = deleteNamespace(t, core, rand.Uint64(), "nonexistent_namespace", now)
 	})
 
 	t.Run("delete with multiple namespaces", func(t *testing.T) {
@@ -343,7 +399,7 @@ func TestCore_DeleteNamespace(t *testing.T) {
 		require.Len(t, list.Namespaces, 2)
 
 		// Delete the first namespace
-		_ = deleteNamespace(t, core, namespace1Id, now)
+		_ = deleteNamespace(t, core, accountId, "test_namespace_1", now)
 
 		// Verify only the second namespace remains
 		list = listNamespaces(t, core, accountId)
@@ -390,7 +446,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 
 		// Update a namespace after snapshot
 		updateTime := now.Add(time.Hour)
-		_ = updateNamespace(t, core1, namespace1Id, "updated description", updateTime)
+		_ = updateNamespace(t, core1, accountId, "test_namespace_1", "updated description", 1, updateTime)
 
 		// Create another namespace after snapshot
 		_ = createNamespace(t, core1, namespace3Id, "test_namespace_3", 20, now.Add(2*time.Hour))
@@ -516,7 +572,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 
 		// Update namespace in restored core
 		updateTime := now.Add(time.Hour)
-		namespace := updateNamespace(t, core2, namespace1Id, "updated after restore", updateTime)
+		namespace := updateNamespace(t, core2, accountId, "test_namespace", "updated after restore", 1, updateTime)
 		require.Equal(t, "updated after restore", namespace.Description)
 
 		// Create new namespace in restored core
@@ -531,8 +587,9 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 func TestCore_NamespaceMetadata(t *testing.T) {
 	core := newNamespacesCore(t)
 	now := time.Now()
+	accountId := rand.Uint64()
 	namespaceId := &corepb.NamespaceId{
-		AccountId:   rand.Uint64(),
+		AccountId:   accountId,
 		NamespaceId: rand.Uint32(),
 	}
 
@@ -558,10 +615,12 @@ func TestCore_NamespaceMetadata(t *testing.T) {
 	// Update namespace metadata
 	resp2, err := core.UpdateNamespace(&coreapis.UpdateNamespaceRequest{
 		Payload: &corepb.UpdateNamespaceRequest{
-			NamespaceId: namespaceId,
-			Description: "updated description",
-			Now:         now.Add(time.Minute).UnixNano(),
-			Metadata:    map[string]string{"team": "search", "cost-center": "5678"},
+			AccountId:       accountId,
+			NamespaceName:   "test_namespace",
+			Description:     "updated description",
+			Now:             now.Add(time.Minute).UnixNano(),
+			Metadata:        map[string]string{"team": "search", "cost-center": "5678"},
+			ExpectedVersion: 1,
 		},
 	})
 	require.NoError(t, err)
@@ -711,14 +770,16 @@ func listNamespaces(t *testing.T, core *Core, accountId uint64) *corepb.ListName
 	return resp.Payload
 }
 
-func updateNamespace(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, description string, now time.Time) *corepb.Namespace {
+func updateNamespace(t *testing.T, core *Core, accountId uint64, namespaceName string, description string, version uint64, now time.Time) *corepb.Namespace {
 	t.Helper()
 
 	resp, err := core.UpdateNamespace(&coreapis.UpdateNamespaceRequest{
 		Payload: &corepb.UpdateNamespaceRequest{
-			NamespaceId: namespaceId,
-			Description: description,
-			Now:         now.UnixNano(),
+			AccountId:       accountId,
+			NamespaceName:   namespaceName,
+			Description:     description,
+			Now:             now.UnixNano(),
+			ExpectedVersion: version,
 		},
 	})
 
@@ -731,14 +792,16 @@ func updateNamespace(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, 
 	return resp.Payload.Namespace
 }
 
-func updateNamespaceWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, description string, now time.Time) *monsterax.Error {
+func updateNamespaceWithError(t *testing.T, core *Core, accountId uint64, namespaceName string, description string, version uint64, now time.Time) *monsterax.Error {
 	t.Helper()
 
 	resp, err := core.UpdateNamespace(&coreapis.UpdateNamespaceRequest{
 		Payload: &corepb.UpdateNamespaceRequest{
-			NamespaceId: namespaceId,
-			Description: description,
-			Now:         now.UnixNano(),
+			AccountId:       accountId,
+			NamespaceName:   namespaceName,
+			Description:     description,
+			Now:             now.UnixNano(),
+			ExpectedVersion: version,
 		},
 	})
 
@@ -750,12 +813,13 @@ func updateNamespaceWithError(t *testing.T, core *Core, namespaceId *corepb.Name
 	return resp.ApplicationError
 }
 
-func deleteNamespace(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, now time.Time) *corepb.DeleteNamespaceResponse {
+func deleteNamespace(t *testing.T, core *Core, accountId uint64, namespaceName string, now time.Time) *corepb.DeleteNamespaceResponse {
 	t.Helper()
 
 	resp, err := core.DeleteNamespace(&coreapis.DeleteNamespaceRequest{
 		Payload: &corepb.DeleteNamespaceRequest{
-			NamespaceId: namespaceId,
+			AccountId:     accountId,
+			NamespaceName: namespaceName,
 		},
 	})
 

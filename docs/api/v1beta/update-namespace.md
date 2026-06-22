@@ -8,10 +8,14 @@ Safe to retry.
 
 ## Request
 
+* `expected_version` enables optimistic locking: the update is applied only if it equals the
+  namespace's current `version`. See [Updates](/docs/api-overview.md#updates).
+
 ```json
 {
   "namespace_name": "UserObjects",
   "description": "Updated description",
+  "expected_version": 1,
   "metadata": {
     "team": "identity"
   }
@@ -21,6 +25,7 @@ Safe to retry.
 ## Response
 
 * Returns `NotFound` if the namespace does not exist.
+* Returns `InvalidArgument` if `expected_version` does not match the namespace's current `version`.
 * `version` is bumped on every successful update.
 
 ```json

@@ -509,7 +509,7 @@ func TestCore_UpdateSemaphore(t *testing.T) {
 		_ = createSemaphore(t, core, semaphoreId, "test_semaphore", 2, now)
 
 		// T+1m: Update semaphore
-		_ = updateSemaphore(t, core, namespaceId, "test_semaphore", "updated description", 3, now.Add(time.Minute))
+		_ = updateSemaphore(t, core, namespaceId, "test_semaphore", "updated description", 3, 1, now.Add(time.Minute))
 
 		// T+2m: Get updated semaphore
 		semaphore := getSemaphore(t, core, semaphoreId, now.Add(2*time.Minute))
@@ -554,7 +554,7 @@ func TestCore_UpdateSemaphore(t *testing.T) {
 		require.EqualValues(t, 3, semaphore.ActiveHoldersCount)
 
 		// T+5m: Try to update semaphore to reduce permits to 2 (less than current holders)
-		appErr := updateSemaphoreWithError(t, core, namespaceId, "test_semaphore", "updated description", 2, now.Add(5*time.Minute))
+		appErr := updateSemaphoreWithError(t, core, namespaceId, "test_semaphore", "updated description", 2, 1, now.Add(5*time.Minute))
 		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
 
 		// Verify the semaphore was not updated
@@ -574,7 +574,7 @@ func TestCore_UpdateSemaphore(t *testing.T) {
 		}
 
 		// Try to update a nonexistent semaphore
-		appErr := updateSemaphoreWithError(t, core, namespaceId, "nonexistent_semaphore", "updated description", 3, now)
+		appErr := updateSemaphoreWithError(t, core, namespaceId, "nonexistent_semaphore", "updated description", 3, 1, now)
 		require.Equal(t, monsterax.NotFound, appErr.Code)
 	})
 
@@ -603,7 +603,7 @@ func TestCore_UpdateSemaphore(t *testing.T) {
 
 		// T+2m: the only holder has expired. UpdateSemaphore prunes it and must clean up
 		// the index row that was tracking it.
-		_ = updateSemaphore(t, core, namespaceId, "sema", "updated", 3, now.Add(2*time.Minute))
+		_ = updateSemaphore(t, core, namespaceId, "sema", "updated", 3, 1, now.Add(2*time.Minute))
 		require.Empty(t, listExpirationRecords(t, core, semaphoreId))
 
 		stored, err := core.semaphores.Get(core.badgerStore.View(), semaphoreId)
@@ -639,13 +639,90 @@ func TestCore_UpdateSemaphore(t *testing.T) {
 
 		// T+2m: the short-lived holder is gone. UpdateSemaphore prunes it and must move the
 		// index row from the short lease's expiration to the long lease's.
-		updated := updateSemaphore(t, core, namespaceId, "sema", "updated", 5, now.Add(2*time.Minute))
+		updated := updateSemaphore(t, core, namespaceId, "sema", "updated", 5, 1, now.Add(2*time.Minute))
 		require.Equal(t, longLease.ExpiresAt, updated.EarliestHolderExpiresAt)
 		require.Equal(t, []int64{longLease.ExpiresAt}, listExpirationRecords(t, core, semaphoreId))
 
 		stored, err := core.semaphores.Get(core.badgerStore.View(), semaphoreId)
 		require.NoError(t, err)
 		require.Equal(t, longLease.ExpiresAt, stored.EarliestHolderExpiresAt)
+	})
+
+	t.Run("version increments on each successful update", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+		}
+		semaphoreId := &corepb.SemaphoreId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			SemaphoreId: rand.Uint64(),
+		}
+
+		// A freshly created semaphore starts at version 1
+		created := createSemaphore(t, core, semaphoreId, "test_semaphore", 2, now)
+		require.EqualValues(t, 1, created.Version)
+
+		// Updating with the matching current version succeeds and bumps the version
+		updated := updateSemaphore(t, core, namespaceId, "test_semaphore", "desc v2", 3, 1, now.Add(time.Minute))
+		require.EqualValues(t, 2, updated.Version)
+
+		// The next update must use the new version
+		updated = updateSemaphore(t, core, namespaceId, "test_semaphore", "desc v3", 4, 2, now.Add(2*time.Minute))
+		require.EqualValues(t, 3, updated.Version)
+	})
+
+	t.Run("update with stale version", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+		}
+		semaphoreId := &corepb.SemaphoreId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			SemaphoreId: rand.Uint64(),
+		}
+
+		_ = createSemaphore(t, core, semaphoreId, "test_semaphore", 2, now)
+
+		// First update with version 1 succeeds (semaphore is now at version 2)
+		_ = updateSemaphore(t, core, namespaceId, "test_semaphore", "desc v2", 3, 1, now.Add(time.Minute))
+
+		// Reusing the stale version 1 is rejected with a version mismatch
+		appErr := updateSemaphoreWithError(t, core, namespaceId, "test_semaphore", "should not apply", 5, 1, now.Add(2*time.Minute))
+		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Contains(t, appErr.Message, "version mismatch")
+
+		// The rejected update did not change anything
+		semaphore := getSemaphore(t, core, semaphoreId, now.Add(3*time.Minute))
+		require.Equal(t, "desc v2", semaphore.Description)
+		require.EqualValues(t, 3, semaphore.Permits)
+		require.EqualValues(t, 2, semaphore.Version)
+	})
+
+	t.Run("update with future version", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+		}
+		semaphoreId := &corepb.SemaphoreId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			SemaphoreId: rand.Uint64(),
+		}
+
+		_ = createSemaphore(t, core, semaphoreId, "test_semaphore", 2, now)
+
+		// Passing a version the semaphore has never reached is rejected
+		appErr := updateSemaphoreWithError(t, core, namespaceId, "test_semaphore", "desc", 3, 99, now.Add(time.Minute))
+		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Contains(t, appErr.Message, "version mismatch")
 	})
 }
 
@@ -936,12 +1013,13 @@ func TestCore_SemaphoreMetadata(t *testing.T) {
 	updateMetadata := map[string]string{"team": "search", "env": "prod"}
 	updateResp, err := core.UpdateSemaphore(&coreapis.UpdateSemaphoreRequest{
 		Payload: &corepb.UpdateSemaphoreRequest{
-			NamespaceId:   namespaceId,
-			SemaphoreName: "test_semaphore",
-			Description:   "updated description",
-			Permits:       5,
-			Now:           now.Add(2 * time.Minute).UnixNano(),
-			Metadata:      updateMetadata,
+			NamespaceId:     namespaceId,
+			SemaphoreName:   "test_semaphore",
+			Description:     "updated description",
+			Permits:         5,
+			Now:             now.Add(2 * time.Minute).UnixNano(),
+			Metadata:        updateMetadata,
+			ExpectedVersion: 1,
 		},
 	})
 	require.NoError(t, err)
@@ -3875,16 +3953,17 @@ func listSemaphoreHolders(t *testing.T, core *Core, namespaceId *corepb.Namespac
 	return resp.Payload
 }
 
-func updateSemaphore(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, semaphoreName string, description string, permits uint64, now time.Time) *corepb.Semaphore {
+func updateSemaphore(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, semaphoreName string, description string, permits uint64, version uint64, now time.Time) *corepb.Semaphore {
 	t.Helper()
 
 	resp, err := core.UpdateSemaphore(&coreapis.UpdateSemaphoreRequest{
 		Payload: &corepb.UpdateSemaphoreRequest{
-			NamespaceId:   namespaceId,
-			SemaphoreName: semaphoreName,
-			Description:   description,
-			Permits:       permits,
-			Now:           now.UnixNano(),
+			NamespaceId:     namespaceId,
+			SemaphoreName:   semaphoreName,
+			Description:     description,
+			Permits:         permits,
+			Now:             now.UnixNano(),
+			ExpectedVersion: version,
 		},
 	})
 
@@ -3897,16 +3976,17 @@ func updateSemaphore(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, 
 	return resp.Payload.Semaphore
 }
 
-func updateSemaphoreWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, semaphoreName string, description string, permits uint64, now time.Time) *monsterax.Error {
+func updateSemaphoreWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, semaphoreName string, description string, permits uint64, version uint64, now time.Time) *monsterax.Error {
 	t.Helper()
 
 	resp, err := core.UpdateSemaphore(&coreapis.UpdateSemaphoreRequest{
 		Payload: &corepb.UpdateSemaphoreRequest{
-			NamespaceId:   namespaceId,
-			SemaphoreName: semaphoreName,
-			Description:   description,
-			Permits:       permits,
-			Now:           now.UnixNano(),
+			NamespaceId:     namespaceId,
+			SemaphoreName:   semaphoreName,
+			Description:     description,
+			Permits:         permits,
+			Now:             now.UnixNano(),
+			ExpectedVersion: version,
 		},
 	})
 

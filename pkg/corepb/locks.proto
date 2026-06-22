@@ -95,7 +95,8 @@ message CreateLockLeaseRequest {
   string process_id = 2;
   uint64 ttl_seconds = 3;
   int64 now = 4;
-  int64 max_number_of_lock_leases = 5;
+  map<string, string> metadata = 5;
+  int64 max_number_of_lock_leases = 6;
 }
 
 message CreateLockLeaseResponse {
@@ -169,9 +170,10 @@ message LockHolder {
 }
 
 enum LockState {
-  UNLOCKED = 0;
-  SHARED_LOCKED = 1;
-  EXCLUSIVE_LOCKED = 2;
+  INVALID = 0;
+  UNLOCKED = 1;
+  SHARED_LOCKED = 2;
+  EXCLUSIVE_LOCKED = 3;
 }
 
 message LockId {

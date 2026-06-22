@@ -344,7 +344,7 @@ func TestValidateListNamespacesRequest(t *testing.T) {
 			name: "limit too high",
 			request: &gracklepb.ListNamespacesRequest{
 				PaginationToken: "",
-				Limit:           101,
+				Limit:           251,
 			},
 			shouldError: true,
 		},
@@ -360,7 +360,7 @@ func TestValidateListNamespacesRequest(t *testing.T) {
 			name: "edge case: limit at maximum",
 			request: &gracklepb.ListNamespacesRequest{
 				PaginationToken: "",
-				Limit:           100,
+				Limit:           250,
 			},
 			shouldError: false,
 		},
@@ -559,100 +559,6 @@ func TestValidateGetWaitGroupRequest(t *testing.T) {
 				require.Error(t, ValidateGetWaitGroupRequest(test.request))
 			} else {
 				require.NoError(t, ValidateGetWaitGroupRequest(test.request))
-			}
-		})
-	}
-}
-
-func TestValidateAddJobsToWaitGroupRequest(t *testing.T) {
-	tests := []struct {
-		name        string
-		request     *gracklepb.AddJobsToWaitGroupRequest
-		shouldError bool
-	}{
-		{
-			name:        "empty request",
-			request:     &gracklepb.AddJobsToWaitGroupRequest{},
-			shouldError: true,
-		},
-		{
-			name: "empty namespace name",
-			request: &gracklepb.AddJobsToWaitGroupRequest{
-				WaitGroupName: "validname",
-				Counter:       1,
-			},
-			shouldError: true,
-		},
-		{
-			name: "empty wait group name",
-			request: &gracklepb.AddJobsToWaitGroupRequest{
-				NamespaceName: "validname",
-				Counter:       1,
-			},
-			shouldError: true,
-		},
-		{
-			name: "namespace name too long",
-			request: &gracklepb.AddJobsToWaitGroupRequest{
-				NamespaceName: string(make([]byte, 129)),
-				WaitGroupName: "validname",
-				Counter:       1,
-			},
-			shouldError: true,
-		},
-		{
-			name: "wait group name too long",
-			request: &gracklepb.AddJobsToWaitGroupRequest{
-				NamespaceName: "validname",
-				WaitGroupName: string(make([]byte, 129)),
-				Counter:       1,
-			},
-			shouldError: true,
-		},
-		{
-			name: "invalid namespace name characters",
-			request: &gracklepb.AddJobsToWaitGroupRequest{
-				NamespaceName: "invalid name",
-				WaitGroupName: "validname",
-				Counter:       1,
-			},
-			shouldError: true,
-		},
-		{
-			name: "invalid wait group name characters",
-			request: &gracklepb.AddJobsToWaitGroupRequest{
-				NamespaceName: "validname",
-				WaitGroupName: "invalid name",
-				Counter:       1,
-			},
-			shouldError: true,
-		},
-		{
-			name: "invalid counter",
-			request: &gracklepb.AddJobsToWaitGroupRequest{
-				NamespaceName: "validname",
-				WaitGroupName: "invalid name",
-				Counter:       0,
-			},
-			shouldError: true,
-		},
-		{
-			name: "valid request",
-			request: &gracklepb.AddJobsToWaitGroupRequest{
-				NamespaceName: "validname",
-				WaitGroupName: "validwaitgroup",
-				Counter:       1,
-			},
-			shouldError: false,
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			if test.shouldError {
-				require.Error(t, ValidateAddJobsToWaitGroupRequest(test.request))
-			} else {
-				require.NoError(t, ValidateAddJobsToWaitGroupRequest(test.request))
 			}
 		})
 	}
@@ -948,7 +854,7 @@ func TestValidateListWaitGroupsRequest(t *testing.T) {
 			request: &gracklepb.ListWaitGroupsRequest{
 				NamespaceName:   "validname",
 				PaginationToken: "",
-				Limit:           101,
+				Limit:           251,
 			},
 			shouldError: true,
 		},
@@ -966,7 +872,7 @@ func TestValidateListWaitGroupsRequest(t *testing.T) {
 			request: &gracklepb.ListWaitGroupsRequest{
 				NamespaceName:   "validname",
 				PaginationToken: "",
-				Limit:           100,
+				Limit:           250,
 			},
 			shouldError: false,
 		},
@@ -2035,7 +1941,7 @@ func TestValidateListLocksRequest(t *testing.T) {
 			request: &gracklepb.ListLocksRequest{
 				NamespaceName:   "validname",
 				PaginationToken: "",
-				Limit:           101,
+				Limit:           251,
 			},
 			shouldError: true,
 		},
@@ -2053,7 +1959,7 @@ func TestValidateListLocksRequest(t *testing.T) {
 			request: &gracklepb.ListLocksRequest{
 				NamespaceName:   "validname",
 				PaginationToken: "",
-				Limit:           100,
+				Limit:           250,
 			},
 			shouldError: false,
 		},
@@ -2170,7 +2076,7 @@ func TestValidateListSemaphoresRequest(t *testing.T) {
 			request: &gracklepb.ListSemaphoresRequest{
 				NamespaceName:   "validname",
 				PaginationToken: "",
-				Limit:           101,
+				Limit:           251,
 			},
 			shouldError: true,
 		},
@@ -2188,7 +2094,7 @@ func TestValidateListSemaphoresRequest(t *testing.T) {
 			request: &gracklepb.ListSemaphoresRequest{
 				NamespaceName:   "validname",
 				PaginationToken: "",
-				Limit:           100,
+				Limit:           250,
 			},
 			shouldError: false,
 		},
@@ -2480,7 +2386,7 @@ func TestValidateListWaitGroupCompletedJobsRequest(t *testing.T) {
 			request: &gracklepb.ListWaitGroupCompletedJobsRequest{
 				NamespaceName: "validname",
 				WaitGroupName: "validname",
-				Limit:         101,
+				Limit:         251,
 			},
 			shouldError: true,
 		},
@@ -2604,7 +2510,7 @@ func TestValidateListSemaphoreHoldersRequest(t *testing.T) {
 			request: &gracklepb.ListSemaphoreHoldersRequest{
 				NamespaceName: "validname",
 				SemaphoreName: "validname",
-				Limit:         101,
+				Limit:         251,
 			},
 			shouldError: true,
 		},
@@ -2845,7 +2751,7 @@ func TestValidateListBarriersRequest(t *testing.T) {
 			name: "limit too high",
 			request: &gracklepb.ListBarriersRequest{
 				NamespaceName: "validname",
-				Limit:         101,
+				Limit:         251,
 			},
 			shouldError: true,
 		},
@@ -3507,7 +3413,7 @@ func TestValidateListBarrierParticipantsRequest(t *testing.T) {
 			request: &gracklepb.ListBarrierParticipantsRequest{
 				NamespaceName: "validname",
 				BarrierName:   "validname",
-				Limit:         101,
+				Limit:         251,
 			},
 			shouldError: true,
 		},
@@ -3916,7 +3822,7 @@ func TestValidateListSemaphoreLeasesRequest(t *testing.T) {
 			name: "limit too high",
 			request: &gracklepb.ListSemaphoreLeasesRequest{
 				NamespaceName: "validname",
-				Limit:         101,
+				Limit:         251,
 			},
 			shouldError: true,
 		},
@@ -4388,7 +4294,7 @@ func TestValidateListLockLeasesRequest(t *testing.T) {
 			name: "limit too high",
 			request: &gracklepb.ListLockLeasesRequest{
 				NamespaceName: "validname",
-				Limit:         101,
+				Limit:         251,
 			},
 			shouldError: true,
 		},

@@ -249,6 +249,7 @@ func TestUpdateBarrier(t *testing.T) {
 			BarrierName:       "barrier1",
 			Description:       "Updated description",
 			ExpectedProcesses: 5,
+			ExpectedVersion:   1,
 		})
 		require.NoError(t, err)
 		require.NotNil(t, updateResp.Barrier)
@@ -261,6 +262,7 @@ func TestUpdateBarrier(t *testing.T) {
 			BarrierName:       "barrier1",
 			Description:       "desc",
 			ExpectedProcesses: 5,
+			ExpectedVersion:   1,
 		})
 		require.Error(t, err)
 
@@ -270,6 +272,7 @@ func TestUpdateBarrier(t *testing.T) {
 			BarrierName:       "barrier1",
 			Description:       "desc",
 			ExpectedProcesses: 0,
+			ExpectedVersion:   1,
 		})
 		require.Error(t, err)
 	})
@@ -303,6 +306,7 @@ func TestUpdateBarrier(t *testing.T) {
 			BarrierName:       "test-barrier",
 			Description:       "Updated description",
 			ExpectedProcesses: 10,
+			ExpectedVersion:   1,
 		})
 		require.NoError(t, err)
 		require.NotNil(t, updateResp.Barrier)
@@ -359,6 +363,7 @@ func TestUpdateBarrier(t *testing.T) {
 			BarrierName:       "test-barrier",
 			Description:       "Updated",
 			ExpectedProcesses: 2,
+			ExpectedVersion:   1,
 		})
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "there are currently more arrived processes than the new expected processes")
@@ -369,6 +374,7 @@ func TestUpdateBarrier(t *testing.T) {
 			BarrierName:       "test-barrier",
 			Description:       "Updated",
 			ExpectedProcesses: 3,
+			ExpectedVersion:   1,
 		})
 		require.NoError(t, err)
 		require.EqualValues(t, 3, updateResp.Barrier.ExpectedProcesses)
@@ -379,6 +385,7 @@ func TestUpdateBarrier(t *testing.T) {
 			BarrierName:       "test-barrier",
 			Description:       "Updated again",
 			ExpectedProcesses: 10,
+			ExpectedVersion:   2,
 		})
 		require.NoError(t, err)
 		require.EqualValues(t, 10, updateResp2.Barrier.ExpectedProcesses)
@@ -400,6 +407,7 @@ func TestUpdateBarrier(t *testing.T) {
 			BarrierName:       "nonexistent-barrier",
 			Description:       "desc",
 			ExpectedProcesses: 5,
+			ExpectedVersion:   1,
 		})
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "barrier not found")

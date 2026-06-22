@@ -64,12 +64,6 @@ func (r *AcquireSemaphoreRequest) ShardKey() []byte {
 	return sharding.ByAccountAndNamespace(r.NamespaceId.AccountId, r.NamespaceId.NamespaceId)
 }
 
-// AddJobsToWaitGroupRequest
-
-func (r *AddJobsToWaitGroupRequest) ShardKey() []byte {
-	return sharding.ByAccountAndNamespace(r.NamespaceId.AccountId, r.NamespaceId.NamespaceId)
-}
-
 // CompleteJobsFromWaitGroupRequest
 
 func (r *CompleteJobsFromWaitGroupRequest) ShardKey() []byte {
@@ -103,7 +97,7 @@ func (r *DeleteLockRequest) ShardKey() []byte {
 // DeleteNamespaceRequest
 
 func (r *DeleteNamespaceRequest) ShardKey() []byte {
-	return sharding.ByAccount(r.NamespaceId.AccountId)
+	return sharding.ByAccount(r.AccountId)
 }
 
 // DeleteSemaphoreRequest
@@ -235,7 +229,7 @@ func (r *ListWaitGroupJobsRequest) ShardKey() []byte {
 // UpdateWaitGroupRequest
 
 func (r *UpdateWaitGroupRequest) ShardKey() []byte {
-	return sharding.ByAccountAndNamespace(r.WaitGroupId.AccountId, r.WaitGroupId.NamespaceId)
+	return sharding.ByAccountAndNamespace(r.NamespaceId.AccountId, r.NamespaceId.NamespaceId)
 }
 
 // ReleaseLockRequest
@@ -253,7 +247,7 @@ func (r *ReleaseSemaphoreRequest) ShardKey() []byte {
 // UpdateNamespaceRequest
 
 func (r *UpdateNamespaceRequest) ShardKey() []byte {
-	return sharding.ByAccount(r.NamespaceId.AccountId)
+	return sharding.ByAccount(r.AccountId)
 }
 
 // UpdateSemaphoreRequest

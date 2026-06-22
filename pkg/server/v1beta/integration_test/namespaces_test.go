@@ -70,16 +70,18 @@ func TestUpdateNamespace(t *testing.T) {
 
 		// Valid request
 		resp, err := server.UpdateNamespace(ctx, &gracklepb.UpdateNamespaceRequest{
-			NamespaceName: "namespace1",
-			Description:   "Updated description",
+			NamespaceName:   "namespace1",
+			Description:     "Updated description",
+			ExpectedVersion: 1,
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp.Namespace)
 
 		// Invalid request - invalid namespace name
 		_, err = server.UpdateNamespace(ctx, &gracklepb.UpdateNamespaceRequest{
-			NamespaceName: "invalid@namespace",
-			Description:   "Updated description",
+			NamespaceName:   "invalid@namespace",
+			Description:     "Updated description",
+			ExpectedVersion: 1,
 		})
 		require.Error(t, err)
 	})

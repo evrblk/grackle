@@ -12,6 +12,8 @@ Safe to retry.
 
 * `metadata` is an optional, opaque map of string key/value pairs stored alongside the barrier —
   see [Metadata](/docs/api-overview.md#metadata).
+* `expected_version` enables optimistic locking: the update is applied only if it equals the
+  barrier's current `version`. See [Updates](/docs/api-overview.md#updates).
 
 ```json
 {
@@ -19,6 +21,7 @@ Safe to retry.
   "barrier_name": "phase_1_complete",
   "description": "End of map phase (scaled)",
   "expected_processes": 6,
+  "expected_version": 1,
   "metadata": {
     "phase": "map"
   }
@@ -29,6 +32,8 @@ Safe to retry.
 
 * Returns `NotFound` if the namespace does not exist.
 * Returns `NotFound` if the barrier does not exist.
+* Returns `InvalidArgument` if `expected_version` does not match the barrier's current `version`.
+* Returns `InvalidArgument` if the new `expected_processes` is below the current `arrived_processes`.
 
 ```json
 {

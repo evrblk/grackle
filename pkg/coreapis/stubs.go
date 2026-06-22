@@ -1448,7 +1448,7 @@ func (s *GrackleMonsteraStub) ListWaitGroupJobs(ctx context.Context, request *co
 	return response, nilifyIfEmpty(appResponse.Error)
 }
 
-func (s *GrackleMonsteraStub) AddJobsToWaitGroup(ctx context.Context, request *corepb.AddJobsToWaitGroupRequest) (*corepb.AddJobsToWaitGroupResponse, error) {
+func (s *GrackleMonsteraStub) UpdateWaitGroup(ctx context.Context, request *corepb.UpdateWaitGroupRequest) (*corepb.UpdateWaitGroupResponse, error) {
 	data, err := request.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1473,7 +1473,7 @@ func (s *GrackleMonsteraStub) AddJobsToWaitGroup(ctx context.Context, request *c
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.AddJobsToWaitGroupResponse{}
+	response := &corepb.UpdateWaitGroupResponse{}
 	err = response.UnmarshalVT(appResponse.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
@@ -1644,40 +1644,6 @@ func (s *GrackleMonsteraStub) WaitGroupsDeleteNamespace(ctx context.Context, req
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 	response := &corepb.WaitGroupsDeleteNamespaceResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
-	}
-
-	return response, nilifyIfEmpty(appResponse.Error)
-}
-
-func (s *GrackleMonsteraStub) UpdateWaitGroup(ctx context.Context, request *corepb.UpdateWaitGroupRequest) (*corepb.UpdateWaitGroupResponse, error) {
-	data, err := request.MarshalBinary()
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal request: %w", err)
-	}
-
-	appRequest := &monsterax.Request{
-		Data:         data,
-		MethodNumber: 7,
-	}
-	requestBytes, err := appRequest.MarshalVT()
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal request: %w", err)
-	}
-
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleWaitGroups", request.ShardKey(), requestBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	appResponse := &monsterax.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
-	}
-	response := &corepb.UpdateWaitGroupResponse{}
 	err = response.UnmarshalVT(appResponse.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
@@ -3029,14 +2995,14 @@ func (s *GrackleNonclusteredStub) ListWaitGroupJobs(ctx context.Context, request
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) AddJobsToWaitGroup(ctx context.Context, request *corepb.AddJobsToWaitGroupRequest) (*corepb.AddJobsToWaitGroupResponse, error) {
+func (s *GrackleNonclusteredStub) UpdateWaitGroup(ctx context.Context, request *corepb.UpdateWaitGroupRequest) (*corepb.UpdateWaitGroupResponse, error) {
 	shardKey := request.ShardKey()
 	for _, adapter := range s.grackleWaitGroupsCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.AddJobsToWaitGroup(&monsterax.UpdateRequest[*corepb.AddJobsToWaitGroupRequest]{Payload: request})
+			response, err := adapter.core.UpdateWaitGroup(&monsterax.UpdateRequest[*corepb.UpdateWaitGroupRequest]{Payload: request})
 			if err != nil {
 				return nil, err
 			}
@@ -3146,28 +3112,6 @@ func (s *GrackleNonclusteredStub) WaitGroupsDeleteNamespace(ctx context.Context,
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.WaitGroupsDeleteNamespace(&monsterax.UpdateRequest[*corepb.WaitGroupsDeleteNamespaceRequest]{Payload: request})
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(response.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			return response.Payload, nil
-		}
-	}
-
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
-}
-
-func (s *GrackleNonclusteredStub) UpdateWaitGroup(ctx context.Context, request *corepb.UpdateWaitGroupRequest) (*corepb.UpdateWaitGroupResponse, error) {
-	shardKey := request.ShardKey()
-	for _, adapter := range s.grackleWaitGroupsCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			response, err := adapter.core.UpdateWaitGroup(&monsterax.UpdateRequest[*corepb.UpdateWaitGroupRequest]{Payload: request})
 			if err != nil {
 				return nil, err
 			}

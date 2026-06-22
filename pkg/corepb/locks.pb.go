@@ -24,22 +24,25 @@ const (
 type LockState int32
 
 const (
-	LockState_UNLOCKED         LockState = 0
-	LockState_SHARED_LOCKED    LockState = 1
-	LockState_EXCLUSIVE_LOCKED LockState = 2
+	LockState_INVALID          LockState = 0
+	LockState_UNLOCKED         LockState = 1
+	LockState_SHARED_LOCKED    LockState = 2
+	LockState_EXCLUSIVE_LOCKED LockState = 3
 )
 
 // Enum value maps for LockState.
 var (
 	LockState_name = map[int32]string{
-		0: "UNLOCKED",
-		1: "SHARED_LOCKED",
-		2: "EXCLUSIVE_LOCKED",
+		0: "INVALID",
+		1: "UNLOCKED",
+		2: "SHARED_LOCKED",
+		3: "EXCLUSIVE_LOCKED",
 	}
 	LockState_value = map[string]int32{
-		"UNLOCKED":         0,
-		"SHARED_LOCKED":    1,
-		"EXCLUSIVE_LOCKED": 2,
+		"INVALID":          0,
+		"UNLOCKED":         1,
+		"SHARED_LOCKED":    2,
+		"EXCLUSIVE_LOCKED": 3,
 	}
 )
 
@@ -956,7 +959,8 @@ type CreateLockLeaseRequest struct {
 	ProcessId             string                 `protobuf:"bytes,2,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
 	TtlSeconds            uint64                 `protobuf:"varint,3,opt,name=ttl_seconds,json=ttlSeconds,proto3" json:"ttl_seconds,omitempty"`
 	Now                   int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
-	MaxNumberOfLockLeases int64                  `protobuf:"varint,5,opt,name=max_number_of_lock_leases,json=maxNumberOfLockLeases,proto3" json:"max_number_of_lock_leases,omitempty"`
+	Metadata              map[string]string      `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	MaxNumberOfLockLeases int64                  `protobuf:"varint,6,opt,name=max_number_of_lock_leases,json=maxNumberOfLockLeases,proto3" json:"max_number_of_lock_leases,omitempty"`
 	unknownFields         protoimpl.UnknownFields
 	sizeCache             protoimpl.SizeCache
 }
@@ -1017,6 +1021,13 @@ func (x *CreateLockLeaseRequest) GetNow() int64 {
 		return x.Now
 	}
 	return 0
+}
+
+func (x *CreateLockLeaseRequest) GetMetadata() map[string]string {
+	if x != nil {
+		return x.Metadata
+	}
+	return nil
 }
 
 func (x *CreateLockLeaseRequest) GetMaxNumberOfLockLeases() int64 {
@@ -1673,7 +1684,7 @@ func (x *Lock) GetState() LockState {
 	if x != nil {
 		return x.State
 	}
-	return LockState_UNLOCKED
+	return LockState_INVALID
 }
 
 func (x *Lock) GetLockedAt() int64 {
@@ -2035,15 +2046,19 @@ const file_pkg_corepb_locks_proto_rawDesc = "" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x1b\n" +
 	"\trecord_id\x18\x02 \x01(\x04R\brecordId\x12\x10\n" +
 	"\x03now\x18\x03 \x01(\x03R\x03now\"\x1e\n" +
-	"\x1cLocksDeleteNamespaceResponse\"\xe3\x01\n" +
+	"\x1cLocksDeleteNamespaceResponse\"\xfd\x02\n" +
 	"\x16CreateLockLeaseRequest\x12=\n" +
 	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\x12\x1d\n" +
 	"\n" +
 	"process_id\x18\x02 \x01(\tR\tprocessId\x12\x1f\n" +
 	"\vttl_seconds\x18\x03 \x01(\x04R\n" +
 	"ttlSeconds\x12\x10\n" +
-	"\x03now\x18\x04 \x01(\x03R\x03now\x128\n" +
-	"\x19max_number_of_lock_leases\x18\x05 \x01(\x03R\x15maxNumberOfLockLeases\"Q\n" +
+	"\x03now\x18\x04 \x01(\x03R\x03now\x12[\n" +
+	"\bmetadata\x18\x05 \x03(\v2?.com.evrblk.grackle.corepb.CreateLockLeaseRequest.MetadataEntryR\bmetadata\x128\n" +
+	"\x19max_number_of_lock_leases\x18\x06 \x01(\x03R\x15maxNumberOfLockLeases\x1a;\n" +
+	"\rMetadataEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"Q\n" +
 	"\x17CreateLockLeaseResponse\x126\n" +
 	"\x05lease\x18\x01 \x01(\v2 .com.evrblk.grackle.corepb.LeaseR\x05lease\"i\n" +
 	"\x16RevokeLockLeaseRequest\x12=\n" +
@@ -2109,11 +2124,12 @@ const file_pkg_corepb_locks_proto_rawDesc = "" +
 	"\fLockAncestor\x121\n" +
 	"\x02id\x18\x01 \x01(\v2!.com.evrblk.grackle.corepb.LockIdR\x02id\x12'\n" +
 	"\x0fexclusive_count\x18\x02 \x01(\x03R\x0eexclusiveCount\x12!\n" +
-	"\fshared_count\x18\x03 \x01(\x03R\vsharedCount*B\n" +
-	"\tLockState\x12\f\n" +
-	"\bUNLOCKED\x10\x00\x12\x11\n" +
-	"\rSHARED_LOCKED\x10\x01\x12\x14\n" +
-	"\x10EXCLUSIVE_LOCKED\x10\x02B&Z$github.com/evrblk/grackle/pkg/corepbb\x06proto3"
+	"\fshared_count\x18\x03 \x01(\x03R\vsharedCount*O\n" +
+	"\tLockState\x12\v\n" +
+	"\aINVALID\x10\x00\x12\f\n" +
+	"\bUNLOCKED\x10\x01\x12\x11\n" +
+	"\rSHARED_LOCKED\x10\x02\x12\x14\n" +
+	"\x10EXCLUSIVE_LOCKED\x10\x03B&Z$github.com/evrblk/grackle/pkg/corepbb\x06proto3"
 
 var (
 	file_pkg_corepb_locks_proto_rawDescOnce sync.Once
@@ -2128,7 +2144,7 @@ func file_pkg_corepb_locks_proto_rawDescGZIP() []byte {
 }
 
 var file_pkg_corepb_locks_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_pkg_corepb_locks_proto_msgTypes = make([]protoimpl.MessageInfo, 36)
+var file_pkg_corepb_locks_proto_msgTypes = make([]protoimpl.MessageInfo, 37)
 var file_pkg_corepb_locks_proto_goTypes = []any{
 	(LockState)(0),                            // 0: com.evrblk.grackle.corepb.LockState
 	(*AcquireLockRequest)(nil),                // 1: com.evrblk.grackle.corepb.AcquireLockRequest
@@ -2166,11 +2182,12 @@ var file_pkg_corepb_locks_proto_goTypes = []any{
 	(*LocksGarbageCollectionRecord)(nil),      // 33: com.evrblk.grackle.corepb.LocksGarbageCollectionRecord
 	(*LockAncestor)(nil),                      // 34: com.evrblk.grackle.corepb.LockAncestor
 	nil,                                       // 35: com.evrblk.grackle.corepb.AcquireLockRequest.MetadataEntry
-	nil,                                       // 36: com.evrblk.grackle.corepb.LockHolder.MetadataEntry
-	(*NamespaceId)(nil),                       // 37: com.evrblk.grackle.corepb.NamespaceId
-	(*PaginationToken)(nil),                   // 38: com.evrblk.grackle.corepb.PaginationToken
-	(*LeaseId)(nil),                           // 39: com.evrblk.grackle.corepb.LeaseId
-	(*Lease)(nil),                             // 40: com.evrblk.grackle.corepb.Lease
+	nil,                                       // 36: com.evrblk.grackle.corepb.CreateLockLeaseRequest.MetadataEntry
+	nil,                                       // 37: com.evrblk.grackle.corepb.LockHolder.MetadataEntry
+	(*NamespaceId)(nil),                       // 38: com.evrblk.grackle.corepb.NamespaceId
+	(*PaginationToken)(nil),                   // 39: com.evrblk.grackle.corepb.PaginationToken
+	(*LeaseId)(nil),                           // 40: com.evrblk.grackle.corepb.LeaseId
+	(*Lease)(nil),                             // 41: com.evrblk.grackle.corepb.Lease
 }
 var file_pkg_corepb_locks_proto_depIdxs = []int32{
 	31, // 0: com.evrblk.grackle.corepb.AcquireLockRequest.lock_id:type_name -> com.evrblk.grackle.corepb.LockId
@@ -2181,45 +2198,46 @@ var file_pkg_corepb_locks_proto_depIdxs = []int32{
 	31, // 5: com.evrblk.grackle.corepb.GetLockRequest.lock_id:type_name -> com.evrblk.grackle.corepb.LockId
 	29, // 6: com.evrblk.grackle.corepb.GetLockResponse.lock:type_name -> com.evrblk.grackle.corepb.Lock
 	31, // 7: com.evrblk.grackle.corepb.DeleteLockRequest.lock_id:type_name -> com.evrblk.grackle.corepb.LockId
-	37, // 8: com.evrblk.grackle.corepb.ListLocksRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	38, // 9: com.evrblk.grackle.corepb.ListLocksRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	38, // 8: com.evrblk.grackle.corepb.ListLocksRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	39, // 9: com.evrblk.grackle.corepb.ListLocksRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
 	29, // 10: com.evrblk.grackle.corepb.ListLocksResponse.locks:type_name -> com.evrblk.grackle.corepb.Lock
-	38, // 11: com.evrblk.grackle.corepb.ListLocksResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	38, // 12: com.evrblk.grackle.corepb.ListLocksResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	39, // 13: com.evrblk.grackle.corepb.ListLocksByLeaseIdRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
-	38, // 14: com.evrblk.grackle.corepb.ListLocksByLeaseIdRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	39, // 11: com.evrblk.grackle.corepb.ListLocksResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	39, // 12: com.evrblk.grackle.corepb.ListLocksResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	40, // 13: com.evrblk.grackle.corepb.ListLocksByLeaseIdRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
+	39, // 14: com.evrblk.grackle.corepb.ListLocksByLeaseIdRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
 	29, // 15: com.evrblk.grackle.corepb.ListLocksByLeaseIdResponse.locks:type_name -> com.evrblk.grackle.corepb.Lock
-	38, // 16: com.evrblk.grackle.corepb.ListLocksByLeaseIdResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	38, // 17: com.evrblk.grackle.corepb.ListLocksByLeaseIdResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	37, // 18: com.evrblk.grackle.corepb.LocksDeleteNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	39, // 19: com.evrblk.grackle.corepb.CreateLockLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
-	40, // 20: com.evrblk.grackle.corepb.CreateLockLeaseResponse.lease:type_name -> com.evrblk.grackle.corepb.Lease
-	39, // 21: com.evrblk.grackle.corepb.RevokeLockLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
-	39, // 22: com.evrblk.grackle.corepb.RefreshLockLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
-	40, // 23: com.evrblk.grackle.corepb.RefreshLockLeaseResponse.lease:type_name -> com.evrblk.grackle.corepb.Lease
-	39, // 24: com.evrblk.grackle.corepb.GetLockLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
-	40, // 25: com.evrblk.grackle.corepb.GetLockLeaseResponse.lease:type_name -> com.evrblk.grackle.corepb.Lease
-	37, // 26: com.evrblk.grackle.corepb.ListLockLeasesRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	38, // 27: com.evrblk.grackle.corepb.ListLockLeasesRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	40, // 28: com.evrblk.grackle.corepb.ListLockLeasesResponse.leases:type_name -> com.evrblk.grackle.corepb.Lease
-	38, // 29: com.evrblk.grackle.corepb.ListLockLeasesResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	38, // 30: com.evrblk.grackle.corepb.ListLockLeasesResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	37, // 31: com.evrblk.grackle.corepb.ListLockLeasesByProcessIdRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	38, // 32: com.evrblk.grackle.corepb.ListLockLeasesByProcessIdRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	40, // 33: com.evrblk.grackle.corepb.ListLockLeasesByProcessIdResponse.leases:type_name -> com.evrblk.grackle.corepb.Lease
-	38, // 34: com.evrblk.grackle.corepb.ListLockLeasesByProcessIdResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	38, // 35: com.evrblk.grackle.corepb.ListLockLeasesByProcessIdResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	31, // 36: com.evrblk.grackle.corepb.Lock.id:type_name -> com.evrblk.grackle.corepb.LockId
-	0,  // 37: com.evrblk.grackle.corepb.Lock.state:type_name -> com.evrblk.grackle.corepb.LockState
-	30, // 38: com.evrblk.grackle.corepb.Lock.lock_holders:type_name -> com.evrblk.grackle.corepb.LockHolder
-	36, // 39: com.evrblk.grackle.corepb.LockHolder.metadata:type_name -> com.evrblk.grackle.corepb.LockHolder.MetadataEntry
-	37, // 40: com.evrblk.grackle.corepb.LocksGarbageCollectionRecord.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	31, // 41: com.evrblk.grackle.corepb.LockAncestor.id:type_name -> com.evrblk.grackle.corepb.LockId
-	42, // [42:42] is the sub-list for method output_type
-	42, // [42:42] is the sub-list for method input_type
-	42, // [42:42] is the sub-list for extension type_name
-	42, // [42:42] is the sub-list for extension extendee
-	0,  // [0:42] is the sub-list for field type_name
+	39, // 16: com.evrblk.grackle.corepb.ListLocksByLeaseIdResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	39, // 17: com.evrblk.grackle.corepb.ListLocksByLeaseIdResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	38, // 18: com.evrblk.grackle.corepb.LocksDeleteNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	40, // 19: com.evrblk.grackle.corepb.CreateLockLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
+	36, // 20: com.evrblk.grackle.corepb.CreateLockLeaseRequest.metadata:type_name -> com.evrblk.grackle.corepb.CreateLockLeaseRequest.MetadataEntry
+	41, // 21: com.evrblk.grackle.corepb.CreateLockLeaseResponse.lease:type_name -> com.evrblk.grackle.corepb.Lease
+	40, // 22: com.evrblk.grackle.corepb.RevokeLockLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
+	40, // 23: com.evrblk.grackle.corepb.RefreshLockLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
+	41, // 24: com.evrblk.grackle.corepb.RefreshLockLeaseResponse.lease:type_name -> com.evrblk.grackle.corepb.Lease
+	40, // 25: com.evrblk.grackle.corepb.GetLockLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
+	41, // 26: com.evrblk.grackle.corepb.GetLockLeaseResponse.lease:type_name -> com.evrblk.grackle.corepb.Lease
+	38, // 27: com.evrblk.grackle.corepb.ListLockLeasesRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	39, // 28: com.evrblk.grackle.corepb.ListLockLeasesRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	41, // 29: com.evrblk.grackle.corepb.ListLockLeasesResponse.leases:type_name -> com.evrblk.grackle.corepb.Lease
+	39, // 30: com.evrblk.grackle.corepb.ListLockLeasesResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	39, // 31: com.evrblk.grackle.corepb.ListLockLeasesResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	38, // 32: com.evrblk.grackle.corepb.ListLockLeasesByProcessIdRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	39, // 33: com.evrblk.grackle.corepb.ListLockLeasesByProcessIdRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	41, // 34: com.evrblk.grackle.corepb.ListLockLeasesByProcessIdResponse.leases:type_name -> com.evrblk.grackle.corepb.Lease
+	39, // 35: com.evrblk.grackle.corepb.ListLockLeasesByProcessIdResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	39, // 36: com.evrblk.grackle.corepb.ListLockLeasesByProcessIdResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	31, // 37: com.evrblk.grackle.corepb.Lock.id:type_name -> com.evrblk.grackle.corepb.LockId
+	0,  // 38: com.evrblk.grackle.corepb.Lock.state:type_name -> com.evrblk.grackle.corepb.LockState
+	30, // 39: com.evrblk.grackle.corepb.Lock.lock_holders:type_name -> com.evrblk.grackle.corepb.LockHolder
+	37, // 40: com.evrblk.grackle.corepb.LockHolder.metadata:type_name -> com.evrblk.grackle.corepb.LockHolder.MetadataEntry
+	38, // 41: com.evrblk.grackle.corepb.LocksGarbageCollectionRecord.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	31, // 42: com.evrblk.grackle.corepb.LockAncestor.id:type_name -> com.evrblk.grackle.corepb.LockId
+	43, // [43:43] is the sub-list for method output_type
+	43, // [43:43] is the sub-list for method input_type
+	43, // [43:43] is the sub-list for extension type_name
+	43, // [43:43] is the sub-list for extension extendee
+	0,  // [0:43] is the sub-list for field type_name
 }
 
 func init() { file_pkg_corepb_locks_proto_init() }
@@ -2235,7 +2253,7 @@ func file_pkg_corepb_locks_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_corepb_locks_proto_rawDesc), len(file_pkg_corepb_locks_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   36,
+			NumMessages:   37,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

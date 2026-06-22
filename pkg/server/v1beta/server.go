@@ -75,6 +75,18 @@ func (s *GrackleApiServer) CreateWaitGroup(ctx context.Context, req *gracklepb.C
 	return s.handler.CreateWaitGroup(ctx, req, 0, grackle.DefaultServiceLimits)
 }
 
+func (s *GrackleApiServer) UpdateWaitGroup(ctx context.Context, req *gracklepb.UpdateWaitGroupRequest) (*gracklepb.UpdateWaitGroupResponse, error) {
+	if err := ValidateUpdateWaitGroupRequest(req); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
+	}
+
+	// Increment counter of total wait groups operations
+	// TODO: what is considered a wait group operation?
+	waitGroupsOperationsTotal.Inc()
+
+	return s.handler.UpdateWaitGroup(ctx, req, 0, grackle.DefaultServiceLimits)
+}
+
 func (s *GrackleApiServer) GetWaitGroup(ctx context.Context, req *gracklepb.GetWaitGroupRequest) (*gracklepb.GetWaitGroupResponse, error) {
 	if err := ValidateGetWaitGroupRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
@@ -95,17 +107,6 @@ func (s *GrackleApiServer) WaitForWaitGroup(ctx context.Context, req *gracklepb.
 	waitGroupsOperationsTotal.Inc()
 
 	return s.handler.WaitForWaitGroup(ctx, req, 0, grackle.DefaultServiceLimits)
-}
-
-func (s *GrackleApiServer) AddJobsToWaitGroup(ctx context.Context, req *gracklepb.AddJobsToWaitGroupRequest) (*gracklepb.AddJobsToWaitGroupResponse, error) {
-	if err := ValidateAddJobsToWaitGroupRequest(req); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
-	}
-
-	// Increment counter of total wait groups operations
-	waitGroupsOperationsTotal.Inc()
-
-	return s.handler.AddJobsToWaitGroup(ctx, req, 0, grackle.DefaultServiceLimits)
 }
 
 func (s *GrackleApiServer) CompleteJobsFromWaitGroup(ctx context.Context, req *gracklepb.CompleteJobsFromWaitGroupRequest) (*gracklepb.CompleteJobsFromWaitGroupResponse, error) {

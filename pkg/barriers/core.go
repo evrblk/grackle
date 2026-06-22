@@ -236,6 +236,7 @@ func (c *Core) CreateBarrier(req *coreapis.CreateBarrierRequest) (*coreapis.Crea
 		CreatedAt:         req.Payload.Now,
 		UpdatedAt:         req.Payload.Now,
 		Metadata:          req.Payload.Metadata,
+		Version:           1,
 	}
 
 	appErr, err := c.barriers.Create(txn, barrier)
@@ -352,6 +353,20 @@ func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest) (*coreapis.Upda
 		return nil, err
 	}
 
+	if barrier.Version != req.Payload.ExpectedVersion {
+		return &coreapis.UpdateBarrierResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.InvalidArgument,
+				"version mismatch",
+				map[string]string{
+					"barrier_id":       ids.EncodeBarrierId(req.Payload.BarrierId),
+					"actual_version":   fmt.Sprintf("%d", barrier.Version),
+					"expected_version": fmt.Sprintf("%d", req.Payload.ExpectedVersion),
+				},
+			),
+		}, nil
+	}
+
 	// If there are currently more arrived processes than the new expected processes
 	if barrier.ArrivedProcesses > req.Payload.ExpectedProcesses {
 		return &coreapis.UpdateBarrierResponse{
@@ -366,6 +381,7 @@ func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest) (*coreapis.Upda
 	barrier.ExpectedProcesses = req.Payload.ExpectedProcesses
 	barrier.UpdatedAt = req.Payload.Now
 	barrier.Metadata = req.Payload.Metadata
+	barrier.Version += 1
 
 	err = c.barriers.Update(txn, barrier)
 	if err != nil {

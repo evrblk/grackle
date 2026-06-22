@@ -163,7 +163,8 @@ type UpdateBarrierRequest struct {
 	Description       string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
 	ExpectedProcesses uint64                 `protobuf:"varint,3,opt,name=expected_processes,json=expectedProcesses,proto3" json:"expected_processes,omitempty"`
 	Metadata          map[string]string      `protobuf:"bytes,4,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	Now               int64                  `protobuf:"varint,5,opt,name=now,proto3" json:"now,omitempty"`
+	ExpectedVersion   uint64                 `protobuf:"varint,5,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
+	Now               int64                  `protobuf:"varint,6,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -224,6 +225,13 @@ func (x *UpdateBarrierRequest) GetMetadata() map[string]string {
 		return x.Metadata
 	}
 	return nil
+}
+
+func (x *UpdateBarrierRequest) GetExpectedVersion() uint64 {
+	if x != nil {
+		return x.ExpectedVersion
+	}
+	return 0
 }
 
 func (x *UpdateBarrierRequest) GetNow() int64 {
@@ -1725,14 +1733,15 @@ const file_pkg_corepb_barriers_proto_rawDesc = "" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"U\n" +
 	"\x15CreateBarrierResponse\x12<\n" +
-	"\abarrier\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.BarrierR\abarrier\"\xd6\x02\n" +
+	"\abarrier\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.BarrierR\abarrier\"\x81\x03\n" +
 	"\x14UpdateBarrierRequest\x12C\n" +
 	"\n" +
 	"barrier_id\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.BarrierIdR\tbarrierId\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12-\n" +
 	"\x12expected_processes\x18\x03 \x01(\x04R\x11expectedProcesses\x12Y\n" +
-	"\bmetadata\x18\x04 \x03(\v2=.com.evrblk.grackle.corepb.UpdateBarrierRequest.MetadataEntryR\bmetadata\x12\x10\n" +
-	"\x03now\x18\x05 \x01(\x03R\x03now\x1a;\n" +
+	"\bmetadata\x18\x04 \x03(\v2=.com.evrblk.grackle.corepb.UpdateBarrierRequest.MetadataEntryR\bmetadata\x12)\n" +
+	"\x10expected_version\x18\x05 \x01(\x04R\x0fexpectedVersion\x12\x10\n" +
+	"\x03now\x18\x06 \x01(\x03R\x03now\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"U\n" +

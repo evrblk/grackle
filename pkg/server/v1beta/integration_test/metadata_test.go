@@ -35,8 +35,9 @@ func TestMetadataRoundTrip(t *testing.T) {
 		// Update replaces the metadata
 		updMd := map[string]string{"team": "search", "cost-center": "5678"}
 		updResp, err := server.UpdateNamespace(ctx, &gracklepb.UpdateNamespaceRequest{
-			NamespaceName: "namespace1",
-			Metadata:      updMd,
+			NamespaceName:   "namespace1",
+			Metadata:        updMd,
+			ExpectedVersion: 1,
 		})
 		require.NoError(t, err)
 		require.Equal(t, updMd, updResp.Namespace.Metadata)
@@ -175,10 +176,11 @@ func TestMetadataRoundTrip(t *testing.T) {
 		// Update metadata
 		updMd := map[string]string{"team": "search", "env": "prod"}
 		updResp, err := server.UpdateSemaphore(ctx, &gracklepb.UpdateSemaphoreRequest{
-			NamespaceName: "namespace1",
-			SemaphoreName: "semaphore1",
-			Permits:       5,
-			Metadata:      updMd,
+			NamespaceName:   "namespace1",
+			SemaphoreName:   "semaphore1",
+			Permits:         5,
+			Metadata:        updMd,
+			ExpectedVersion: 1,
 		})
 		require.NoError(t, err)
 		require.Equal(t, updMd, updResp.Semaphore.Metadata)
@@ -244,6 +246,7 @@ func TestMetadataRoundTrip(t *testing.T) {
 			BarrierName:       "barrier1",
 			ExpectedProcesses: 2,
 			Metadata:          updMd,
+			ExpectedVersion:   1,
 		})
 		require.NoError(t, err)
 		require.Equal(t, updMd, updResp.Barrier.Metadata)

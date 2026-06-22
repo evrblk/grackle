@@ -106,6 +106,7 @@ func (c *Core) CreateNamespace(req *coreapis.CreateNamespaceRequest) (*coreapis.
 		CreatedAt:   req.Payload.Now,
 		UpdatedAt:   req.Payload.Now,
 		Metadata:    req.Payload.Metadata,
+		Version:     1,
 	}
 
 	err = c.namespaces.Create(txn, namespace)
@@ -136,14 +137,14 @@ func (c *Core) UpdateNamespace(req *coreapis.UpdateNamespaceRequest) (*coreapis.
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
-	namespace, err := c.namespaces.Get(txn, req.Payload.NamespaceId)
+	namespace, err := c.namespaces.GetByName(txn, req.Payload.AccountId, req.Payload.NamespaceName)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.UpdateNamespaceResponse{
 				ApplicationError: monsterax.NewErrorWithContext(
 					monsterax.NotFound,
 					"namespace not found",
-					map[string]string{"namespace_id": ids.EncodeNamespaceId(req.Payload.NamespaceId)},
+					map[string]string{"namespace_name": req.Payload.NamespaceName},
 				),
 			}, nil
 		}
@@ -151,9 +152,24 @@ func (c *Core) UpdateNamespace(req *coreapis.UpdateNamespaceRequest) (*coreapis.
 		return nil, err
 	}
 
+	if namespace.Version != req.Payload.ExpectedVersion {
+		return &coreapis.UpdateNamespaceResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.InvalidArgument,
+				"version mismatch",
+				map[string]string{
+					"namespace_name":   req.Payload.NamespaceName,
+					"actual_version":   fmt.Sprintf("%d", namespace.Version),
+					"expected_version": fmt.Sprintf("%d", req.Payload.ExpectedVersion),
+				},
+			),
+		}, nil
+	}
+
 	namespace.Description = req.Payload.Description
 	namespace.UpdatedAt = req.Payload.Now
 	namespace.Metadata = req.Payload.Metadata
+	namespace.Version += 1
 
 	err = c.namespaces.Update(txn, namespace)
 	if err != nil {
@@ -176,7 +192,7 @@ func (c *Core) DeleteNamespace(req *coreapis.DeleteNamespaceRequest) (*coreapis.
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
-	namespace, err := c.namespaces.Get(txn, req.Payload.NamespaceId)
+	namespace, err := c.namespaces.GetByName(txn, req.Payload.AccountId, req.Payload.NamespaceName)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.DeleteNamespaceResponse{
@@ -188,7 +204,7 @@ func (c *Core) DeleteNamespace(req *coreapis.DeleteNamespaceRequest) (*coreapis.
 	}
 
 	// Get counters for that account
-	counters, err := c.counters.Get(txn, req.Payload.NamespaceId.AccountId)
+	counters, err := c.counters.Get(txn, namespace.Id.AccountId)
 	if err != nil {
 		return nil, err
 	}
@@ -200,7 +216,7 @@ func (c *Core) DeleteNamespace(req *coreapis.DeleteNamespaceRequest) (*coreapis.
 
 	// Update counters
 	counters.NumberOfNamespaces = counters.NumberOfNamespaces - 1
-	err = c.counters.Set(txn, req.Payload.NamespaceId.AccountId, counters)
+	err = c.counters.Set(txn, namespace.Id.AccountId, counters)
 	if err != nil {
 		return nil, err
 	}

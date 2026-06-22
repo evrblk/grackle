@@ -98,6 +98,7 @@ message UpdateSemaphoreRequest {
   uint64 permits = 4;
   int64 now = 5;
   map<string, string> metadata = 6;
+  uint64 expected_version = 7;
 }
 
 message UpdateSemaphoreResponse {
@@ -167,7 +168,8 @@ message CreateSemaphoreLeaseRequest {
   string process_id = 2;
   uint64 ttl_seconds = 3;
   int64 now = 4;
-  int64 max_number_of_semaphore_leases = 5;
+  map<string, string> metadata = 5;
+  int64 max_number_of_semaphore_leases = 6;
 }
 
 message CreateSemaphoreLeaseResponse {

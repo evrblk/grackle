@@ -59,7 +59,7 @@ func (s *StatsCollector) RecordRequest(opType OperationType, success bool) {
 		if !success {
 			s.semaphoreErrors++
 		}
-	case OpAddWaitGroupJobs, OpCompleteWaitGroupJobs, OpGetWaitGroup:
+	case OpCompleteWaitGroupJobs, OpGetWaitGroup:
 		s.waitgroupRequests++
 		if !success {
 			s.waitgroupErrors++

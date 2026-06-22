@@ -9,8 +9,8 @@ Safe to retry — duplicate calls fail with `AlreadyExists`.
 
 ## Request
 
-* `counter` is the total number of jobs the group is waiting for; it can be grown later 
-  with `AddJobsToWaitGroup`.
+* `counter` is the total number of jobs the group is waiting for; it can be changed later
+  with [UpdateWaitGroup](/docs/api/v1beta/update-wait-group.md).
 * `expires_at` is an absolute timestamp after which the group is reaped by GC regardless of completion.
 * Set `expires_at` to a value comfortably past the expected completion time. It can be pushed out
   later with [UpdateWaitGroup](/docs/api/v1beta/update-wait-group.md) if a batch needs more time.

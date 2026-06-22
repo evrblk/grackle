@@ -23,11 +23,14 @@ message CreateWaitGroupResponse {
 }
 
 message UpdateWaitGroupRequest {
-  WaitGroupId wait_group_id = 1;
-  string description = 2;
-  int64 now = 3;
-  int64 expires_at = 4;
-  map<string, string> metadata = 5;
+  NamespaceId namespace_id = 1;
+  string wait_group_name = 2;
+  string description = 3;
+  int64 now = 4;
+  int64 expires_at = 5;
+  uint64 counter = 6;
+  map<string, string> metadata = 7;
+  uint64 expected_version = 8;
 }
 
 message UpdateWaitGroupResponse {
@@ -70,18 +73,6 @@ message DeleteWaitGroupRequest {
 }
 
 message DeleteWaitGroupResponse {}
-
-message AddJobsToWaitGroupRequest {
-  NamespaceId namespace_id = 1;
-  string wait_group_name = 2;
-  uint64 counter = 3;
-  int64 now = 4;
-  int64 max_wait_group_size = 5;
-}
-
-message AddJobsToWaitGroupResponse {
-  WaitGroup wait_group = 1;
-}
 
 message CompleteJobsFromWaitGroupRequest {
   NamespaceId namespace_id = 1;

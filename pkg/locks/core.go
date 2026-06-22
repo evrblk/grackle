@@ -834,6 +834,7 @@ func (c *Core) CreateLockLease(req *coreapis.CreateLockLeaseRequest) (*coreapis.
 		ProcessId: req.Payload.ProcessId,
 		CreatedAt: req.Payload.Now,
 		ExpiresAt: expiresAt,
+		Metadata:  req.Payload.Metadata,
 	}
 
 	err = c.leases.Create(txn, lease)

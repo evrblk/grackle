@@ -146,10 +146,11 @@ func (w *Worker) selectOperation() OperationType {
 		if readOp {
 			return OpGetWaitGroup
 		}
-		// For writes, randomly choose between add and complete
-		if w.rng.Intn(2) == 0 {
-			return OpAddWaitGroupJobs
-		}
+		// // For writes, randomly choose between add and complete
+		// if w.rng.Intn(2) == 0 {
+		// 	return OpUpdateWaitGroup
+		// }
+		// TODO
 		return OpCompleteWaitGroupJobs
 
 	default:
@@ -195,8 +196,6 @@ func (w *Worker) executeOperation(ctx context.Context, opType OperationType) {
 		err = executeRevokeSemaphoreLease(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
 	case OpListSemaphoreLeases:
 		err = executeListSemaphoreLeases(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
-	case OpAddWaitGroupJobs:
-		err = executeAddWaitGroupJobs(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
 	case OpCompleteWaitGroupJobs:
 		err = executeCompleteWaitGroupJobs(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
 	case OpGetWaitGroup:

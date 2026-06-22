@@ -205,149 +205,6 @@ func TestCore_Create(t *testing.T) {
 	})
 }
 
-func TestCore_AddJobsToWaitGroup(t *testing.T) {
-	t.Run("add jobs to existing wait group", func(t *testing.T) {
-		core := newWaitGroupsCore(t)
-		now := time.Now()
-		expiresAt := now.Add(time.Hour).UnixNano()
-		namespaceId := &corepb.NamespaceId{
-			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
-		}
-
-		// T+0: Create wait group
-		resp1, err := core.CreateWaitGroup(&coreapis.CreateWaitGroupRequest{
-			Payload: &corepb.CreateWaitGroupRequest{
-				WaitGroupId: &corepb.WaitGroupId{
-					AccountId:   namespaceId.AccountId,
-					NamespaceId: namespaceId.NamespaceId,
-					WaitGroupId: rand.Uint64(),
-				},
-				Name:                              "test_wait_group",
-				Description:                       "test description",
-				Counter:                           10,
-				Now:                               now.UnixNano(),
-				ExpiresAt:                         expiresAt,
-				MaxNumberOfWaitGroupsPerNamespace: 100,
-			},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.ApplicationError)
-
-		// T+1m: Add jobs to wait group
-		resp2, err := core.AddJobsToWaitGroup(&coreapis.AddJobsToWaitGroupRequest{
-			Payload: &corepb.AddJobsToWaitGroupRequest{
-				NamespaceId:      namespaceId,
-				WaitGroupName:    "test_wait_group",
-				Counter:          5,
-				Now:              now.Add(time.Minute).UnixNano(),
-				MaxWaitGroupSize: 100,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp2)
-		require.Nil(t, resp2.ApplicationError)
-		require.NotNil(t, resp2.Payload)
-		require.NotNil(t, resp2.Payload.WaitGroup)
-		require.EqualValues(t, 15, resp2.Payload.WaitGroup.Counter)
-		require.EqualValues(t, 0, resp2.Payload.WaitGroup.Completed)
-	})
-
-	t.Run("add jobs to nonexistent wait group", func(t *testing.T) {
-		core := newWaitGroupsCore(t)
-		now := time.Now()
-
-		// Try to add jobs to a nonexistent wait group
-		resp1, err := core.AddJobsToWaitGroup(&coreapis.AddJobsToWaitGroupRequest{
-			Payload: &corepb.AddJobsToWaitGroupRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   rand.Uint64(),
-					NamespaceId: rand.Uint32(),
-				},
-				WaitGroupName:    "nonexistent_wait_group",
-				Counter:          5,
-				Now:              now.UnixNano(),
-				MaxWaitGroupSize: 100,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.Payload)
-		require.NotNil(t, resp1.ApplicationError)
-		require.Equal(t, monsterax.NotFound, resp1.ApplicationError.Code)
-	})
-
-	t.Run("maximum group size", func(t *testing.T) {
-		core := newWaitGroupsCore(t)
-		now := time.Now()
-		expiresAt := now.Add(time.Hour).UnixNano()
-		maxWaitGroupSize := int64(10) // Use a small number for testing
-		waitGroupId := &corepb.WaitGroupId{
-			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
-			WaitGroupId: rand.Uint64(),
-		}
-
-		// Create wait group with initial counter of 5
-		resp1, err := core.CreateWaitGroup(&coreapis.CreateWaitGroupRequest{
-			Payload: &corepb.CreateWaitGroupRequest{
-				WaitGroupId:                       waitGroupId,
-				Name:                              "test_wait_group",
-				Description:                       "test description",
-				Counter:                           5,
-				Now:                               now.UnixNano(),
-				ExpiresAt:                         expiresAt,
-				MaxNumberOfWaitGroupsPerNamespace: 100,
-			},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp1)
-		require.Nil(t, resp1.ApplicationError)
-		require.NotNil(t, resp1.Payload)
-
-		// Add jobs up to the limit (5 + 5 = 10, which equals maxWaitGroupSize)
-		resp2, err := core.AddJobsToWaitGroup(&coreapis.AddJobsToWaitGroupRequest{
-			Payload: &corepb.AddJobsToWaitGroupRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   waitGroupId.AccountId,
-					NamespaceId: waitGroupId.NamespaceId,
-				},
-				WaitGroupName:    "test_wait_group",
-				Counter:          5,
-				Now:              now.Add(time.Minute).UnixNano(),
-				MaxWaitGroupSize: maxWaitGroupSize,
-			},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp2)
-		require.Nil(t, resp2.ApplicationError)
-		require.NotNil(t, resp2.Payload)
-
-		// Try to add one more job, which should fail (5 + 5 + 1 = 11 > 10)
-		resp3, err := core.AddJobsToWaitGroup(&coreapis.AddJobsToWaitGroupRequest{
-			Payload: &corepb.AddJobsToWaitGroupRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   waitGroupId.AccountId,
-					NamespaceId: waitGroupId.NamespaceId,
-				},
-				WaitGroupName:    "test_wait_group",
-				Counter:          1,
-				Now:              now.Add(2 * time.Minute).UnixNano(),
-				MaxWaitGroupSize: maxWaitGroupSize,
-			},
-		})
-
-		require.NoError(t, err)
-		require.NotNil(t, resp3)
-		require.Nil(t, resp3.Payload)
-		require.NotNil(t, resp3.ApplicationError)
-		require.Equal(t, monsterax.ResourceExhausted, resp3.ApplicationError.Code)
-	})
-}
-
 func TestCore_CompleteJobsFromWaitGroup(t *testing.T) {
 	t.Run("complete jobs from existing wait group", func(t *testing.T) {
 		core := newWaitGroupsCore(t)
@@ -942,9 +799,13 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 		core := newWaitGroupsCore(t)
 		now := time.Now()
 		expiresAt := now.Add(time.Hour).UnixNano()
-		waitGroupId := &corepb.WaitGroupId{
+		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
 			NamespaceId: rand.Uint32(),
+		}
+		waitGroupId := &corepb.WaitGroupId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
 			WaitGroupId: rand.Uint64(),
 		}
 
@@ -969,11 +830,14 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 		newExpiresAt := now.Add(2 * time.Hour).UnixNano()
 		resp2, err := core.UpdateWaitGroup(&coreapis.UpdateWaitGroupRequest{
 			Payload: &corepb.UpdateWaitGroupRequest{
-				WaitGroupId: waitGroupId,
-				Description: "updated description",
-				ExpiresAt:   newExpiresAt,
-				Metadata:    map[string]string{"team": "search", "env": "production"},
-				Now:         now.Add(time.Minute).UnixNano(),
+				NamespaceId:     namespaceId,
+				WaitGroupName:   "test_wait_group",
+				Description:     "updated description",
+				ExpiresAt:       newExpiresAt,
+				Metadata:        map[string]string{"team": "search", "env": "production"},
+				Now:             now.Add(time.Minute).UnixNano(),
+				ExpectedVersion: 1,
+				Counter:         10,
 			},
 		})
 		require.NoError(t, err)
@@ -1000,9 +864,13 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 	t.Run("clearing metadata", func(t *testing.T) {
 		core := newWaitGroupsCore(t)
 		now := time.Now()
-		waitGroupId := &corepb.WaitGroupId{
+		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
 			NamespaceId: rand.Uint32(),
+		}
+		waitGroupId := &corepb.WaitGroupId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
 			WaitGroupId: rand.Uint64(),
 		}
 
@@ -1023,10 +891,12 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 		// Update with no metadata clears it
 		resp, err := core.UpdateWaitGroup(&coreapis.UpdateWaitGroupRequest{
 			Payload: &corepb.UpdateWaitGroupRequest{
-				WaitGroupId: waitGroupId,
-				Description: "desc",
-				ExpiresAt:   now.Add(time.Hour).UnixNano(),
-				Now:         now.Add(time.Minute).UnixNano(),
+				NamespaceId:     namespaceId,
+				WaitGroupName:   "test_wait_group",
+				Description:     "desc",
+				ExpiresAt:       now.Add(time.Hour).UnixNano(),
+				Now:             now.Add(time.Minute).UnixNano(),
+				ExpectedVersion: 1,
 			},
 		})
 		require.NoError(t, err)
@@ -1040,14 +910,14 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 
 		resp, err := core.UpdateWaitGroup(&coreapis.UpdateWaitGroupRequest{
 			Payload: &corepb.UpdateWaitGroupRequest{
-				WaitGroupId: &corepb.WaitGroupId{
+				NamespaceId: &corepb.NamespaceId{
 					AccountId:   rand.Uint64(),
 					NamespaceId: rand.Uint32(),
-					WaitGroupId: rand.Uint64(),
 				},
-				Description: "updated description",
-				ExpiresAt:   now.Add(time.Hour).UnixNano(),
-				Now:         now.UnixNano(),
+				WaitGroupName: "nonexistent_wait_group",
+				Description:   "updated description",
+				ExpiresAt:     now.Add(time.Hour).UnixNano(),
+				Now:           now.UnixNano(),
 			},
 		})
 		require.NoError(t, err)
@@ -1062,9 +932,13 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 		now := time.Now()
 		oldExpiresAt := now.Add(time.Hour).UnixNano()
 		newExpiresAt := now.Add(48 * time.Hour).UnixNano()
-		waitGroupId := &corepb.WaitGroupId{
+		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
 			NamespaceId: rand.Uint32(),
+		}
+		waitGroupId := &corepb.WaitGroupId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
 			WaitGroupId: rand.Uint64(),
 		}
 
@@ -1084,10 +958,12 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 		// Push expiration far into the future
 		_, err = core.UpdateWaitGroup(&coreapis.UpdateWaitGroupRequest{
 			Payload: &corepb.UpdateWaitGroupRequest{
-				WaitGroupId: waitGroupId,
-				Description: "desc",
-				ExpiresAt:   newExpiresAt,
-				Now:         now.Add(time.Minute).UnixNano(),
+				NamespaceId:     namespaceId,
+				WaitGroupName:   "test_wait_group",
+				Description:     "desc",
+				ExpiresAt:       newExpiresAt,
+				Now:             now.Add(time.Minute).UnixNano(),
+				ExpectedVersion: 1,
 			},
 		})
 		require.NoError(t, err)
@@ -1108,6 +984,178 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 		// Wait group is still present
 		wg := getWaitGroup(t, core, waitGroupId)
 		require.Equal(t, newExpiresAt, wg.ExpiresAt)
+	})
+
+	t.Run("version increments on each successful update", func(t *testing.T) {
+		core := newWaitGroupsCore(t)
+		now := time.Now()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+		}
+		waitGroupId := &corepb.WaitGroupId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			WaitGroupId: rand.Uint64(),
+		}
+
+		// A freshly created wait group starts at version 1
+		resp1, err := core.CreateWaitGroup(&coreapis.CreateWaitGroupRequest{
+			Payload: &corepb.CreateWaitGroupRequest{
+				WaitGroupId:                       waitGroupId,
+				Name:                              "test_wait_group",
+				Description:                       "desc",
+				Counter:                           10,
+				Now:                               now.UnixNano(),
+				ExpiresAt:                         now.Add(time.Hour).UnixNano(),
+				MaxNumberOfWaitGroupsPerNamespace: 100,
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp1.ApplicationError)
+		require.EqualValues(t, 1, resp1.Payload.WaitGroup.Version)
+
+		// Updating with the matching current version succeeds and bumps the version
+		resp2, err := core.UpdateWaitGroup(&coreapis.UpdateWaitGroupRequest{
+			Payload: &corepb.UpdateWaitGroupRequest{
+				NamespaceId:     namespaceId,
+				WaitGroupName:   "test_wait_group",
+				Description:     "desc v2",
+				ExpiresAt:       now.Add(time.Hour).UnixNano(),
+				Now:             now.Add(time.Minute).UnixNano(),
+				ExpectedVersion: 1,
+				Counter:         10,
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp2.ApplicationError)
+		require.EqualValues(t, 2, resp2.Payload.WaitGroup.Version)
+
+		// The next update must use the new version
+		resp3, err := core.UpdateWaitGroup(&coreapis.UpdateWaitGroupRequest{
+			Payload: &corepb.UpdateWaitGroupRequest{
+				NamespaceId:     namespaceId,
+				WaitGroupName:   "test_wait_group",
+				Description:     "desc v3",
+				ExpiresAt:       now.Add(time.Hour).UnixNano(),
+				Now:             now.Add(2 * time.Minute).UnixNano(),
+				ExpectedVersion: 2,
+				Counter:         10,
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp3.ApplicationError)
+		require.EqualValues(t, 3, resp3.Payload.WaitGroup.Version)
+	})
+
+	t.Run("update with stale version", func(t *testing.T) {
+		core := newWaitGroupsCore(t)
+		now := time.Now()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+		}
+		waitGroupId := &corepb.WaitGroupId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			WaitGroupId: rand.Uint64(),
+		}
+
+		_, err := core.CreateWaitGroup(&coreapis.CreateWaitGroupRequest{
+			Payload: &corepb.CreateWaitGroupRequest{
+				WaitGroupId:                       waitGroupId,
+				Name:                              "test_wait_group",
+				Description:                       "desc",
+				Counter:                           10,
+				Now:                               now.UnixNano(),
+				ExpiresAt:                         now.Add(time.Hour).UnixNano(),
+				MaxNumberOfWaitGroupsPerNamespace: 100,
+			},
+		})
+		require.NoError(t, err)
+
+		// First update with version 1 succeeds (wait group is now at version 2)
+		resp, err := core.UpdateWaitGroup(&coreapis.UpdateWaitGroupRequest{
+			Payload: &corepb.UpdateWaitGroupRequest{
+				NamespaceId:     namespaceId,
+				WaitGroupName:   "test_wait_group",
+				Description:     "desc v2",
+				ExpiresAt:       now.Add(time.Hour).UnixNano(),
+				Now:             now.Add(time.Minute).UnixNano(),
+				ExpectedVersion: 1,
+				Counter:         10,
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp.ApplicationError)
+
+		// Reusing the stale version 1 is rejected with a version mismatch
+		resp, err = core.UpdateWaitGroup(&coreapis.UpdateWaitGroupRequest{
+			Payload: &corepb.UpdateWaitGroupRequest{
+				NamespaceId:     namespaceId,
+				WaitGroupName:   "test_wait_group",
+				Description:     "should not apply",
+				ExpiresAt:       now.Add(time.Hour).UnixNano(),
+				Now:             now.Add(2 * time.Minute).UnixNano(),
+				ExpectedVersion: 1,
+				Counter:         10,
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp.Payload)
+		require.NotNil(t, resp.ApplicationError)
+		require.Equal(t, monsterax.InvalidArgument, resp.ApplicationError.Code)
+		require.Contains(t, resp.ApplicationError.Message, "version mismatch")
+
+		// The rejected update did not change anything
+		wg := getWaitGroup(t, core, waitGroupId)
+		require.Equal(t, "desc v2", wg.Description)
+		require.EqualValues(t, 2, wg.Version)
+	})
+
+	t.Run("update with future version", func(t *testing.T) {
+		core := newWaitGroupsCore(t)
+		now := time.Now()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+		}
+		waitGroupId := &corepb.WaitGroupId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			WaitGroupId: rand.Uint64(),
+		}
+
+		_, err := core.CreateWaitGroup(&coreapis.CreateWaitGroupRequest{
+			Payload: &corepb.CreateWaitGroupRequest{
+				WaitGroupId:                       waitGroupId,
+				Name:                              "test_wait_group",
+				Description:                       "desc",
+				Counter:                           10,
+				Now:                               now.UnixNano(),
+				ExpiresAt:                         now.Add(time.Hour).UnixNano(),
+				MaxNumberOfWaitGroupsPerNamespace: 100,
+			},
+		})
+		require.NoError(t, err)
+
+		// Passing a version the wait group has never reached is rejected
+		resp, err := core.UpdateWaitGroup(&coreapis.UpdateWaitGroupRequest{
+			Payload: &corepb.UpdateWaitGroupRequest{
+				NamespaceId:     namespaceId,
+				WaitGroupName:   "test_wait_group",
+				Description:     "desc",
+				ExpiresAt:       now.Add(time.Hour).UnixNano(),
+				Now:             now.Add(time.Minute).UnixNano(),
+				ExpectedVersion: 99,
+				Counter:         10,
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp.Payload)
+		require.NotNil(t, resp.ApplicationError)
+		require.Equal(t, monsterax.InvalidArgument, resp.ApplicationError.Code)
+		require.Contains(t, resp.ApplicationError.Message, "version mismatch")
 	})
 }
 
@@ -1229,24 +1277,6 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 	require.Nil(t, resp3.ApplicationError)
 	require.NotNil(t, resp3.Payload)
 
-	// T+3m: Add more jobs to wait group (after snapshot)
-	resp4, err := core1.AddJobsToWaitGroup(&coreapis.AddJobsToWaitGroupRequest{
-		Payload: &corepb.AddJobsToWaitGroupRequest{
-			NamespaceId: &corepb.NamespaceId{
-				AccountId:   waitGroupId.AccountId,
-				NamespaceId: waitGroupId.NamespaceId,
-			},
-			WaitGroupName:    "test_wait_group",
-			Counter:          5,
-			Now:              now.Add(3 * time.Minute).UnixNano(),
-			MaxWaitGroupSize: 100,
-		},
-	})
-	require.NoError(t, err)
-	require.NotNil(t, resp4)
-	require.Nil(t, resp4.ApplicationError)
-	require.NotNil(t, resp4.Payload)
-
 	// Write snapshot to buffer
 	buf := bytes.NewBuffer(nil)
 	err = snapshot.Write(buf)
@@ -1301,17 +1331,16 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 	require.EqualValues(t, 10, resp7.Payload.WaitGroup.Counter)
 	require.EqualValues(t, 5, resp7.Payload.WaitGroup.Completed)
 
-	// T+7m: Add more jobs in restored state
-	resp8, err := core2.AddJobsToWaitGroup(&coreapis.AddJobsToWaitGroupRequest{
-		Payload: &corepb.AddJobsToWaitGroupRequest{
+	// T+7m: Complete more jobs in restored state
+	resp8, err := core2.CompleteJobsFromWaitGroup(&coreapis.CompleteJobsFromWaitGroupRequest{
+		Payload: &corepb.CompleteJobsFromWaitGroupRequest{
 			NamespaceId: &corepb.NamespaceId{
 				AccountId:   waitGroupId.AccountId,
 				NamespaceId: waitGroupId.NamespaceId,
 			},
-			WaitGroupName:    "test_wait_group",
-			Counter:          3,
-			Now:              now.Add(7 * time.Minute).UnixNano(),
-			MaxWaitGroupSize: 100,
+			WaitGroupName: "test_wait_group",
+			Jobs:          completeJobRequests([]string{"job_8", "job_9"}),
+			Now:           now.Add(8 * time.Minute).UnixNano(),
 		},
 	})
 	require.NoError(t, err)
@@ -1329,8 +1358,8 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 	require.NotNil(t, resp9)
 	require.Nil(t, resp9.ApplicationError)
 	require.NotNil(t, resp9.Payload)
-	require.EqualValues(t, 13, resp9.Payload.WaitGroup.Counter)
-	require.EqualValues(t, 5, resp9.Payload.WaitGroup.Completed)
+	require.EqualValues(t, 10, resp9.Payload.WaitGroup.Counter)
+	require.EqualValues(t, 7, resp9.Payload.WaitGroup.Completed)
 
 	// Verify that the original core has different state (it should have more completed jobs)
 	resp10, err := core1.GetWaitGroup(&coreapis.GetWaitGroupRequest{
@@ -1342,7 +1371,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 	require.NotNil(t, resp10)
 	require.Nil(t, resp10.ApplicationError)
 	require.NotNil(t, resp10.Payload)
-	require.EqualValues(t, 15, resp10.Payload.WaitGroup.Counter)  // 10 + 5 added after snapshot
+	require.EqualValues(t, 10, resp10.Payload.WaitGroup.Counter)  // 10 + 5 added after snapshot
 	require.EqualValues(t, 5, resp10.Payload.WaitGroup.Completed) // 3 + 2 completed after snapshot
 }
 

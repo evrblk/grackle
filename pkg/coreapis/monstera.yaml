@@ -147,7 +147,7 @@ cores:
         method_number: 4
         sharded: true
     update_methods:
-      - name: AddJobsToWaitGroup
+      - name: UpdateWaitGroup
         method_number: 1
         sharded: true
       - name: CompleteJobsFromWaitGroup
@@ -164,9 +164,6 @@ cores:
         sharded: false
       - name: WaitGroupsDeleteNamespace
         method_number: 6
-        sharded: true
-      - name: UpdateWaitGroup
-        method_number: 7
         sharded: true
 
   - name: GrackleBarriers

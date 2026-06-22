@@ -26,7 +26,8 @@ message UpdateBarrierRequest {
   string description = 2;
   uint64 expected_processes = 3;
   map<string, string> metadata = 4;
-  int64 now = 5;
+  uint64 expected_version = 5;
+  int64 now = 6;
 }
 
 message UpdateBarrierResponse {

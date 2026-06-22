@@ -56,32 +56,6 @@ func (m *AcquireSemaphoreResponse) MarshalBinary() (data []byte, err error) {
 	return m.MarshalVT()
 }
 
-// AddJobsToWaitGroupRequest
-
-var _ encoding.BinaryMarshaler = (*AddJobsToWaitGroupRequest)(nil)
-var _ encoding.BinaryUnmarshaler = (*AddJobsToWaitGroupRequest)(nil)
-
-func (m *AddJobsToWaitGroupRequest) UnmarshalBinary(data []byte) error {
-	return m.UnmarshalVT(data)
-}
-
-func (m *AddJobsToWaitGroupRequest) MarshalBinary() (data []byte, err error) {
-	return m.MarshalVT()
-}
-
-// AddJobsToWaitGroupResponse
-
-var _ encoding.BinaryMarshaler = (*AddJobsToWaitGroupResponse)(nil)
-var _ encoding.BinaryUnmarshaler = (*AddJobsToWaitGroupResponse)(nil)
-
-func (m *AddJobsToWaitGroupResponse) UnmarshalBinary(data []byte) error {
-	return m.UnmarshalVT(data)
-}
-
-func (m *AddJobsToWaitGroupResponse) MarshalBinary() (data []byte, err error) {
-	return m.MarshalVT()
-}
-
 // ArriveAtBarrierRequest
 
 var _ encoding.BinaryMarshaler = (*ArriveAtBarrierRequest)(nil)

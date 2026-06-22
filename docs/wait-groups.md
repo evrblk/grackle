@@ -1,7 +1,7 @@
 # Wait Groups
 
 A Grackle **wait group** is a named counter for coordinating the completion of N parallel jobs.
-The producer sets (or grows) the total number of jobs it expects; the workers report each job as
+The producer sets the total number of jobs it expects (and can revise it later); the workers report each job as
 done; one or more observers block on `WaitForWaitGroup` until the group is fully complete. It is
 the distributed equivalent of Go's `sync.WaitGroup`.
 
@@ -13,8 +13,8 @@ with `CreateWaitGroup` before jobs can be added or completed.
 ### Counter and completed
 A wait group has two numbers:
 
-- `counter` — the total number of jobs the group is waiting for. Set at creation and grown via
-  `AddJobsToWaitGroup`. There is no API to decrease it.
+- `counter` — the total number of jobs the group is waiting for. Set at creation and changed later
+  via `UpdateWaitGroup`; it can be raised or lowered, but not below `completed`.
 - `completed` — the number of distinct jobs reported done via `CompleteJobsFromWaitGroup`.
 
 The group is **complete** when `completed == counter`. You do not need to know all job IDs upfront
@@ -86,24 +86,28 @@ CreateWaitGroupResponse:
 }
 ```
 
-If the producer discovers more work after the fact, it grows the counter:
+If the producer discovers more work after the fact, it revises the total with `UpdateWaitGroup`.
+`counter` is the new total — not a delta — and `expected_version` must equal the group's current
+`version` for the update to apply (see [Updates](/docs/api-overview.md#updates)):
 
-AddJobsToWaitGroupRequest:
+UpdateWaitGroupRequest:
 ```json
 {
   "namespace_name": "pipelines",
   "wait_group_name": "batch_2026_06_12",
-  "counter": 10
+  "counter": 110,
+  "expected_version": 1
 }
 ```
 
-AddJobsToWaitGroupResponse:
+UpdateWaitGroupResponse:
 ```json
 {
   "wait_group": {
     "name": "batch_2026_06_12",
     "counter": 110,
     "completed": 0,
+    "version": 2,
     "expires_at": 1718236800000000000
   }
 }
@@ -182,11 +186,13 @@ A timed-out caller can simply call `WaitForWaitGroup` again — the group contin
 in the background. Inspect the current state at any time with `GetWaitGroup`, or enumerate which
 jobs have checked in with `ListWaitGroupCompletedJobs`.
 
-`UpdateWaitGroup` revises a group's mutable attributes — its `description`, its `expires_at`
-deadline, and its `metadata`. The name, `counter`, and `completed` count are immutable (grow the
-counter with `AddJobsToWaitGroup` instead). Pushing `expires_at` further out is the way to give a
-slow batch more time before GC reaps it; the expiration schedule is reconciled atomically.
-Metadata is replaced wholesale — an update that omits `metadata` clears it.
+`UpdateWaitGroup` revises a group's mutable attributes — its `description`, its `counter`, its
+`expires_at` deadline, and its `metadata`. The name and `completed` count are immutable. Pushing
+`expires_at` further out is the way to give a slow batch more time before GC reaps it; the
+expiration schedule is reconciled atomically. The update is a full replacement, so send every
+mutable field you want to keep — an update that omits `metadata` clears it, and one that omits
+`counter` resets it. Each call is guarded by `expected_version` for optimistic concurrency — see
+[Updates](/docs/api-overview.md#updates).
 
 UpdateWaitGroupRequest:
 ```json
@@ -194,7 +200,9 @@ UpdateWaitGroupRequest:
   "namespace_name": "pipelines",
   "wait_group_name": "batch_2026_06_12",
   "description": "Daily ETL batch (extended)",
+  "counter": 110,
   "expires_at": 1718323200000000000,
+  "expected_version": 2,
   "metadata": { "team": "data", "pipeline": "etl", "priority": "high" }
 }
 ```
@@ -207,6 +215,7 @@ UpdateWaitGroupResponse:
     "description": "Daily ETL batch (extended)",
     "counter": 110,
     "completed": 73,
+    "version": 3,
     "expires_at": 1718323200000000000,
     "metadata": { "team": "data", "pipeline": "etl", "priority": "high" }
   }
@@ -219,7 +228,7 @@ group that reaches its `expires_at` is deleted automatically.
 ## When to use what
 
 - **Wait group** — one or more producers fan out N jobs, one or more observers want to know when
-  the fan-in is done. Counter only ever grows; completion is idempotent per `job_id`.
+  the fan-in is done. The counter is adjustable via `UpdateWaitGroup`; completion is idempotent per `job_id`.
 - **Barrier** — N peers all need to meet at a synchronization point with no producer/observer
   asymmetry. Each participant calls `WaitAtBarrier` and is released when the configured number of
   participants have arrived.
@@ -234,7 +243,6 @@ know when the fan-in is done.
 * [ListWaitGroups](/docs/api/v1beta/list-wait-groups.md)
 * [GetWaitGroup](/docs/api/v1beta/get-wait-group.md)
 * [DeleteWaitGroup](/docs/api/v1beta/delete-wait-group.md)
-* [AddJobsToWaitGroup](/docs/api/v1beta/add-jobs-to-wait-group.md)
 * [CompleteJobsFromWaitGroup](/docs/api/v1beta/complete-jobs-from-wait-group.md)
 * [ListWaitGroupCompletedJobs](/docs/api/v1beta/list-wait-group-completed-jobs.md)
 * [WaitForWaitGroup](/docs/api/v1beta/wait-for-wait-group.md)

@@ -94,8 +94,8 @@ type ListWaitGroupsRequest = monsterax.ReadRequest[*corepb.ListWaitGroupsRequest
 type ListWaitGroupsResponse = monsterax.ReadResponse[*corepb.ListWaitGroupsResponse]
 type ListWaitGroupJobsRequest = monsterax.ReadRequest[*corepb.ListWaitGroupJobsRequest]
 type ListWaitGroupJobsResponse = monsterax.ReadResponse[*corepb.ListWaitGroupJobsResponse]
-type AddJobsToWaitGroupRequest = monsterax.UpdateRequest[*corepb.AddJobsToWaitGroupRequest]
-type AddJobsToWaitGroupResponse = monsterax.UpdateResponse[*corepb.AddJobsToWaitGroupResponse]
+type UpdateWaitGroupRequest = monsterax.UpdateRequest[*corepb.UpdateWaitGroupRequest]
+type UpdateWaitGroupResponse = monsterax.UpdateResponse[*corepb.UpdateWaitGroupResponse]
 type CompleteJobsFromWaitGroupRequest = monsterax.UpdateRequest[*corepb.CompleteJobsFromWaitGroupRequest]
 type CompleteJobsFromWaitGroupResponse = monsterax.UpdateResponse[*corepb.CompleteJobsFromWaitGroupResponse]
 type CreateWaitGroupRequest = monsterax.UpdateRequest[*corepb.CreateWaitGroupRequest]
@@ -106,8 +106,6 @@ type RunWaitGroupsGarbageCollectionRequest = monsterax.UpdateUnshardedRequest[*c
 type RunWaitGroupsGarbageCollectionResponse = monsterax.UpdateResponse[*corepb.RunWaitGroupsGarbageCollectionResponse]
 type WaitGroupsDeleteNamespaceRequest = monsterax.UpdateRequest[*corepb.WaitGroupsDeleteNamespaceRequest]
 type WaitGroupsDeleteNamespaceResponse = monsterax.UpdateResponse[*corepb.WaitGroupsDeleteNamespaceResponse]
-type UpdateWaitGroupRequest = monsterax.UpdateRequest[*corepb.UpdateWaitGroupRequest]
-type UpdateWaitGroupResponse = monsterax.UpdateResponse[*corepb.UpdateWaitGroupResponse]
 type GetBarrierRequest = monsterax.ReadRequest[*corepb.GetBarrierRequest]
 type GetBarrierResponse = monsterax.ReadResponse[*corepb.GetBarrierResponse]
 type GetBarrierByNameRequest = monsterax.ReadRequest[*corepb.GetBarrierByNameRequest]
@@ -175,13 +173,12 @@ type GrackleClientApi interface {
 	GetWaitGroupByName(ctx context.Context, req *corepb.GetWaitGroupByNameRequest) (*corepb.GetWaitGroupByNameResponse, error)
 	ListWaitGroups(ctx context.Context, req *corepb.ListWaitGroupsRequest) (*corepb.ListWaitGroupsResponse, error)
 	ListWaitGroupJobs(ctx context.Context, req *corepb.ListWaitGroupJobsRequest) (*corepb.ListWaitGroupJobsResponse, error)
-	AddJobsToWaitGroup(ctx context.Context, req *corepb.AddJobsToWaitGroupRequest) (*corepb.AddJobsToWaitGroupResponse, error)
+	UpdateWaitGroup(ctx context.Context, req *corepb.UpdateWaitGroupRequest) (*corepb.UpdateWaitGroupResponse, error)
 	CompleteJobsFromWaitGroup(ctx context.Context, req *corepb.CompleteJobsFromWaitGroupRequest) (*corepb.CompleteJobsFromWaitGroupResponse, error)
 	CreateWaitGroup(ctx context.Context, req *corepb.CreateWaitGroupRequest) (*corepb.CreateWaitGroupResponse, error)
 	DeleteWaitGroup(ctx context.Context, req *corepb.DeleteWaitGroupRequest) (*corepb.DeleteWaitGroupResponse, error)
 	RunWaitGroupsGarbageCollection(ctx context.Context, req *corepb.RunWaitGroupsGarbageCollectionRequest, shardId string) (*corepb.RunWaitGroupsGarbageCollectionResponse, error)
 	WaitGroupsDeleteNamespace(ctx context.Context, req *corepb.WaitGroupsDeleteNamespaceRequest) (*corepb.WaitGroupsDeleteNamespaceResponse, error)
-	UpdateWaitGroup(ctx context.Context, req *corepb.UpdateWaitGroupRequest) (*corepb.UpdateWaitGroupResponse, error)
 
 	GetBarrier(ctx context.Context, req *corepb.GetBarrierRequest) (*corepb.GetBarrierResponse, error)
 	GetBarrierByName(ctx context.Context, req *corepb.GetBarrierByNameRequest) (*corepb.GetBarrierByNameResponse, error)
@@ -260,13 +257,12 @@ type GrackleWaitGroupsCoreApi interface {
 	GetWaitGroupByName(req *GetWaitGroupByNameRequest) (*GetWaitGroupByNameResponse, error)
 	ListWaitGroups(req *ListWaitGroupsRequest) (*ListWaitGroupsResponse, error)
 	ListWaitGroupJobs(req *ListWaitGroupJobsRequest) (*ListWaitGroupJobsResponse, error)
-	AddJobsToWaitGroup(req *AddJobsToWaitGroupRequest) (*AddJobsToWaitGroupResponse, error)
+	UpdateWaitGroup(req *UpdateWaitGroupRequest) (*UpdateWaitGroupResponse, error)
 	CompleteJobsFromWaitGroup(req *CompleteJobsFromWaitGroupRequest) (*CompleteJobsFromWaitGroupResponse, error)
 	CreateWaitGroup(req *CreateWaitGroupRequest) (*CreateWaitGroupResponse, error)
 	DeleteWaitGroup(req *DeleteWaitGroupRequest) (*DeleteWaitGroupResponse, error)
 	RunWaitGroupsGarbageCollection(req *RunWaitGroupsGarbageCollectionRequest) (*RunWaitGroupsGarbageCollectionResponse, error)
 	WaitGroupsDeleteNamespace(req *WaitGroupsDeleteNamespaceRequest) (*WaitGroupsDeleteNamespaceResponse, error)
-	UpdateWaitGroup(req *UpdateWaitGroupRequest) (*UpdateWaitGroupResponse, error)
 }
 
 type GrackleBarriersCoreApi interface {

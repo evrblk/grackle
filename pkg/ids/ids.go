@@ -15,11 +15,11 @@ import (
 var (
 	ErrInvalidId = errors.New("invalid id")
 
-	namespaceIdRegex = regexp.MustCompile("ns_[0-9a-zA-Z]+")
-	waitGroupIdRegex = regexp.MustCompile("wg_[0-9a-zA-Z]+")
-	semaphoreIdRegex = regexp.MustCompile("sem_[0-9a-zA-Z]+")
-	barrierIdRegex   = regexp.MustCompile("bar_[0-9a-zA-Z]+")
-	leaseIdRegex     = regexp.MustCompile("ls_[0-9a-zA-Z]+")
+	namespaceIdRegex = regexp.MustCompile("^ns_[0-9a-zA-Z]+$")
+	waitGroupIdRegex = regexp.MustCompile("^wg_[0-9a-zA-Z]+$")
+	semaphoreIdRegex = regexp.MustCompile("^sem_[0-9a-zA-Z]+$")
+	barrierIdRegex   = regexp.MustCompile("^bar_[0-9a-zA-Z]+$")
+	leaseIdRegex     = regexp.MustCompile("^ls_[0-9a-zA-Z]+$")
 )
 
 func DecodeNamespaceId(s string) (*corepb.NamespaceId, error) {

@@ -185,6 +185,11 @@ func (m *UpdateBarrierRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) 
 	if m.Now != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Now))
 		i--
+		dAtA[i] = 0x30
+	}
+	if m.ExpectedVersion != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.ExpectedVersion))
+		i--
 		dAtA[i] = 0x28
 	}
 	if len(m.Metadata) > 0 {
@@ -1692,6 +1697,9 @@ func (m *UpdateBarrierRequest) SizeVT() (n int) {
 			n += mapEntrySize + 1 + protohelpers.SizeOfVarint(uint64(mapEntrySize))
 		}
 	}
+	if m.ExpectedVersion != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.ExpectedVersion))
+	}
 	if m.Now != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.Now))
 	}
@@ -2892,6 +2900,25 @@ func (m *UpdateBarrierRequest) UnmarshalVT(dAtA []byte) error {
 			m.Metadata[mapkey] = mapvalue
 			iNdEx = postIndex
 		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExpectedVersion", wireType)
+			}
+			m.ExpectedVersion = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ExpectedVersion |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
 			}

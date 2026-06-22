@@ -7,6 +7,7 @@ import (
 
 	gracklepb "github.com/evrblk/evrblk-go/grackle/v1beta"
 	"github.com/evrblk/grackle/pkg/ids"
+	"github.com/evrblk/grackle/pkg/pagination"
 )
 
 const (
@@ -20,7 +21,6 @@ const (
 	maxDescriptionLength     = 1024
 	maxCompleteJobBatchSize  = 50
 	maxPaginationTokenLength = 1024
-	maxPaginationLimit       = 100
 	maxTimeoutSeconds        = 300 // 5 minutes
 	maxLeaseIdLength         = 64
 	maxLeaseTtlSeconds       = 300 // 5 minutes
@@ -29,8 +29,8 @@ const (
 	maxMetadataKeyLength   = 128
 	maxMetadataValueLength = 256
 
-	nameRegex     = "^[-_0-9a-zA-Z]*$"
-	lockNameRegex = "^[-_0-9a-zA-Z//]*$"
+	nameRegex     = "^[-_0-9a-zA-Z]+$"
+	lockNameRegex = "^[-_0-9a-zA-Z]+(/[-_0-9a-zA-Z]+)*$"
 )
 
 func ValidateCreateNamespaceRequest(req *gracklepb.CreateNamespaceRequest) error {
@@ -102,11 +102,39 @@ func ValidateCreateWaitGroupRequest(req *gracklepb.CreateWaitGroupRequest) error
 		return err
 	}
 
+	if err := validateDescription(req.Description, "CreateWaitGroupRequest.Description"); err != nil {
+		return err
+	}
+
 	if req.Counter <= 0 {
 		return invalid("CreateWaitGroupRequest.Counter", "must be greater than 0")
 	}
 
 	if err := validateMetadata(req.Metadata, "CreateWaitGroupRequest.Metadata"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ValidateUpdateWaitGroupRequest(req *gracklepb.UpdateWaitGroupRequest) error {
+	if err := validateNamespaceName(req.NamespaceName, "UpdateWaitGroupRequest.NamespaceName"); err != nil {
+		return err
+	}
+
+	if err := validateWaitGroupName(req.WaitGroupName, "UpdateWaitGroupRequest.WaitGroupName"); err != nil {
+		return err
+	}
+
+	if err := validateDescription(req.Description, "UpdateWaitGroupRequest.Description"); err != nil {
+		return err
+	}
+
+	if req.Counter <= 0 {
+		return invalid("UpdateWaitGroupRequest.Counter", "must be greater than 0")
+	}
+
+	if err := validateMetadata(req.Metadata, "UpdateWaitGroupRequest.Metadata"); err != nil {
 		return err
 	}
 
@@ -135,18 +163,6 @@ func ValidateWaitForWaitGroupRequest(req *gracklepb.WaitForWaitGroupRequest) err
 	}
 
 	if err := validateTimeOutSeconds(req.TimeoutSeconds, "WaitForWaitGroupRequest.TimeoutSeconds"); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func ValidateAddJobsToWaitGroupRequest(req *gracklepb.AddJobsToWaitGroupRequest) error {
-	if err := validateNamespaceName(req.NamespaceName, "AddJobsToWaitGroupRequest.NamespaceName"); err != nil {
-		return err
-	}
-
-	if err := validateWaitGroupName(req.WaitGroupName, "AddJobsToWaitGroupRequest.WaitGroupName"); err != nil {
 		return err
 	}
 
@@ -313,6 +329,10 @@ func ValidateCreateSemaphoreRequest(req *gracklepb.CreateSemaphoreRequest) error
 		return err
 	}
 
+	if err := validateDescription(req.Description, "CreateSemaphoreRequest.Description"); err != nil {
+		return err
+	}
+
 	if req.Permits <= 0 {
 		return invalid("CreateSemaphoreRequest.Permits", "must be greater than 0")
 	}
@@ -358,6 +378,10 @@ func ValidateUpdateSemaphoreRequest(req *gracklepb.UpdateSemaphoreRequest) error
 	}
 
 	if err := validateSemaphoreName(req.SemaphoreName, "UpdateSemaphoreRequest.SemaphoreName"); err != nil {
+		return err
+	}
+
+	if err := validateDescription(req.Description, "UpdateSemaphoreRequest.Description"); err != nil {
 		return err
 	}
 
@@ -832,7 +856,7 @@ func validatePaginationToken(value string, fieldName string) error {
 
 func validateLeaseTtlSeconds(value uint64, fieldName string) error {
 	if value <= 0 || value > maxLeaseTtlSeconds {
-		return invalid(fieldName, fmt.Sprintf("must be between 0 and %d", maxLeaseTtlSeconds))
+		return invalid(fieldName, fmt.Sprintf("must be between 1 and %d", maxLeaseTtlSeconds))
 	}
 
 	return nil
@@ -840,15 +864,15 @@ func validateLeaseTtlSeconds(value uint64, fieldName string) error {
 
 func validateTimeOutSeconds(value int32, fieldName string) error {
 	if value <= 0 || value > maxTimeoutSeconds {
-		return invalid(fieldName, fmt.Sprintf("must be between 0 and %d", maxTimeoutSeconds))
+		return invalid(fieldName, fmt.Sprintf("must be between 1 and %d", maxTimeoutSeconds))
 	}
 
 	return nil
 }
 
 func validateLimit(value int32, fieldName string) error {
-	if value < 0 || value > maxPaginationLimit {
-		return invalid(fieldName, fmt.Sprintf("must be between 0 and %d", maxPaginationLimit))
+	if value < 0 || value > pagination.MaxPaginationLimit {
+		return invalid(fieldName, fmt.Sprintf("must be between 0 and %d", pagination.MaxPaginationLimit))
 	}
 
 	return nil

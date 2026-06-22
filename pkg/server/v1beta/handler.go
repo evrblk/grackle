@@ -67,28 +67,21 @@ func (s *GrackleApiServerHandler) GetNamespace(ctx context.Context, req *grackle
 func (s *GrackleApiServerHandler) UpdateNamespace(ctx context.Context, req *gracklepb.UpdateNamespaceRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.UpdateNamespaceResponse, error) {
 	now := time.Now()
 
-	// Resolve namespace by name to get its ID
-	resp1, err := s.grackleClient.GetNamespaceByName(ctx, &corepb.GetNamespaceByNameRequest{
-		AccountId:     accountId,
-		NamespaceName: req.NamespaceName,
-	})
-	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
-	}
-
-	// Update namespace description
-	resp2, err := s.grackleClient.UpdateNamespace(ctx, &corepb.UpdateNamespaceRequest{
-		NamespaceId: resp1.Namespace.Id,
-		Description: req.Description,
-		Now:         now.UnixNano(),
-		Metadata:    req.Metadata,
+	// Update namespace
+	resp1, err := s.grackleClient.UpdateNamespace(ctx, &corepb.UpdateNamespaceRequest{
+		AccountId:       accountId,
+		NamespaceName:   req.NamespaceName,
+		Description:     req.Description,
+		Now:             now.UnixNano(),
+		Metadata:        req.Metadata,
+		ExpectedVersion: req.ExpectedVersion,
 	})
 	if err != nil {
 		return nil, monsterax.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.UpdateNamespaceResponse{
-		Namespace: namespaceToFront(resp2.Namespace),
+		Namespace: namespaceToFront(resp1.Namespace),
 	}, nil
 }
 
@@ -150,8 +143,8 @@ func (s *GrackleApiServerHandler) DeleteNamespace(ctx context.Context, req *grac
 
 	// Delete the namespace itself
 	_, err = s.grackleClient.DeleteNamespace(ctx, &corepb.DeleteNamespaceRequest{
-		NamespaceId: resp1.Namespace.Id,
-		Now:         now.UnixNano(),
+		NamespaceName: req.NamespaceName,
+		Now:           now.UnixNano(),
 	})
 	if err != nil {
 		return nil, monsterax.ErrorToGRPC(err)
@@ -162,7 +155,7 @@ func (s *GrackleApiServerHandler) DeleteNamespace(ctx context.Context, req *grac
 
 func (s *GrackleApiServerHandler) ListNamespaces(ctx context.Context, req *gracklepb.ListNamespacesRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.ListNamespacesResponse, error) {
 	// Decode pagination token from base64-encoded format
-	paginationToken, err := paginationTokenFromFront(req.PaginationToken)
+	paginationToken, err := paginationTokenToCore(req.PaginationToken)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
@@ -231,6 +224,44 @@ func (s *GrackleApiServerHandler) CreateWaitGroup(ctx context.Context, req *grac
 	}
 
 	return &gracklepb.CreateWaitGroupResponse{
+		WaitGroup: waitGroupToFront(resp2.WaitGroup),
+	}, nil
+}
+
+func (s *GrackleApiServerHandler) UpdateWaitGroup(ctx context.Context, req *gracklepb.UpdateWaitGroupRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.UpdateWaitGroupResponse, error) {
+	now := time.Now()
+
+	// Validate wait group size doesn't exceed account limits
+	// TODO: consistent error format with Validate* methods
+	if req.Counter > uint64(limits.MaxWaitGroupSize) {
+		return nil, status.Errorf(codes.InvalidArgument, "wait group size is too big, max: %d", limits.MaxWaitGroupSize)
+	}
+
+	// Resolve namespace by name to get its ID
+	resp1, err := s.grackleClient.GetNamespaceByName(ctx, &corepb.GetNamespaceByNameRequest{
+		AccountId:     accountId,
+		NamespaceName: req.NamespaceName,
+	})
+	if err != nil {
+		return nil, monsterax.ErrorToGRPC(err)
+	}
+
+	// Create wait group with generated ID
+	resp2, err := s.grackleClient.UpdateWaitGroup(ctx, &corepb.UpdateWaitGroupRequest{
+		NamespaceId:     resp1.Namespace.Id,
+		WaitGroupName:   req.WaitGroupName,
+		Description:     req.Description,
+		Now:             now.UnixNano(),
+		Counter:         req.Counter,
+		ExpiresAt:       req.ExpiresAt,
+		Metadata:        req.Metadata,
+		ExpectedVersion: req.ExpectedVersion,
+	})
+	if err != nil {
+		return nil, monsterax.ErrorToGRPC(err)
+	}
+
+	return &gracklepb.UpdateWaitGroupResponse{
 		WaitGroup: waitGroupToFront(resp2.WaitGroup),
 	}, nil
 }
@@ -319,35 +350,6 @@ func (s *GrackleApiServerHandler) WaitForWaitGroup(ctx context.Context, req *gra
 	}
 }
 
-func (s *GrackleApiServerHandler) AddJobsToWaitGroup(ctx context.Context, req *gracklepb.AddJobsToWaitGroupRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.AddJobsToWaitGroupResponse, error) {
-	now := time.Now()
-
-	// Resolve namespace by name to get its ID
-	resp1, err := s.grackleClient.GetNamespaceByName(ctx, &corepb.GetNamespaceByNameRequest{
-		AccountId:     accountId,
-		NamespaceName: req.NamespaceName,
-	})
-	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
-	}
-
-	// Increment wait group counter with size validation
-	resp2, err := s.grackleClient.AddJobsToWaitGroup(ctx, &corepb.AddJobsToWaitGroupRequest{
-		NamespaceId:      resp1.Namespace.Id,
-		WaitGroupName:    req.WaitGroupName,
-		Counter:          req.Counter,
-		Now:              now.UnixNano(),
-		MaxWaitGroupSize: limits.MaxWaitGroupSize,
-	})
-	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
-	}
-
-	return &gracklepb.AddJobsToWaitGroupResponse{
-		WaitGroup: waitGroupToFront(resp2.WaitGroup),
-	}, nil
-}
-
 func (s *GrackleApiServerHandler) CompleteJobsFromWaitGroup(ctx context.Context, req *gracklepb.CompleteJobsFromWaitGroupRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.CompleteJobsFromWaitGroupResponse, error) {
 	now := time.Now()
 
@@ -410,7 +412,7 @@ func (s *GrackleApiServerHandler) ListWaitGroups(ctx context.Context, req *grack
 	}
 
 	// Decode pagination token from base64-encoded format
-	paginationToken, err := paginationTokenFromFront(req.PaginationToken)
+	paginationToken, err := paginationTokenToCore(req.PaginationToken)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
@@ -453,7 +455,7 @@ func (s *GrackleApiServerHandler) ListWaitGroupCompletedJobs(ctx context.Context
 	}
 
 	// Decode pagination token from base64-encoded format
-	paginationToken, err := paginationTokenFromFront(req.PaginationToken)
+	paginationToken, err := paginationTokenToCore(req.PaginationToken)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
@@ -673,7 +675,7 @@ func (s *GrackleApiServerHandler) ListLocks(ctx context.Context, req *gracklepb.
 	}
 
 	// Decode pagination token from base64-encoded format
-	paginationToken, err := paginationTokenFromFront(req.PaginationToken)
+	paginationToken, err := paginationTokenToCore(req.PaginationToken)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
@@ -759,7 +761,7 @@ func (s *GrackleApiServerHandler) ListSemaphores(ctx context.Context, req *grack
 	}
 
 	// Decode pagination token from base64-encoded format
-	paginationToken, err := paginationTokenFromFront(req.PaginationToken)
+	paginationToken, err := paginationTokenToCore(req.PaginationToken)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
@@ -805,7 +807,7 @@ func (s *GrackleApiServerHandler) ListSemaphoreHolders(ctx context.Context, req 
 	}
 
 	// Decode pagination token from base64-encoded format
-	paginationToken, err := paginationTokenFromFront(req.PaginationToken)
+	paginationToken, err := paginationTokenToCore(req.PaginationToken)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
@@ -995,12 +997,13 @@ func (s *GrackleApiServerHandler) UpdateSemaphore(ctx context.Context, req *grac
 
 	// Update the semaphore
 	resp2, err := s.grackleClient.UpdateSemaphore(ctx, &corepb.UpdateSemaphoreRequest{
-		NamespaceId:   resp1.Namespace.Id,
-		SemaphoreName: req.SemaphoreName,
-		Description:   req.Description,
-		Now:           now.UnixNano(),
-		Permits:       req.Permits,
-		Metadata:      req.Metadata,
+		NamespaceId:     resp1.Namespace.Id,
+		SemaphoreName:   req.SemaphoreName,
+		Description:     req.Description,
+		Now:             now.UnixNano(),
+		Permits:         req.Permits,
+		Metadata:        req.Metadata,
+		ExpectedVersion: req.ExpectedVersion,
 	})
 	if err != nil {
 		return nil, monsterax.ErrorToGRPC(err)
@@ -1080,7 +1083,7 @@ func (s *GrackleApiServerHandler) ListBarriers(ctx context.Context, req *grackle
 	}
 
 	// Decode pagination token from base64-encoded format
-	paginationToken, err := paginationTokenFromFront(req.PaginationToken)
+	paginationToken, err := paginationTokenToCore(req.PaginationToken)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
@@ -1189,6 +1192,7 @@ func (s *GrackleApiServerHandler) UpdateBarrier(ctx context.Context, req *grackl
 		ExpectedProcesses: req.ExpectedProcesses,
 		Now:               now.UnixNano(),
 		Metadata:          req.Metadata,
+		ExpectedVersion:   req.ExpectedVersion,
 	})
 	if err != nil {
 		return nil, monsterax.ErrorToGRPC(err)
@@ -1319,7 +1323,7 @@ func (s *GrackleApiServerHandler) ListBarrierParticipants(ctx context.Context, r
 	}
 
 	// Decode pagination token from base64-encoded format
-	paginationToken, err := paginationTokenFromFront(req.PaginationToken)
+	paginationToken, err := paginationTokenToCore(req.PaginationToken)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
@@ -1375,6 +1379,7 @@ func (s *GrackleApiServerHandler) CreateSemaphoreLease(ctx context.Context, req 
 		ProcessId:                  req.ProcessId,
 		TtlSeconds:                 req.TtlSeconds,
 		Now:                        now.UnixNano(),
+		Metadata:                   req.Metadata,
 		MaxNumberOfSemaphoreLeases: limits.MaxNumberOfSemaphoreLeases,
 	})
 	if err != nil {
@@ -1470,7 +1475,7 @@ func (s *GrackleApiServerHandler) ListSemaphoreLeases(ctx context.Context, req *
 	}
 
 	// Decode pagination token from base64-encoded format
-	paginationToken, err := paginationTokenFromFront(req.PaginationToken)
+	paginationToken, err := paginationTokenToCore(req.PaginationToken)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
@@ -1561,6 +1566,7 @@ func (s *GrackleApiServerHandler) CreateLockLease(ctx context.Context, req *grac
 		ProcessId:             req.ProcessId,
 		TtlSeconds:            req.TtlSeconds,
 		Now:                   now.UnixNano(),
+		Metadata:              req.Metadata,
 		MaxNumberOfLockLeases: limits.MaxNumberOfLockLeases,
 	})
 	if err != nil {
@@ -1658,7 +1664,7 @@ func (s *GrackleApiServerHandler) ListLockLeases(ctx context.Context, req *grack
 	}
 
 	// Decode pagination token from base64-encoded format
-	paginationToken, err := paginationTokenFromFront(req.PaginationToken)
+	paginationToken, err := paginationTokenToCore(req.PaginationToken)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}

@@ -362,7 +362,7 @@ func TestCore_UpdateBarrier(t *testing.T) {
 
 		// T+1m: Update barrier
 		updateTime := now.Add(time.Minute)
-		resp := updateBarrier(t, core, barrierId, "Updated description", 5, updateTime)
+		resp := updateBarrier(t, core, barrierId, "Updated description", 5, 1, updateTime)
 		require.NotNil(t, resp.Barrier)
 		require.Equal(t, "Updated description", resp.Barrier.Description)
 		require.EqualValues(t, 5, resp.Barrier.ExpectedProcesses)
@@ -387,7 +387,7 @@ func TestCore_UpdateBarrier(t *testing.T) {
 		}
 
 		// Try to update a barrier that doesn't exist
-		appErr := updateBarrierWithError(t, core, barrierId, "Updated description", 5, now)
+		appErr := updateBarrierWithError(t, core, barrierId, "Updated description", 5, 1, now)
 		require.Equal(t, monsterax.NotFound, appErr.Code)
 		require.Contains(t, appErr.Message, "barrier not found")
 	})
@@ -414,20 +414,85 @@ func TestCore_UpdateBarrier(t *testing.T) {
 		}
 
 		// T+2m: Try to update expected_processes to 2 (less than 3 arrived processes)
-		appErr := updateBarrierWithError(t, core, barrierId, "Updated description", 2, now.Add(2*time.Minute))
+		appErr := updateBarrierWithError(t, core, barrierId, "Updated description", 2, 1, now.Add(2*time.Minute))
 		require.NotNil(t, appErr)
 		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
 		require.Contains(t, appErr.Message, "there are currently more arrived processes than the new expected processes")
 
 		// T+3m: Update to expected_processes = 3 (equal to arrived_processes) should succeed
-		resp1 := updateBarrier(t, core, barrierId, "Updated description", 3, now.Add(3*time.Minute))
+		resp1 := updateBarrier(t, core, barrierId, "Updated description", 3, 1, now.Add(3*time.Minute))
 		require.NotNil(t, resp1.Barrier)
 		require.EqualValues(t, 3, resp1.Barrier.ExpectedProcesses)
 
 		// T+4m: Update to expected_processes = 10 (greater than arrived_processes) should succeed
-		resp2 := updateBarrier(t, core, barrierId, "Updated description again", 10, now.Add(4*time.Minute))
+		resp2 := updateBarrier(t, core, barrierId, "Updated description again", 10, 2, now.Add(4*time.Minute))
 		require.NotNil(t, resp2.Barrier)
 		require.EqualValues(t, 10, resp2.Barrier.ExpectedProcesses)
+	})
+
+	t.Run("version increments on each successful update", func(t *testing.T) {
+		core := newBarriersCore(t)
+		now := time.Now()
+		barrierId := &corepb.BarrierId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+			BarrierId:   rand.Uint64(),
+		}
+
+		// A freshly created barrier starts at version 1
+		created := createBarrier(t, core, barrierId, "test_barrier", 3, 10, now)
+		require.EqualValues(t, 1, created.Version)
+
+		// Updating with the matching current version succeeds and bumps the version
+		resp := updateBarrier(t, core, barrierId, "Updated description", 5, 1, now.Add(time.Minute))
+		require.EqualValues(t, 2, resp.Barrier.Version)
+
+		// The next update must use the new version
+		resp = updateBarrier(t, core, barrierId, "Updated again", 6, 2, now.Add(2*time.Minute))
+		require.EqualValues(t, 3, resp.Barrier.Version)
+	})
+
+	t.Run("update with stale version", func(t *testing.T) {
+		core := newBarriersCore(t)
+		now := time.Now()
+		barrierId := &corepb.BarrierId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+			BarrierId:   rand.Uint64(),
+		}
+
+		_ = createBarrier(t, core, barrierId, "test_barrier", 3, 10, now)
+
+		// First update with version 1 succeeds (barrier is now at version 2)
+		_ = updateBarrier(t, core, barrierId, "Updated description", 5, 1, now.Add(time.Minute))
+
+		// Reusing the stale version 1 is rejected with a version mismatch
+		appErr := updateBarrierWithError(t, core, barrierId, "Should not apply", 7, 1, now.Add(2*time.Minute))
+		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Contains(t, appErr.Message, "version mismatch")
+
+		// The rejected update did not change anything
+		barrier := getBarrier(t, core, barrierId)
+		require.Equal(t, "Updated description", barrier.Description)
+		require.EqualValues(t, 5, barrier.ExpectedProcesses)
+		require.EqualValues(t, 2, barrier.Version)
+	})
+
+	t.Run("update with future version", func(t *testing.T) {
+		core := newBarriersCore(t)
+		now := time.Now()
+		barrierId := &corepb.BarrierId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+			BarrierId:   rand.Uint64(),
+		}
+
+		_ = createBarrier(t, core, barrierId, "test_barrier", 3, 10, now)
+
+		// Passing a version the barrier has never reached is rejected
+		appErr := updateBarrierWithError(t, core, barrierId, "Updated description", 5, 99, now.Add(time.Minute))
+		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Contains(t, appErr.Message, "version mismatch")
 	})
 }
 
@@ -671,6 +736,7 @@ func TestCore_BarrierMetadata(t *testing.T) {
 			ExpectedProcesses: 2,
 			Metadata:          updateMetadata,
 			Now:               updateTime.UnixNano(),
+			ExpectedVersion:   1,
 		},
 	})
 	require.NoError(t, err)
@@ -1155,7 +1221,7 @@ func listBarrierParticipantsWithError(t *testing.T, core *Core, namespaceId *cor
 	return resp.ApplicationError
 }
 
-func updateBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, description string, expectedProcesses uint64, now time.Time) *corepb.UpdateBarrierResponse {
+func updateBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, description string, expectedProcesses uint64, version uint64, now time.Time) *corepb.UpdateBarrierResponse {
 	t.Helper()
 
 	resp, err := core.UpdateBarrier(&coreapis.UpdateBarrierRequest{
@@ -1164,6 +1230,7 @@ func updateBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, descri
 			Description:       description,
 			ExpectedProcesses: expectedProcesses,
 			Now:               now.UnixNano(),
+			ExpectedVersion:   version,
 		},
 	})
 
@@ -1175,7 +1242,7 @@ func updateBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, descri
 	return resp.Payload
 }
 
-func updateBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierId, description string, expectedProcesses uint64, now time.Time) *monsterax.Error {
+func updateBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierId, description string, expectedProcesses uint64, version uint64, now time.Time) *monsterax.Error {
 	t.Helper()
 
 	resp, err := core.UpdateBarrier(&coreapis.UpdateBarrierRequest{
@@ -1184,6 +1251,7 @@ func updateBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierI
 			Description:       description,
 			ExpectedProcesses: expectedProcesses,
 			Now:               now.UnixNano(),
+			ExpectedVersion:   version,
 		},
 	})
 

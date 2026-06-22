@@ -117,44 +117,6 @@ func TestGetWaitGroup(t *testing.T) {
 	})
 }
 
-func TestAddJobsToWaitGroup(t *testing.T) {
-	t.Run("validation", func(t *testing.T) {
-		server := setupGrackleApiServer(t)
-		ctx := context.Background()
-
-		// Create namespace
-		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
-			Name: "namespace1",
-		})
-		require.NoError(t, err)
-
-		// Create wait group
-		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
-			NamespaceName: "namespace1",
-			WaitGroupName: "waitgroup1",
-			Counter:       1,
-		})
-		require.NoError(t, err)
-
-		// Valid request
-		resp, err := server.AddJobsToWaitGroup(ctx, &gracklepb.AddJobsToWaitGroupRequest{
-			NamespaceName: "namespace1",
-			WaitGroupName: "waitgroup1",
-			Counter:       5,
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp.WaitGroup)
-
-		// Invalid request - invalid namespace name
-		_, err = server.AddJobsToWaitGroup(ctx, &gracklepb.AddJobsToWaitGroupRequest{
-			NamespaceName: "invalid@namespace",
-			WaitGroupName: "waitgroup1",
-			Counter:       5,
-		})
-		require.Error(t, err)
-	})
-}
-
 func TestCompleteJobsFromWaitGroup(t *testing.T) {
 	t.Run("validation", func(t *testing.T) {
 		server := setupGrackleApiServer(t)

@@ -31,7 +31,6 @@ const (
 	OpRefreshSemaphoreLease
 	OpRevokeSemaphoreLease
 	OpListSemaphoreLeases
-	OpAddWaitGroupJobs
 	OpCompleteWaitGroupJobs
 	OpGetWaitGroup
 	OpListWaitGroups
@@ -72,8 +71,6 @@ func (o OperationType) String() string {
 		return "revoke_semaphore_lease"
 	case OpListSemaphoreLeases:
 		return "list_semaphore_leases"
-	case OpAddWaitGroupJobs:
-		return "add_waitgroup_jobs"
 	case OpCompleteWaitGroupJobs:
 		return "complete_waitgroup_jobs"
 	case OpGetWaitGroup:
@@ -239,29 +236,6 @@ func executeGetSemaphore(ctx context.Context, client grackle.GrackleApi, pool *R
 	_, err := client.GetSemaphore(ctx, &grackle.GetSemaphoreRequest{
 		NamespaceName: ns,
 		SemaphoreName: semName,
-	})
-	return err
-}
-
-// executeAddWaitGroupJobs executes adding jobs to a wait group
-func executeAddWaitGroupJobs(ctx context.Context, client grackle.GrackleApi, pool *ResourcePool, workerID int, rng *rand.Rand, config *Config) error {
-	// Pick random namespace
-	ns := pool.namespaces[rng.Intn(len(pool.namespaces))]
-
-	// Pick random wait group
-	waitgroups := pool.waitGroups[ns]
-	if len(waitgroups) == 0 {
-		return fmt.Errorf("no wait groups available in namespace %s", ns)
-	}
-	wgName := waitgroups[rng.Intn(len(waitgroups))]
-
-	// Random number of jobs to add (1 to batch size)
-	counter := uint64(rng.Intn(config.WaitGroupJobBatchSize) + 1)
-
-	_, err := client.AddJobsToWaitGroup(ctx, &grackle.AddJobsToWaitGroupRequest{
-		NamespaceName: ns,
-		WaitGroupName: wgName,
-		Counter:       counter,
 	})
 	return err
 }

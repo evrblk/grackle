@@ -1020,17 +1020,17 @@ func (a *GrackleWaitGroupsCoreAdapter) Update(appRequestBytes []byte) (*monstera
 
 	switch appRequest.MethodNumber {
 	case 1:
-		payload := corepb.AddJobsToWaitGroupRequest{}
+		payload := corepb.UpdateWaitGroupRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleWaitGroupsCore.AddJobsToWaitGroup(&AddJobsToWaitGroupRequest{Payload: &payload})
+		methodResponse, err := a.grackleWaitGroupsCore.UpdateWaitGroup(&UpdateWaitGroupRequest{Payload: &payload})
 		if err != nil {
 			return nil, err
 		}
-		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "AddJobsToWaitGroup", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "AddJobsToWaitGroup", a.shardId, a.replicaId).Inc()
+		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "UpdateWaitGroup", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "UpdateWaitGroup", a.shardId, a.replicaId).Inc()
 		appResponse.Error = methodResponse.ApplicationError
 		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
 		if err != nil {
@@ -1121,24 +1121,6 @@ func (a *GrackleWaitGroupsCoreAdapter) Update(appRequestBytes []byte) (*monstera
 		}
 		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "WaitGroupsDeleteNamespace", a.shardId, a.replicaId), t1)
 		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "WaitGroupsDeleteNamespace", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
-		if err != nil {
-			return nil, err
-		}
-		appResponse.Data = methodResponseBytes
-	case 7:
-		payload := corepb.UpdateWaitGroupRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
-		if err != nil {
-			return nil, err
-		}
-		methodResponse, err := a.grackleWaitGroupsCore.UpdateWaitGroup(&UpdateWaitGroupRequest{Payload: &payload})
-		if err != nil {
-			return nil, err
-		}
-		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "UpdateWaitGroup", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "UpdateWaitGroup", a.shardId, a.replicaId).Inc()
 		appResponse.Error = methodResponse.ApplicationError
 		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
 		if err != nil {

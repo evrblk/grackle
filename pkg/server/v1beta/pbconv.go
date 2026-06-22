@@ -54,8 +54,6 @@ func waitGroupJobToFront(job *corepb.WaitGroupJob) *gracklepb.WaitGroupJob {
 	}
 }
 
-// completeJobToCore converts a public CompleteJobRequest (job id + metadata)
-// into its core counterpart.
 func completeJobToCore(job *gracklepb.CompleteJobRequest) *corepb.CompleteJobRequest {
 	if job == nil {
 		return nil
@@ -116,7 +114,7 @@ func lockToFront(lock *corepb.Lock) *gracklepb.Lock {
 
 	return &gracklepb.Lock{
 		Name:        lock.Id.LockName,
-		State:       gracklepb.LockState(lock.State),
+		State:       lockStateToFront(lock.State),
 		LockedAt:    lock.LockedAt,
 		LockHolders: lockHoldersToFront(lock.LockHolders, lock.Id.AccountId, lock.Id.NamespaceId),
 	}
@@ -256,7 +254,7 @@ func paginationTokenToFront(paginationToken *corepb.PaginationToken) (string, er
 	return base64.StdEncoding.EncodeToString(data), nil
 }
 
-func paginationTokenFromFront(paginationTokenBase64 string) (*corepb.PaginationToken, error) {
+func paginationTokenToCore(paginationTokenBase64 string) (*corepb.PaginationToken, error) {
 	if paginationTokenBase64 == "" {
 		return nil, nil
 	}
@@ -285,6 +283,7 @@ func leaseToFront(lease *corepb.Lease) *gracklepb.Lease {
 		ProcessId: lease.ProcessId,
 		CreatedAt: lease.CreatedAt,
 		ExpiresAt: lease.ExpiresAt,
+		Metadata:  lease.Metadata,
 	}
 }
 
@@ -294,4 +293,17 @@ func leasesToFront(leases []*corepb.Lease) []*gracklepb.Lease {
 		frontLeases[i] = leaseToFront(lease)
 	}
 	return frontLeases
+}
+
+func lockStateToFront(lockState corepb.LockState) gracklepb.LockState {
+	switch lockState {
+	case corepb.LockState_UNLOCKED:
+		return gracklepb.LockState_UNLOCKED
+	case corepb.LockState_SHARED_LOCKED:
+		return gracklepb.LockState_SHARED_LOCKED
+	case corepb.LockState_EXCLUSIVE_LOCKED:
+		return gracklepb.LockState_EXCLUSIVE_LOCKED
+	default:
+		return gracklepb.LockState_INVALID
+	}
 }

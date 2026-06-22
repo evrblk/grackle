@@ -862,15 +862,16 @@ func (x *ReleaseSemaphoreResponse) GetSemaphore() *Semaphore {
 }
 
 type UpdateSemaphoreRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	SemaphoreName string                 `protobuf:"bytes,2,opt,name=semaphore_name,json=semaphoreName,proto3" json:"semaphore_name,omitempty"`
-	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	Permits       uint64                 `protobuf:"varint,4,opt,name=permits,proto3" json:"permits,omitempty"`
-	Now           int64                  `protobuf:"varint,5,opt,name=now,proto3" json:"now,omitempty"`
-	Metadata      map[string]string      `protobuf:"bytes,6,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	NamespaceId     *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
+	SemaphoreName   string                 `protobuf:"bytes,2,opt,name=semaphore_name,json=semaphoreName,proto3" json:"semaphore_name,omitempty"`
+	Description     string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	Permits         uint64                 `protobuf:"varint,4,opt,name=permits,proto3" json:"permits,omitempty"`
+	Now             int64                  `protobuf:"varint,5,opt,name=now,proto3" json:"now,omitempty"`
+	Metadata        map[string]string      `protobuf:"bytes,6,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	ExpectedVersion uint64                 `protobuf:"varint,7,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *UpdateSemaphoreRequest) Reset() {
@@ -943,6 +944,13 @@ func (x *UpdateSemaphoreRequest) GetMetadata() map[string]string {
 		return x.Metadata
 	}
 	return nil
+}
+
+func (x *UpdateSemaphoreRequest) GetExpectedVersion() uint64 {
+	if x != nil {
+		return x.ExpectedVersion
+	}
+	return 0
 }
 
 type UpdateSemaphoreResponse struct {
@@ -1587,7 +1595,8 @@ type CreateSemaphoreLeaseRequest struct {
 	ProcessId                  string                 `protobuf:"bytes,2,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
 	TtlSeconds                 uint64                 `protobuf:"varint,3,opt,name=ttl_seconds,json=ttlSeconds,proto3" json:"ttl_seconds,omitempty"`
 	Now                        int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
-	MaxNumberOfSemaphoreLeases int64                  `protobuf:"varint,5,opt,name=max_number_of_semaphore_leases,json=maxNumberOfSemaphoreLeases,proto3" json:"max_number_of_semaphore_leases,omitempty"`
+	Metadata                   map[string]string      `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	MaxNumberOfSemaphoreLeases int64                  `protobuf:"varint,6,opt,name=max_number_of_semaphore_leases,json=maxNumberOfSemaphoreLeases,proto3" json:"max_number_of_semaphore_leases,omitempty"`
 	unknownFields              protoimpl.UnknownFields
 	sizeCache                  protoimpl.SizeCache
 }
@@ -1648,6 +1657,13 @@ func (x *CreateSemaphoreLeaseRequest) GetNow() int64 {
 		return x.Now
 	}
 	return 0
+}
+
+func (x *CreateSemaphoreLeaseRequest) GetMetadata() map[string]string {
+	if x != nil {
+		return x.Metadata
+	}
+	return nil
 }
 
 func (x *CreateSemaphoreLeaseRequest) GetMaxNumberOfSemaphoreLeases() int64 {
@@ -2695,14 +2711,15 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\blease_id\x18\x03 \x01(\x04R\aleaseId\x12\x10\n" +
 	"\x03now\x18\x04 \x01(\x03R\x03now\"^\n" +
 	"\x18ReleaseSemaphoreResponse\x12B\n" +
-	"\tsemaphore\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.SemaphoreR\tsemaphore\"\xf2\x02\n" +
+	"\tsemaphore\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.SemaphoreR\tsemaphore\"\x9d\x03\n" +
 	"\x16UpdateSemaphoreRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12%\n" +
 	"\x0esemaphore_name\x18\x02 \x01(\tR\rsemaphoreName\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x18\n" +
 	"\apermits\x18\x04 \x01(\x04R\apermits\x12\x10\n" +
 	"\x03now\x18\x05 \x01(\x03R\x03now\x12[\n" +
-	"\bmetadata\x18\x06 \x03(\v2?.com.evrblk.grackle.corepb.UpdateSemaphoreRequest.MetadataEntryR\bmetadata\x1a;\n" +
+	"\bmetadata\x18\x06 \x03(\v2?.com.evrblk.grackle.corepb.UpdateSemaphoreRequest.MetadataEntryR\bmetadata\x12)\n" +
+	"\x10expected_version\x18\a \x01(\x04R\x0fexpectedVersion\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"]\n" +
@@ -2747,15 +2764,19 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\x12\x10\n" +
 	"\x03now\x18\x02 \x01(\x03R\x03now\"S\n" +
 	"\x19GetSemaphoreLeaseResponse\x126\n" +
-	"\x05lease\x18\x01 \x01(\v2 .com.evrblk.grackle.corepb.LeaseR\x05lease\"\xf2\x01\n" +
+	"\x05lease\x18\x01 \x01(\v2 .com.evrblk.grackle.corepb.LeaseR\x05lease\"\x91\x03\n" +
 	"\x1bCreateSemaphoreLeaseRequest\x12=\n" +
 	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\x12\x1d\n" +
 	"\n" +
 	"process_id\x18\x02 \x01(\tR\tprocessId\x12\x1f\n" +
 	"\vttl_seconds\x18\x03 \x01(\x04R\n" +
 	"ttlSeconds\x12\x10\n" +
-	"\x03now\x18\x04 \x01(\x03R\x03now\x12B\n" +
-	"\x1emax_number_of_semaphore_leases\x18\x05 \x01(\x03R\x1amaxNumberOfSemaphoreLeases\"V\n" +
+	"\x03now\x18\x04 \x01(\x03R\x03now\x12`\n" +
+	"\bmetadata\x18\x05 \x03(\v2D.com.evrblk.grackle.corepb.CreateSemaphoreLeaseRequest.MetadataEntryR\bmetadata\x12B\n" +
+	"\x1emax_number_of_semaphore_leases\x18\x06 \x01(\x03R\x1amaxNumberOfSemaphoreLeases\x1a;\n" +
+	"\rMetadataEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"V\n" +
 	"\x1cCreateSemaphoreLeaseResponse\x126\n" +
 	"\x05lease\x18\x01 \x01(\v2 .com.evrblk.grackle.corepb.LeaseR\x05lease\"n\n" +
 	"\x1bRevokeSemaphoreLeaseRequest\x12=\n" +
@@ -2846,7 +2867,7 @@ func file_pkg_corepb_semaphores_proto_rawDescGZIP() []byte {
 	return file_pkg_corepb_semaphores_proto_rawDescData
 }
 
-var file_pkg_corepb_semaphores_proto_msgTypes = make([]protoimpl.MessageInfo, 48)
+var file_pkg_corepb_semaphores_proto_msgTypes = make([]protoimpl.MessageInfo, 49)
 var file_pkg_corepb_semaphores_proto_goTypes = []any{
 	(*CreateSemaphoreRequest)(nil),                 // 0: com.evrblk.grackle.corepb.CreateSemaphoreRequest
 	(*CreateSemaphoreResponse)(nil),                // 1: com.evrblk.grackle.corepb.CreateSemaphoreResponse
@@ -2894,75 +2915,77 @@ var file_pkg_corepb_semaphores_proto_goTypes = []any{
 	nil,                                            // 43: com.evrblk.grackle.corepb.CreateSemaphoreRequest.MetadataEntry
 	nil,                                            // 44: com.evrblk.grackle.corepb.AcquireSemaphoreRequest.MetadataEntry
 	nil,                                            // 45: com.evrblk.grackle.corepb.UpdateSemaphoreRequest.MetadataEntry
-	nil,                                            // 46: com.evrblk.grackle.corepb.Semaphore.MetadataEntry
-	nil,                                            // 47: com.evrblk.grackle.corepb.SemaphoreHolder.MetadataEntry
-	(*NamespaceId)(nil),                            // 48: com.evrblk.grackle.corepb.NamespaceId
-	(*PaginationToken)(nil),                        // 49: com.evrblk.grackle.corepb.PaginationToken
-	(*LeaseId)(nil),                                // 50: com.evrblk.grackle.corepb.LeaseId
-	(*Lease)(nil),                                  // 51: com.evrblk.grackle.corepb.Lease
+	nil,                                            // 46: com.evrblk.grackle.corepb.CreateSemaphoreLeaseRequest.MetadataEntry
+	nil,                                            // 47: com.evrblk.grackle.corepb.Semaphore.MetadataEntry
+	nil,                                            // 48: com.evrblk.grackle.corepb.SemaphoreHolder.MetadataEntry
+	(*NamespaceId)(nil),                            // 49: com.evrblk.grackle.corepb.NamespaceId
+	(*PaginationToken)(nil),                        // 50: com.evrblk.grackle.corepb.PaginationToken
+	(*LeaseId)(nil),                                // 51: com.evrblk.grackle.corepb.LeaseId
+	(*Lease)(nil),                                  // 52: com.evrblk.grackle.corepb.Lease
 }
 var file_pkg_corepb_semaphores_proto_depIdxs = []int32{
 	39, // 0: com.evrblk.grackle.corepb.CreateSemaphoreRequest.semaphore_id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
 	43, // 1: com.evrblk.grackle.corepb.CreateSemaphoreRequest.metadata:type_name -> com.evrblk.grackle.corepb.CreateSemaphoreRequest.MetadataEntry
 	36, // 2: com.evrblk.grackle.corepb.CreateSemaphoreResponse.semaphore:type_name -> com.evrblk.grackle.corepb.Semaphore
-	48, // 3: com.evrblk.grackle.corepb.ListSemaphoresRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	49, // 4: com.evrblk.grackle.corepb.ListSemaphoresRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	49, // 3: com.evrblk.grackle.corepb.ListSemaphoresRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	50, // 4: com.evrblk.grackle.corepb.ListSemaphoresRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
 	36, // 5: com.evrblk.grackle.corepb.ListSemaphoresResponse.semaphores:type_name -> com.evrblk.grackle.corepb.Semaphore
-	49, // 6: com.evrblk.grackle.corepb.ListSemaphoresResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	49, // 7: com.evrblk.grackle.corepb.ListSemaphoresResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	50, // 8: com.evrblk.grackle.corepb.ListSemaphoresByLeaseIdRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
-	49, // 9: com.evrblk.grackle.corepb.ListSemaphoresByLeaseIdRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	50, // 6: com.evrblk.grackle.corepb.ListSemaphoresResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	50, // 7: com.evrblk.grackle.corepb.ListSemaphoresResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	51, // 8: com.evrblk.grackle.corepb.ListSemaphoresByLeaseIdRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
+	50, // 9: com.evrblk.grackle.corepb.ListSemaphoresByLeaseIdRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
 	36, // 10: com.evrblk.grackle.corepb.ListSemaphoresByLeaseIdResponse.semaphores:type_name -> com.evrblk.grackle.corepb.Semaphore
-	49, // 11: com.evrblk.grackle.corepb.ListSemaphoresByLeaseIdResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	49, // 12: com.evrblk.grackle.corepb.ListSemaphoresByLeaseIdResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	50, // 11: com.evrblk.grackle.corepb.ListSemaphoresByLeaseIdResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	50, // 12: com.evrblk.grackle.corepb.ListSemaphoresByLeaseIdResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
 	39, // 13: com.evrblk.grackle.corepb.GetSemaphoreRequest.semaphore_id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
 	36, // 14: com.evrblk.grackle.corepb.GetSemaphoreResponse.semaphore:type_name -> com.evrblk.grackle.corepb.Semaphore
-	48, // 15: com.evrblk.grackle.corepb.GetSemaphoreByNameRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	49, // 15: com.evrblk.grackle.corepb.GetSemaphoreByNameRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
 	36, // 16: com.evrblk.grackle.corepb.GetSemaphoreByNameResponse.semaphore:type_name -> com.evrblk.grackle.corepb.Semaphore
-	48, // 17: com.evrblk.grackle.corepb.AcquireSemaphoreRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	49, // 17: com.evrblk.grackle.corepb.AcquireSemaphoreRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
 	44, // 18: com.evrblk.grackle.corepb.AcquireSemaphoreRequest.metadata:type_name -> com.evrblk.grackle.corepb.AcquireSemaphoreRequest.MetadataEntry
 	36, // 19: com.evrblk.grackle.corepb.AcquireSemaphoreResponse.semaphore:type_name -> com.evrblk.grackle.corepb.Semaphore
-	48, // 20: com.evrblk.grackle.corepb.ReleaseSemaphoreRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	49, // 20: com.evrblk.grackle.corepb.ReleaseSemaphoreRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
 	36, // 21: com.evrblk.grackle.corepb.ReleaseSemaphoreResponse.semaphore:type_name -> com.evrblk.grackle.corepb.Semaphore
-	48, // 22: com.evrblk.grackle.corepb.UpdateSemaphoreRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	49, // 22: com.evrblk.grackle.corepb.UpdateSemaphoreRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
 	45, // 23: com.evrblk.grackle.corepb.UpdateSemaphoreRequest.metadata:type_name -> com.evrblk.grackle.corepb.UpdateSemaphoreRequest.MetadataEntry
 	36, // 24: com.evrblk.grackle.corepb.UpdateSemaphoreResponse.semaphore:type_name -> com.evrblk.grackle.corepb.Semaphore
-	48, // 25: com.evrblk.grackle.corepb.DeleteSemaphoreRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	48, // 26: com.evrblk.grackle.corepb.ListSemaphoreHoldersRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	49, // 27: com.evrblk.grackle.corepb.ListSemaphoreHoldersRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	49, // 25: com.evrblk.grackle.corepb.DeleteSemaphoreRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	49, // 26: com.evrblk.grackle.corepb.ListSemaphoreHoldersRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	50, // 27: com.evrblk.grackle.corepb.ListSemaphoreHoldersRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
 	37, // 28: com.evrblk.grackle.corepb.ListSemaphoreHoldersResponse.holders:type_name -> com.evrblk.grackle.corepb.SemaphoreHolder
-	49, // 29: com.evrblk.grackle.corepb.ListSemaphoreHoldersResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	49, // 30: com.evrblk.grackle.corepb.ListSemaphoreHoldersResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	48, // 31: com.evrblk.grackle.corepb.ListSemaphoreLeasesRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	49, // 32: com.evrblk.grackle.corepb.ListSemaphoreLeasesRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	51, // 33: com.evrblk.grackle.corepb.ListSemaphoreLeasesResponse.leases:type_name -> com.evrblk.grackle.corepb.Lease
-	49, // 34: com.evrblk.grackle.corepb.ListSemaphoreLeasesResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	49, // 35: com.evrblk.grackle.corepb.ListSemaphoreLeasesResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	48, // 36: com.evrblk.grackle.corepb.ListSemaphoreLeasesByProcessIdRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	49, // 37: com.evrblk.grackle.corepb.ListSemaphoreLeasesByProcessIdRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	51, // 38: com.evrblk.grackle.corepb.ListSemaphoreLeasesByProcessIdResponse.leases:type_name -> com.evrblk.grackle.corepb.Lease
-	49, // 39: com.evrblk.grackle.corepb.ListSemaphoreLeasesByProcessIdResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	49, // 40: com.evrblk.grackle.corepb.ListSemaphoreLeasesByProcessIdResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	50, // 41: com.evrblk.grackle.corepb.GetSemaphoreLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
-	51, // 42: com.evrblk.grackle.corepb.GetSemaphoreLeaseResponse.lease:type_name -> com.evrblk.grackle.corepb.Lease
-	50, // 43: com.evrblk.grackle.corepb.CreateSemaphoreLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
-	51, // 44: com.evrblk.grackle.corepb.CreateSemaphoreLeaseResponse.lease:type_name -> com.evrblk.grackle.corepb.Lease
-	50, // 45: com.evrblk.grackle.corepb.RevokeSemaphoreLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
-	50, // 46: com.evrblk.grackle.corepb.RefreshSemaphoreLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
-	51, // 47: com.evrblk.grackle.corepb.RefreshSemaphoreLeaseResponse.lease:type_name -> com.evrblk.grackle.corepb.Lease
-	48, // 48: com.evrblk.grackle.corepb.SemaphoresDeleteNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	39, // 49: com.evrblk.grackle.corepb.Semaphore.id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
-	46, // 50: com.evrblk.grackle.corepb.Semaphore.metadata:type_name -> com.evrblk.grackle.corepb.Semaphore.MetadataEntry
-	38, // 51: com.evrblk.grackle.corepb.SemaphoreHolder.id:type_name -> com.evrblk.grackle.corepb.SemaphoreHolderId
-	47, // 52: com.evrblk.grackle.corepb.SemaphoreHolder.metadata:type_name -> com.evrblk.grackle.corepb.SemaphoreHolder.MetadataEntry
-	48, // 53: com.evrblk.grackle.corepb.SemaphoresGarbageCollectionRecord.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	39, // 54: com.evrblk.grackle.corepb.SemaphoresGarbageCollectionRecord.semaphore_id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
-	39, // 55: com.evrblk.grackle.corepb.SemaphoresExpirationRecord.semaphore_id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
-	56, // [56:56] is the sub-list for method output_type
-	56, // [56:56] is the sub-list for method input_type
-	56, // [56:56] is the sub-list for extension type_name
-	56, // [56:56] is the sub-list for extension extendee
-	0,  // [0:56] is the sub-list for field type_name
+	50, // 29: com.evrblk.grackle.corepb.ListSemaphoreHoldersResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	50, // 30: com.evrblk.grackle.corepb.ListSemaphoreHoldersResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	49, // 31: com.evrblk.grackle.corepb.ListSemaphoreLeasesRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	50, // 32: com.evrblk.grackle.corepb.ListSemaphoreLeasesRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	52, // 33: com.evrblk.grackle.corepb.ListSemaphoreLeasesResponse.leases:type_name -> com.evrblk.grackle.corepb.Lease
+	50, // 34: com.evrblk.grackle.corepb.ListSemaphoreLeasesResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	50, // 35: com.evrblk.grackle.corepb.ListSemaphoreLeasesResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	49, // 36: com.evrblk.grackle.corepb.ListSemaphoreLeasesByProcessIdRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	50, // 37: com.evrblk.grackle.corepb.ListSemaphoreLeasesByProcessIdRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	52, // 38: com.evrblk.grackle.corepb.ListSemaphoreLeasesByProcessIdResponse.leases:type_name -> com.evrblk.grackle.corepb.Lease
+	50, // 39: com.evrblk.grackle.corepb.ListSemaphoreLeasesByProcessIdResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	50, // 40: com.evrblk.grackle.corepb.ListSemaphoreLeasesByProcessIdResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	51, // 41: com.evrblk.grackle.corepb.GetSemaphoreLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
+	52, // 42: com.evrblk.grackle.corepb.GetSemaphoreLeaseResponse.lease:type_name -> com.evrblk.grackle.corepb.Lease
+	51, // 43: com.evrblk.grackle.corepb.CreateSemaphoreLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
+	46, // 44: com.evrblk.grackle.corepb.CreateSemaphoreLeaseRequest.metadata:type_name -> com.evrblk.grackle.corepb.CreateSemaphoreLeaseRequest.MetadataEntry
+	52, // 45: com.evrblk.grackle.corepb.CreateSemaphoreLeaseResponse.lease:type_name -> com.evrblk.grackle.corepb.Lease
+	51, // 46: com.evrblk.grackle.corepb.RevokeSemaphoreLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
+	51, // 47: com.evrblk.grackle.corepb.RefreshSemaphoreLeaseRequest.lease_id:type_name -> com.evrblk.grackle.corepb.LeaseId
+	52, // 48: com.evrblk.grackle.corepb.RefreshSemaphoreLeaseResponse.lease:type_name -> com.evrblk.grackle.corepb.Lease
+	49, // 49: com.evrblk.grackle.corepb.SemaphoresDeleteNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	39, // 50: com.evrblk.grackle.corepb.Semaphore.id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
+	47, // 51: com.evrblk.grackle.corepb.Semaphore.metadata:type_name -> com.evrblk.grackle.corepb.Semaphore.MetadataEntry
+	38, // 52: com.evrblk.grackle.corepb.SemaphoreHolder.id:type_name -> com.evrblk.grackle.corepb.SemaphoreHolderId
+	48, // 53: com.evrblk.grackle.corepb.SemaphoreHolder.metadata:type_name -> com.evrblk.grackle.corepb.SemaphoreHolder.MetadataEntry
+	49, // 54: com.evrblk.grackle.corepb.SemaphoresGarbageCollectionRecord.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	39, // 55: com.evrblk.grackle.corepb.SemaphoresGarbageCollectionRecord.semaphore_id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
+	39, // 56: com.evrblk.grackle.corepb.SemaphoresExpirationRecord.semaphore_id:type_name -> com.evrblk.grackle.corepb.SemaphoreId
+	57, // [57:57] is the sub-list for method output_type
+	57, // [57:57] is the sub-list for method input_type
+	57, // [57:57] is the sub-list for extension type_name
+	57, // [57:57] is the sub-list for extension extendee
+	0,  // [0:57] is the sub-list for field type_name
 }
 
 func init() { file_pkg_corepb_semaphores_proto_init() }
@@ -2982,7 +3005,7 @@ func file_pkg_corepb_semaphores_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_corepb_semaphores_proto_rawDesc), len(file_pkg_corepb_semaphores_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   48,
+			NumMessages:   49,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
