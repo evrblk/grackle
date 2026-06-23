@@ -153,7 +153,7 @@ acquireLockResp, err := grackleClient.AcquireLock(context.Background(), &grackle
 	NamespaceName:  "my_namespace",
 	LockName:       "lock1",
 	Exclusive:      true,
-	LeaseId:        createLeaseResp.Lease.Id,
+	LeaseId:        createLeaseResp.Lease.LeaseId,
 	TimeoutSeconds: 60,
 })
 ```

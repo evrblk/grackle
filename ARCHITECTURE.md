@@ -63,6 +63,20 @@ This determinism is what lets Monstera replicate them via Raft.
 | `pagination/` | Pagination token helpers; core token ⇄ monstera token; `GetLimitWithDefaults`. |
 | `grackle/` | `limits.go` — `ServiceLimits` struct + `DefaultServiceLimits` (per-namespace caps, rate limits). Passed into every handler call. |
 | `server/v1beta/` | gRPC front-end. `server.go` (validate+dispatch), `handler.go` (orchestration), `validators.go` (`Validate*Request` + name/length/metadata regexes), `pbconv.go` (`*ToFront`/`*ToCore`), `middleware.go` (auth: request signing via `evrblk-go/authn`, hot-reloaded keys), `metrics.go`, `vtproto.go`. `integration_test/` = black-box tests against a full in-process server. |
+
+## Single-tenant (OSS) vs multi-tenant (cloud)
+
+**This is the open-source, single-tenant build.** That is why `GrackleApiServer` (`server.go`)
+passes a hardcoded `accountId = 0` and `grackle.DefaultServiceLimits` (high, fixed per-namespace
+caps) into every handler call. The per-account plumbing throughout the stack — `AccountId` in every
+ID and shard key, per-`(account,namespace)` counters, the namespace/lease ownership checks — is
+**real and intentional**, not dead code: the closed-source cloud build reuses the same
+`handler.go`/cores/tables but swaps in its own front server that derives `accountId` from the authn
+key and fetches `ServiceLimits` per account. `GrackleApiServer` itself is **not** reused by cloud.
+
+Implication for reviewers: do not flag the hardcoded `accountId = 0`, the hardcoded limits, or the
+"single-tenant collapse" as bugs — they are the designed OSS behavior. Per-account isolation
+correctness is exercised by the cloud front-end, not this one.
 | `workers/` | GC workers (`IntervalWorker`, every 5s). One per primitive. Each lists shards (`ListShards`) and fans out `Run<X>GarbageCollection` per shard concurrently. |
 
 ## cmd / run modes (`cmd/grackle`)
