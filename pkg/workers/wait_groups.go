@@ -59,7 +59,10 @@ func (w *GrackleWaitGroupsGCWorker) runGarbageCollection(shardId string, now tim
 	defer monsterax.MeasureSince(grackleWaitGroupsGCWorkerDuration.WithLabelValues(shardId), time.Now())
 
 	_, err := w.coreApiClient.RunWaitGroupsGarbageCollection(context.TODO(), &corepb.RunWaitGroupsGarbageCollectionRequest{
-		Now: now.UnixNano(),
+		Now:                        now.UnixNano(),
+		GcRecordsPageSize:          100,
+		GcRecordWaitGroupsPageSize: 1000,
+		MaxDeletedObjects:          1000,
 	}, shardId)
 	if err != nil {
 		grackleWaitGroupsGCWorkerErrorsTotal.WithLabelValues(shardId).Inc()

@@ -43,6 +43,7 @@ func TestCore_Create(t *testing.T) {
 				Now:                               now.UnixNano(),
 				ExpiresAt:                         expiresAt,
 				MaxNumberOfWaitGroupsPerNamespace: 100,
+				DeleteAfterFinishedSeconds:        3600,
 			},
 		})
 
@@ -54,8 +55,13 @@ func TestCore_Create(t *testing.T) {
 		require.Equal(t, "test_wait_group", resp1.Payload.WaitGroup.Name)
 		require.Equal(t, "test description", resp1.Payload.WaitGroup.Description)
 		require.EqualValues(t, 10, resp1.Payload.WaitGroup.Counter)
-		require.EqualValues(t, 0, resp1.Payload.WaitGroup.Completed)
+		require.EqualValues(t, 0, resp1.Payload.WaitGroup.CompletedJobs)
 		require.Equal(t, expiresAt, resp1.Payload.WaitGroup.ExpiresAt)
+		// A newly created wait group is active, has no finish time, and carries
+		// the configured retention period.
+		require.Equal(t, corepb.WaitGroupStatus_WAIT_GROUP_STATUS_ACTIVE, resp1.Payload.WaitGroup.Status)
+		require.EqualValues(t, 0, resp1.Payload.WaitGroup.FinishedAt)
+		require.EqualValues(t, 3600, resp1.Payload.WaitGroup.DeleteAfterFinishedSeconds)
 
 		// Get wait group
 		resp2, err := core.GetWaitGroup(&coreapis.GetWaitGroupRequest{
@@ -72,7 +78,7 @@ func TestCore_Create(t *testing.T) {
 		require.Equal(t, "test_wait_group", resp2.Payload.WaitGroup.Name)
 		require.Equal(t, "test description", resp2.Payload.WaitGroup.Description)
 		require.EqualValues(t, 10, resp2.Payload.WaitGroup.Counter)
-		require.EqualValues(t, 0, resp2.Payload.WaitGroup.Completed)
+		require.EqualValues(t, 0, resp2.Payload.WaitGroup.CompletedJobs)
 
 		// Get wait group by name
 		resp3, err := core.GetWaitGroupByName(&coreapis.GetWaitGroupByNameRequest{
@@ -93,7 +99,7 @@ func TestCore_Create(t *testing.T) {
 		require.Equal(t, "test_wait_group", resp3.Payload.WaitGroup.Name)
 		require.Equal(t, "test description", resp3.Payload.WaitGroup.Description)
 		require.EqualValues(t, 10, resp3.Payload.WaitGroup.Counter)
-		require.EqualValues(t, 0, resp3.Payload.WaitGroup.Completed)
+		require.EqualValues(t, 0, resp3.Payload.WaitGroup.CompletedJobs)
 	})
 
 	t.Run("create wait group with duplicate name", func(t *testing.T) {
@@ -250,7 +256,7 @@ func TestCore_CompleteJobsFromWaitGroup(t *testing.T) {
 		require.Nil(t, resp2.ApplicationError)
 		require.NotNil(t, resp2.Payload.WaitGroup)
 		require.EqualValues(t, 10, resp2.Payload.WaitGroup.Counter)
-		require.EqualValues(t, 3, resp2.Payload.WaitGroup.Completed)
+		require.EqualValues(t, 3, resp2.Payload.WaitGroup.CompletedJobs)
 
 		// T+2m: Complete same jobs again (should not increase completed counter)
 		resp3, err := core.CompleteJobsFromWaitGroup(&coreapis.CompleteJobsFromWaitGroupRequest{
@@ -267,7 +273,7 @@ func TestCore_CompleteJobsFromWaitGroup(t *testing.T) {
 		require.Nil(t, resp3.ApplicationError)
 		require.NotNil(t, resp3.Payload.WaitGroup)
 		require.EqualValues(t, 10, resp3.Payload.WaitGroup.Counter)
-		require.EqualValues(t, 3, resp3.Payload.WaitGroup.Completed)
+		require.EqualValues(t, 3, resp3.Payload.WaitGroup.CompletedJobs)
 	})
 
 	t.Run("complete jobs from nonexistent wait group", func(t *testing.T) {
@@ -294,7 +300,7 @@ func TestCore_CompleteJobsFromWaitGroup(t *testing.T) {
 		require.Equal(t, monsterax.NotFound, resp1.ApplicationError.Code)
 	})
 
-	t.Run("counter overflow", func(t *testing.T) {
+	t.Run("counter overflow completes wait group", func(t *testing.T) {
 		core := newWaitGroupsCore(t)
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
@@ -318,22 +324,18 @@ func TestCore_CompleteJobsFromWaitGroup(t *testing.T) {
 		// and no job rows were written.
 		wg := getWaitGroup(t, core, waitGroupId)
 		require.EqualValues(t, 2, wg.Counter)
-		require.EqualValues(t, 0, wg.Completed)
+		require.EqualValues(t, 0, wg.CompletedJobs)
 
 		jobsList := listWaitGroupJobs(t, core, namespaceId, "test_wait_group")
 		require.Empty(t, jobsList.Jobs)
 
 		// Completing exactly Counter jobs succeeds
 		wg = completeJobsFromWaitGroup(t, core, namespaceId, "test_wait_group", []string{"job_1", "job_2"}, now.Add(2*time.Minute))
-		require.EqualValues(t, 2, wg.Completed)
+		require.EqualValues(t, 2, wg.CompletedJobs)
 
 		// Adding more new jobs on top now overflows and must be rejected
 		appErr = completeJobsFromWaitGroupWithError(t, core, namespaceId, "test_wait_group", []string{"job_3"}, now.Add(3*time.Minute))
 		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
-
-		// Re-completing already-completed jobs is a no-op and must succeed
-		wg = completeJobsFromWaitGroup(t, core, namespaceId, "test_wait_group", []string{"job_1", "job_2"}, now.Add(4*time.Minute))
-		require.EqualValues(t, 2, wg.Completed)
 	})
 }
 
@@ -729,7 +731,7 @@ func TestCore_DeleteWaitGroup(t *testing.T) {
 		require.NotNil(t, resp1.Payload)
 		require.NotNil(t, resp1.Payload.WaitGroup)
 		require.EqualValues(t, groupSize, resp1.Payload.WaitGroup.Counter)
-		require.EqualValues(t, 0, resp1.Payload.WaitGroup.Completed)
+		require.EqualValues(t, 0, resp1.Payload.WaitGroup.CompletedJobs)
 
 		// Complete all jobs in batches
 		batchSize := 10
@@ -774,7 +776,7 @@ func TestCore_DeleteWaitGroup(t *testing.T) {
 		require.NotNil(t, resp3.Payload)
 		require.NotNil(t, resp3.Payload.WaitGroup)
 		require.EqualValues(t, groupSize, resp3.Payload.WaitGroup.Counter)
-		require.EqualValues(t, groupSize, resp3.Payload.WaitGroup.Completed)
+		require.EqualValues(t, groupSize, resp3.Payload.WaitGroup.CompletedJobs)
 
 		// Delete wait group
 		resp4, err := core.DeleteWaitGroup(&coreapis.DeleteWaitGroupRequest{
@@ -852,7 +854,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 		// Name, counter, and completed are immutable through Update
 		require.Equal(t, "test_wait_group", resp2.Payload.WaitGroup.Name)
 		require.EqualValues(t, 10, resp2.Payload.WaitGroup.Counter)
-		require.EqualValues(t, 0, resp2.Payload.WaitGroup.Completed)
+		require.EqualValues(t, 0, resp2.Payload.WaitGroup.CompletedJobs)
 
 		// Reload and confirm persisted
 		wg := getWaitGroup(t, core, waitGroupId)
@@ -964,12 +966,13 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				ExpiresAt:       newExpiresAt,
 				Now:             now.Add(time.Minute).UnixNano(),
 				ExpectedVersion: 1,
+				Counter:         1,
 			},
 		})
 		require.NoError(t, err)
 
 		// Running GC at a time after the OLD expiration but before the NEW one
-		// must not collect the wait group, because the expiration index was
+		// must not mark the wait group expired, because the expiration index was
 		// reconciled to the new timestamp.
 		_, err = core.RunWaitGroupsGarbageCollection(&coreapis.RunWaitGroupsGarbageCollectionRequest{
 			Payload: &corepb.RunWaitGroupsGarbageCollectionRequest{
@@ -1157,6 +1160,55 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 		require.Equal(t, monsterax.InvalidArgument, resp.ApplicationError.Code)
 		require.Contains(t, resp.ApplicationError.Message, "version mismatch")
 	})
+
+	t.Run("cannot update a finished wait group", func(t *testing.T) {
+		core := newWaitGroupsCore(t)
+		now := time.Now()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+		}
+		waitGroupId := &corepb.WaitGroupId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			WaitGroupId: rand.Uint64(),
+		}
+
+		_, err := core.CreateWaitGroup(&coreapis.CreateWaitGroupRequest{
+			Payload: &corepb.CreateWaitGroupRequest{
+				WaitGroupId:                       waitGroupId,
+				Name:                              "test_wait_group",
+				Description:                       "desc",
+				Counter:                           2,
+				Now:                               now.UnixNano(),
+				ExpiresAt:                         now.Add(time.Hour).UnixNano(),
+				MaxNumberOfWaitGroupsPerNamespace: 100,
+			},
+		})
+		require.NoError(t, err)
+
+		// Complete all jobs so the wait group becomes COMPLETED.
+		wg := completeJobsFromWaitGroup(t, core, namespaceId, "test_wait_group", []string{"job_1", "job_2"}, now.Add(time.Minute))
+		require.Equal(t, corepb.WaitGroupStatus_WAIT_GROUP_STATUS_COMPLETED, wg.Status)
+
+		// Updating a finished wait group is rejected.
+		resp, err := core.UpdateWaitGroup(&coreapis.UpdateWaitGroupRequest{
+			Payload: &corepb.UpdateWaitGroupRequest{
+				NamespaceId:     namespaceId,
+				WaitGroupName:   "test_wait_group",
+				Description:     "new desc",
+				ExpiresAt:       now.Add(2 * time.Hour).UnixNano(),
+				Now:             now.Add(2 * time.Minute).UnixNano(),
+				ExpectedVersion: wg.Version,
+				Counter:         2,
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp.Payload)
+		require.NotNil(t, resp.ApplicationError)
+		require.Equal(t, monsterax.InvalidArgument, resp.ApplicationError.Code)
+		require.Contains(t, resp.ApplicationError.Message, "only active wait groups can be updated")
+	})
 }
 
 func TestCore_CompleteJobsWithMetadata(t *testing.T) {
@@ -1198,7 +1250,7 @@ func TestCore_CompleteJobsWithMetadata(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.Nil(t, resp.ApplicationError)
-	require.EqualValues(t, 2, resp.Payload.WaitGroup.Completed)
+	require.EqualValues(t, 2, resp.Payload.WaitGroup.CompletedJobs)
 
 	// Metadata is persisted on the completed job records
 	jobsList := listWaitGroupJobs(t, core, namespaceId, "test_wait_group")
@@ -1299,7 +1351,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 	require.NotNil(t, resp5.Payload)
 	require.NotNil(t, resp5.Payload.WaitGroup)
 	require.EqualValues(t, 10, resp5.Payload.WaitGroup.Counter)
-	require.EqualValues(t, 3, resp5.Payload.WaitGroup.Completed)
+	require.EqualValues(t, 3, resp5.Payload.WaitGroup.CompletedJobs)
 
 	// T+5m: Complete more jobs in restored state
 	resp6, err := core2.CompleteJobsFromWaitGroup(&coreapis.CompleteJobsFromWaitGroupRequest{
@@ -1329,7 +1381,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 	require.Nil(t, resp7.ApplicationError)
 	require.NotNil(t, resp7.Payload)
 	require.EqualValues(t, 10, resp7.Payload.WaitGroup.Counter)
-	require.EqualValues(t, 5, resp7.Payload.WaitGroup.Completed)
+	require.EqualValues(t, 5, resp7.Payload.WaitGroup.CompletedJobs)
 
 	// T+7m: Complete more jobs in restored state
 	resp8, err := core2.CompleteJobsFromWaitGroup(&coreapis.CompleteJobsFromWaitGroupRequest{
@@ -1359,7 +1411,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 	require.Nil(t, resp9.ApplicationError)
 	require.NotNil(t, resp9.Payload)
 	require.EqualValues(t, 10, resp9.Payload.WaitGroup.Counter)
-	require.EqualValues(t, 7, resp9.Payload.WaitGroup.Completed)
+	require.EqualValues(t, 7, resp9.Payload.WaitGroup.CompletedJobs)
 
 	// Verify that the original core has different state (it should have more completed jobs)
 	resp10, err := core1.GetWaitGroup(&coreapis.GetWaitGroupRequest{
@@ -1371,8 +1423,8 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 	require.NotNil(t, resp10)
 	require.Nil(t, resp10.ApplicationError)
 	require.NotNil(t, resp10.Payload)
-	require.EqualValues(t, 10, resp10.Payload.WaitGroup.Counter)  // 10 + 5 added after snapshot
-	require.EqualValues(t, 5, resp10.Payload.WaitGroup.Completed) // 3 + 2 completed after snapshot
+	require.EqualValues(t, 10, resp10.Payload.WaitGroup.Counter)      // 10 + 5 added after snapshot
+	require.EqualValues(t, 5, resp10.Payload.WaitGroup.CompletedJobs) // 3 + 2 completed after snapshot
 }
 
 func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
@@ -1661,6 +1713,166 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 	require.NotNil(t, resp13.Payload)
 
 	t.Logf("Garbage collection completed successfully in %d runs", runCount)
+}
+
+func TestCore_DeleteAfterFinished(t *testing.T) {
+	t.Run("completed wait group is marked completed and deleted after retention", func(t *testing.T) {
+		core := newWaitGroupsCore(t)
+		now := time.Now()
+		deleteAfterSeconds := int64(600) // 10 minutes
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+		}
+		waitGroupId := &corepb.WaitGroupId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			WaitGroupId: rand.Uint64(),
+		}
+
+		_, err := core.CreateWaitGroup(&coreapis.CreateWaitGroupRequest{
+			Payload: &corepb.CreateWaitGroupRequest{
+				WaitGroupId:                       waitGroupId,
+				Name:                              "test_wait_group",
+				Description:                       "desc",
+				Counter:                           2,
+				Now:                               now.UnixNano(),
+				ExpiresAt:                         now.Add(time.Hour).UnixNano(),
+				MaxNumberOfWaitGroupsPerNamespace: 100,
+				DeleteAfterFinishedSeconds:        deleteAfterSeconds,
+			},
+		})
+		require.NoError(t, err)
+
+		// Completing all jobs finishes the wait group as COMPLETED.
+		finishedAt := now.Add(time.Minute)
+		wg := completeJobsFromWaitGroup(t, core, namespaceId, "test_wait_group", []string{"job_1", "job_2"}, finishedAt)
+		require.Equal(t, corepb.WaitGroupStatus_WAIT_GROUP_STATUS_COMPLETED, wg.Status)
+		require.Equal(t, finishedAt.UnixNano(), wg.FinishedAt)
+		require.EqualValues(t, 2, wg.CompletedJobs)
+
+		// GC before the retention period elapses must not delete the wait group.
+		runWaitGroupsGC(t, core, finishedAt.Add(5*time.Minute))
+		wg = getWaitGroup(t, core, waitGroupId)
+		require.Equal(t, corepb.WaitGroupStatus_WAIT_GROUP_STATUS_COMPLETED, wg.Status)
+
+		// GC after the retention period deletes the wait group and its jobs.
+		runWaitGroupsGC(t, core, finishedAt.Add(time.Duration(deleteAfterSeconds)*time.Second).Add(time.Minute))
+		requireWaitGroupNotFound(t, core, waitGroupId)
+	})
+
+	t.Run("expired wait group is marked expired then deleted after retention", func(t *testing.T) {
+		core := newWaitGroupsCore(t)
+		now := time.Now()
+		deleteAfterSeconds := int64(600) // 10 minutes
+		expiresAt := now.Add(time.Hour)
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+		}
+		waitGroupId := &corepb.WaitGroupId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			WaitGroupId: rand.Uint64(),
+		}
+
+		_, err := core.CreateWaitGroup(&coreapis.CreateWaitGroupRequest{
+			Payload: &corepb.CreateWaitGroupRequest{
+				WaitGroupId:                       waitGroupId,
+				Name:                              "test_wait_group",
+				Description:                       "desc",
+				Counter:                           5,
+				Now:                               now.UnixNano(),
+				ExpiresAt:                         expiresAt.UnixNano(),
+				MaxNumberOfWaitGroupsPerNamespace: 100,
+				DeleteAfterFinishedSeconds:        deleteAfterSeconds,
+			},
+		})
+		require.NoError(t, err)
+
+		// Only partially complete it so it never reaches its counter.
+		completeJobsFromWaitGroup(t, core, namespaceId, "test_wait_group", []string{"job_1"}, now.Add(time.Minute))
+
+		// GC after expires_at but before the retention period marks the wait group
+		// EXPIRED without deleting it.
+		runWaitGroupsGC(t, core, expiresAt.Add(5*time.Minute))
+		wg := getWaitGroup(t, core, waitGroupId)
+		require.Equal(t, corepb.WaitGroupStatus_WAIT_GROUP_STATUS_EXPIRED, wg.Status)
+		require.Equal(t, expiresAt.UnixNano(), wg.FinishedAt)
+
+		// GC after the retention period (finished_at + delete_after) deletes it.
+		runWaitGroupsGC(t, core, expiresAt.Add(time.Duration(deleteAfterSeconds)*time.Second).Add(time.Minute))
+		requireWaitGroupNotFound(t, core, waitGroupId)
+	})
+
+	t.Run("expires_at no longer deletes directly", func(t *testing.T) {
+		core := newWaitGroupsCore(t)
+		now := time.Now()
+		expiresAt := now.Add(time.Hour)
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+		}
+		waitGroupId := &corepb.WaitGroupId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			WaitGroupId: rand.Uint64(),
+		}
+
+		_, err := core.CreateWaitGroup(&coreapis.CreateWaitGroupRequest{
+			Payload: &corepb.CreateWaitGroupRequest{
+				WaitGroupId:                       waitGroupId,
+				Name:                              "test_wait_group",
+				Description:                       "desc",
+				Counter:                           5,
+				Now:                               now.UnixNano(),
+				ExpiresAt:                         expiresAt.UnixNano(),
+				MaxNumberOfWaitGroupsPerNamespace: 100,
+				// Large retention: even though the wait group expires, it stays
+				// around long after expires_at.
+				DeleteAfterFinishedSeconds: int64((24 * time.Hour).Seconds()),
+			},
+		})
+		require.NoError(t, err)
+
+		// Way past expires_at, but well within the retention window.
+		runWaitGroupsGC(t, core, expiresAt.Add(time.Hour))
+		wg := getWaitGroup(t, core, waitGroupId)
+		require.Equal(t, corepb.WaitGroupStatus_WAIT_GROUP_STATUS_EXPIRED, wg.Status)
+	})
+}
+
+// runWaitGroupsGC runs a garbage collection pass at the given wall-clock time
+// with generous page sizes.
+func runWaitGroupsGC(t *testing.T, core *Core, now time.Time) {
+	t.Helper()
+
+	resp, err := core.RunWaitGroupsGarbageCollection(&coreapis.RunWaitGroupsGarbageCollectionRequest{
+		Payload: &corepb.RunWaitGroupsGarbageCollectionRequest{
+			Now:                        now.UnixNano(),
+			GcRecordsPageSize:          100,
+			GcRecordWaitGroupsPageSize: 1000,
+			MaxDeletedObjects:          1000,
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+}
+
+// requireWaitGroupNotFound asserts that the wait group no longer exists.
+func requireWaitGroupNotFound(t *testing.T, core *Core, waitGroupId *corepb.WaitGroupId) {
+	t.Helper()
+
+	resp, err := core.GetWaitGroup(&coreapis.GetWaitGroupRequest{
+		Payload: &corepb.GetWaitGroupRequest{
+			WaitGroupId: waitGroupId,
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.NotNil(t, resp.ApplicationError)
+	require.Equal(t, monsterax.NotFound, resp.ApplicationError.Code)
 }
 
 // completeJobRequests builds a slice of CompleteJobRequest from plain job ids

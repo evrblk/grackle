@@ -16,6 +16,7 @@ message CreateWaitGroupRequest {
   int64 expires_at = 6;
   map<string, string> metadata = 7;
   int64 max_number_of_wait_groups_per_namespace = 8;
+  int64 delete_after_finished_seconds = 9;
 }
 
 message CreateWaitGroupResponse {
@@ -31,6 +32,7 @@ message UpdateWaitGroupRequest {
   uint64 counter = 6;
   map<string, string> metadata = 7;
   uint64 expected_version = 8;
+  int64 delete_after_finished_seconds = 9;
 }
 
 message UpdateWaitGroupResponse {
@@ -129,8 +131,26 @@ message WaitGroup {
   uint64 version = 6;
   int64 expires_at = 7;
   uint64 counter = 8;
-  uint64 completed = 9;
+  uint64 completed_jobs = 9;
   map<string, string> metadata = 10;
+  WaitGroupStatus status = 11;
+  int64 delete_after_finished_seconds = 12;
+  // finished_at is the timestamp (ns) at which the wait group became finished
+  // (either completed or expired). Zero while the wait group is still active.
+  int64 finished_at = 13;
+}
+
+// WaitGroupStatus is the lifecycle state of a wait group. A wait group starts
+// ACTIVE. It becomes COMPLETED once the number of completed jobs reaches the
+// counter, or EXPIRED once expires_at passes while it is still active. Both
+// COMPLETED and EXPIRED are terminal "finished" states after which the wait
+// group is deleted by garbage collection once delete_after_finished_seconds
+// has elapsed.
+enum WaitGroupStatus {
+  WAIT_GROUP_STATUS_INVALID = 0;
+  WAIT_GROUP_STATUS_ACTIVE = 1;
+  WAIT_GROUP_STATUS_EXPIRED = 2;
+  WAIT_GROUP_STATUS_COMPLETED = 3;
 }
 
 message WaitGroupJob {
@@ -167,4 +187,12 @@ message WaitGroupsGarbageCollectionRecord {
 message WaitGroupsExpirationRecord {
   WaitGroupId wait_group_id = 1;
   int64 expires_at = 2;
+}
+
+// WaitGroupsDeletionRecord schedules the deletion of a finished wait group.
+// delete_at is the timestamp (ns) at which garbage collection should delete
+// the wait group, computed as finished_at + delete_after_finished_seconds.
+message WaitGroupsDeletionRecord {
+  WaitGroupId wait_group_id = 1;
+  int64 delete_at = 2;
 }

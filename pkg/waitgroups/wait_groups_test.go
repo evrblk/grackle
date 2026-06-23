@@ -23,13 +23,13 @@ func TestWaitGroupsTable_Create(t *testing.T) {
 				NamespaceId: rand.Uint32(),
 				WaitGroupId: rand.Uint64(),
 			},
-			Name:        "test_wait_group",
-			Description: "test description",
-			Counter:     10,
-			Completed:   0,
-			CreatedAt:   rand.Int64(),
-			UpdatedAt:   rand.Int64(),
-			ExpiresAt:   rand.Int64(),
+			Name:          "test_wait_group",
+			Description:   "test description",
+			Counter:       10,
+			CompletedJobs: 0,
+			CreatedAt:     rand.Int64(),
+			UpdatedAt:     rand.Int64(),
+			ExpiresAt:     rand.Int64(),
 		}
 
 		txn := badgerStore.Update()
@@ -49,7 +49,7 @@ func TestWaitGroupsTable_Create(t *testing.T) {
 		require.Equal(t, waitGroup.Name, actual.Name)
 		require.Equal(t, waitGroup.Description, actual.Description)
 		require.Equal(t, waitGroup.Counter, actual.Counter)
-		require.Equal(t, waitGroup.Completed, actual.Completed)
+		require.Equal(t, waitGroup.CompletedJobs, actual.CompletedJobs)
 	})
 
 	t.Run("create wait group creates name index entry", func(t *testing.T) {
@@ -64,13 +64,13 @@ func TestWaitGroupsTable_Create(t *testing.T) {
 				NamespaceId: rand.Uint32(),
 				WaitGroupId: rand.Uint64(),
 			},
-			Name:        "test_wait_group",
-			Description: "test description",
-			Counter:     10,
-			Completed:   0,
-			CreatedAt:   rand.Int64(),
-			UpdatedAt:   rand.Int64(),
-			ExpiresAt:   rand.Int64(),
+			Name:          "test_wait_group",
+			Description:   "test description",
+			Counter:       10,
+			CompletedJobs: 0,
+			CreatedAt:     rand.Int64(),
+			UpdatedAt:     rand.Int64(),
+			ExpiresAt:     rand.Int64(),
 		}
 
 		txn := badgerStore.Update()
@@ -105,13 +105,13 @@ func TestWaitGroupsTable_Get(t *testing.T) {
 				NamespaceId: rand.Uint32(),
 				WaitGroupId: rand.Uint64(),
 			},
-			Name:        "test_wait_group",
-			Description: "test description",
-			Counter:     10,
-			Completed:   5,
-			CreatedAt:   rand.Int64(),
-			UpdatedAt:   rand.Int64(),
-			ExpiresAt:   rand.Int64(),
+			Name:          "test_wait_group",
+			Description:   "test description",
+			Counter:       10,
+			CompletedJobs: 5,
+			CreatedAt:     rand.Int64(),
+			UpdatedAt:     rand.Int64(),
+			ExpiresAt:     rand.Int64(),
 		}
 
 		txn := badgerStore.Update()
@@ -131,7 +131,7 @@ func TestWaitGroupsTable_Get(t *testing.T) {
 		require.Equal(t, waitGroup.Name, actual.Name)
 		require.Equal(t, waitGroup.Description, actual.Description)
 		require.Equal(t, waitGroup.Counter, actual.Counter)
-		require.Equal(t, waitGroup.Completed, actual.Completed)
+		require.Equal(t, waitGroup.CompletedJobs, actual.CompletedJobs)
 		require.Equal(t, waitGroup.CreatedAt, actual.CreatedAt)
 		require.Equal(t, waitGroup.UpdatedAt, actual.UpdatedAt)
 		require.Equal(t, waitGroup.ExpiresAt, actual.ExpiresAt)
@@ -172,13 +172,13 @@ func TestWaitGroupsTable_GetByName(t *testing.T) {
 				NamespaceId: rand.Uint32(),
 				WaitGroupId: rand.Uint64(),
 			},
-			Name:        "test_wait_group",
-			Description: "test description",
-			Counter:     10,
-			Completed:   0,
-			CreatedAt:   rand.Int64(),
-			UpdatedAt:   rand.Int64(),
-			ExpiresAt:   rand.Int64(),
+			Name:          "test_wait_group",
+			Description:   "test description",
+			Counter:       10,
+			CompletedJobs: 0,
+			CreatedAt:     rand.Int64(),
+			UpdatedAt:     rand.Int64(),
+			ExpiresAt:     rand.Int64(),
 		}
 
 		txn := badgerStore.Update()
@@ -230,13 +230,13 @@ func TestWaitGroupsTable_GetByName(t *testing.T) {
 				NamespaceId: namespaceId1,
 				WaitGroupId: rand.Uint64(),
 			},
-			Name:        "test_wait_group",
-			Description: "test description",
-			Counter:     10,
-			Completed:   0,
-			CreatedAt:   rand.Int64(),
-			UpdatedAt:   rand.Int64(),
-			ExpiresAt:   rand.Int64(),
+			Name:          "test_wait_group",
+			Description:   "test description",
+			Counter:       10,
+			CompletedJobs: 0,
+			CreatedAt:     rand.Int64(),
+			UpdatedAt:     rand.Int64(),
+			ExpiresAt:     rand.Int64(),
 		}
 
 		txn := badgerStore.Update()
@@ -269,13 +269,13 @@ func TestWaitGroupsTable_Update(t *testing.T) {
 				NamespaceId: rand.Uint32(),
 				WaitGroupId: rand.Uint64(),
 			},
-			Name:        "test_wait_group",
-			Description: "test description",
-			Counter:     10,
-			Completed:   0,
-			CreatedAt:   rand.Int64(),
-			UpdatedAt:   rand.Int64(),
-			ExpiresAt:   rand.Int64(),
+			Name:          "test_wait_group",
+			Description:   "test description",
+			Counter:       10,
+			CompletedJobs: 0,
+			CreatedAt:     rand.Int64(),
+			UpdatedAt:     rand.Int64(),
+			ExpiresAt:     rand.Int64(),
 		}
 
 		txn := badgerStore.Update()
@@ -286,7 +286,7 @@ func TestWaitGroupsTable_Update(t *testing.T) {
 
 		// Update wait group
 		waitGroup.Counter = 20
-		waitGroup.Completed = 5
+		waitGroup.CompletedJobs = 5
 		newUpdateTime := rand.Int64()
 		waitGroup.UpdatedAt = newUpdateTime
 
@@ -304,7 +304,7 @@ func TestWaitGroupsTable_Update(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, actual)
 		require.Equal(t, uint64(20), actual.Counter)
-		require.Equal(t, uint64(5), actual.Completed)
+		require.Equal(t, uint64(5), actual.CompletedJobs)
 		require.Equal(t, newUpdateTime, actual.UpdatedAt)
 		require.Equal(t, waitGroup.Name, actual.Name)
 		require.Equal(t, waitGroup.Description, actual.Description)
@@ -322,13 +322,13 @@ func TestWaitGroupsTable_Update(t *testing.T) {
 				NamespaceId: rand.Uint32(),
 				WaitGroupId: rand.Uint64(),
 			},
-			Name:        "test_wait_group",
-			Description: "test description",
-			Counter:     10,
-			Completed:   0,
-			CreatedAt:   rand.Int64(),
-			UpdatedAt:   rand.Int64(),
-			ExpiresAt:   rand.Int64(),
+			Name:          "test_wait_group",
+			Description:   "test description",
+			Counter:       10,
+			CompletedJobs: 0,
+			CreatedAt:     rand.Int64(),
+			UpdatedAt:     rand.Int64(),
+			ExpiresAt:     rand.Int64(),
 		}
 
 		txn := badgerStore.Update()
@@ -362,13 +362,13 @@ func TestWaitGroupsTable_Delete(t *testing.T) {
 				NamespaceId: rand.Uint32(),
 				WaitGroupId: rand.Uint64(),
 			},
-			Name:        "test_wait_group",
-			Description: "test description",
-			Counter:     10,
-			Completed:   0,
-			CreatedAt:   rand.Int64(),
-			UpdatedAt:   rand.Int64(),
-			ExpiresAt:   rand.Int64(),
+			Name:          "test_wait_group",
+			Description:   "test description",
+			Counter:       10,
+			CompletedJobs: 0,
+			CreatedAt:     rand.Int64(),
+			UpdatedAt:     rand.Int64(),
+			ExpiresAt:     rand.Int64(),
 		}
 
 		txn := badgerStore.Update()
@@ -443,13 +443,13 @@ func TestWaitGroupsTable_List(t *testing.T) {
 					NamespaceId: namespaceId,
 					WaitGroupId: uint64(i),
 				},
-				Name:        "test_wait_group_" + string(rune(i)),
-				Description: "test description",
-				Counter:     10,
-				Completed:   0,
-				CreatedAt:   rand.Int64(),
-				UpdatedAt:   rand.Int64(),
-				ExpiresAt:   rand.Int64(),
+				Name:          "test_wait_group_" + string(rune(i)),
+				Description:   "test description",
+				Counter:       10,
+				CompletedJobs: 0,
+				CreatedAt:     rand.Int64(),
+				UpdatedAt:     rand.Int64(),
+				ExpiresAt:     rand.Int64(),
 			}
 
 			txn := badgerStore.Update()
@@ -489,13 +489,13 @@ func TestWaitGroupsTable_List(t *testing.T) {
 					NamespaceId: namespaceId,
 					WaitGroupId: uint64(i),
 				},
-				Name:        "test_wait_group_" + string(rune(i)),
-				Description: "test description",
-				Counter:     10,
-				Completed:   0,
-				CreatedAt:   rand.Int64(),
-				UpdatedAt:   rand.Int64(),
-				ExpiresAt:   rand.Int64(),
+				Name:          "test_wait_group_" + string(rune(i)),
+				Description:   "test description",
+				Counter:       10,
+				CompletedJobs: 0,
+				CreatedAt:     rand.Int64(),
+				UpdatedAt:     rand.Int64(),
+				ExpiresAt:     rand.Int64(),
 			}
 
 			txn := badgerStore.Update()
@@ -563,13 +563,13 @@ func TestWaitGroupsTable_List(t *testing.T) {
 					NamespaceId: namespaceId1,
 					WaitGroupId: uint64(i),
 				},
-				Name:        "test_wait_group_ns1_" + string(rune(i)),
-				Description: "test description",
-				Counter:     10,
-				Completed:   0,
-				CreatedAt:   rand.Int64(),
-				UpdatedAt:   rand.Int64(),
-				ExpiresAt:   rand.Int64(),
+				Name:          "test_wait_group_ns1_" + string(rune(i)),
+				Description:   "test description",
+				Counter:       10,
+				CompletedJobs: 0,
+				CreatedAt:     rand.Int64(),
+				UpdatedAt:     rand.Int64(),
+				ExpiresAt:     rand.Int64(),
 			}
 
 			txn := badgerStore.Update()
@@ -587,13 +587,13 @@ func TestWaitGroupsTable_List(t *testing.T) {
 					NamespaceId: namespaceId2,
 					WaitGroupId: uint64(i),
 				},
-				Name:        "test_wait_group_ns2_" + string(rune(i)),
-				Description: "test description",
-				Counter:     10,
-				Completed:   0,
-				CreatedAt:   rand.Int64(),
-				UpdatedAt:   rand.Int64(),
-				ExpiresAt:   rand.Int64(),
+				Name:          "test_wait_group_ns2_" + string(rune(i)),
+				Description:   "test description",
+				Counter:       10,
+				CompletedJobs: 0,
+				CreatedAt:     rand.Int64(),
+				UpdatedAt:     rand.Int64(),
+				ExpiresAt:     rand.Int64(),
 			}
 
 			txn := badgerStore.Update()

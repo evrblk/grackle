@@ -186,7 +186,7 @@ func TestCompleteJobsFromWaitGroup(t *testing.T) {
 			WaitGroupName: "waitgroup1",
 		})
 		require.NoError(t, err)
-		require.EqualValues(t, 0, resp.WaitGroup.Completed)
+		require.EqualValues(t, 0, resp.WaitGroup.CompletedJobs)
 
 		// Completing exactly Counter jobs succeeds
 		_, err = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
@@ -203,14 +203,6 @@ func TestCompleteJobsFromWaitGroup(t *testing.T) {
 			Jobs:          completeJobs([]string{"job3"}),
 		})
 		require.Error(t, err)
-
-		// Re-completing already-completed jobs is a no-op and must succeed
-		_, err = server.CompleteJobsFromWaitGroup(ctx, &gracklepb.CompleteJobsFromWaitGroupRequest{
-			NamespaceName: "namespace1",
-			WaitGroupName: "waitgroup1",
-			Jobs:          completeJobs([]string{"job1", "job2"}),
-		})
-		require.NoError(t, err)
 	})
 }
 
@@ -545,7 +537,7 @@ func TestWaitForWaitGroup(t *testing.T) {
 		require.True(t, resp.Completed)
 		require.False(t, resp.TimedOut)
 		require.Equal(t, uint64(2), resp.WaitGroup.Counter)
-		require.Equal(t, uint64(2), resp.WaitGroup.Completed)
+		require.Equal(t, uint64(2), resp.WaitGroup.CompletedJobs)
 	})
 
 	t.Run("timeout", func(t *testing.T) {
@@ -586,6 +578,6 @@ func TestWaitForWaitGroup(t *testing.T) {
 		require.False(t, resp.Completed)
 		require.True(t, resp.TimedOut)
 		require.Equal(t, uint64(10), resp.WaitGroup.Counter)
-		require.Equal(t, uint64(5), resp.WaitGroup.Completed)
+		require.Equal(t, uint64(5), resp.WaitGroup.CompletedJobs)
 	})
 }

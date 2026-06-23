@@ -110,6 +110,10 @@ func ValidateCreateWaitGroupRequest(req *gracklepb.CreateWaitGroupRequest) error
 		return invalid("CreateWaitGroupRequest.Counter", "must be greater than 0")
 	}
 
+	if req.DeleteAfterFinishedSeconds < 0 {
+		return invalid("CreateWaitGroupRequest.DeleteAfterFinishedSeconds", "must not be negative")
+	}
+
 	if err := validateMetadata(req.Metadata, "CreateWaitGroupRequest.Metadata"); err != nil {
 		return err
 	}
@@ -132,6 +136,10 @@ func ValidateUpdateWaitGroupRequest(req *gracklepb.UpdateWaitGroupRequest) error
 
 	if req.Counter <= 0 {
 		return invalid("UpdateWaitGroupRequest.Counter", "must be greater than 0")
+	}
+
+	if req.DeleteAfterFinishedSeconds < 0 {
+		return invalid("UpdateWaitGroupRequest.DeleteAfterFinishedSeconds", "must not be negative")
 	}
 
 	if err := validateMetadata(req.Metadata, "UpdateWaitGroupRequest.Metadata"); err != nil {

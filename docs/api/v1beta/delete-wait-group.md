@@ -1,8 +1,9 @@
 # DeleteWaitGroup
 
-Deletes a wait group. Any in-flight `WaitForWaitGroup` callers will see `NotFound`. A wait 
-group that reaches its `expires_at` is deleted automatically — explicit delete is only 
-needed for early cleanup.
+Deletes a wait group immediately. Any in-flight `WaitForWaitGroup` callers will see `NotFound`. A
+finished wait group (one that has `completed` or `expired`) is deleted automatically once its
+`delete_after_finished_seconds` retention window elapses — explicit delete is only needed for early
+cleanup.
 
 Safe to retry.
 

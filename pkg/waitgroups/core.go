@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/evrblk/monstera"
 	"github.com/evrblk/monstera/store"
@@ -24,6 +25,7 @@ type Core struct {
 	counters          *tables.CountersTable[*corepb.WaitGroupsCounter, corepb.WaitGroupsCounter]
 	gcRecords         *tables.GCRecordsTable[*corepb.WaitGroupsGarbageCollectionRecord, corepb.WaitGroupsGarbageCollectionRecord]
 	expirationRecords *expirationRecordsTable
+	deletionRecords   *deletionRecordsTable
 }
 
 var _ coreapis.GrackleWaitGroupsCoreApi = &Core{}
@@ -48,6 +50,7 @@ func NewCore(badgerStore *store.BadgerStore, shardGlobalIndexPrefix []byte, shar
 			shardGlobalIndexPrefix,
 		),
 		expirationRecords: newExpirationRecordsTable(shardGlobalIndexPrefix),
+		deletionRecords:   newDeletionRecordsTable(shardGlobalIndexPrefix),
 	}
 }
 
@@ -57,6 +60,7 @@ func (c *Core) ranges() []monsterax.KeyRange {
 		c.counters.GetTableKeyRange(),
 		c.gcRecords.GetTableKeyRange(),
 		c.expirationRecords.GetTableKeyRange(),
+		c.deletionRecords.GetTableKeyRange(),
 	}
 
 	ranges = append(ranges, c.waitGroups.GetTableKeyRanges()...)
@@ -242,16 +246,18 @@ func (c *Core) CreateWaitGroup(req *coreapis.CreateWaitGroupRequest) (*coreapis.
 	}
 
 	waitGroup := &corepb.WaitGroup{
-		Id:          req.Payload.WaitGroupId,
-		Name:        req.Payload.Name,
-		Description: req.Payload.Description,
-		Counter:     req.Payload.Counter,
-		Completed:   0,
-		CreatedAt:   req.Payload.Now,
-		UpdatedAt:   req.Payload.Now,
-		ExpiresAt:   req.Payload.ExpiresAt,
-		Metadata:    req.Payload.Metadata,
-		Version:     1,
+		Id:                         req.Payload.WaitGroupId,
+		Name:                       req.Payload.Name,
+		Description:                req.Payload.Description,
+		Counter:                    req.Payload.Counter,
+		CompletedJobs:              0,
+		CreatedAt:                  req.Payload.Now,
+		UpdatedAt:                  req.Payload.Now,
+		ExpiresAt:                  req.Payload.ExpiresAt,
+		Metadata:                   req.Payload.Metadata,
+		Version:                    1,
+		Status:                     corepb.WaitGroupStatus_WAIT_GROUP_STATUS_ACTIVE,
+		DeleteAfterFinishedSeconds: req.Payload.DeleteAfterFinishedSeconds,
 	}
 
 	err = c.waitGroups.Create(txn, waitGroup)
@@ -289,7 +295,8 @@ func (c *Core) CreateWaitGroup(req *coreapis.CreateWaitGroupRequest) (*coreapis.
 // expiration index is reconciled (the old entry is removed and a new one
 // added) so that garbage collection fires at the new time rather than the old
 // one. It is not allowed to shrink counter below the current number of completed
-// jobs. Returns NotFound if the wait group does not exist.
+// jobs. Returns NotFound if the wait group does not exist. Only active wait groups
+// can be updated.
 func (c *Core) UpdateWaitGroup(req *coreapis.UpdateWaitGroupRequest) (*coreapis.UpdateWaitGroupResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
@@ -324,14 +331,27 @@ func (c *Core) UpdateWaitGroup(req *coreapis.UpdateWaitGroupRequest) (*coreapis.
 		}, nil
 	}
 
-	if waitGroup.Completed > req.Payload.Counter {
+	if waitGroup.Status != corepb.WaitGroupStatus_WAIT_GROUP_STATUS_ACTIVE {
 		return &coreapis.UpdateWaitGroupResponse{
 			ApplicationError: monsterax.NewErrorWithContext(
 				monsterax.InvalidArgument,
-				"there are currently more completed processes than the new counter",
+				"only active wait groups can be updated",
 				map[string]string{
 					"wait_group_name": req.Payload.WaitGroupName,
-					"completed":       fmt.Sprintf("%d", waitGroup.Completed),
+					"status":          fmt.Sprintf("%s", waitGroup.Status),
+				},
+			),
+		}, nil
+	}
+
+	if waitGroup.CompletedJobs > req.Payload.Counter {
+		return &coreapis.UpdateWaitGroupResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.InvalidArgument,
+				"there are currently more completed jobs than the new counter",
+				map[string]string{
+					"wait_group_name": req.Payload.WaitGroupName,
+					"completed_jobs":  fmt.Sprintf("%d", waitGroup.CompletedJobs),
 					"new_counter":     fmt.Sprintf("%d", req.Payload.Counter),
 				},
 			),
@@ -340,7 +360,8 @@ func (c *Core) UpdateWaitGroup(req *coreapis.UpdateWaitGroupRequest) (*coreapis.
 
 	// Reconcile the global expiration index when expires_at changes. Without
 	// this the index keeps pointing at the old timestamp and GC would fire at
-	// the wrong time.
+	// the wrong time. Only active wait groups reach this point (finished ones
+	// are rejected above) and they always have an expiration record.
 	if waitGroup.ExpiresAt != req.Payload.ExpiresAt {
 		err = c.expirationRecords.Delete(txn, waitGroup.ExpiresAt, waitGroup.Id)
 		if err != nil {
@@ -358,6 +379,16 @@ func (c *Core) UpdateWaitGroup(req *coreapis.UpdateWaitGroupRequest) (*coreapis.
 	waitGroup.UpdatedAt = req.Payload.Now
 	waitGroup.Version += 1
 	waitGroup.Counter = req.Payload.Counter
+	waitGroup.DeleteAfterFinishedSeconds = req.Payload.DeleteAfterFinishedSeconds
+
+	// Lowering the counter down to the number of completed jobs finishes the
+	// wait group.
+	if waitGroup.CompletedJobs == waitGroup.Counter {
+		err = c.markWaitGroupFinished(txn, waitGroup, corepb.WaitGroupStatus_WAIT_GROUP_STATUS_COMPLETED, req.Payload.Now)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	err = c.waitGroups.Update(txn, waitGroup)
 	if err != nil {
@@ -406,6 +437,18 @@ func (c *Core) DeleteWaitGroup(req *coreapis.DeleteWaitGroupRequest) (*coreapis.
 		return nil, err
 	}
 
+	// Remove any pending expiration / deletion index entries for this wait
+	// group. These are no-ops if the corresponding record does not exist (e.g.
+	// an active wait group has no deletion record yet).
+	err = c.expirationRecords.Delete(txn, waitGroup.ExpiresAt, waitGroup.Id)
+	if err != nil {
+		return nil, err
+	}
+	err = c.deletionRecords.Delete(txn, deletionTime(waitGroup.FinishedAt, waitGroup.DeleteAfterFinishedSeconds), waitGroup.Id)
+	if err != nil {
+		return nil, err
+	}
+
 	// Mark the wait group's jobs for deletion
 	err = c.gcRecords.Create(txn, &corepb.WaitGroupsGarbageCollectionRecord{
 		Id: req.Payload.RecordId,
@@ -435,10 +478,10 @@ func (c *Core) DeleteWaitGroup(req *coreapis.DeleteWaitGroupRequest) (*coreapis.
 }
 
 // CompleteJobsFromWaitGroup marks each given job id as completed in the
-// named wait group, incrementing the Completed counter once per previously
+// named wait group, incrementing CompletedJobs once per previously
 // unseen job id (re-completing an already-completed job is a no-op).
 // Returns NotFound if the wait group does not exist, or InvalidArgument if
-// the call would push Completed above Counter — in the latter case the
+// the call would push CompletedJobs above Counter — in the latter case the
 // transaction is discarded and no jobs are persisted.
 func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroupRequest) (*coreapis.CompleteJobsFromWaitGroupResponse, error) {
 	txn := c.badgerStore.Update()
@@ -458,6 +501,19 @@ func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroup
 		}
 
 		return nil, err
+	}
+
+	if waitGroup.Status != corepb.WaitGroupStatus_WAIT_GROUP_STATUS_ACTIVE {
+		return &coreapis.CompleteJobsFromWaitGroupResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.InvalidArgument,
+				"only active wait groups can accept jobs",
+				map[string]string{
+					"wait_group_name": req.Payload.WaitGroupName,
+					"status":          fmt.Sprintf("%s", waitGroup.Status),
+				},
+			),
+		}, nil
 	}
 
 	for _, job := range req.Payload.Jobs {
@@ -481,7 +537,7 @@ func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroup
 				}
 
 				// Increment counter only if we haven't seen this job_id before
-				waitGroup.Completed++
+				waitGroup.CompletedJobs++
 			} else {
 				return nil, err
 			}
@@ -489,7 +545,7 @@ func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroup
 	}
 
 	// Reject if completing these jobs would overflow the wait group counter.
-	if waitGroup.Completed > waitGroup.Counter {
+	if waitGroup.CompletedJobs > waitGroup.Counter {
 		return &coreapis.CompleteJobsFromWaitGroupResponse{
 			ApplicationError: monsterax.NewErrorWithContext(
 				monsterax.InvalidArgument,
@@ -497,12 +553,21 @@ func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroup
 				map[string]string{
 					"wait_group_name": req.Payload.WaitGroupName,
 					"counter":         fmt.Sprintf("%d", waitGroup.Counter),
-					"completed":       fmt.Sprintf("%d", waitGroup.Completed),
+					"completed_jobs":  fmt.Sprintf("%d", waitGroup.CompletedJobs),
 				}),
 		}, nil
 	}
 
 	waitGroup.UpdatedAt = req.Payload.Now
+
+	// When all jobs are completed the wait group becomes finished. Mark it as
+	// completed and schedule its deletion after delete_after_finished_seconds.
+	if waitGroup.CompletedJobs == waitGroup.Counter {
+		err = c.markWaitGroupFinished(txn, waitGroup, corepb.WaitGroupStatus_WAIT_GROUP_STATUS_COMPLETED, req.Payload.Now)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	err = c.waitGroups.Update(txn, waitGroup)
 	if err != nil {
@@ -526,11 +591,28 @@ func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroup
 // by req.MaxDeletedObjects across the whole call; records that fully drain
 // within their budget are themselves removed, otherwise they remain and are
 // resumed on the next GC tick.
+//
+// On every tick it also: (1) marks active wait groups whose expires_at has
+// passed as expired and schedules their deletion, and (2) deletes finished
+// wait groups (completed or expired) whose scheduled deletion time has passed.
 func (c *Core) RunWaitGroupsGarbageCollection(req *coreapis.RunWaitGroupsGarbageCollectionRequest) (*coreapis.RunWaitGroupsGarbageCollectionResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
 	totalDeletedObjects := 0
+
+	// Mark expired wait groups (expires_at <= now) and schedule their deletion.
+	err := c.expireWaitGroups(txn, req.Payload.Now, int(req.Payload.GcRecordsPageSize))
+	if err != nil {
+		return nil, err
+	}
+
+	// Delete finished wait groups whose retention period has elapsed.
+	deletedFinished, err := c.deleteFinishedWaitGroups(txn, req.Payload.Now, int(req.Payload.GcRecordsPageSize), int(req.Payload.MaxDeletedObjects)-totalDeletedObjects)
+	if err != nil {
+		return nil, err
+	}
+	totalDeletedObjects = totalDeletedObjects + deletedFinished
 
 	// List one page of GC records
 	gcRecords, err := c.gcRecords.List(txn, int(req.Payload.GcRecordsPageSize))
@@ -608,6 +690,156 @@ func (c *Core) WaitGroupsDeleteNamespace(req *coreapis.WaitGroupsDeleteNamespace
 	}, nil
 }
 
+// deletionTime returns the timestamp (ns) at which a finished wait group should
+// be deleted, given when it finished and its retention period in seconds.
+func deletionTime(finishedAt int64, deleteAfterFinishedSeconds int64) int64 {
+	return finishedAt + deleteAfterFinishedSeconds*int64(time.Second)
+}
+
+// markWaitGroupFinished transitions a wait group to a terminal (finished) state
+// (completed or expired). It records the finish time, removes the now-obsolete
+// expiration index entry, and schedules the wait group for deletion after
+// delete_after_finished_seconds. The caller is responsible for persisting the
+// wait group itself.
+func (c *Core) markWaitGroupFinished(txn *store.Txn, waitGroup *corepb.WaitGroup, status corepb.WaitGroupStatus, finishedAt int64) error {
+	waitGroup.Status = status
+	waitGroup.FinishedAt = finishedAt
+
+	// A finished wait group no longer expires; drop its expiration index entry.
+	err := c.expirationRecords.Delete(txn, waitGroup.ExpiresAt, waitGroup.Id)
+	if err != nil {
+		return err
+	}
+
+	// Schedule deletion after the retention period.
+	return c.deletionRecords.Add(txn, deletionTime(finishedAt, waitGroup.DeleteAfterFinishedSeconds), waitGroup.Id)
+}
+
+// expireWaitGroups marks active wait groups whose expires_at has passed as
+// expired and schedules their deletion. Stale expiration records (pointing at a
+// wait group that is already finished or no longer exists) are removed.
+func (c *Core) expireWaitGroups(txn *store.Txn, now int64, pageSize int) error {
+	pageSize = pagination.GetLimitWithDefaults(pageSize)
+
+	records := make([]*corepb.WaitGroupsExpirationRecord, 0, pageSize)
+	err := c.expirationRecords.ListByExpiration(txn, 0, now, func(record *corepb.WaitGroupsExpirationRecord) (bool, error) {
+		records = append(records, record)
+		return len(records) < pageSize, nil
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, record := range records {
+		waitGroup, err := c.waitGroups.Get(txn, record.WaitGroupId)
+		if err != nil {
+			if errors.Is(err, store.ErrNotFound) {
+				// Wait group is gone; drop the stale expiration record.
+				if err := c.expirationRecords.Delete(txn, record.ExpiresAt, record.WaitGroupId); err != nil {
+					return err
+				}
+				continue
+			}
+			return err
+		}
+
+		if waitGroup.Status == corepb.WaitGroupStatus_WAIT_GROUP_STATUS_ACTIVE {
+			// markWaitGroupFinished removes this expiration record itself.
+			if err := c.markWaitGroupFinished(txn, waitGroup, corepb.WaitGroupStatus_WAIT_GROUP_STATUS_EXPIRED, record.ExpiresAt); err != nil {
+				return err
+			}
+			if err := c.waitGroups.Update(txn, waitGroup); err != nil {
+				return err
+			}
+		} else {
+			// Already finished; the expiration record is stale.
+			if err := c.expirationRecords.Delete(txn, record.ExpiresAt, record.WaitGroupId); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// deleteFinishedWaitGroups deletes finished wait groups whose scheduled deletion
+// time (delete_at) has passed, draining their completed jobs first. It is
+// bounded by maxDeletedObjects across the whole call; a wait group whose jobs do
+// not fully drain within the budget is left in place and resumed on the next GC
+// tick. Returns the number of objects deleted.
+func (c *Core) deleteFinishedWaitGroups(txn *store.Txn, now int64, pageSize int, maxDeletedObjects int) (int, error) {
+	deletedObjects := 0
+	if maxDeletedObjects <= 0 {
+		return deletedObjects, nil
+	}
+
+	pageSize = pagination.GetLimitWithDefaults(pageSize)
+
+	records := make([]*corepb.WaitGroupsDeletionRecord, 0, pageSize)
+	err := c.deletionRecords.ListByDeletion(txn, 0, now, func(record *corepb.WaitGroupsDeletionRecord) (bool, error) {
+		records = append(records, record)
+		return len(records) < pageSize, nil
+	})
+	if err != nil {
+		return deletedObjects, err
+	}
+
+	for _, record := range records {
+		// -3 reserves budget for removing the deletion record, the main table
+		// row, and the counter update for this wait group.
+		limit := maxDeletedObjects - deletedObjects - 3
+		if limit <= 0 {
+			break
+		}
+
+		waitGroup, err := c.waitGroups.Get(txn, record.WaitGroupId)
+		if err != nil {
+			if errors.Is(err, store.ErrNotFound) {
+				// Wait group already gone; drop the stale deletion record.
+				if err := c.deletionRecords.Delete(txn, record.DeleteAt, record.WaitGroupId); err != nil {
+					return deletedObjects, err
+				}
+				deletedObjects++
+				continue
+			}
+			return deletedObjects, err
+		}
+
+		// Delete one page of completed jobs.
+		deletedJobs, err := c.deleteWaitGroupJobs(txn, waitGroup.Id, limit)
+		if err != nil {
+			return deletedObjects, err
+		}
+		deletedObjects = deletedObjects + deletedJobs
+
+		// If fewer jobs were deleted than the limit, then all jobs are drained
+		// and the wait group itself can be removed.
+		if deletedJobs < limit {
+			counters, err := c.counters.Get(txn, waitGroup.Id.AccountId, waitGroup.Id.NamespaceId)
+			if err != nil {
+				return deletedObjects, err
+			}
+			counters.NumberOfWaitGroups -= 1
+			if err := c.counters.Set(txn, waitGroup.Id.AccountId, waitGroup.Id.NamespaceId, counters); err != nil {
+				return deletedObjects, err
+			}
+			deletedObjects++
+
+			if err := c.waitGroups.Delete(txn, waitGroup.Id); err != nil {
+				return deletedObjects, err
+			}
+			deletedObjects++
+
+			if err := c.deletionRecords.Delete(txn, record.DeleteAt, record.WaitGroupId); err != nil {
+				return deletedObjects, err
+			}
+			deletedObjects++
+		}
+	}
+
+	return deletedObjects, nil
+}
+
 func (c *Core) deleteWaitGroupJobs(txn *store.Txn, waitGroupId *corepb.WaitGroupId, waitGroupJobsPageSize int) (int, error) {
 	deletedObjects := 0
 
@@ -640,8 +872,8 @@ func (c *Core) deleteNamespace(txn *store.Txn, namespaceId *corepb.NamespaceId, 
 
 	// Delete those wait groups
 	for _, waitGroup := range waitGroupsPage.waitGroups {
-		// -3 is for expirationGlobalIndex, counters, and main table records
-		limit := maxDeletedObjects - deletedObjects - 3
+		// -4 is for expirationGlobalIndex, deletionGlobalIndex, counters, and main table records
+		limit := maxDeletedObjects - deletedObjects - 4
 
 		deletedJobs, err := c.deleteWaitGroupJobs(txn, waitGroup.Id, limit)
 		if err != nil {
@@ -653,6 +885,14 @@ func (c *Core) deleteNamespace(txn *store.Txn, namespaceId *corepb.NamespaceId, 
 		if deletedJobs < limit {
 			// Remove a wait group from expirationGlobalIndex. Will not fail if it was already removed.
 			err = c.expirationRecords.Delete(txn, waitGroup.ExpiresAt, waitGroup.Id)
+			if err != nil {
+				return deletedObjects, err
+			}
+			deletedObjects++
+
+			// Remove a wait group from deletionGlobalIndex. Will not fail if it was already removed
+			// (e.g. an active wait group that never finished has no deletion record).
+			err = c.deletionRecords.Delete(txn, deletionTime(waitGroup.FinishedAt, waitGroup.DeleteAfterFinishedSeconds), waitGroup.Id)
 			if err != nil {
 				return deletedObjects, err
 			}

@@ -24,25 +24,25 @@ const (
 type LockState int32
 
 const (
-	LockState_INVALID          LockState = 0
-	LockState_UNLOCKED         LockState = 1
-	LockState_SHARED_LOCKED    LockState = 2
-	LockState_EXCLUSIVE_LOCKED LockState = 3
+	LockState_LOCK_STATE_INVALID          LockState = 0
+	LockState_LOCK_STATE_UNLOCKED         LockState = 1
+	LockState_LOCK_STATE_SHARED_LOCKED    LockState = 2
+	LockState_LOCK_STATE_EXCLUSIVE_LOCKED LockState = 3
 )
 
 // Enum value maps for LockState.
 var (
 	LockState_name = map[int32]string{
-		0: "INVALID",
-		1: "UNLOCKED",
-		2: "SHARED_LOCKED",
-		3: "EXCLUSIVE_LOCKED",
+		0: "LOCK_STATE_INVALID",
+		1: "LOCK_STATE_UNLOCKED",
+		2: "LOCK_STATE_SHARED_LOCKED",
+		3: "LOCK_STATE_EXCLUSIVE_LOCKED",
 	}
 	LockState_value = map[string]int32{
-		"INVALID":          0,
-		"UNLOCKED":         1,
-		"SHARED_LOCKED":    2,
-		"EXCLUSIVE_LOCKED": 3,
+		"LOCK_STATE_INVALID":          0,
+		"LOCK_STATE_UNLOCKED":         1,
+		"LOCK_STATE_SHARED_LOCKED":    2,
+		"LOCK_STATE_EXCLUSIVE_LOCKED": 3,
 	}
 )
 
@@ -1684,7 +1684,7 @@ func (x *Lock) GetState() LockState {
 	if x != nil {
 		return x.State
 	}
-	return LockState_INVALID
+	return LockState_LOCK_STATE_INVALID
 }
 
 func (x *Lock) GetLockedAt() int64 {
@@ -2124,12 +2124,12 @@ const file_pkg_corepb_locks_proto_rawDesc = "" +
 	"\fLockAncestor\x121\n" +
 	"\x02id\x18\x01 \x01(\v2!.com.evrblk.grackle.corepb.LockIdR\x02id\x12'\n" +
 	"\x0fexclusive_count\x18\x02 \x01(\x03R\x0eexclusiveCount\x12!\n" +
-	"\fshared_count\x18\x03 \x01(\x03R\vsharedCount*O\n" +
-	"\tLockState\x12\v\n" +
-	"\aINVALID\x10\x00\x12\f\n" +
-	"\bUNLOCKED\x10\x01\x12\x11\n" +
-	"\rSHARED_LOCKED\x10\x02\x12\x14\n" +
-	"\x10EXCLUSIVE_LOCKED\x10\x03B&Z$github.com/evrblk/grackle/pkg/corepbb\x06proto3"
+	"\fshared_count\x18\x03 \x01(\x03R\vsharedCount*{\n" +
+	"\tLockState\x12\x16\n" +
+	"\x12LOCK_STATE_INVALID\x10\x00\x12\x17\n" +
+	"\x13LOCK_STATE_UNLOCKED\x10\x01\x12\x1c\n" +
+	"\x18LOCK_STATE_SHARED_LOCKED\x10\x02\x12\x1f\n" +
+	"\x1bLOCK_STATE_EXCLUSIVE_LOCKED\x10\x03B&Z$github.com/evrblk/grackle/pkg/corepbb\x06proto3"
 
 var (
 	file_pkg_corepb_locks_proto_rawDescOnce sync.Once

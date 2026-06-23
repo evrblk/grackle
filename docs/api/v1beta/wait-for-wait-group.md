@@ -1,6 +1,6 @@
 # WaitForWaitGroup
 
-Blocks until the wait group is complete (`completed >= counter`) or until `timeout_seconds`
+Blocks until the wait group is complete (`completed_jobs >= counter`) or until `timeout_seconds`
 elapses. Many callers can wait on the same group at once; all of them are released together.
 
 Safe to retry — a timed-out caller can simply call again; the group continues to make progress
@@ -23,7 +23,8 @@ in the background.
 * Returns `NotFound` if the namespace does not exist.
 * Returns `NotFound` if the wait group does not exist.
 * `completed` and `timed_out` are mutually exclusive flags on the response — `timed_out: true`
-  means the deadline fired first; `completed: true` means the group reached the threshold.
+  means the deadline fired first; `completed: true` means the group reached the threshold (its
+  `status` is then `completed`).
 
 __Completed before timeout:__
 
@@ -31,9 +32,11 @@ __Completed before timeout:__
 {
   "wait_group": {
     "name": "batch_2026_06_12",
+    "status": "COMPLETED",
     "counter": 110,
-    "completed": 110,
-    "expires_at": 1718236800000000000
+    "completed_jobs": 110,
+    "expires_at": 1718236800000000000,
+    "finished_at": 1718150700000000000
   },
   "completed": true,
   "timed_out": false
@@ -46,8 +49,9 @@ __Timeout fired first:__
 {
   "wait_group": {
     "name": "batch_2026_06_12",
+    "status": "ACTIVE",
     "counter": 110,
-    "completed": 73,
+    "completed_jobs": 73,
     "expires_at": 1718236800000000000
   },
   "completed": false,

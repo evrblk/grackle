@@ -79,15 +79,31 @@ func waitGroupToFront(waitGroup *corepb.WaitGroup) *gracklepb.WaitGroup {
 	}
 
 	return &gracklepb.WaitGroup{
-		Name:        waitGroup.Name,
-		Description: waitGroup.Description,
-		CreatedAt:   waitGroup.CreatedAt,
-		UpdatedAt:   waitGroup.UpdatedAt,
-		Counter:     waitGroup.Counter,
-		Completed:   waitGroup.Completed,
-		ExpiresAt:   waitGroup.ExpiresAt,
-		Version:     waitGroup.Version,
-		Metadata:    waitGroup.Metadata,
+		Name:                       waitGroup.Name,
+		Description:                waitGroup.Description,
+		CreatedAt:                  waitGroup.CreatedAt,
+		UpdatedAt:                  waitGroup.UpdatedAt,
+		Counter:                    waitGroup.Counter,
+		CompletedJobs:              waitGroup.CompletedJobs,
+		ExpiresAt:                  waitGroup.ExpiresAt,
+		Version:                    waitGroup.Version,
+		Metadata:                   waitGroup.Metadata,
+		Status:                     waitGroupStatusToFront(waitGroup.Status),
+		DeleteAfterFinishedSeconds: waitGroup.DeleteAfterFinishedSeconds,
+		FinishedAt:                 waitGroup.FinishedAt,
+	}
+}
+
+func waitGroupStatusToFront(status corepb.WaitGroupStatus) gracklepb.WaitGroupStatus {
+	switch status {
+	case corepb.WaitGroupStatus_WAIT_GROUP_STATUS_ACTIVE:
+		return gracklepb.WaitGroupStatus_WAIT_GROUP_STATUS_ACTIVE
+	case corepb.WaitGroupStatus_WAIT_GROUP_STATUS_EXPIRED:
+		return gracklepb.WaitGroupStatus_WAIT_GROUP_STATUS_EXPIRED
+	case corepb.WaitGroupStatus_WAIT_GROUP_STATUS_COMPLETED:
+		return gracklepb.WaitGroupStatus_WAIT_GROUP_STATUS_COMPLETED
+	default:
+		return gracklepb.WaitGroupStatus_WAIT_GROUP_STATUS_INVALID
 	}
 }
 
@@ -297,13 +313,13 @@ func leasesToFront(leases []*corepb.Lease) []*gracklepb.Lease {
 
 func lockStateToFront(lockState corepb.LockState) gracklepb.LockState {
 	switch lockState {
-	case corepb.LockState_UNLOCKED:
-		return gracklepb.LockState_UNLOCKED
-	case corepb.LockState_SHARED_LOCKED:
-		return gracklepb.LockState_SHARED_LOCKED
-	case corepb.LockState_EXCLUSIVE_LOCKED:
-		return gracklepb.LockState_EXCLUSIVE_LOCKED
+	case corepb.LockState_LOCK_STATE_UNLOCKED:
+		return gracklepb.LockState_LOCK_STATE_UNLOCKED
+	case corepb.LockState_LOCK_STATE_SHARED_LOCKED:
+		return gracklepb.LockState_LOCK_STATE_SHARED_LOCKED
+	case corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED:
+		return gracklepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED
 	default:
-		return gracklepb.LockState_INVALID
+		return gracklepb.LockState_LOCK_STATE_INVALID
 	}
 }

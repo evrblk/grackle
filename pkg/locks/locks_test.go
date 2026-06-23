@@ -28,7 +28,7 @@ func TestLocksTable_Get(t *testing.T) {
 				NamespaceId: namespaceId,
 				LockName:    lockName,
 			},
-			State:    corepb.LockState_EXCLUSIVE_LOCKED,
+			State:    corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED,
 			LockedAt: 12345,
 			LockHolders: []*corepb.LockHolder{
 				{LeaseId: 100, LockedAt: 12345},
@@ -98,7 +98,7 @@ func TestLocksTable_Update(t *testing.T) {
 				NamespaceId: namespaceId,
 				LockName:    "new_lock",
 			},
-			State:    corepb.LockState_EXCLUSIVE_LOCKED,
+			State:    corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED,
 			LockedAt: 12345,
 			LockHolders: []*corepb.LockHolder{
 				{LeaseId: leaseId, LockedAt: 12345},
@@ -148,7 +148,7 @@ func TestLocksTable_Update(t *testing.T) {
 				NamespaceId: namespaceId,
 				LockName:    "shared_lock",
 			},
-			State:    corepb.LockState_SHARED_LOCKED,
+			State:    corepb.LockState_LOCK_STATE_SHARED_LOCKED,
 			LockedAt: 12345,
 			LockHolders: []*corepb.LockHolder{
 				{LeaseId: leaseId1, LockedAt: 12345},
@@ -208,7 +208,7 @@ func TestLocksTable_Update(t *testing.T) {
 				NamespaceId: namespaceId,
 				LockName:    "shared_lock",
 			},
-			State:    corepb.LockState_SHARED_LOCKED,
+			State:    corepb.LockState_LOCK_STATE_SHARED_LOCKED,
 			LockedAt: 12345,
 			LockHolders: []*corepb.LockHolder{
 				{LeaseId: leaseId1, LockedAt: 12345},
@@ -272,7 +272,7 @@ func TestLocksTable_Update(t *testing.T) {
 				NamespaceId: namespaceId,
 				LockName:    "exclusive_lock",
 			},
-			State:    corepb.LockState_EXCLUSIVE_LOCKED,
+			State:    corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED,
 			LockedAt: 12345,
 			LockHolders: []*corepb.LockHolder{
 				{LeaseId: leaseId1, LockedAt: 12345},
@@ -334,7 +334,7 @@ func TestLocksTable_Delete(t *testing.T) {
 				NamespaceId: namespaceId,
 				LockName:    "test_lock",
 			},
-			State:    corepb.LockState_EXCLUSIVE_LOCKED,
+			State:    corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED,
 			LockedAt: 12345,
 			LockHolders: []*corepb.LockHolder{
 				{LeaseId: leaseId, LockedAt: 12345},
@@ -411,7 +411,7 @@ func TestLocksTable_Delete(t *testing.T) {
 				NamespaceId: namespaceId,
 				LockName:    "shared_lock",
 			},
-			State:    corepb.LockState_SHARED_LOCKED,
+			State:    corepb.LockState_LOCK_STATE_SHARED_LOCKED,
 			LockedAt: 12345,
 			LockHolders: []*corepb.LockHolder{
 				{LeaseId: leaseId1, LockedAt: 12345},
@@ -472,7 +472,7 @@ func TestLocksTable_List(t *testing.T) {
 					NamespaceId: namespaceId,
 					LockName:    fmt.Sprintf("lock_%d", i),
 				},
-				State:    corepb.LockState_EXCLUSIVE_LOCKED,
+				State:    corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED,
 				LockedAt: int64(12345 + i),
 				LockHolders: []*corepb.LockHolder{
 					{LeaseId: uint64(100 + i), LockedAt: int64(12345 + i)},
@@ -515,7 +515,7 @@ func TestLocksTable_List(t *testing.T) {
 					NamespaceId: namespaceId,
 					LockName:    fmt.Sprintf("lock_%02d", i),
 				},
-				State:    corepb.LockState_EXCLUSIVE_LOCKED,
+				State:    corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED,
 				LockedAt: int64(12345 + i),
 				LockHolders: []*corepb.LockHolder{
 					{LeaseId: uint64(100 + i), LockedAt: int64(12345 + i)},
@@ -602,7 +602,7 @@ func TestLocksTable_ListByLeaseId(t *testing.T) {
 					NamespaceId: namespaceId,
 					LockName:    fmt.Sprintf("lock_%d", i),
 				},
-				State:    corepb.LockState_EXCLUSIVE_LOCKED,
+				State:    corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED,
 				LockedAt: int64(12345 + i),
 				LockHolders: []*corepb.LockHolder{
 					{LeaseId: leaseId, LockedAt: int64(12345 + i)},
@@ -647,7 +647,7 @@ func TestLocksTable_ListByLeaseId(t *testing.T) {
 					NamespaceId: namespaceId,
 					LockName:    fmt.Sprintf("lock_%02d", i),
 				},
-				State:    corepb.LockState_EXCLUSIVE_LOCKED,
+				State:    corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED,
 				LockedAt: int64(12345 + i),
 				LockHolders: []*corepb.LockHolder{
 					{LeaseId: leaseId, LockedAt: int64(12345 + i)},
@@ -746,7 +746,7 @@ func TestLocksTable_ListByLeaseId(t *testing.T) {
 					NamespaceId: namespaceId,
 					LockName:    fmt.Sprintf("lock_%04d", i),
 				},
-				State:    corepb.LockState_EXCLUSIVE_LOCKED,
+				State:    corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED,
 				LockedAt: int64(12345 + i),
 				LockHolders: []*corepb.LockHolder{
 					{LeaseId: leaseId, LockedAt: int64(12345 + i)},
@@ -812,7 +812,7 @@ func TestLocksTable_ListByLeaseId(t *testing.T) {
 					NamespaceId: namespaceId,
 					LockName:    fmt.Sprintf("lock_lease1_%d", i),
 				},
-				State:    corepb.LockState_EXCLUSIVE_LOCKED,
+				State:    corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED,
 				LockedAt: int64(12345 + i),
 				LockHolders: []*corepb.LockHolder{
 					{LeaseId: leaseId1, LockedAt: int64(12345 + i)},
@@ -833,7 +833,7 @@ func TestLocksTable_ListByLeaseId(t *testing.T) {
 					NamespaceId: namespaceId,
 					LockName:    fmt.Sprintf("lock_lease2_%d", i),
 				},
-				State:    corepb.LockState_EXCLUSIVE_LOCKED,
+				State:    corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED,
 				LockedAt: int64(12345 + i),
 				LockHolders: []*corepb.LockHolder{
 					{LeaseId: leaseId2, LockedAt: int64(12345 + i)},

@@ -38,6 +38,7 @@ func RegisterGracklePrefixes(registry monsterax.TableRegistry) {
 		"Grackle.WaitGroupsCore.Counters.Table":                 registry.RegisterPrefix([]byte{0x43}),
 		"Grackle.WaitGroupsCore.GarbageCollectionRecords.Table": registry.RegisterPrefix([]byte{0x44}),
 		"Grackle.WaitGroupsCore.ExpirationRecords.Table":        registry.RegisterPrefix([]byte{0x45}),
+		"Grackle.WaitGroupsCore.DeletionRecords.Table":          registry.RegisterPrefix([]byte{0x46}),
 
 		// Namespaces
 		"Grackle.NamespacesCore.Namespaces.Table":      registry.RegisterPrefix([]byte{0x50}),

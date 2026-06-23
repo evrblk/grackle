@@ -170,10 +170,10 @@ message LockHolder {
 }
 
 enum LockState {
-  INVALID = 0;
-  UNLOCKED = 1;
-  SHARED_LOCKED = 2;
-  EXCLUSIVE_LOCKED = 3;
+  LOCK_STATE_INVALID = 0;
+  LOCK_STATE_UNLOCKED = 1;
+  LOCK_STATE_SHARED_LOCKED = 2;
+  LOCK_STATE_EXCLUSIVE_LOCKED = 3;
 }
 
 message LockId {

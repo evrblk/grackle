@@ -1941,6 +1941,19 @@ func (m *WaitGroupsDeleteNamespaceResponse) MarshalBinary() (data []byte, err er
 	return m.MarshalVT()
 }
 
+// WaitGroupsDeletionRecord
+
+var _ encoding.BinaryMarshaler = (*WaitGroupsDeletionRecord)(nil)
+var _ encoding.BinaryUnmarshaler = (*WaitGroupsDeletionRecord)(nil)
+
+func (m *WaitGroupsDeletionRecord) UnmarshalBinary(data []byte) error {
+	return m.UnmarshalVT(data)
+}
+
+func (m *WaitGroupsDeletionRecord) MarshalBinary() (data []byte, err error) {
+	return m.MarshalVT()
+}
+
 // WaitGroupsExpirationRecord
 
 var _ encoding.BinaryMarshaler = (*WaitGroupsExpirationRecord)(nil)

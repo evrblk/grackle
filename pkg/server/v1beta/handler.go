@@ -218,6 +218,7 @@ func (s *GrackleApiServerHandler) CreateWaitGroup(ctx context.Context, req *grac
 		ExpiresAt:                         req.ExpiresAt,
 		Metadata:                          req.Metadata,
 		MaxNumberOfWaitGroupsPerNamespace: limits.MaxNumberOfWaitGroupsPerNamespace,
+		DeleteAfterFinishedSeconds:        req.DeleteAfterFinishedSeconds,
 	})
 	if err != nil {
 		return nil, monsterax.ErrorToGRPC(err)
@@ -248,14 +249,15 @@ func (s *GrackleApiServerHandler) UpdateWaitGroup(ctx context.Context, req *grac
 
 	// Create wait group with generated ID
 	resp2, err := s.grackleClient.UpdateWaitGroup(ctx, &corepb.UpdateWaitGroupRequest{
-		NamespaceId:     resp1.Namespace.Id,
-		WaitGroupName:   req.WaitGroupName,
-		Description:     req.Description,
-		Now:             now.UnixNano(),
-		Counter:         req.Counter,
-		ExpiresAt:       req.ExpiresAt,
-		Metadata:        req.Metadata,
-		ExpectedVersion: req.ExpectedVersion,
+		NamespaceId:                resp1.Namespace.Id,
+		WaitGroupName:              req.WaitGroupName,
+		Description:                req.Description,
+		Now:                        now.UnixNano(),
+		Counter:                    req.Counter,
+		ExpiresAt:                  req.ExpiresAt,
+		Metadata:                   req.Metadata,
+		ExpectedVersion:            req.ExpectedVersion,
+		DeleteAfterFinishedSeconds: req.DeleteAfterFinishedSeconds,
 	})
 	if err != nil {
 		return nil, monsterax.ErrorToGRPC(err)
@@ -324,7 +326,7 @@ func (s *GrackleApiServerHandler) WaitForWaitGroup(ctx context.Context, req *gra
 
 		// Check completion and timeout conditions
 		timedOut := time.Now().After(deadline)
-		completed := resp2.WaitGroup.Counter == resp2.WaitGroup.Completed
+		completed := resp2.WaitGroup.Counter == resp2.WaitGroup.CompletedJobs
 
 		if timedOut || completed {
 			return &gracklepb.WaitForWaitGroupResponse{

@@ -41,7 +41,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		success, lock := acquireLock(t, core, lockId, lease.Id, true, now)
 		require.True(t, success)
 		require.EqualValues(t, now.UnixNano(), lock.LockedAt)
-		require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
 		require.EqualValues(t, now.UnixNano(), lock.LockHolders[0].LockedAt)
 
 		// T+1m: Get lock
@@ -56,7 +56,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		require.Nil(t, resp2.ApplicationError)
 		require.NotNil(t, resp2.Payload)
 		require.NotNil(t, resp2.Payload.Lock)
-		require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, resp2.Payload.Lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, resp2.Payload.Lock.State)
 
 		// T+61m: Get lock
 		resp3, err := core.GetLock(&coreapis.GetLockRequest{
@@ -70,7 +70,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		require.Nil(t, resp3.ApplicationError)
 		require.NotNil(t, resp3.Payload)
 		require.NotNil(t, resp3.Payload.Lock)
-		require.Equal(t, corepb.LockState_UNLOCKED, resp3.Payload.Lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_UNLOCKED, resp3.Payload.Lock.State)
 	})
 
 	t.Run("shared lock", func(t *testing.T) {
@@ -91,17 +91,17 @@ func TestCore_AcquireLock(t *testing.T) {
 		success, lock := acquireLock(t, core, lockId, lease.Id, false, now)
 		require.True(t, success)
 		require.EqualValues(t, now.UnixNano(), lock.LockedAt)
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 		require.Len(t, lock.LockHolders, 1)
 		require.EqualValues(t, now.UnixNano(), lock.LockHolders[0].LockedAt)
 
 		// T+1m: Get lock
 		lock = getLock(t, core, lockId, now.Add(time.Minute))
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 
 		// T+61m: Get lock
 		lock = getLock(t, core, lockId, now.Add(61*time.Minute))
-		require.Equal(t, corepb.LockState_UNLOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State)
 	})
 
 	t.Run("exclusive lock repeatedly", func(t *testing.T) {
@@ -121,12 +121,12 @@ func TestCore_AcquireLock(t *testing.T) {
 		// T+0: Acquire lock
 		success, lock := acquireLock(t, core, lockId, lease.Id, true, now)
 		require.True(t, success)
-		require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
 
 		// T+1m: Acquire lock again
 		success, lock = acquireLock(t, core, lockId, lease.Id, true, now.Add(time.Minute))
 		require.True(t, success)
-		require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
 	})
 
 	t.Run("shared lock repeatedly", func(t *testing.T) {
@@ -146,12 +146,12 @@ func TestCore_AcquireLock(t *testing.T) {
 		// T+0: Acquire lock
 		success, lock := acquireLock(t, core, lockId, lease.Id, false, now)
 		require.True(t, success)
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 
 		// T+1m: Acquire lock again
 		success, lock = acquireLock(t, core, lockId, lease.Id, false, now.Add(time.Minute))
 		require.True(t, success)
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 	})
 
 	t.Run("exclusive locked by another process", func(t *testing.T) {
@@ -173,17 +173,17 @@ func TestCore_AcquireLock(t *testing.T) {
 		// T+0: Acquire lock
 		success, lock := acquireLock(t, core, lockId, lease1.Id, true, now)
 		require.True(t, success)
-		require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
 
 		// T+1m: Acquire write lock by another process
 		success, lock = acquireLock(t, core, lockId, lease2.Id, true, now.Add(time.Minute))
 		require.False(t, success)
-		require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
 
 		// T+2m: Acquire read lock by another process
 		success, lock = acquireLock(t, core, lockId, lease3.Id, false, now.Add(2*time.Minute))
 		require.False(t, success)
-		require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
 	})
 
 	t.Run("shared locked by another process", func(t *testing.T) {
@@ -205,17 +205,17 @@ func TestCore_AcquireLock(t *testing.T) {
 		// T+0: Acquire lock
 		success, lock := acquireLock(t, core, lockId, lease1.Id, false, now)
 		require.True(t, success)
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 
 		// T+1m: Acquire exclusive lock by another process
 		success, lock = acquireLock(t, core, lockId, lease2.Id, true, now.Add(time.Minute))
 		require.False(t, success)
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 
 		// T+2m: Acquire shared lock by another process
 		success, lock = acquireLock(t, core, lockId, lease3.Id, false, now.Add(2*time.Minute))
 		require.True(t, success)
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 		require.Len(t, lock.LockHolders, 2)
 	})
 
@@ -253,7 +253,7 @@ func TestCore_AcquireLock(t *testing.T) {
 			require.NotNil(t, response.Payload)
 			require.NotNil(t, response.Payload.Lock)
 			require.True(t, response.Payload.Success)
-			require.Equal(t, corepb.LockState_SHARED_LOCKED, response.Payload.Lock.State)
+			require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, response.Payload.Lock.State)
 		}
 
 		// Try to acquire one more lock - this should fail
@@ -282,7 +282,7 @@ func TestCore_AcquireLock(t *testing.T) {
 
 		// Verify that the lock was not created
 		lock := getLock(t, core, lockId, now.Add(time.Second))
-		require.Equal(t, corepb.LockState_UNLOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State)
 
 		// Test that reusing an existing lock (even if expired) doesn't count against the limit
 		existingLockId := &corepb.LockId{
@@ -305,7 +305,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, response.Payload.Lock)
 		require.True(t, response.Payload.Success)
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, response.Payload.Lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, response.Payload.Lock.State)
 
 		// Let's release one of the existing locks (for both holders)
 		_ = releaseLock(t, core, existingLockId, lease.Id, now.Add(time.Second*3))
@@ -328,7 +328,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, response.Payload.Lock)
 		require.True(t, response.Payload.Success)
-		require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, response.Payload.Lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, response.Payload.Lock.State)
 
 		// Test that creating a lock in a different namespace doesn't affect the limit
 		differentNamespaceId := rand.Uint32()
@@ -353,7 +353,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, response.Payload.Lock)
 		require.True(t, response.Payload.Success)
-		require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, response.Payload.Lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, response.Payload.Lock.State)
 
 		// Test that creating a lock with a different account doesn't affect the limit
 		differentAccountNamespaceId := rand.Uint32()
@@ -378,7 +378,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, response.Payload.Lock)
 		require.True(t, response.Payload.Success)
-		require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, response.Payload.Lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, response.Payload.Lock.State)
 	})
 
 	t.Run("parent exclusive blocks descendant shared", func(t *testing.T) {
@@ -877,7 +877,7 @@ func TestCore_AcquireLock(t *testing.T) {
 
 		// No lock row should have been created.
 		lock := getLock(t, core, lockId, now)
-		require.Equal(t, corepb.LockState_UNLOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State)
 	})
 
 	t.Run("acquire with expired lease", func(t *testing.T) {
@@ -899,7 +899,7 @@ func TestCore_AcquireLock(t *testing.T) {
 
 		// Lock row was not created.
 		lock := getLock(t, core, lockId, now.Add(2*time.Minute))
-		require.Equal(t, corepb.LockState_UNLOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State)
 	})
 }
 
@@ -936,7 +936,7 @@ func TestCore_LockHolderMetadata(t *testing.T) {
 	require.NotNil(t, resp.Payload)
 	require.NotNil(t, resp.Payload.Lock)
 	require.True(t, resp.Payload.Success)
-	require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, resp.Payload.Lock.State)
+	require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, resp.Payload.Lock.State)
 	require.Len(t, resp.Payload.Lock.LockHolders, 1)
 
 	// Metadata is present on the holder in the AcquireLock response.
@@ -944,7 +944,7 @@ func TestCore_LockHolderMetadata(t *testing.T) {
 
 	// And it is persisted: a subsequent GetLock returns the same holder metadata.
 	lock := getLock(t, core, lockId, now.Add(time.Minute))
-	require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, lock.State)
+	require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
 	require.Len(t, lock.LockHolders, 1)
 	require.Equal(t, metadata, lock.LockHolders[0].Metadata)
 }
@@ -1051,7 +1051,7 @@ func TestCore_GetLock(t *testing.T) {
 
 		// Get lock
 		lock := getLock(t, core, lockId, now)
-		require.Equal(t, corepb.LockState_UNLOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State)
 	})
 
 	t.Run("shared locked with multiple holders between expirations", func(t *testing.T) {
@@ -1073,30 +1073,30 @@ func TestCore_GetLock(t *testing.T) {
 		// T+0: Acquire shared lock with process_1 (expires at T+30m)
 		success, lock := acquireLock(t, core, lockId, lease1.Id, false, now)
 		require.True(t, success)
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 		require.Len(t, lock.LockHolders, 1)
 
 		// T+1m: Acquire shared lock with process_2 (expires at T+15m)
 		success, lock = acquireLock(t, core, lockId, lease2.Id, false, now.Add(time.Minute))
 		require.True(t, success)
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 		require.Len(t, lock.LockHolders, 2)
 
 		// T+2m: Acquire shared lock with process_3 (expires at T+45m)
 		success, lock = acquireLock(t, core, lockId, lease3.Id, false, now.Add(2*time.Minute))
 		require.True(t, success)
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 		require.Len(t, lock.LockHolders, 3)
 
 		// T+20m: Get lock at time between process_2 expiration (T+15m) and process_1 expiration (T+30m)
 		// process_2 should have expired, but process_1 and process_3 should still be active
 		lock = getLock(t, core, lockId, now.Add(20*time.Minute))
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 		require.Len(t, lock.LockHolders, 2) // Only two holders should remain
 
 		// T+50m: Get lock after all holders have expired
 		lock = getLock(t, core, lockId, now.Add(50*time.Minute))
-		require.Equal(t, corepb.LockState_UNLOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State)
 		require.Len(t, lock.LockHolders, 0)
 		require.EqualValues(t, 0, lock.LockedAt)
 	})
@@ -1140,7 +1140,7 @@ func TestCore_DeleteLock(t *testing.T) {
 		// T+0: Acquire lock
 		success, lock := acquireLock(t, core, lockId, lease.Id, true, now)
 		require.True(t, success)
-		require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
 
 		// T+1m: Delete lock
 		_, err := core.DeleteLock(&coreapis.DeleteLockRequest{
@@ -1155,7 +1155,7 @@ func TestCore_DeleteLock(t *testing.T) {
 		// T+2m: Acquire lock
 		success, lock = acquireLock(t, core, lockId, lease.Id, true, now.Add(2*time.Minute))
 		require.True(t, success)
-		require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
 	})
 }
 
@@ -1176,7 +1176,7 @@ func TestCore_ReleaseLock(t *testing.T) {
 
 		// Release lock
 		lock := releaseLock(t, core, lockId, leaseId, now)
-		require.Equal(t, corepb.LockState_UNLOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State)
 	})
 
 	t.Run("exclusive lock", func(t *testing.T) {
@@ -1197,15 +1197,15 @@ func TestCore_ReleaseLock(t *testing.T) {
 		// T+0: Acquire lock
 		success, lock := acquireLock(t, core, lockId, lease1.Id, true, now)
 		require.True(t, success)
-		require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
 
 		// T+1m: Release lock with wrong lease id
 		lock = releaseLock(t, core, lockId, lease2.Id, now.Add(time.Minute))
-		require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
 
 		// T+2m: Release lock with correct lease id
 		lock = releaseLock(t, core, lockId, lease1.Id, now.Add(2*time.Minute))
-		require.Equal(t, corepb.LockState_UNLOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State)
 	})
 
 	t.Run("shared lock", func(t *testing.T) {
@@ -1227,20 +1227,20 @@ func TestCore_ReleaseLock(t *testing.T) {
 		// T+0: Acquire read lock
 		success, lock := acquireLock(t, core, lockId, lease1.Id, false, now)
 		require.True(t, success)
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 
 		// T+1m: Acquire read lock from another process
 		success, lock = acquireLock(t, core, lockId, lease2.Id, false, now.Add(time.Minute))
 		require.True(t, success)
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 
 		// T+2m: Release lock with first lease id
 		lock = releaseLock(t, core, lockId, lease1.Id, now.Add(2*time.Minute))
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 
 		// T+3m: Release lock with second lease id
 		lock = releaseLock(t, core, lockId, lease2.Id, now.Add(3*time.Minute))
-		require.Equal(t, corepb.LockState_UNLOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State)
 		require.Len(t, lock.LockHolders, 0)
 	})
 
@@ -1261,11 +1261,11 @@ func TestCore_ReleaseLock(t *testing.T) {
 		// T+0: Acquire lock
 		success, lock := acquireLock(t, core, lockId, lease.Id, true, now)
 		require.True(t, success)
-		require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
 
 		// T+61m: Release lock after expiration time
 		lock = releaseLock(t, core, lockId, lease.Id, now.Add(61*time.Minute))
-		require.Equal(t, corepb.LockState_UNLOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State)
 	})
 
 	t.Run("expiration records cleanup", func(t *testing.T) {
@@ -1286,19 +1286,19 @@ func TestCore_ReleaseLock(t *testing.T) {
 		// T+0: Acquire shared lock with process_1
 		success, lock := acquireLock(t, core, lockId, lease1.Id, false, now)
 		require.True(t, success)
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 		require.Len(t, lock.LockHolders, 1)
 
 		// T+1m: Acquire shared lock with process_2
 		success, lock = acquireLock(t, core, lockId, lease2.Id, false, now.Add(1*time.Minute))
 		require.True(t, success)
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 		require.Len(t, lock.LockHolders, 2)
 
 		// T+2m: Release lock from process_1
 		// This is the critical operation that must properly delete the old expiration record
 		lock = releaseLock(t, core, lockId, lease1.Id, now.Add(2*time.Minute))
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 		require.Len(t, lock.LockHolders, 1)
 
 		// T+3m: Run garbage collection
@@ -1317,7 +1317,7 @@ func TestCore_ReleaseLock(t *testing.T) {
 
 		// Verify lock still exists with process_2 holder
 		lock = getLock(t, core, lockId, now.Add(3*time.Minute))
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 		require.Len(t, lock.LockHolders, 1)
 	})
 }
@@ -1343,7 +1343,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 	// T+0: Acquire exclusive lock
 	success, lock := acquireLock(t, core1, lockId, lease1.Id, true, now)
 	require.True(t, success)
-	require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, lock.State)
+	require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
 
 	// Take snapshot at this point
 	snapshot := core1.Snapshot()
@@ -1354,7 +1354,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 	// T+2m: Acquire shared lock with different process (after snapshot)
 	success, lock = acquireLock(t, core1, lockId, lease2.Id, false, now.Add(2*time.Minute))
 	require.True(t, success)
-	require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+	require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 
 	// Write snapshot to buffer
 	buf := bytes.NewBuffer(nil)
@@ -1368,7 +1368,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 	// T+3m: Check that the restored state matches the snapshot state
 	// The lock should exist with write lock held by process_1
 	lock = getLock(t, core2, lockId, now.Add(3*time.Minute))
-	require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, lock.State)
+	require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
 
 	// Create leases for core2 (after restore)
 	lease3 := createLease(t, core2, accountId, namespaceId, "process-3", now, 60*time.Minute)
@@ -1377,12 +1377,12 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 	// T+4m: Try to acquire exclusive lock with different process in restored state (should fail)
 	success, lock = acquireLock(t, core2, lockId, lease3.Id, true, now.Add(4*time.Minute))
 	require.False(t, success)
-	require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, lock.State)
+	require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
 
 	// T+5m: Try to acquire shared lock with different process in restored state (should fail)
 	success, lock = acquireLock(t, core2, lockId, lease4.Id, false, now.Add(5*time.Minute))
 	require.False(t, success)
-	require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, lock.State)
+	require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
 
 	// T+6m: Release the exclusive lock in restored state
 	// The lock is held by lease1 from core1, so we need to use that lease ID
@@ -1397,16 +1397,16 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 
 	// T+7m: Verify lock is unlocked in restored state
 	lock = getLock(t, core2, lockId, now.Add(7*time.Minute))
-	require.Equal(t, corepb.LockState_UNLOCKED, lock.State)
+	require.Equal(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State)
 
 	// T+8m: Acquire shared lock in restored state (should succeed)
 	success, lock = acquireLock(t, core2, lockId, lease3.Id, false, now.Add(8*time.Minute))
 	require.True(t, success)
-	require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+	require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 
 	// Verify that the original core has different state (it should have a read lock from process_2)
 	lock = getLock(t, core1, lockId, now.Add(8*time.Minute))
-	require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+	require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 	require.Len(t, lock.LockHolders, 1)
 }
 
@@ -1500,9 +1500,9 @@ func TestCore_ListLocks(t *testing.T) {
 		require.Contains(t, lockMap, "lock_2")
 		require.Contains(t, lockMap, "lock_3")
 
-		require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, lockMap["lock_1"].State)
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, lockMap["lock_2"].State)
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, lockMap["lock_3"].State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lockMap["lock_1"].State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lockMap["lock_2"].State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lockMap["lock_3"].State)
 	})
 
 	t.Run("with expired locks", func(t *testing.T) {
@@ -1552,7 +1552,7 @@ func TestCore_ListLocks(t *testing.T) {
 		require.Len(t, response3.Payload.Locks, 1) // Only the active lock should be returned
 
 		require.Equal(t, "lock_active", response3.Payload.Locks[0].Id.LockName)
-		require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, response3.Payload.Locks[0].State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, response3.Payload.Locks[0].State)
 	})
 
 	t.Run("with multiple namespaces", func(t *testing.T) {
@@ -1705,17 +1705,17 @@ func TestCore_ListLocks(t *testing.T) {
 
 		// Check write lock
 		writeLock := lockMap["write_lock"]
-		require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, writeLock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, writeLock.State)
 		require.Len(t, writeLock.LockHolders, 1)
 
 		// Check single read lock
 		readLockSingle := lockMap["read_lock_single"]
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, readLockSingle.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, readLockSingle.State)
 		require.Len(t, readLockSingle.LockHolders, 1)
 
 		// Check multiple read lock
 		readLockMultiple := lockMap["read_lock_multiple"]
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, readLockMultiple.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, readLockMultiple.State)
 		require.Len(t, readLockMultiple.LockHolders, 2)
 	})
 
@@ -1801,7 +1801,7 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 				require.True(t, success)
 
 				// Add a second holder for shared locks that will also expire
-				if lock.State == corepb.LockState_SHARED_LOCKED {
+				if lock.State == corepb.LockState_LOCK_STATE_SHARED_LOCKED {
 					lease2 := createLease(t, core, namespaceId.AccountId, namespaceId.NamespaceId, fmt.Sprintf("process-%d-2", i), now, 30*time.Minute)
 					success, _ := acquireLock(t, core, lockId, lease2.Id, false, now)
 					require.True(t, success)
@@ -1826,7 +1826,7 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 				require.True(t, success)
 
 				// Add a second holder that will also remain
-				if lock.State == corepb.LockState_SHARED_LOCKED {
+				if lock.State == corepb.LockState_LOCK_STATE_SHARED_LOCKED {
 					lease2 := createLease(t, core, namespaceId.AccountId, namespaceId.NamespaceId, fmt.Sprintf("process-%d-2", i), now, 60*time.Minute)
 					success, _ := acquireLock(t, core, lockId, lease2.Id, false, now)
 					require.True(t, success)
@@ -1837,7 +1837,7 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 		// Verify all locks exist and are locked before garbage collection
 		for _, lockId := range lockIds {
 			lock := getLock(t, core, lockId, now)
-			require.NotEqual(t, corepb.LockState_UNLOCKED, lock.State)
+			require.NotEqual(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State)
 		}
 
 		// Run garbage collection at the moment when some locks expire (T+31 minutes)
@@ -1861,16 +1861,16 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 		// Locks 0-4 should be unlocked (all holders expired)
 		for i := range 5 {
 			lock := getLock(t, core, lockIds[i], gcTime)
-			require.Equal(t, corepb.LockState_UNLOCKED, lock.State, "Lock %d should be unlocked", i)
+			require.Equal(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State, "Lock %d should be unlocked", i)
 		}
 
 		// Locks 5-9 should still be locked but with fewer holders
 		for i := 5; i < 10; i++ {
 			lock := getLock(t, core, lockIds[i], gcTime)
-			require.NotEqual(t, corepb.LockState_UNLOCKED, lock.State, "Lock %d should still be locked", i)
+			require.NotEqual(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State, "Lock %d should still be locked", i)
 
 			// For shared locks, verify only one holder remains
-			if lock.State == corepb.LockState_SHARED_LOCKED {
+			if lock.State == corepb.LockState_LOCK_STATE_SHARED_LOCKED {
 				require.Len(t, lock.LockHolders, 1, "Lock %d should have exactly one holder remaining", i)
 			}
 		}
@@ -1878,10 +1878,10 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 		// Locks 10-14 should still be locked with all holders
 		for i := 10; i < numLocks; i++ {
 			lock := getLock(t, core, lockIds[i], gcTime)
-			require.NotEqual(t, corepb.LockState_UNLOCKED, lock.State, "Lock %d should still be locked", i)
+			require.NotEqual(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State, "Lock %d should still be locked", i)
 
 			// For shared locks, verify both holders remain
-			if lock.State == corepb.LockState_SHARED_LOCKED {
+			if lock.State == corepb.LockState_LOCK_STATE_SHARED_LOCKED {
 				require.Len(t, lock.LockHolders, 2, "Lock %d should have both holders remaining", i)
 			}
 		}
@@ -1903,13 +1903,13 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 		// Verify that locks 5-9 still have their remaining holders
 		for i := 5; i < 10; i++ {
 			lock := getLock(t, core, lockIds[i], gcTime)
-			require.NotEqual(t, corepb.LockState_UNLOCKED, lock.State, "Lock %d should still be locked after second GC", i)
+			require.NotEqual(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State, "Lock %d should still be locked after second GC", i)
 		}
 
 		// Verify that locks 10-14 still have all their holders
 		for i := 10; i < numLocks; i++ {
 			lock := getLock(t, core, lockIds[i], gcTime)
-			require.NotEqual(t, corepb.LockState_UNLOCKED, lock.State, "Lock %d should still be locked after second GC", i)
+			require.NotEqual(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State, "Lock %d should still be locked after second GC", i)
 		}
 	})
 
@@ -1960,7 +1960,7 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 		// Verify locks exist by getting them
 		for _, lockId := range lockIds {
 			lock := getLock(t, core, lockId, now)
-			require.NotEqual(t, corepb.LockState_UNLOCKED, lock.State)
+			require.NotEqual(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State)
 		}
 
 		// Mark the namespace as deleted using LocksDeleteNamespace
@@ -1990,12 +1990,12 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 		// Verify that locks in the deleted namespace are no longer accessible
 		for _, lockId := range lockIds {
 			lock := getLock(t, core, lockId, now)
-			require.Equal(t, corepb.LockState_UNLOCKED, lock.State)
+			require.Equal(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State)
 		}
 
 		// Verify the different namespace lock still exists after GC
 		lock := getLock(t, core, differentNamespaceLockId, now)
-		require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
 	})
 }
 
@@ -2031,7 +2031,7 @@ func TestCore_RevokeLockLease(t *testing.T) {
 			// Acquire the lock
 			success, lock := acquireLock(t, core, lockIds[i], lease.Id, true, now)
 			require.True(t, success)
-			require.Equal(t, corepb.LockState_EXCLUSIVE_LOCKED, lock.State)
+			require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
 		}
 
 		// Verify that counters show the correct number of locks and leases
@@ -2052,7 +2052,7 @@ func TestCore_RevokeLockLease(t *testing.T) {
 		// Verify that all locks are released
 		for i := range numLocks {
 			lock := getLock(t, core, lockIds[i], now)
-			require.Equal(t, corepb.LockState_UNLOCKED, lock.State)
+			require.Equal(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State)
 		}
 
 		// Verify that counters are updated correctly
@@ -2116,7 +2116,7 @@ func TestCore_RevokeLockLease(t *testing.T) {
 
 		// Lock held by the expired lease is released; counters reflect the revocation.
 		lock := getLock(t, core, lockId, now.Add(2*time.Minute))
-		require.Equal(t, corepb.LockState_UNLOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State)
 
 		counters, err = core.counters.Get(core.badgerStore.View(), accountId, namespaceId)
 		require.NoError(t, err)
@@ -2143,12 +2143,12 @@ func TestCore_RevokeLockLease_ReleasesSharedLocks(t *testing.T) {
 	// Acquire shared lock with lease1
 	success, lock := acquireLock(t, core, lockId, lease1.Id, false, now)
 	require.True(t, success)
-	require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+	require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 
 	// Acquire shared lock with lease2
 	success, lock = acquireLock(t, core, lockId, lease2.Id, false, now)
 	require.True(t, success)
-	require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+	require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 	require.Len(t, lock.LockHolders, 2)
 
 	// Revoke lease1
@@ -2162,7 +2162,7 @@ func TestCore_RevokeLockLease_ReleasesSharedLocks(t *testing.T) {
 
 	// Verify that the lock is still held by lease2
 	lock = getLock(t, core, lockId, now)
-	require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+	require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 	require.Len(t, lock.LockHolders, 1)
 	require.EqualValues(t, lease2.Id.LeaseId, lock.LockHolders[0].LeaseId)
 
@@ -2177,7 +2177,7 @@ func TestCore_RevokeLockLease_ReleasesSharedLocks(t *testing.T) {
 
 	// Verify that the lock is now unlocked
 	lock = getLock(t, core, lockId, now)
-	require.Equal(t, corepb.LockState_UNLOCKED, lock.State)
+	require.Equal(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State)
 }
 
 func TestCore_RefreshLockLease(t *testing.T) {
@@ -2295,8 +2295,8 @@ func TestCore_RefreshLockLease(t *testing.T) {
 		require.Equal(t, monsterax.NotFound, getResp.ApplicationError.Code)
 
 		// Locks held by the lease are released
-		require.Equal(t, corepb.LockState_UNLOCKED, getLock(t, core, exclusiveLockId, refreshAt).State)
-		require.Equal(t, corepb.LockState_UNLOCKED, getLock(t, core, sharedLockId, refreshAt).State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_UNLOCKED, getLock(t, core, exclusiveLockId, refreshAt).State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_UNLOCKED, getLock(t, core, sharedLockId, refreshAt).State)
 
 		// Counters reflect the revocation
 		counters, err = core.counters.Get(core.badgerStore.View(), accountId, namespaceId)
@@ -2342,7 +2342,7 @@ func TestCore_RefreshLockLease(t *testing.T) {
 
 		// The shared lock is still held by the valid lease
 		lock = getLock(t, core, lockId, refreshAt)
-		require.Equal(t, corepb.LockState_SHARED_LOCKED, lock.State)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, lock.State)
 		require.Len(t, lock.LockHolders, 1)
 		require.EqualValues(t, validLease.Id.LeaseId, lock.LockHolders[0].LeaseId)
 
