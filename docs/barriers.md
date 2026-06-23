@@ -45,13 +45,23 @@ about.
 When the barrier releases, `WaitAtBarrier` returns the `next_generation` value the peers should
 use for their next round.
 
-### Expiration
-A barrier has an absolute `expires_at` set at creation. After that timestamp the barrier and its
-participant records are reaped by GC regardless of state. This is the backstop for crashed peers
-— a half-arrived barrier cannot block waiters forever.
+### Activity tracking
+Each barrier carries a `last_activity_at` timestamp — the time of the most recent activity on it,
+namely creation or a process arriving via `ArriveAtBarrier`. It is set at creation and is not
+changed by `UpdateBarrier`, `WaitAtBarrier`, or other reads. It is the base from which the
+auto-deletion time (`last_activity_at + delete_inactive_after_seconds`) is computed.
 
-`expires_at` is the barrier's own deadline; it is not tied to any lease. Barriers do not use
-leases.
+### Auto-deletion
+Barriers do not expire. Instead they are **auto-deleted after a period of inactivity**:
+`delete_inactive_after_seconds` is set at creation, and garbage collection removes the barrier (and
+its participant records) once `last_activity_at + delete_inactive_after_seconds` has passed. Every
+activity — creating the barrier, and each `ArriveAtBarrier` — resets the clock by advancing
+`last_activity_at`, pushing the deletion further out. A barrier that is actively used therefore
+lives indefinitely, while a forgotten one is reclaimed `delete_inactive_after_seconds` after its
+last use. This is the backstop for crashed peers — a half-arrived barrier cannot linger forever.
+
+`delete_inactive_after_seconds` is the barrier's own inactivity window; it is not tied to any
+lease. Barriers do not use leases.
 
 ### Arrive vs. Wait
 There are two ways to interact with a barrier:
@@ -72,8 +82,9 @@ Grackle — see [Metadata](/docs/api-overview.md#metadata) for the shared semant
 
 ## Example workflow
 
-The coordinator creates a barrier for 4 worker shards that need to meet at end-of-phase.
-(Assuming that a namespace `pipelines` already exists.)
+The coordinator creates a barrier for 4 worker shards that need to meet at end-of-phase, and asks
+Grackle to auto-delete it after an hour (3600 seconds) of inactivity. (Assuming that a namespace
+`pipelines` already exists.)
 
 CreateBarrierRequest:
 ```json
@@ -82,8 +93,8 @@ CreateBarrierRequest:
   "barrier_name": "phase_1_complete",
   "description": "End of map phase",
   "expected_processes": 4,
-  "expires_at": 1718236800000000000
-})
+  "delete_inactive_after_seconds": 3600
+}
 ```
 
 CreateBarrierResponse:
@@ -97,7 +108,9 @@ CreateBarrierResponse:
     "generation": 1,
     "version": 1,
     "created_at": 1718150400000000000,
-    "updated_at": 1718150400000000000
+    "updated_at": 1718150400000000000,
+    "last_activity_at": 1718150400000000000,
+    "delete_inactive_after_seconds": 3600
   }
 }
 ```
@@ -179,7 +192,8 @@ in the background. For the next phase, every peer uses `expected_generation: 1` 
 
 Inspect the barrier at any time with `GetBarrier`, or enumerate who has arrived in a given
 generation with `ListBarrierParticipants`. `DeleteBarrier` removes the barrier and its
-participant records; one that reaches `expires_at` is deleted automatically.
+participant records; one that sits idle is deleted automatically once
+`delete_inactive_after_seconds` elapse since its last activity.
 
 ## When to use what
 

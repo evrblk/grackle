@@ -160,16 +160,16 @@ func (m *BarriersDeleteNamespaceResponse) MarshalBinary() (data []byte, err erro
 	return m.MarshalVT()
 }
 
-// BarriersExpirationRecord
+// BarriersDeletionRecord
 
-var _ encoding.BinaryMarshaler = (*BarriersExpirationRecord)(nil)
-var _ encoding.BinaryUnmarshaler = (*BarriersExpirationRecord)(nil)
+var _ encoding.BinaryMarshaler = (*BarriersDeletionRecord)(nil)
+var _ encoding.BinaryUnmarshaler = (*BarriersDeletionRecord)(nil)
 
-func (m *BarriersExpirationRecord) UnmarshalBinary(data []byte) error {
+func (m *BarriersDeletionRecord) UnmarshalBinary(data []byte) error {
 	return m.UnmarshalVT(data)
 }
 
-func (m *BarriersExpirationRecord) MarshalBinary() (data []byte, err error) {
+func (m *BarriersDeletionRecord) MarshalBinary() (data []byte, err error) {
 	return m.MarshalVT()
 }
 
@@ -1821,32 +1821,6 @@ func (m *UpdateWaitGroupResponse) UnmarshalBinary(data []byte) error {
 }
 
 func (m *UpdateWaitGroupResponse) MarshalBinary() (data []byte, err error) {
-	return m.MarshalVT()
-}
-
-// WaitAtBarrierRequest
-
-var _ encoding.BinaryMarshaler = (*WaitAtBarrierRequest)(nil)
-var _ encoding.BinaryUnmarshaler = (*WaitAtBarrierRequest)(nil)
-
-func (m *WaitAtBarrierRequest) UnmarshalBinary(data []byte) error {
-	return m.UnmarshalVT(data)
-}
-
-func (m *WaitAtBarrierRequest) MarshalBinary() (data []byte, err error) {
-	return m.MarshalVT()
-}
-
-// WaitAtBarrierResponse
-
-var _ encoding.BinaryMarshaler = (*WaitAtBarrierResponse)(nil)
-var _ encoding.BinaryUnmarshaler = (*WaitAtBarrierResponse)(nil)
-
-func (m *WaitAtBarrierResponse) UnmarshalBinary(data []byte) error {
-	return m.UnmarshalVT(data)
-}
-
-func (m *WaitAtBarrierResponse) MarshalBinary() (data []byte, err error) {
 	return m.MarshalVT()
 }
 

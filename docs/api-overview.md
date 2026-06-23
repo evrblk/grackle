@@ -6,8 +6,8 @@ Conventions that apply across the whole Everblack Grackle API.
 
 Every timestamp in Grackle — both in requests and in responses — is an `int64` count of
 **nanoseconds since the Unix epoch** (UTC). This includes fields such as `created_at`,
-`updated_at`, `locked_at`, `arrived_at`, `completed_at`, and the absolute `expires_at` deadlines on
-wait groups and barriers.
+`updated_at`, `locked_at`, `arrived_at`, `completed_at`, `last_activity_at`, and the absolute
+`expires_at` deadline on wait groups.
 
 Durations are the exception: lease TTLs and blocking-call timeouts are expressed in **seconds**
 (`ttl_seconds`, `timeout_seconds`), because they are relative offsets rather than points in time.

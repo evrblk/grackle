@@ -30,7 +30,8 @@ Safe to retry.
     "active_holders_count": 0,
     "version": 1,
     "created_at": 1695826239671432000,
-    "updated_at": 1695826239671432000
+    "updated_at": 1695826239671432000,
+    "last_activity_at": 1695826239671432000
   }
 }
 ```

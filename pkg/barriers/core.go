@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/evrblk/monstera"
 	"github.com/evrblk/monstera/store"
@@ -19,11 +20,11 @@ import (
 type Core struct {
 	badgerStore *store.BadgerStore
 
-	barriers          *barriersTable
-	participants      *participantsTable
-	counters          *tables.CountersTable[*corepb.BarriersCounter, corepb.BarriersCounter]
-	gcRecords         *tables.GCRecordsTable[*corepb.BarriersGarbageCollectionRecord, corepb.BarriersGarbageCollectionRecord]
-	expirationRecords *expirationRecordsTable
+	barriers        *barriersTable
+	participants    *participantsTable
+	counters        *tables.CountersTable[*corepb.BarriersCounter, corepb.BarriersCounter]
+	gcRecords       *tables.GCRecordsTable[*corepb.BarriersGarbageCollectionRecord, corepb.BarriersGarbageCollectionRecord]
+	deletionRecords *deletionRecordsTable
 }
 
 var _ coreapis.GrackleBarriersCoreApi = &Core{}
@@ -47,7 +48,7 @@ func NewCore(badgerStore *store.BadgerStore, globalIndexPrefix []byte, shardLowe
 			tables.Grackle["Grackle.BarriersCore.GarbageCollectionRecords.Table"].Bytes(),
 			globalIndexPrefix,
 		),
-		expirationRecords: newExpirationRecordsTable(globalIndexPrefix),
+		deletionRecords: newDeletionRecordsTable(globalIndexPrefix),
 	}
 }
 
@@ -55,7 +56,7 @@ func (c *Core) ranges() []monsterax.KeyRange {
 	ranges := []monsterax.KeyRange{
 		c.counters.GetTableKeyRange(),
 		c.gcRecords.GetTableKeyRange(),
-		c.expirationRecords.GetTableKeyRange(),
+		c.deletionRecords.GetTableKeyRange(),
 		c.participants.GetTableKeyRange(),
 	}
 
@@ -239,16 +240,18 @@ func (c *Core) CreateBarrier(req *coreapis.CreateBarrierRequest) (*coreapis.Crea
 	}
 
 	barrier := &corepb.Barrier{
-		Id:                req.Payload.BarrierId,
-		Name:              req.Payload.Name,
-		Description:       req.Payload.Description,
-		ExpectedProcesses: req.Payload.ExpectedProcesses,
-		ArrivedProcesses:  0,
-		Generation:        1,
-		CreatedAt:         req.Payload.Now,
-		UpdatedAt:         req.Payload.Now,
-		Metadata:          req.Payload.Metadata,
-		Version:           1,
+		Id:                         req.Payload.BarrierId,
+		Name:                       req.Payload.Name,
+		Description:                req.Payload.Description,
+		ExpectedProcesses:          req.Payload.ExpectedProcesses,
+		ArrivedProcesses:           0,
+		Generation:                 1,
+		CreatedAt:                  req.Payload.Now,
+		UpdatedAt:                  req.Payload.Now,
+		Metadata:                   req.Payload.Metadata,
+		Version:                    1,
+		LastActivityAt:             req.Payload.Now,
+		DeleteInactiveAfterSeconds: req.Payload.DeleteInactiveAfterSeconds,
 	}
 
 	appErr, err := c.barriers.Create(txn, barrier)
@@ -259,6 +262,12 @@ func (c *Core) CreateBarrier(req *coreapis.CreateBarrierRequest) (*coreapis.Crea
 		return &coreapis.CreateBarrierResponse{
 			ApplicationError: appErr,
 		}, nil
+	}
+
+	// Schedule auto-deletion after the inactivity window.
+	err = c.deletionRecords.Add(txn, deletionTime(barrier.LastActivityAt, barrier.DeleteInactiveAfterSeconds), barrier.Id)
+	if err != nil {
+		return nil, err
 	}
 
 	// Update counters
@@ -308,6 +317,12 @@ func (c *Core) DeleteBarrier(req *coreapis.DeleteBarrierRequest) (*coreapis.Dele
 	}
 
 	err = c.barriers.Delete(txn, barrier.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Remove the pending auto-deletion record. No-op if it does not exist.
+	err = c.deletionRecords.Delete(txn, deletionTime(barrier.LastActivityAt, barrier.DeleteInactiveAfterSeconds), barrier.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -404,11 +419,30 @@ func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest) (*coreapis.Upda
 		}, nil
 	}
 
+	// Reconcile the auto-deletion schedule if the inactivity window changed. An
+	// update is not itself activity, so last_activity_at (and thus the base of
+	// the deletion time) does not change here.
+	oldDeleteAt := deletionTime(barrier.LastActivityAt, barrier.DeleteInactiveAfterSeconds)
+	newDeleteAt := deletionTime(barrier.LastActivityAt, req.Payload.DeleteInactiveAfterSeconds)
+	if oldDeleteAt != newDeleteAt {
+		err = c.deletionRecords.Delete(txn, oldDeleteAt, barrier.Id)
+		if err != nil {
+			return nil, err
+		}
+		err = c.deletionRecords.Add(txn, newDeleteAt, barrier.Id)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	barrier.Description = req.Payload.Description
 	barrier.ExpectedProcesses = req.Payload.ExpectedProcesses
 	barrier.UpdatedAt = req.Payload.Now
 	barrier.Metadata = req.Payload.Metadata
 	barrier.Version += 1
+	barrier.DeleteInactiveAfterSeconds = req.Payload.DeleteInactiveAfterSeconds
+
+	allArrived := false
 
 	// Lowering ExpectedProcesses down to the number of already-arrived processes satisfies the
 	// release condition, but the trip logic only runs on arrival (in ArriveAtBarrier). Without
@@ -418,6 +452,7 @@ func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest) (*coreapis.Upda
 	if barrier.ArrivedProcesses >= barrier.ExpectedProcesses {
 		barrier.ArrivedProcesses = 0
 		barrier.Generation += 1
+		allArrived = true
 	}
 
 	err = c.barriers.Update(txn, barrier)
@@ -432,7 +467,8 @@ func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest) (*coreapis.Upda
 
 	return &coreapis.UpdateBarrierResponse{
 		Payload: &corepb.UpdateBarrierResponse{
-			Barrier: barrier,
+			Barrier:    barrier,
+			AllArrived: allArrived,
 		},
 	}, nil
 }
@@ -524,6 +560,8 @@ func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest) (*coreapis.
 		return nil, err
 	}
 
+	allArrived := false
+
 	// Increment the counter of arrived processes
 	barrier.ArrivedProcesses += 1
 
@@ -532,9 +570,24 @@ func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest) (*coreapis.
 	if barrier.ArrivedProcesses == barrier.ExpectedProcesses {
 		barrier.ArrivedProcesses = 0
 		barrier.Generation += 1
+		allArrived = true
 	}
 
-	barrier.UpdatedAt = req.Payload.Now
+	// Arriving is activity: advance last_activity_at and push the auto-deletion
+	// time out accordingly.
+	oldDeleteAt := deletionTime(barrier.LastActivityAt, barrier.DeleteInactiveAfterSeconds)
+	barrier.LastActivityAt = req.Payload.Now
+	newDeleteAt := deletionTime(barrier.LastActivityAt, barrier.DeleteInactiveAfterSeconds)
+	if oldDeleteAt != newDeleteAt {
+		err = c.deletionRecords.Delete(txn, oldDeleteAt, barrier.Id)
+		if err != nil {
+			return nil, err
+		}
+		err = c.deletionRecords.Add(txn, newDeleteAt, barrier.Id)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	err = c.barriers.Update(txn, barrier)
 	if err != nil {
@@ -548,7 +601,8 @@ func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest) (*coreapis.
 
 	return &coreapis.ArriveAtBarrierResponse{
 		Payload: &corepb.ArriveAtBarrierResponse{
-			Barrier: barrier,
+			Barrier:    barrier,
+			AllArrived: allArrived,
 		},
 	}, nil
 }
@@ -610,6 +664,12 @@ func (c *Core) RunBarriersGarbageCollection(req *coreapis.RunBarriersGarbageColl
 				if err != nil {
 					return nil, err
 				}
+
+				// Remove its pending auto-deletion record. No-op if absent.
+				err = c.deletionRecords.Delete(txn, deletionTime(barrier.LastActivityAt, barrier.DeleteInactiveAfterSeconds), barrier.Id)
+				if err != nil {
+					return nil, err
+				}
 				visited++
 				if visited >= req.Payload.MaxVisited {
 					goto commit
@@ -644,6 +704,12 @@ func (c *Core) RunBarriersGarbageCollection(req *coreapis.RunBarriersGarbageColl
 	}
 
 commit:
+
+	// Auto-delete barriers that have been inactive past their retention window.
+	err = c.deleteInactiveBarriers(txn, req.Payload.Now, int(req.Payload.GcRecordBarriersPageSize), participantsPageSize, &visited, req.Payload.MaxVisited)
+	if err != nil {
+		return nil, err
+	}
 
 	err = txn.Commit()
 	if err != nil {
@@ -682,6 +748,85 @@ func (c *Core) BarriersDeleteNamespace(req *coreapis.BarriersDeleteNamespaceRequ
 	return &coreapis.BarriersDeleteNamespaceResponse{
 		Payload: &corepb.BarriersDeleteNamespaceResponse{},
 	}, nil
+}
+
+// deletionTime returns the timestamp (ns) at which an inactive barrier should
+// be auto-deleted, given its last activity time and inactivity window in
+// seconds.
+func deletionTime(lastActivityAt int64, deleteInactiveAfterSeconds int64) int64 {
+	return lastActivityAt + deleteInactiveAfterSeconds*int64(time.Second)
+}
+
+// deleteInactiveBarriers deletes barriers whose auto-deletion time (delete_at)
+// has passed, draining their participants first. It shares the GC pass's visit
+// budget; a barrier whose participants do not fully drain within the budget is
+// left in place (along with its deletion record) and resumed on the next tick.
+func (c *Core) deleteInactiveBarriers(txn *store.Txn, now int64, barriersPageSize int, participantsPageSize int, visited *int64, maxVisited int64) error {
+	if *visited >= maxVisited {
+		return nil
+	}
+
+	barriersPageSize = pagination.GetLimitWithDefaults(barriersPageSize)
+
+	records := make([]*corepb.BarriersDeletionRecord, 0, barriersPageSize)
+	err := c.deletionRecords.ListByDeletion(txn, 0, now, func(record *corepb.BarriersDeletionRecord) (bool, error) {
+		records = append(records, record)
+		return len(records) < barriersPageSize, nil
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, record := range records {
+		if *visited >= maxVisited {
+			return nil
+		}
+
+		barrier, err := c.barriers.Get(txn, record.BarrierId)
+		if err != nil {
+			if errors.Is(err, store.ErrNotFound) {
+				// Barrier already gone; drop the stale deletion record.
+				if err := c.deletionRecords.Delete(txn, record.DeleteAt, record.BarrierId); err != nil {
+					return err
+				}
+				*visited++
+				continue
+			}
+			return err
+		}
+
+		// Drain one page of participants first.
+		participantsDrained, err := c.gcDeleteBarrierParticipants(txn, barrier.Id, participantsPageSize, visited, maxVisited)
+		if err != nil {
+			return err
+		}
+		if !participantsDrained {
+			// More participants remain (or the visit budget was exhausted). Leave the
+			// barrier and its deletion record in place; a later GC pass resumes.
+			return nil
+		}
+
+		// All participants drained — delete the barrier and its bookkeeping.
+		counters, err := c.counters.Get(txn, barrier.Id.AccountId, barrier.Id.NamespaceId)
+		if err != nil {
+			return err
+		}
+		counters.NumberOfBarriers -= 1
+		if err := c.counters.Set(txn, barrier.Id.AccountId, barrier.Id.NamespaceId, counters); err != nil {
+			return err
+		}
+
+		if err := c.barriers.Delete(txn, barrier.Id); err != nil {
+			return err
+		}
+		*visited++
+
+		if err := c.deletionRecords.Delete(txn, record.DeleteAt, record.BarrierId); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // gcDeleteBarrierParticipants deletes up to one page of participants for the given barrier,

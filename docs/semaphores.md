@@ -51,6 +51,11 @@ replaced by `UpdateSemaphore`. Each holder can also attach its own `metadata` on
 which is returned with the holder by `ListSemaphoreHolders`. Metadata is opaque to Grackle — see
 [Metadata](/docs/api-overview.md#metadata) for the shared semantics and limits.
 
+### Activity tracking
+Each semaphore carries a `last_activity_at` timestamp — the time of the most recent activity on it,
+namely an `AcquireSemaphore` (held or not) or a `ReleaseSemaphore`. It is set at creation and is
+not changed by `UpdateSemaphore` or by reads.
+
 ## Example workflow
 
 Define a new semaphore. `permits` must be > 0. (Assuming that a namespace `third_parties` already 
@@ -77,7 +82,8 @@ CreateSemaphoreResponse:
     "active_holders_count": 0,
     "version": 1,
     "created_at": 1695826239671432000,
-    "updated_at": 1695826239671432000
+    "updated_at": 1695826239671432000,
+    "last_activity_at": 1695826239671432000
   }
 }
 ```
@@ -132,7 +138,8 @@ AcquireSemaphoreResponse (success):
     "active_holders_count": 1,
     "version": 1,
     "created_at": 1695826239671432000,
-    "updated_at": 1695826239671432000
+    "updated_at": 1695826239671432000,
+    "last_activity_at": 1695826239671432000
   },
   "success": true
 }
@@ -149,7 +156,8 @@ AcquireSemaphoreResponse (no permits left — not an error):
     "active_holders_count": 7,
     "version": 1,
     "created_at": 1695826239671432000,
-    "updated_at": 1695826239671432000
+    "updated_at": 1695826239671432000,
+    "last_activity_at": 1695826239671432000
   },
   "success": false
 }
@@ -177,7 +185,8 @@ ReleaseSemaphoreResponse:
     "active_holders_count": 0,
     "version": 1,
     "created_at": 1695826239671432000,
-    "updated_at": 1695826239671432000
+    "updated_at": 1695826239671432000,
+    "last_activity_at": 1695826239671432000
   }
 }
 ```

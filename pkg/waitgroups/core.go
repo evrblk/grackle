@@ -258,6 +258,7 @@ func (c *Core) CreateWaitGroup(req *coreapis.CreateWaitGroupRequest) (*coreapis.
 		Version:                    1,
 		Status:                     corepb.WaitGroupStatus_WAIT_GROUP_STATUS_ACTIVE,
 		DeleteAfterFinishedSeconds: req.Payload.DeleteAfterFinishedSeconds,
+		LastActivityAt:             req.Payload.Now,
 	}
 
 	err = c.waitGroups.Create(txn, waitGroup)
@@ -338,7 +339,7 @@ func (c *Core) UpdateWaitGroup(req *coreapis.UpdateWaitGroupRequest) (*coreapis.
 				"only active wait groups can be updated",
 				map[string]string{
 					"wait_group_name": req.Payload.WaitGroupName,
-					"status":          fmt.Sprintf("%s", waitGroup.Status),
+					"status":          waitGroup.Status.String(),
 				},
 			),
 		}, nil
@@ -510,7 +511,7 @@ func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroup
 				"only active wait groups can accept jobs",
 				map[string]string{
 					"wait_group_name": req.Payload.WaitGroupName,
-					"status":          fmt.Sprintf("%s", waitGroup.Status),
+					"status":          waitGroup.Status.String(),
 				},
 			),
 		}, nil
@@ -558,7 +559,7 @@ func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroup
 		}, nil
 	}
 
-	waitGroup.UpdatedAt = req.Payload.Now
+	waitGroup.LastActivityAt = req.Payload.Now
 
 	// When all jobs are completed the wait group becomes finished. Mark it as
 	// completed and schedule its deletion after delete_after_finished_seconds.

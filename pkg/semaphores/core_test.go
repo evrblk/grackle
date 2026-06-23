@@ -3666,6 +3666,43 @@ func TestCore_ListSemaphoresByLeaseId(t *testing.T) {
 	})
 }
 
+func TestCore_LastActivityAt(t *testing.T) {
+	t.Run("create sets it, acquire/release update it, update does not", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+		}
+		semaphoreId := &corepb.SemaphoreId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			SemaphoreId: rand.Uint64(),
+		}
+
+		// Create records the creation time as the initial activity.
+		semaphore := createSemaphore(t, core, semaphoreId, "test_semaphore", 5, now)
+		require.Equal(t, now.UnixNano(), semaphore.LastActivityAt)
+
+		// Update* must NOT touch last_activity_at.
+		updated := updateSemaphore(t, core, namespaceId, "test_semaphore", "new description", 5, 1, now.Add(time.Minute))
+		require.Equal(t, now.UnixNano(), updated.LastActivityAt)
+
+		lease := createLease(t, core, namespaceId.AccountId, namespaceId.NamespaceId, "process-1", now, time.Hour)
+
+		// Acquiring updates the timestamp.
+		acquireTime := now.Add(2 * time.Minute)
+		ok, acquired := acquireSemaphore(t, core, namespaceId, lease.Id, "test_semaphore", 1, acquireTime)
+		require.True(t, ok)
+		require.Equal(t, acquireTime.UnixNano(), acquired.LastActivityAt)
+
+		// Releasing updates the timestamp.
+		releaseTime := now.Add(3 * time.Minute)
+		released := releaseSemaphore(t, core, namespaceId, "test_semaphore", lease.Id, releaseTime)
+		require.Equal(t, releaseTime.UnixNano(), released.LastActivityAt)
+	})
+}
+
 func newSemaphoresCore(t *testing.T) *Core {
 	t.Helper()
 

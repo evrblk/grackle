@@ -322,12 +322,6 @@ func (r *ArriveAtBarrierRequest) ShardKey() []byte {
 	return sharding.ByAccountAndNamespace(r.NamespaceId.AccountId, r.NamespaceId.NamespaceId)
 }
 
-// WaitAtBarrierRequest
-
-func (r *WaitAtBarrierRequest) ShardKey() []byte {
-	return sharding.ByAccountAndNamespace(r.NamespaceId.AccountId, r.NamespaceId.NamespaceId)
-}
-
 // BarriersDeleteNamespaceRequest
 
 func (r *BarriersDeleteNamespaceRequest) ShardKey() []byte {

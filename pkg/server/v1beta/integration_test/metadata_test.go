@@ -223,11 +223,11 @@ func TestMetadataRoundTrip(t *testing.T) {
 
 		barrierMd := map[string]string{"job": "rollout", "tier": "gold"}
 		createResp, err := server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
-			NamespaceName:     "namespace1",
-			BarrierName:       "barrier1",
-			ExpectedProcesses: 2,
-			ExpiresAt:         time.Now().Add(10 * time.Minute).UnixNano(),
-			Metadata:          barrierMd,
+			NamespaceName:              "namespace1",
+			BarrierName:                "barrier1",
+			ExpectedProcesses:          2,
+			DeleteInactiveAfterSeconds: int64((10 * time.Minute).Seconds()),
+			Metadata:                   barrierMd,
 		})
 		require.NoError(t, err)
 		require.Equal(t, barrierMd, createResp.Barrier.Metadata)
@@ -242,11 +242,12 @@ func TestMetadataRoundTrip(t *testing.T) {
 		// Update barrier metadata
 		updMd := map[string]string{"job": "rollout", "tier": "platinum"}
 		updResp, err := server.UpdateBarrier(ctx, &gracklepb.UpdateBarrierRequest{
-			NamespaceName:     "namespace1",
-			BarrierName:       "barrier1",
-			ExpectedProcesses: 2,
-			Metadata:          updMd,
-			ExpectedVersion:   1,
+			NamespaceName:              "namespace1",
+			BarrierName:                "barrier1",
+			ExpectedProcesses:          2,
+			Metadata:                   updMd,
+			ExpectedVersion:            1,
+			DeleteInactiveAfterSeconds: int64((10 * time.Minute).Seconds()),
 		})
 		require.NoError(t, err)
 		require.Equal(t, updMd, updResp.Barrier.Metadata)

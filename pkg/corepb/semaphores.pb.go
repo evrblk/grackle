@@ -2132,8 +2132,11 @@ type Semaphore struct {
 	ActiveHolds             uint64                 `protobuf:"varint,9,opt,name=active_holds,json=activeHolds,proto3" json:"active_holds,omitempty"`
 	ActiveHoldersCount      uint64                 `protobuf:"varint,10,opt,name=active_holders_count,json=activeHoldersCount,proto3" json:"active_holders_count,omitempty"`
 	EarliestHolderExpiresAt int64                  `protobuf:"varint,11,opt,name=earliest_holder_expires_at,json=earliestHolderExpiresAt,proto3" json:"earliest_holder_expires_at,omitempty"`
-	unknownFields           protoimpl.UnknownFields
-	sizeCache               protoimpl.SizeCache
+	// last_activity_at is the timestamp (ns) of the most recent activity on this
+	// semaphore (an acquire attempt or a release). Not affected by reads.
+	LastActivityAt int64 `protobuf:"varint,12,opt,name=last_activity_at,json=lastActivityAt,proto3" json:"last_activity_at,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *Semaphore) Reset() {
@@ -2239,6 +2242,13 @@ func (x *Semaphore) GetActiveHoldersCount() uint64 {
 func (x *Semaphore) GetEarliestHolderExpiresAt() int64 {
 	if x != nil {
 		return x.EarliestHolderExpiresAt
+	}
+	return 0
+}
+
+func (x *Semaphore) GetLastActivityAt() int64 {
+	if x != nil {
+		return x.LastActivityAt
 	}
 	return 0
 }
@@ -2802,7 +2812,7 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\vmax_visited\x18\x04 \x01(\x03R\n" +
 	"maxVisited\x12<\n" +
 	"\x1bgc_record_holders_page_size\x18\x05 \x01(\x03R\x17gcRecordHoldersPageSize\"(\n" +
-	"&RunSemaphoresGarbageCollectionResponse\"\x8a\x04\n" +
+	"&RunSemaphoresGarbageCollectionResponse\"\xb4\x04\n" +
 	"\tSemaphore\x126\n" +
 	"\x02id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.SemaphoreIdR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
@@ -2817,7 +2827,8 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\factive_holds\x18\t \x01(\x04R\vactiveHolds\x120\n" +
 	"\x14active_holders_count\x18\n" +
 	" \x01(\x04R\x12activeHoldersCount\x12;\n" +
-	"\x1aearliest_holder_expires_at\x18\v \x01(\x03R\x17earliestHolderExpiresAt\x1a;\n" +
+	"\x1aearliest_holder_expires_at\x18\v \x01(\x03R\x17earliestHolderExpiresAt\x12(\n" +
+	"\x10last_activity_at\x18\f \x01(\x03R\x0elastActivityAt\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xb6\x02\n" +

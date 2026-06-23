@@ -59,7 +59,11 @@ func (w *GrackleBarriersGCWorker) runGarbageCollection(shardId string, now time.
 	defer monsterax.MeasureSince(grackleBarriersGCWorkerDuration.WithLabelValues(shardId), time.Now())
 
 	_, err := w.coreApiClient.RunBarriersGarbageCollection(context.TODO(), &corepb.RunBarriersGarbageCollectionRequest{
-		Now: now.UnixNano(),
+		Now:                          now.UnixNano(),
+		GcRecordsPageSize:            100,
+		GcRecordBarriersPageSize:     1000,
+		GcRecordParticipantsPageSize: 1000,
+		MaxVisited:                   1000,
 	}, shardId)
 	if err != nil {
 		grackleBarriersGCWorkerErrorsTotal.WithLabelValues(shardId).Inc()

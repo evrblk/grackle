@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -37,19 +38,25 @@ type SemaphoreHandle struct {
 
 // ResourcePool manages all pre-created resources and tracks acquisitions
 type ResourcePool struct {
-	// Pre-created resource names
+	// Pre-created resource names / state
 	namespaces []string
-	locks      map[string][]string // namespace -> lock names
-	semaphores map[string][]string // namespace -> semaphore names
-	waitGroups map[string][]string // namespace -> waitgroup names
+	locks      map[string][]string          // namespace -> lock names
+	semaphores map[string][]string          // namespace -> semaphore names
+	waitGroups map[string][]*WaitGroupState // namespace -> wait group state
+	barriers   map[string][]*BarrierState   // namespace -> barrier state
 
-	// Tracking leases per worker
-	lockLeases      sync.Map // workerID -> []LeaseHandle (Type="lock")
-	semaphoreLeases sync.Map // workerID -> []LeaseHandle (Type="semaphore")
+	// Flattened views for uniform random selection across namespaces.
+	allWaitGroups []*WaitGroupState
+	allBarriers   []*BarrierState
 
-	// Tracking acquired resources per worker
-	acquiredLocks      sync.Map // workerID -> []LockHandle
-	acquiredSemaphores sync.Map // workerID -> []SemaphoreHandle
+	// Per-worker tracking of leases and acquired resources. Blocking acquires
+	// run on background goroutines, so multiple goroutines may touch the same
+	// worker's entries concurrently; mu guards all four maps.
+	mu                 sync.Mutex
+	lockLeases         map[int][]LeaseHandle
+	semaphoreLeases    map[int][]LeaseHandle
+	acquiredLocks      map[int][]LockHandle
+	acquiredSemaphores map[int][]SemaphoreHandle
 
 	// Config for resource creation
 	config *Config
@@ -60,11 +67,16 @@ func SetupResources(ctx context.Context, client grackle.GrackleApi, config *Conf
 	log.Println("Setting up resources...")
 
 	pool := &ResourcePool{
-		namespaces: make([]string, 0, config.Namespaces),
-		locks:      make(map[string][]string),
-		semaphores: make(map[string][]string),
-		waitGroups: make(map[string][]string),
-		config:     config,
+		namespaces:         make([]string, 0, config.Namespaces),
+		locks:              make(map[string][]string),
+		semaphores:         make(map[string][]string),
+		waitGroups:         make(map[string][]*WaitGroupState),
+		barriers:           make(map[string][]*BarrierState),
+		lockLeases:         make(map[int][]LeaseHandle),
+		semaphoreLeases:    make(map[int][]LeaseHandle),
+		acquiredLocks:      make(map[int][]LockHandle),
+		acquiredSemaphores: make(map[int][]SemaphoreHandle),
+		config:             config,
 	}
 
 	// Create namespaces
@@ -107,24 +119,38 @@ func SetupResources(ctx context.Context, client grackle.GrackleApi, config *Conf
 	if config.WaitGroupsPerNS > 0 {
 		log.Printf("Creating %d wait groups per namespace...", config.WaitGroupsPerNS)
 		for _, ns := range pool.namespaces {
-			wgNames := make([]string, 0, config.WaitGroupsPerNS)
+			states := make([]*WaitGroupState, 0, config.WaitGroupsPerNS)
 			for i := 0; i < config.WaitGroupsPerNS; i++ {
 				wgName := fmt.Sprintf("wg-%d", i)
-				expiresAt := time.Now().Add(1 * time.Hour).UnixNano()
-				_, err := client.CreateWaitGroup(ctx, &grackle.CreateWaitGroupRequest{
-					NamespaceName: ns,
-					WaitGroupName: wgName,
-					Counter:       uint64(config.WaitGroupInitialCounter),
-					ExpiresAt:     expiresAt,
-				})
-				if err != nil {
+				state := NewWaitGroupState(ns, wgName, uint64(config.WaitGroupInitialCounter), config)
+				if err := state.Create(ctx, client); err != nil {
 					return nil, fmt.Errorf("failed to create wait group %s in namespace %s: %w", wgName, ns, err)
 				}
-				wgNames = append(wgNames, wgName)
+				states = append(states, state)
+				pool.allWaitGroups = append(pool.allWaitGroups, state)
 			}
-			pool.waitGroups[ns] = wgNames
+			pool.waitGroups[ns] = states
 		}
 		log.Printf("Created %d wait groups per namespace", config.WaitGroupsPerNS)
+	}
+
+	// Create barriers (need to be created before use)
+	if config.BarriersPerNS > 0 {
+		log.Printf("Creating %d barriers per namespace...", config.BarriersPerNS)
+		for _, ns := range pool.namespaces {
+			states := make([]*BarrierState, 0, config.BarriersPerNS)
+			for i := 0; i < config.BarriersPerNS; i++ {
+				barrierName := fmt.Sprintf("barrier-%d", i)
+				state := NewBarrierState(ns, barrierName, uint64(config.BarrierExpectedProcesses), config)
+				if err := state.Create(ctx, client); err != nil {
+					return nil, fmt.Errorf("failed to create barrier %s in namespace %s: %w", barrierName, ns, err)
+				}
+				states = append(states, state)
+				pool.allBarriers = append(pool.allBarriers, state)
+			}
+			pool.barriers[ns] = states
+		}
+		log.Printf("Created %d barriers per namespace", config.BarriersPerNS)
 	}
 
 	// Pre-populate lock names (locks don't need to be created, just named)
@@ -147,45 +173,50 @@ func SetupResources(ctx context.Context, client grackle.GrackleApi, config *Conf
 func CleanupResources(ctx context.Context, client grackle.GrackleApi, pool *ResourcePool) {
 	log.Println("Cleaning up resources...")
 
-	// Revoke all lock leases
-	pool.lockLeases.Range(func(key, value any) bool {
-		leases := value.([]LeaseHandle)
-		for _, lease := range leases {
-			_, err := client.RevokeLockLease(ctx, &grackle.RevokeLockLeaseRequest{
-				NamespaceName: lease.Namespace,
-				LeaseId:       lease.LeaseID,
-			})
-			if err != nil {
-				log.Printf("Warning: failed to revoke lock lease %s/%s: %v", lease.Namespace, lease.LeaseID, err)
-			}
+	// Revoke all lock leases (releases the locks they hold in one shot)
+	for _, lease := range pool.allLeases("lock") {
+		_, err := client.RevokeLockLease(ctx, &grackle.RevokeLockLeaseRequest{
+			NamespaceName: lease.Namespace,
+			LeaseId:       lease.LeaseID,
+		})
+		if err != nil {
+			log.Printf("Warning: failed to revoke lock lease %s/%s: %v", lease.Namespace, lease.LeaseID, err)
 		}
-		return true
-	})
+	}
 
 	// Revoke all semaphore leases
-	pool.semaphoreLeases.Range(func(key, value any) bool {
-		leases := value.([]LeaseHandle)
-		for _, lease := range leases {
-			_, err := client.RevokeSemaphoreLease(ctx, &grackle.RevokeSemaphoreLeaseRequest{
-				NamespaceName: lease.Namespace,
-				LeaseId:       lease.LeaseID,
-			})
-			if err != nil {
-				log.Printf("Warning: failed to revoke semaphore lease %s/%s: %v", lease.Namespace, lease.LeaseID, err)
-			}
+	for _, lease := range pool.allLeases("semaphore") {
+		_, err := client.RevokeSemaphoreLease(ctx, &grackle.RevokeSemaphoreLeaseRequest{
+			NamespaceName: lease.Namespace,
+			LeaseId:       lease.LeaseID,
+		})
+		if err != nil {
+			log.Printf("Warning: failed to revoke semaphore lease %s/%s: %v", lease.Namespace, lease.LeaseID, err)
 		}
-		return true
-	})
+	}
 
 	// Delete wait groups
-	for ns, wgNames := range pool.waitGroups {
-		for _, wgName := range wgNames {
+	for ns, states := range pool.waitGroups {
+		for _, wg := range states {
 			_, err := client.DeleteWaitGroup(ctx, &grackle.DeleteWaitGroupRequest{
 				NamespaceName: ns,
-				WaitGroupName: wgName,
+				WaitGroupName: wg.Name(),
 			})
 			if err != nil {
-				log.Printf("Warning: failed to delete wait group %s/%s: %v", ns, wgName, err)
+				log.Printf("Warning: failed to delete wait group %s/%s: %v", ns, wg.Name(), err)
+			}
+		}
+	}
+
+	// Delete barriers
+	for ns, states := range pool.barriers {
+		for _, b := range states {
+			_, err := client.DeleteBarrier(ctx, &grackle.DeleteBarrierRequest{
+				NamespaceName: ns,
+				BarrierName:   b.Name(),
+			})
+			if err != nil {
+				log.Printf("Warning: failed to delete barrier %s/%s: %v", ns, b.Name(), err)
 			}
 		}
 	}
@@ -203,7 +234,7 @@ func CleanupResources(ctx context.Context, client grackle.GrackleApi, pool *Reso
 		}
 	}
 
-	// Delete locks (release first, then delete)
+	// Delete locks
 	for ns, lockNames := range pool.locks {
 		for _, lockName := range lockNames {
 			_, err := client.DeleteLock(ctx, &grackle.DeleteLockRequest{
@@ -229,164 +260,146 @@ func CleanupResources(ctx context.Context, client grackle.GrackleApi, pool *Reso
 	log.Println("Cleanup complete")
 }
 
+// ---------------------------------------------------------------------------
+// Random selection helpers
+// ---------------------------------------------------------------------------
+
+// GetRandomWaitGroup returns a uniformly random wait group, or nil if none.
+func (p *ResourcePool) GetRandomWaitGroup(rng *rand.Rand) *WaitGroupState {
+	if len(p.allWaitGroups) == 0 {
+		return nil
+	}
+	return p.allWaitGroups[rng.Intn(len(p.allWaitGroups))]
+}
+
+// GetRandomBarrier returns a uniformly random barrier, or nil if none.
+func (p *ResourcePool) GetRandomBarrier(rng *rand.Rand) *BarrierState {
+	if len(p.allBarriers) == 0 {
+		return nil
+	}
+	return p.allBarriers[rng.Intn(len(p.allBarriers))]
+}
+
+// ---------------------------------------------------------------------------
+// Acquired-resource tracking
+// ---------------------------------------------------------------------------
+
 // TrackAcquiredLock tracks a lock acquisition for a worker
 func (p *ResourcePool) TrackAcquiredLock(workerID int, handle LockHandle) {
-	val, _ := p.acquiredLocks.LoadOrStore(workerID, []LockHandle{})
-	handles := val.([]LockHandle)
-	handles = append(handles, handle)
-	p.acquiredLocks.Store(workerID, handles)
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.acquiredLocks[workerID] = append(p.acquiredLocks[workerID], handle)
 }
 
 // GetAndRemoveAcquiredLock retrieves and removes a lock handle for a worker
 func (p *ResourcePool) GetAndRemoveAcquiredLock(workerID int) *LockHandle {
-	val, ok := p.acquiredLocks.Load(workerID)
-	if !ok {
-		return nil
-	}
-	handles := val.([]LockHandle)
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	handles := p.acquiredLocks[workerID]
 	if len(handles) == 0 {
 		return nil
 	}
-	// Remove the first handle
 	handle := handles[0]
-	remaining := handles[1:]
-	if len(remaining) == 0 {
-		p.acquiredLocks.Delete(workerID)
-	} else {
-		p.acquiredLocks.Store(workerID, remaining)
-	}
+	p.acquiredLocks[workerID] = handles[1:]
 	return &handle
 }
 
 // TrackAcquiredSemaphore tracks a semaphore acquisition for a worker
 func (p *ResourcePool) TrackAcquiredSemaphore(workerID int, handle SemaphoreHandle) {
-	val, _ := p.acquiredSemaphores.LoadOrStore(workerID, []SemaphoreHandle{})
-	handles := val.([]SemaphoreHandle)
-	handles = append(handles, handle)
-	p.acquiredSemaphores.Store(workerID, handles)
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.acquiredSemaphores[workerID] = append(p.acquiredSemaphores[workerID], handle)
 }
 
 // GetAndRemoveAcquiredSemaphore retrieves and removes a semaphore handle for a worker
 func (p *ResourcePool) GetAndRemoveAcquiredSemaphore(workerID int) *SemaphoreHandle {
-	val, ok := p.acquiredSemaphores.Load(workerID)
-	if !ok {
-		return nil
-	}
-	handles := val.([]SemaphoreHandle)
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	handles := p.acquiredSemaphores[workerID]
 	if len(handles) == 0 {
 		return nil
 	}
-	// Remove the first handle
 	handle := handles[0]
-	remaining := handles[1:]
-	if len(remaining) == 0 {
-		p.acquiredSemaphores.Delete(workerID)
-	} else {
-		p.acquiredSemaphores.Store(workerID, remaining)
-	}
+	p.acquiredSemaphores[workerID] = handles[1:]
 	return &handle
 }
 
 // CountAcquiredLocks returns total acquired locks across all workers
 func (p *ResourcePool) CountAcquiredLocks() int {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	count := 0
-	p.acquiredLocks.Range(func(key, value any) bool {
-		handles := value.([]LockHandle)
+	for _, handles := range p.acquiredLocks {
 		count += len(handles)
-		return true
-	})
+	}
 	return count
 }
 
 // CountAcquiredSemaphores returns total acquired semaphores across all workers
 func (p *ResourcePool) CountAcquiredSemaphores() int {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	count := 0
-	p.acquiredSemaphores.Range(func(key, value any) bool {
-		handles := value.([]SemaphoreHandle)
+	for _, handles := range p.acquiredSemaphores {
 		count += len(handles)
-		return true
-	})
+	}
 	return count
+}
+
+// ---------------------------------------------------------------------------
+// Lease tracking
+// ---------------------------------------------------------------------------
+
+// leaseMap returns the per-worker lease map for the given type. Caller holds mu.
+func (p *ResourcePool) leaseMap(leaseType string) map[int][]LeaseHandle {
+	if leaseType == "lock" {
+		return p.lockLeases
+	}
+	return p.semaphoreLeases
 }
 
 // TrackLease tracks a lease for a worker
 func (p *ResourcePool) TrackLease(workerID int, lease LeaseHandle) {
-	var leaseMap *sync.Map
-	if lease.Type == "lock" {
-		leaseMap = &p.lockLeases
-	} else {
-		leaseMap = &p.semaphoreLeases
-	}
-
-	val, _ := leaseMap.LoadOrStore(workerID, []LeaseHandle{})
-	leases := val.([]LeaseHandle)
-	leases = append(leases, lease)
-	leaseMap.Store(workerID, leases)
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	m := p.leaseMap(lease.Type)
+	m[workerID] = append(m[workerID], lease)
 }
 
 // GetRandomLease returns a random lease for a worker of the specified type
-func (p *ResourcePool) GetRandomLease(workerID int, leaseType string) *LeaseHandle {
-	var leaseMap *sync.Map
-	if leaseType == "lock" {
-		leaseMap = &p.lockLeases
-	} else {
-		leaseMap = &p.semaphoreLeases
-	}
-
-	val, ok := leaseMap.Load(workerID)
-	if !ok {
-		return nil
-	}
-	leases := val.([]LeaseHandle)
+func (p *ResourcePool) GetRandomLease(workerID int, leaseType string, rng *rand.Rand) *LeaseHandle {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	leases := p.leaseMap(leaseType)[workerID]
 	if len(leases) == 0 {
 		return nil
 	}
-	// Return a random lease
-	lease := leases[len(leases)/2]
+	lease := leases[rng.Intn(len(leases))]
 	return &lease
 }
 
-// GetAndRemoveLease retrieves and removes a random lease for a worker of the specified type
-func (p *ResourcePool) GetAndRemoveLease(workerID int, leaseType string) *LeaseHandle {
-	var leaseMap *sync.Map
-	if leaseType == "lock" {
-		leaseMap = &p.lockLeases
-	} else {
-		leaseMap = &p.semaphoreLeases
-	}
-
-	val, ok := leaseMap.Load(workerID)
-	if !ok {
-		return nil
-	}
-	leases := val.([]LeaseHandle)
-	if len(leases) == 0 {
-		return nil
-	}
-	// Remove the first lease
-	lease := leases[0]
-	remaining := leases[1:]
-	if len(remaining) == 0 {
-		leaseMap.Delete(workerID)
-	} else {
-		leaseMap.Store(workerID, remaining)
-	}
-	return &lease
-}
-
-// GetAllLeases returns all leases for a worker of the specified type
+// GetAllLeases returns a snapshot copy of all leases for a worker of the
+// specified type.
 func (p *ResourcePool) GetAllLeases(workerID int, leaseType string) []LeaseHandle {
-	var leaseMap *sync.Map
-	if leaseType == "lock" {
-		leaseMap = &p.lockLeases
-	} else {
-		leaseMap = &p.semaphoreLeases
-	}
-
-	val, ok := leaseMap.Load(workerID)
-	if !ok {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	leases := p.leaseMap(leaseType)[workerID]
+	if len(leases) == 0 {
 		return nil
 	}
-	leases := val.([]LeaseHandle)
-	return leases
+	out := make([]LeaseHandle, len(leases))
+	copy(out, leases)
+	return out
+}
+
+// allLeases returns a snapshot of every lease of the given type across all
+// workers, used during cleanup.
+func (p *ResourcePool) allLeases(leaseType string) []LeaseHandle {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	var out []LeaseHandle
+	for _, leases := range p.leaseMap(leaseType) {
+		out = append(out, leases...)
+	}
+	return out
 }

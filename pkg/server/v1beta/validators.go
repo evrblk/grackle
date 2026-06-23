@@ -497,8 +497,8 @@ func ValidateCreateBarrierRequest(req *gracklepb.CreateBarrierRequest) error {
 		return invalid("CreateBarrierRequest.ExpectedProcesses", "must be greater than 0")
 	}
 
-	if req.ExpiresAt <= 0 {
-		return invalid("CreateBarrierRequest.ExpiresAt", "must be greater than 0")
+	if req.DeleteInactiveAfterSeconds <= 0 {
+		return invalid("CreateBarrierRequest.DeleteInactiveAfterSeconds", "must be greater than 0")
 	}
 
 	if err := validateMetadata(req.Metadata, "CreateBarrierRequest.Metadata"); err != nil {
@@ -563,6 +563,10 @@ func ValidateUpdateBarrierRequest(req *gracklepb.UpdateBarrierRequest) error {
 
 	if req.ExpectedProcesses <= 0 {
 		return invalid("UpdateBarrierRequest.ExpectedProcesses", "must be greater than 0")
+	}
+
+	if req.DeleteInactiveAfterSeconds <= 0 {
+		return invalid("UpdateBarrierRequest.DeleteInactiveAfterSeconds", "must be greater than 0")
 	}
 
 	if err := validateMetadata(req.Metadata, "UpdateBarrierRequest.Metadata"); err != nil {

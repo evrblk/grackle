@@ -30,6 +30,7 @@ type CreateBarrierRequest struct {
 	Metadata                        map[string]string      `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	Now                             int64                  `protobuf:"varint,6,opt,name=now,proto3" json:"now,omitempty"`
 	MaxNumberOfBarriersPerNamespace int64                  `protobuf:"varint,7,opt,name=max_number_of_barriers_per_namespace,json=maxNumberOfBarriersPerNamespace,proto3" json:"max_number_of_barriers_per_namespace,omitempty"`
+	DeleteInactiveAfterSeconds      int64                  `protobuf:"varint,8,opt,name=delete_inactive_after_seconds,json=deleteInactiveAfterSeconds,proto3" json:"delete_inactive_after_seconds,omitempty"`
 	unknownFields                   protoimpl.UnknownFields
 	sizeCache                       protoimpl.SizeCache
 }
@@ -113,6 +114,13 @@ func (x *CreateBarrierRequest) GetMaxNumberOfBarriersPerNamespace() int64 {
 	return 0
 }
 
+func (x *CreateBarrierRequest) GetDeleteInactiveAfterSeconds() int64 {
+	if x != nil {
+		return x.DeleteInactiveAfterSeconds
+	}
+	return 0
+}
+
 type CreateBarrierResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Barrier       *Barrier               `protobuf:"bytes,1,opt,name=barrier,proto3" json:"barrier,omitempty"`
@@ -158,15 +166,16 @@ func (x *CreateBarrierResponse) GetBarrier() *Barrier {
 }
 
 type UpdateBarrierRequest struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	BarrierId         *BarrierId             `protobuf:"bytes,1,opt,name=barrier_id,json=barrierId,proto3" json:"barrier_id,omitempty"`
-	Description       string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	ExpectedProcesses uint64                 `protobuf:"varint,3,opt,name=expected_processes,json=expectedProcesses,proto3" json:"expected_processes,omitempty"`
-	Metadata          map[string]string      `protobuf:"bytes,4,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	ExpectedVersion   uint64                 `protobuf:"varint,5,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
-	Now               int64                  `protobuf:"varint,6,opt,name=now,proto3" json:"now,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	state                      protoimpl.MessageState `protogen:"open.v1"`
+	BarrierId                  *BarrierId             `protobuf:"bytes,1,opt,name=barrier_id,json=barrierId,proto3" json:"barrier_id,omitempty"`
+	Description                string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	ExpectedProcesses          uint64                 `protobuf:"varint,3,opt,name=expected_processes,json=expectedProcesses,proto3" json:"expected_processes,omitempty"`
+	Metadata                   map[string]string      `protobuf:"bytes,4,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	ExpectedVersion            uint64                 `protobuf:"varint,5,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
+	Now                        int64                  `protobuf:"varint,6,opt,name=now,proto3" json:"now,omitempty"`
+	DeleteInactiveAfterSeconds int64                  `protobuf:"varint,7,opt,name=delete_inactive_after_seconds,json=deleteInactiveAfterSeconds,proto3" json:"delete_inactive_after_seconds,omitempty"`
+	unknownFields              protoimpl.UnknownFields
+	sizeCache                  protoimpl.SizeCache
 }
 
 func (x *UpdateBarrierRequest) Reset() {
@@ -241,9 +250,17 @@ func (x *UpdateBarrierRequest) GetNow() int64 {
 	return 0
 }
 
+func (x *UpdateBarrierRequest) GetDeleteInactiveAfterSeconds() int64 {
+	if x != nil {
+		return x.DeleteInactiveAfterSeconds
+	}
+	return 0
+}
+
 type UpdateBarrierResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Barrier       *Barrier               `protobuf:"bytes,1,opt,name=barrier,proto3" json:"barrier,omitempty"`
+	AllArrived    bool                   `protobuf:"varint,2,opt,name=all_arrived,json=allArrived,proto3" json:"all_arrived,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -283,6 +300,13 @@ func (x *UpdateBarrierResponse) GetBarrier() *Barrier {
 		return x.Barrier
 	}
 	return nil
+}
+
+func (x *UpdateBarrierResponse) GetAllArrived() bool {
+	if x != nil {
+		return x.AllArrived
+	}
+	return false
 }
 
 type ArriveAtBarrierRequest struct {
@@ -372,6 +396,7 @@ func (x *ArriveAtBarrierRequest) GetNow() int64 {
 type ArriveAtBarrierResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Barrier       *Barrier               `protobuf:"bytes,1,opt,name=barrier,proto3" json:"barrier,omitempty"`
+	AllArrived    bool                   `protobuf:"varint,2,opt,name=all_arrived,json=allArrived,proto3" json:"all_arrived,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -413,116 +438,11 @@ func (x *ArriveAtBarrierResponse) GetBarrier() *Barrier {
 	return nil
 }
 
-type WaitAtBarrierRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	BarrierName   string                 `protobuf:"bytes,2,opt,name=barrier_name,json=barrierName,proto3" json:"barrier_name,omitempty"`
-	ProcessId     string                 `protobuf:"bytes,3,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
-	Now           int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *WaitAtBarrierRequest) Reset() {
-	*x = WaitAtBarrierRequest{}
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[6]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *WaitAtBarrierRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*WaitAtBarrierRequest) ProtoMessage() {}
-
-func (x *WaitAtBarrierRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[6]
+func (x *ArriveAtBarrierResponse) GetAllArrived() bool {
 	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
+		return x.AllArrived
 	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use WaitAtBarrierRequest.ProtoReflect.Descriptor instead.
-func (*WaitAtBarrierRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{6}
-}
-
-func (x *WaitAtBarrierRequest) GetNamespaceId() *NamespaceId {
-	if x != nil {
-		return x.NamespaceId
-	}
-	return nil
-}
-
-func (x *WaitAtBarrierRequest) GetBarrierName() string {
-	if x != nil {
-		return x.BarrierName
-	}
-	return ""
-}
-
-func (x *WaitAtBarrierRequest) GetProcessId() string {
-	if x != nil {
-		return x.ProcessId
-	}
-	return ""
-}
-
-func (x *WaitAtBarrierRequest) GetNow() int64 {
-	if x != nil {
-		return x.Now
-	}
-	return 0
-}
-
-type WaitAtBarrierResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Barrier       *Barrier               `protobuf:"bytes,1,opt,name=barrier,proto3" json:"barrier,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *WaitAtBarrierResponse) Reset() {
-	*x = WaitAtBarrierResponse{}
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[7]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *WaitAtBarrierResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*WaitAtBarrierResponse) ProtoMessage() {}
-
-func (x *WaitAtBarrierResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[7]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use WaitAtBarrierResponse.ProtoReflect.Descriptor instead.
-func (*WaitAtBarrierResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *WaitAtBarrierResponse) GetBarrier() *Barrier {
-	if x != nil {
-		return x.Barrier
-	}
-	return nil
+	return false
 }
 
 type GetBarrierRequest struct {
@@ -534,7 +454,7 @@ type GetBarrierRequest struct {
 
 func (x *GetBarrierRequest) Reset() {
 	*x = GetBarrierRequest{}
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[8]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -546,7 +466,7 @@ func (x *GetBarrierRequest) String() string {
 func (*GetBarrierRequest) ProtoMessage() {}
 
 func (x *GetBarrierRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[8]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -559,7 +479,7 @@ func (x *GetBarrierRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetBarrierRequest.ProtoReflect.Descriptor instead.
 func (*GetBarrierRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{8}
+	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetBarrierRequest) GetBarrierId() *BarrierId {
@@ -578,7 +498,7 @@ type GetBarrierResponse struct {
 
 func (x *GetBarrierResponse) Reset() {
 	*x = GetBarrierResponse{}
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[9]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -590,7 +510,7 @@ func (x *GetBarrierResponse) String() string {
 func (*GetBarrierResponse) ProtoMessage() {}
 
 func (x *GetBarrierResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[9]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -603,7 +523,7 @@ func (x *GetBarrierResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetBarrierResponse.ProtoReflect.Descriptor instead.
 func (*GetBarrierResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{9}
+	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GetBarrierResponse) GetBarrier() *Barrier {
@@ -623,7 +543,7 @@ type GetBarrierByNameRequest struct {
 
 func (x *GetBarrierByNameRequest) Reset() {
 	*x = GetBarrierByNameRequest{}
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[10]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -635,7 +555,7 @@ func (x *GetBarrierByNameRequest) String() string {
 func (*GetBarrierByNameRequest) ProtoMessage() {}
 
 func (x *GetBarrierByNameRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[10]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -648,7 +568,7 @@ func (x *GetBarrierByNameRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetBarrierByNameRequest.ProtoReflect.Descriptor instead.
 func (*GetBarrierByNameRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{10}
+	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetBarrierByNameRequest) GetNamespaceId() *NamespaceId {
@@ -674,7 +594,7 @@ type GetBarrierByNameResponse struct {
 
 func (x *GetBarrierByNameResponse) Reset() {
 	*x = GetBarrierByNameResponse{}
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[11]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -686,7 +606,7 @@ func (x *GetBarrierByNameResponse) String() string {
 func (*GetBarrierByNameResponse) ProtoMessage() {}
 
 func (x *GetBarrierByNameResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[11]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -699,7 +619,7 @@ func (x *GetBarrierByNameResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetBarrierByNameResponse.ProtoReflect.Descriptor instead.
 func (*GetBarrierByNameResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{11}
+	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetBarrierByNameResponse) GetBarrier() *Barrier {
@@ -721,7 +641,7 @@ type DeleteBarrierRequest struct {
 
 func (x *DeleteBarrierRequest) Reset() {
 	*x = DeleteBarrierRequest{}
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[12]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -733,7 +653,7 @@ func (x *DeleteBarrierRequest) String() string {
 func (*DeleteBarrierRequest) ProtoMessage() {}
 
 func (x *DeleteBarrierRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[12]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -746,7 +666,7 @@ func (x *DeleteBarrierRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteBarrierRequest.ProtoReflect.Descriptor instead.
 func (*DeleteBarrierRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{12}
+	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *DeleteBarrierRequest) GetNamespaceId() *NamespaceId {
@@ -785,7 +705,7 @@ type DeleteBarrierResponse struct {
 
 func (x *DeleteBarrierResponse) Reset() {
 	*x = DeleteBarrierResponse{}
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[13]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -797,7 +717,7 @@ func (x *DeleteBarrierResponse) String() string {
 func (*DeleteBarrierResponse) ProtoMessage() {}
 
 func (x *DeleteBarrierResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[13]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -810,7 +730,7 @@ func (x *DeleteBarrierResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteBarrierResponse.ProtoReflect.Descriptor instead.
 func (*DeleteBarrierResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{13}
+	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{11}
 }
 
 type ListBarriersRequest struct {
@@ -825,7 +745,7 @@ type ListBarriersRequest struct {
 
 func (x *ListBarriersRequest) Reset() {
 	*x = ListBarriersRequest{}
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[14]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -837,7 +757,7 @@ func (x *ListBarriersRequest) String() string {
 func (*ListBarriersRequest) ProtoMessage() {}
 
 func (x *ListBarriersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[14]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -850,7 +770,7 @@ func (x *ListBarriersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListBarriersRequest.ProtoReflect.Descriptor instead.
 func (*ListBarriersRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{14}
+	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *ListBarriersRequest) GetNamespaceId() *NamespaceId {
@@ -892,7 +812,7 @@ type ListBarriersResponse struct {
 
 func (x *ListBarriersResponse) Reset() {
 	*x = ListBarriersResponse{}
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[15]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -904,7 +824,7 @@ func (x *ListBarriersResponse) String() string {
 func (*ListBarriersResponse) ProtoMessage() {}
 
 func (x *ListBarriersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[15]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -917,7 +837,7 @@ func (x *ListBarriersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListBarriersResponse.ProtoReflect.Descriptor instead.
 func (*ListBarriersResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{15}
+	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *ListBarriersResponse) GetBarriers() []*Barrier {
@@ -954,7 +874,7 @@ type ListBarrierParticipantsRequest struct {
 
 func (x *ListBarrierParticipantsRequest) Reset() {
 	*x = ListBarrierParticipantsRequest{}
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[16]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -966,7 +886,7 @@ func (x *ListBarrierParticipantsRequest) String() string {
 func (*ListBarrierParticipantsRequest) ProtoMessage() {}
 
 func (x *ListBarrierParticipantsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[16]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -979,7 +899,7 @@ func (x *ListBarrierParticipantsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListBarrierParticipantsRequest.ProtoReflect.Descriptor instead.
 func (*ListBarrierParticipantsRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{16}
+	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ListBarrierParticipantsRequest) GetNamespaceId() *NamespaceId {
@@ -1028,7 +948,7 @@ type ListBarrierParticipantsResponse struct {
 
 func (x *ListBarrierParticipantsResponse) Reset() {
 	*x = ListBarrierParticipantsResponse{}
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[17]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1040,7 +960,7 @@ func (x *ListBarrierParticipantsResponse) String() string {
 func (*ListBarrierParticipantsResponse) ProtoMessage() {}
 
 func (x *ListBarrierParticipantsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[17]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1053,7 +973,7 @@ func (x *ListBarrierParticipantsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListBarrierParticipantsResponse.ProtoReflect.Descriptor instead.
 func (*ListBarrierParticipantsResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{17}
+	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ListBarrierParticipantsResponse) GetParticipants() []*BarrierParticipant {
@@ -1090,7 +1010,7 @@ type RunBarriersGarbageCollectionRequest struct {
 
 func (x *RunBarriersGarbageCollectionRequest) Reset() {
 	*x = RunBarriersGarbageCollectionRequest{}
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[18]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1102,7 +1022,7 @@ func (x *RunBarriersGarbageCollectionRequest) String() string {
 func (*RunBarriersGarbageCollectionRequest) ProtoMessage() {}
 
 func (x *RunBarriersGarbageCollectionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[18]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1115,7 +1035,7 @@ func (x *RunBarriersGarbageCollectionRequest) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use RunBarriersGarbageCollectionRequest.ProtoReflect.Descriptor instead.
 func (*RunBarriersGarbageCollectionRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{18}
+	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *RunBarriersGarbageCollectionRequest) GetNow() int64 {
@@ -1161,7 +1081,7 @@ type RunBarriersGarbageCollectionResponse struct {
 
 func (x *RunBarriersGarbageCollectionResponse) Reset() {
 	*x = RunBarriersGarbageCollectionResponse{}
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[19]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1173,7 +1093,7 @@ func (x *RunBarriersGarbageCollectionResponse) String() string {
 func (*RunBarriersGarbageCollectionResponse) ProtoMessage() {}
 
 func (x *RunBarriersGarbageCollectionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[19]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1186,7 +1106,7 @@ func (x *RunBarriersGarbageCollectionResponse) ProtoReflect() protoreflect.Messa
 
 // Deprecated: Use RunBarriersGarbageCollectionResponse.ProtoReflect.Descriptor instead.
 func (*RunBarriersGarbageCollectionResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{19}
+	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{17}
 }
 
 type BarriersDeleteNamespaceRequest struct {
@@ -1200,7 +1120,7 @@ type BarriersDeleteNamespaceRequest struct {
 
 func (x *BarriersDeleteNamespaceRequest) Reset() {
 	*x = BarriersDeleteNamespaceRequest{}
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[20]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1212,7 +1132,7 @@ func (x *BarriersDeleteNamespaceRequest) String() string {
 func (*BarriersDeleteNamespaceRequest) ProtoMessage() {}
 
 func (x *BarriersDeleteNamespaceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[20]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1225,7 +1145,7 @@ func (x *BarriersDeleteNamespaceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BarriersDeleteNamespaceRequest.ProtoReflect.Descriptor instead.
 func (*BarriersDeleteNamespaceRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{20}
+	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *BarriersDeleteNamespaceRequest) GetNamespaceId() *NamespaceId {
@@ -1257,7 +1177,7 @@ type BarriersDeleteNamespaceResponse struct {
 
 func (x *BarriersDeleteNamespaceResponse) Reset() {
 	*x = BarriersDeleteNamespaceResponse{}
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[21]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1269,7 +1189,7 @@ func (x *BarriersDeleteNamespaceResponse) String() string {
 func (*BarriersDeleteNamespaceResponse) ProtoMessage() {}
 
 func (x *BarriersDeleteNamespaceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[21]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1282,7 +1202,7 @@ func (x *BarriersDeleteNamespaceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BarriersDeleteNamespaceResponse.ProtoReflect.Descriptor instead.
 func (*BarriersDeleteNamespaceResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{21}
+	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{19}
 }
 
 type Barrier struct {
@@ -1297,13 +1217,21 @@ type Barrier struct {
 	Generation        uint64                 `protobuf:"varint,8,opt,name=generation,proto3" json:"generation,omitempty"`
 	Version           uint64                 `protobuf:"varint,9,opt,name=version,proto3" json:"version,omitempty"`
 	Metadata          map[string]string      `protobuf:"bytes,10,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	// last_activity_at is the timestamp (ns) of the most recent activity on this
+	// barrier (creation or a process arriving). Not affected by reads.
+	LastActivityAt int64 `protobuf:"varint,11,opt,name=last_activity_at,json=lastActivityAt,proto3" json:"last_activity_at,omitempty"`
+	// delete_inactive_after_seconds is the inactivity window after which the
+	// barrier is auto-deleted: garbage collection removes it once
+	// last_activity_at + delete_inactive_after_seconds has passed. Every activity
+	// pushes the deletion further out.
+	DeleteInactiveAfterSeconds int64 `protobuf:"varint,12,opt,name=delete_inactive_after_seconds,json=deleteInactiveAfterSeconds,proto3" json:"delete_inactive_after_seconds,omitempty"`
+	unknownFields              protoimpl.UnknownFields
+	sizeCache                  protoimpl.SizeCache
 }
 
 func (x *Barrier) Reset() {
 	*x = Barrier{}
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[22]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1315,7 +1243,7 @@ func (x *Barrier) String() string {
 func (*Barrier) ProtoMessage() {}
 
 func (x *Barrier) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[22]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1328,7 +1256,7 @@ func (x *Barrier) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Barrier.ProtoReflect.Descriptor instead.
 func (*Barrier) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{22}
+	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *Barrier) GetId() *BarrierId {
@@ -1401,6 +1329,20 @@ func (x *Barrier) GetMetadata() map[string]string {
 	return nil
 }
 
+func (x *Barrier) GetLastActivityAt() int64 {
+	if x != nil {
+		return x.LastActivityAt
+	}
+	return 0
+}
+
+func (x *Barrier) GetDeleteInactiveAfterSeconds() int64 {
+	if x != nil {
+		return x.DeleteInactiveAfterSeconds
+	}
+	return 0
+}
+
 type BarrierId struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AccountId     uint64                 `protobuf:"varint,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
@@ -1412,7 +1354,7 @@ type BarrierId struct {
 
 func (x *BarrierId) Reset() {
 	*x = BarrierId{}
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[23]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1424,7 +1366,7 @@ func (x *BarrierId) String() string {
 func (*BarrierId) ProtoMessage() {}
 
 func (x *BarrierId) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[23]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1437,7 +1379,7 @@ func (x *BarrierId) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BarrierId.ProtoReflect.Descriptor instead.
 func (*BarrierId) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{23}
+	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *BarrierId) GetAccountId() uint64 {
@@ -1470,7 +1412,7 @@ type BarriersCounter struct {
 
 func (x *BarriersCounter) Reset() {
 	*x = BarriersCounter{}
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[24]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1482,7 +1424,7 @@ func (x *BarriersCounter) String() string {
 func (*BarriersCounter) ProtoMessage() {}
 
 func (x *BarriersCounter) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[24]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1495,7 +1437,7 @@ func (x *BarriersCounter) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BarriersCounter.ProtoReflect.Descriptor instead.
 func (*BarriersCounter) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{24}
+	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *BarriersCounter) GetNumberOfBarriers() int64 {
@@ -1519,7 +1461,7 @@ type BarriersGarbageCollectionRecord struct {
 
 func (x *BarriersGarbageCollectionRecord) Reset() {
 	*x = BarriersGarbageCollectionRecord{}
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[25]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1531,7 +1473,7 @@ func (x *BarriersGarbageCollectionRecord) String() string {
 func (*BarriersGarbageCollectionRecord) ProtoMessage() {}
 
 func (x *BarriersGarbageCollectionRecord) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[25]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1544,7 +1486,7 @@ func (x *BarriersGarbageCollectionRecord) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BarriersGarbageCollectionRecord.ProtoReflect.Descriptor instead.
 func (*BarriersGarbageCollectionRecord) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{25}
+	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *BarriersGarbageCollectionRecord) GetId() uint64 {
@@ -1595,29 +1537,32 @@ func (*BarriersGarbageCollectionRecord_NamespaceId) isBarriersGarbageCollectionR
 
 func (*BarriersGarbageCollectionRecord_BarrierId) isBarriersGarbageCollectionRecord_Record() {}
 
-type BarriersExpirationRecord struct {
+// BarriersDeletionRecord schedules the auto-deletion of an inactive barrier.
+// delete_at is the timestamp (ns) at which garbage collection should delete the
+// barrier, computed as last_activity_at + delete_inactive_after_seconds.
+type BarriersDeletionRecord struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	BarrierId     *BarrierId             `protobuf:"bytes,1,opt,name=barrier_id,json=barrierId,proto3" json:"barrier_id,omitempty"`
-	ExpiresAt     int64                  `protobuf:"varint,2,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	DeleteAt      int64                  `protobuf:"varint,2,opt,name=delete_at,json=deleteAt,proto3" json:"delete_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *BarriersExpirationRecord) Reset() {
-	*x = BarriersExpirationRecord{}
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[26]
+func (x *BarriersDeletionRecord) Reset() {
+	*x = BarriersDeletionRecord{}
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *BarriersExpirationRecord) String() string {
+func (x *BarriersDeletionRecord) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*BarriersExpirationRecord) ProtoMessage() {}
+func (*BarriersDeletionRecord) ProtoMessage() {}
 
-func (x *BarriersExpirationRecord) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[26]
+func (x *BarriersDeletionRecord) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1628,21 +1573,21 @@ func (x *BarriersExpirationRecord) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use BarriersExpirationRecord.ProtoReflect.Descriptor instead.
-func (*BarriersExpirationRecord) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{26}
+// Deprecated: Use BarriersDeletionRecord.ProtoReflect.Descriptor instead.
+func (*BarriersDeletionRecord) Descriptor() ([]byte, []int) {
+	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{24}
 }
 
-func (x *BarriersExpirationRecord) GetBarrierId() *BarrierId {
+func (x *BarriersDeletionRecord) GetBarrierId() *BarrierId {
 	if x != nil {
 		return x.BarrierId
 	}
 	return nil
 }
 
-func (x *BarriersExpirationRecord) GetExpiresAt() int64 {
+func (x *BarriersDeletionRecord) GetDeleteAt() int64 {
 	if x != nil {
-		return x.ExpiresAt
+		return x.DeleteAt
 	}
 	return 0
 }
@@ -1659,7 +1604,7 @@ type BarrierParticipant struct {
 
 func (x *BarrierParticipant) Reset() {
 	*x = BarrierParticipant{}
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[27]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1671,7 +1616,7 @@ func (x *BarrierParticipant) String() string {
 func (*BarrierParticipant) ProtoMessage() {}
 
 func (x *BarrierParticipant) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_corepb_barriers_proto_msgTypes[27]
+	mi := &file_pkg_corepb_barriers_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1684,7 +1629,7 @@ func (x *BarrierParticipant) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BarrierParticipant.ProtoReflect.Descriptor instead.
 func (*BarrierParticipant) Descriptor() ([]byte, []int) {
-	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{27}
+	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *BarrierParticipant) GetProcessId() string {
@@ -1719,7 +1664,7 @@ var File_pkg_corepb_barriers_proto protoreflect.FileDescriptor
 
 const file_pkg_corepb_barriers_proto_rawDesc = "" +
 	"\n" +
-	"\x19pkg/corepb/barriers.proto\x12\x19com.evrblk.grackle.corepb\x1a\x17pkg/corepb/common.proto\x1a\x1bpkg/corepb/namespaces.proto\"\xb9\x03\n" +
+	"\x19pkg/corepb/barriers.proto\x12\x19com.evrblk.grackle.corepb\x1a\x17pkg/corepb/common.proto\x1a\x1bpkg/corepb/namespaces.proto\"\xfc\x03\n" +
 	"\x14CreateBarrierRequest\x12C\n" +
 	"\n" +
 	"barrier_id\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.BarrierIdR\tbarrierId\x12\x12\n" +
@@ -1728,12 +1673,13 @@ const file_pkg_corepb_barriers_proto_rawDesc = "" +
 	"\x12expected_processes\x18\x04 \x01(\x04R\x11expectedProcesses\x12Y\n" +
 	"\bmetadata\x18\x05 \x03(\v2=.com.evrblk.grackle.corepb.CreateBarrierRequest.MetadataEntryR\bmetadata\x12\x10\n" +
 	"\x03now\x18\x06 \x01(\x03R\x03now\x12M\n" +
-	"$max_number_of_barriers_per_namespace\x18\a \x01(\x03R\x1fmaxNumberOfBarriersPerNamespace\x1a;\n" +
+	"$max_number_of_barriers_per_namespace\x18\a \x01(\x03R\x1fmaxNumberOfBarriersPerNamespace\x12A\n" +
+	"\x1ddelete_inactive_after_seconds\x18\b \x01(\x03R\x1adeleteInactiveAfterSeconds\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"U\n" +
 	"\x15CreateBarrierResponse\x12<\n" +
-	"\abarrier\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.BarrierR\abarrier\"\x81\x03\n" +
+	"\abarrier\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.BarrierR\abarrier\"\xc4\x03\n" +
 	"\x14UpdateBarrierRequest\x12C\n" +
 	"\n" +
 	"barrier_id\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.BarrierIdR\tbarrierId\x12 \n" +
@@ -1741,12 +1687,15 @@ const file_pkg_corepb_barriers_proto_rawDesc = "" +
 	"\x12expected_processes\x18\x03 \x01(\x04R\x11expectedProcesses\x12Y\n" +
 	"\bmetadata\x18\x04 \x03(\v2=.com.evrblk.grackle.corepb.UpdateBarrierRequest.MetadataEntryR\bmetadata\x12)\n" +
 	"\x10expected_version\x18\x05 \x01(\x04R\x0fexpectedVersion\x12\x10\n" +
-	"\x03now\x18\x06 \x01(\x03R\x03now\x1a;\n" +
+	"\x03now\x18\x06 \x01(\x03R\x03now\x12A\n" +
+	"\x1ddelete_inactive_after_seconds\x18\a \x01(\x03R\x1adeleteInactiveAfterSeconds\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"U\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"v\n" +
 	"\x15UpdateBarrierResponse\x12<\n" +
-	"\abarrier\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.BarrierR\abarrier\"\xf1\x02\n" +
+	"\abarrier\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.BarrierR\abarrier\x12\x1f\n" +
+	"\vall_arrived\x18\x02 \x01(\bR\n" +
+	"allArrived\"\xf1\x02\n" +
 	"\x16ArriveAtBarrierRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12!\n" +
 	"\fbarrier_name\x18\x02 \x01(\tR\vbarrierName\x12\x1d\n" +
@@ -1759,17 +1708,11 @@ const file_pkg_corepb_barriers_proto_rawDesc = "" +
 	"\x03now\x18\x06 \x01(\x03R\x03now\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"W\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"x\n" +
 	"\x17ArriveAtBarrierResponse\x12<\n" +
-	"\abarrier\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.BarrierR\abarrier\"\xb5\x01\n" +
-	"\x14WaitAtBarrierRequest\x12I\n" +
-	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12!\n" +
-	"\fbarrier_name\x18\x02 \x01(\tR\vbarrierName\x12\x1d\n" +
-	"\n" +
-	"process_id\x18\x03 \x01(\tR\tprocessId\x12\x10\n" +
-	"\x03now\x18\x04 \x01(\x03R\x03now\"U\n" +
-	"\x15WaitAtBarrierResponse\x12<\n" +
-	"\abarrier\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.BarrierR\abarrier\"X\n" +
+	"\abarrier\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.BarrierR\abarrier\x12\x1f\n" +
+	"\vall_arrived\x18\x02 \x01(\bR\n" +
+	"allArrived\"X\n" +
 	"\x11GetBarrierRequest\x12C\n" +
 	"\n" +
 	"barrier_id\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.BarrierIdR\tbarrierId\"R\n" +
@@ -1819,7 +1762,7 @@ const file_pkg_corepb_barriers_proto_rawDesc = "" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x1b\n" +
 	"\trecord_id\x18\x02 \x01(\x04R\brecordId\x12\x10\n" +
 	"\x03now\x18\x03 \x01(\x03R\x03now\"!\n" +
-	"\x1fBarriersDeleteNamespaceResponse\"\xd4\x03\n" +
+	"\x1fBarriersDeleteNamespaceResponse\"\xc1\x04\n" +
 	"\aBarrier\x124\n" +
 	"\x02id\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.BarrierIdR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
@@ -1835,7 +1778,9 @@ const file_pkg_corepb_barriers_proto_rawDesc = "" +
 	"generation\x12\x18\n" +
 	"\aversion\x18\t \x01(\x04R\aversion\x12L\n" +
 	"\bmetadata\x18\n" +
-	" \x03(\v20.com.evrblk.grackle.corepb.Barrier.MetadataEntryR\bmetadata\x1a;\n" +
+	" \x03(\v20.com.evrblk.grackle.corepb.Barrier.MetadataEntryR\bmetadata\x12(\n" +
+	"\x10last_activity_at\x18\v \x01(\x03R\x0elastActivityAt\x12A\n" +
+	"\x1ddelete_inactive_after_seconds\x18\f \x01(\x03R\x1adeleteInactiveAfterSeconds\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"l\n" +
@@ -1852,12 +1797,11 @@ const file_pkg_corepb_barriers_proto_rawDesc = "" +
 	"\fnamespace_id\x18\x02 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdH\x00R\vnamespaceId\x12E\n" +
 	"\n" +
 	"barrier_id\x18\x03 \x01(\v2$.com.evrblk.grackle.corepb.BarrierIdH\x00R\tbarrierIdB\b\n" +
-	"\x06record\"~\n" +
-	"\x18BarriersExpirationRecord\x12C\n" +
+	"\x06record\"z\n" +
+	"\x16BarriersDeletionRecord\x12C\n" +
 	"\n" +
-	"barrier_id\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.BarrierIdR\tbarrierId\x12\x1d\n" +
-	"\n" +
-	"expires_at\x18\x02 \x01(\x03R\texpiresAt\"\x88\x02\n" +
+	"barrier_id\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.BarrierIdR\tbarrierId\x12\x1b\n" +
+	"\tdelete_at\x18\x02 \x01(\x03R\bdeleteAt\"\x88\x02\n" +
 	"\x12BarrierParticipant\x12\x1d\n" +
 	"\n" +
 	"process_id\x18\x01 \x01(\tR\tprocessId\x12\x1d\n" +
@@ -1883,7 +1827,7 @@ func file_pkg_corepb_barriers_proto_rawDescGZIP() []byte {
 	return file_pkg_corepb_barriers_proto_rawDescData
 }
 
-var file_pkg_corepb_barriers_proto_msgTypes = make([]protoimpl.MessageInfo, 33)
+var file_pkg_corepb_barriers_proto_msgTypes = make([]protoimpl.MessageInfo, 31)
 var file_pkg_corepb_barriers_proto_goTypes = []any{
 	(*CreateBarrierRequest)(nil),                 // 0: com.evrblk.grackle.corepb.CreateBarrierRequest
 	(*CreateBarrierResponse)(nil),                // 1: com.evrblk.grackle.corepb.CreateBarrierResponse
@@ -1891,75 +1835,71 @@ var file_pkg_corepb_barriers_proto_goTypes = []any{
 	(*UpdateBarrierResponse)(nil),                // 3: com.evrblk.grackle.corepb.UpdateBarrierResponse
 	(*ArriveAtBarrierRequest)(nil),               // 4: com.evrblk.grackle.corepb.ArriveAtBarrierRequest
 	(*ArriveAtBarrierResponse)(nil),              // 5: com.evrblk.grackle.corepb.ArriveAtBarrierResponse
-	(*WaitAtBarrierRequest)(nil),                 // 6: com.evrblk.grackle.corepb.WaitAtBarrierRequest
-	(*WaitAtBarrierResponse)(nil),                // 7: com.evrblk.grackle.corepb.WaitAtBarrierResponse
-	(*GetBarrierRequest)(nil),                    // 8: com.evrblk.grackle.corepb.GetBarrierRequest
-	(*GetBarrierResponse)(nil),                   // 9: com.evrblk.grackle.corepb.GetBarrierResponse
-	(*GetBarrierByNameRequest)(nil),              // 10: com.evrblk.grackle.corepb.GetBarrierByNameRequest
-	(*GetBarrierByNameResponse)(nil),             // 11: com.evrblk.grackle.corepb.GetBarrierByNameResponse
-	(*DeleteBarrierRequest)(nil),                 // 12: com.evrblk.grackle.corepb.DeleteBarrierRequest
-	(*DeleteBarrierResponse)(nil),                // 13: com.evrblk.grackle.corepb.DeleteBarrierResponse
-	(*ListBarriersRequest)(nil),                  // 14: com.evrblk.grackle.corepb.ListBarriersRequest
-	(*ListBarriersResponse)(nil),                 // 15: com.evrblk.grackle.corepb.ListBarriersResponse
-	(*ListBarrierParticipantsRequest)(nil),       // 16: com.evrblk.grackle.corepb.ListBarrierParticipantsRequest
-	(*ListBarrierParticipantsResponse)(nil),      // 17: com.evrblk.grackle.corepb.ListBarrierParticipantsResponse
-	(*RunBarriersGarbageCollectionRequest)(nil),  // 18: com.evrblk.grackle.corepb.RunBarriersGarbageCollectionRequest
-	(*RunBarriersGarbageCollectionResponse)(nil), // 19: com.evrblk.grackle.corepb.RunBarriersGarbageCollectionResponse
-	(*BarriersDeleteNamespaceRequest)(nil),       // 20: com.evrblk.grackle.corepb.BarriersDeleteNamespaceRequest
-	(*BarriersDeleteNamespaceResponse)(nil),      // 21: com.evrblk.grackle.corepb.BarriersDeleteNamespaceResponse
-	(*Barrier)(nil),                              // 22: com.evrblk.grackle.corepb.Barrier
-	(*BarrierId)(nil),                            // 23: com.evrblk.grackle.corepb.BarrierId
-	(*BarriersCounter)(nil),                      // 24: com.evrblk.grackle.corepb.BarriersCounter
-	(*BarriersGarbageCollectionRecord)(nil),      // 25: com.evrblk.grackle.corepb.BarriersGarbageCollectionRecord
-	(*BarriersExpirationRecord)(nil),             // 26: com.evrblk.grackle.corepb.BarriersExpirationRecord
-	(*BarrierParticipant)(nil),                   // 27: com.evrblk.grackle.corepb.BarrierParticipant
-	nil,                                          // 28: com.evrblk.grackle.corepb.CreateBarrierRequest.MetadataEntry
-	nil,                                          // 29: com.evrblk.grackle.corepb.UpdateBarrierRequest.MetadataEntry
-	nil,                                          // 30: com.evrblk.grackle.corepb.ArriveAtBarrierRequest.MetadataEntry
-	nil,                                          // 31: com.evrblk.grackle.corepb.Barrier.MetadataEntry
-	nil,                                          // 32: com.evrblk.grackle.corepb.BarrierParticipant.MetadataEntry
-	(*NamespaceId)(nil),                          // 33: com.evrblk.grackle.corepb.NamespaceId
-	(*PaginationToken)(nil),                      // 34: com.evrblk.grackle.corepb.PaginationToken
+	(*GetBarrierRequest)(nil),                    // 6: com.evrblk.grackle.corepb.GetBarrierRequest
+	(*GetBarrierResponse)(nil),                   // 7: com.evrblk.grackle.corepb.GetBarrierResponse
+	(*GetBarrierByNameRequest)(nil),              // 8: com.evrblk.grackle.corepb.GetBarrierByNameRequest
+	(*GetBarrierByNameResponse)(nil),             // 9: com.evrblk.grackle.corepb.GetBarrierByNameResponse
+	(*DeleteBarrierRequest)(nil),                 // 10: com.evrblk.grackle.corepb.DeleteBarrierRequest
+	(*DeleteBarrierResponse)(nil),                // 11: com.evrblk.grackle.corepb.DeleteBarrierResponse
+	(*ListBarriersRequest)(nil),                  // 12: com.evrblk.grackle.corepb.ListBarriersRequest
+	(*ListBarriersResponse)(nil),                 // 13: com.evrblk.grackle.corepb.ListBarriersResponse
+	(*ListBarrierParticipantsRequest)(nil),       // 14: com.evrblk.grackle.corepb.ListBarrierParticipantsRequest
+	(*ListBarrierParticipantsResponse)(nil),      // 15: com.evrblk.grackle.corepb.ListBarrierParticipantsResponse
+	(*RunBarriersGarbageCollectionRequest)(nil),  // 16: com.evrblk.grackle.corepb.RunBarriersGarbageCollectionRequest
+	(*RunBarriersGarbageCollectionResponse)(nil), // 17: com.evrblk.grackle.corepb.RunBarriersGarbageCollectionResponse
+	(*BarriersDeleteNamespaceRequest)(nil),       // 18: com.evrblk.grackle.corepb.BarriersDeleteNamespaceRequest
+	(*BarriersDeleteNamespaceResponse)(nil),      // 19: com.evrblk.grackle.corepb.BarriersDeleteNamespaceResponse
+	(*Barrier)(nil),                              // 20: com.evrblk.grackle.corepb.Barrier
+	(*BarrierId)(nil),                            // 21: com.evrblk.grackle.corepb.BarrierId
+	(*BarriersCounter)(nil),                      // 22: com.evrblk.grackle.corepb.BarriersCounter
+	(*BarriersGarbageCollectionRecord)(nil),      // 23: com.evrblk.grackle.corepb.BarriersGarbageCollectionRecord
+	(*BarriersDeletionRecord)(nil),               // 24: com.evrblk.grackle.corepb.BarriersDeletionRecord
+	(*BarrierParticipant)(nil),                   // 25: com.evrblk.grackle.corepb.BarrierParticipant
+	nil,                                          // 26: com.evrblk.grackle.corepb.CreateBarrierRequest.MetadataEntry
+	nil,                                          // 27: com.evrblk.grackle.corepb.UpdateBarrierRequest.MetadataEntry
+	nil,                                          // 28: com.evrblk.grackle.corepb.ArriveAtBarrierRequest.MetadataEntry
+	nil,                                          // 29: com.evrblk.grackle.corepb.Barrier.MetadataEntry
+	nil,                                          // 30: com.evrblk.grackle.corepb.BarrierParticipant.MetadataEntry
+	(*NamespaceId)(nil),                          // 31: com.evrblk.grackle.corepb.NamespaceId
+	(*PaginationToken)(nil),                      // 32: com.evrblk.grackle.corepb.PaginationToken
 }
 var file_pkg_corepb_barriers_proto_depIdxs = []int32{
-	23, // 0: com.evrblk.grackle.corepb.CreateBarrierRequest.barrier_id:type_name -> com.evrblk.grackle.corepb.BarrierId
-	28, // 1: com.evrblk.grackle.corepb.CreateBarrierRequest.metadata:type_name -> com.evrblk.grackle.corepb.CreateBarrierRequest.MetadataEntry
-	22, // 2: com.evrblk.grackle.corepb.CreateBarrierResponse.barrier:type_name -> com.evrblk.grackle.corepb.Barrier
-	23, // 3: com.evrblk.grackle.corepb.UpdateBarrierRequest.barrier_id:type_name -> com.evrblk.grackle.corepb.BarrierId
-	29, // 4: com.evrblk.grackle.corepb.UpdateBarrierRequest.metadata:type_name -> com.evrblk.grackle.corepb.UpdateBarrierRequest.MetadataEntry
-	22, // 5: com.evrblk.grackle.corepb.UpdateBarrierResponse.barrier:type_name -> com.evrblk.grackle.corepb.Barrier
-	33, // 6: com.evrblk.grackle.corepb.ArriveAtBarrierRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	30, // 7: com.evrblk.grackle.corepb.ArriveAtBarrierRequest.metadata:type_name -> com.evrblk.grackle.corepb.ArriveAtBarrierRequest.MetadataEntry
-	22, // 8: com.evrblk.grackle.corepb.ArriveAtBarrierResponse.barrier:type_name -> com.evrblk.grackle.corepb.Barrier
-	33, // 9: com.evrblk.grackle.corepb.WaitAtBarrierRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	22, // 10: com.evrblk.grackle.corepb.WaitAtBarrierResponse.barrier:type_name -> com.evrblk.grackle.corepb.Barrier
-	23, // 11: com.evrblk.grackle.corepb.GetBarrierRequest.barrier_id:type_name -> com.evrblk.grackle.corepb.BarrierId
-	22, // 12: com.evrblk.grackle.corepb.GetBarrierResponse.barrier:type_name -> com.evrblk.grackle.corepb.Barrier
-	33, // 13: com.evrblk.grackle.corepb.GetBarrierByNameRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	22, // 14: com.evrblk.grackle.corepb.GetBarrierByNameResponse.barrier:type_name -> com.evrblk.grackle.corepb.Barrier
-	33, // 15: com.evrblk.grackle.corepb.DeleteBarrierRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	33, // 16: com.evrblk.grackle.corepb.ListBarriersRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	34, // 17: com.evrblk.grackle.corepb.ListBarriersRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	22, // 18: com.evrblk.grackle.corepb.ListBarriersResponse.barriers:type_name -> com.evrblk.grackle.corepb.Barrier
-	34, // 19: com.evrblk.grackle.corepb.ListBarriersResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	34, // 20: com.evrblk.grackle.corepb.ListBarriersResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	33, // 21: com.evrblk.grackle.corepb.ListBarrierParticipantsRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	34, // 22: com.evrblk.grackle.corepb.ListBarrierParticipantsRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	27, // 23: com.evrblk.grackle.corepb.ListBarrierParticipantsResponse.participants:type_name -> com.evrblk.grackle.corepb.BarrierParticipant
-	34, // 24: com.evrblk.grackle.corepb.ListBarrierParticipantsResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	34, // 25: com.evrblk.grackle.corepb.ListBarrierParticipantsResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	33, // 26: com.evrblk.grackle.corepb.BarriersDeleteNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	23, // 27: com.evrblk.grackle.corepb.Barrier.id:type_name -> com.evrblk.grackle.corepb.BarrierId
-	31, // 28: com.evrblk.grackle.corepb.Barrier.metadata:type_name -> com.evrblk.grackle.corepb.Barrier.MetadataEntry
-	33, // 29: com.evrblk.grackle.corepb.BarriersGarbageCollectionRecord.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	23, // 30: com.evrblk.grackle.corepb.BarriersGarbageCollectionRecord.barrier_id:type_name -> com.evrblk.grackle.corepb.BarrierId
-	23, // 31: com.evrblk.grackle.corepb.BarriersExpirationRecord.barrier_id:type_name -> com.evrblk.grackle.corepb.BarrierId
-	32, // 32: com.evrblk.grackle.corepb.BarrierParticipant.metadata:type_name -> com.evrblk.grackle.corepb.BarrierParticipant.MetadataEntry
-	33, // [33:33] is the sub-list for method output_type
-	33, // [33:33] is the sub-list for method input_type
-	33, // [33:33] is the sub-list for extension type_name
-	33, // [33:33] is the sub-list for extension extendee
-	0,  // [0:33] is the sub-list for field type_name
+	21, // 0: com.evrblk.grackle.corepb.CreateBarrierRequest.barrier_id:type_name -> com.evrblk.grackle.corepb.BarrierId
+	26, // 1: com.evrblk.grackle.corepb.CreateBarrierRequest.metadata:type_name -> com.evrblk.grackle.corepb.CreateBarrierRequest.MetadataEntry
+	20, // 2: com.evrblk.grackle.corepb.CreateBarrierResponse.barrier:type_name -> com.evrblk.grackle.corepb.Barrier
+	21, // 3: com.evrblk.grackle.corepb.UpdateBarrierRequest.barrier_id:type_name -> com.evrblk.grackle.corepb.BarrierId
+	27, // 4: com.evrblk.grackle.corepb.UpdateBarrierRequest.metadata:type_name -> com.evrblk.grackle.corepb.UpdateBarrierRequest.MetadataEntry
+	20, // 5: com.evrblk.grackle.corepb.UpdateBarrierResponse.barrier:type_name -> com.evrblk.grackle.corepb.Barrier
+	31, // 6: com.evrblk.grackle.corepb.ArriveAtBarrierRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	28, // 7: com.evrblk.grackle.corepb.ArriveAtBarrierRequest.metadata:type_name -> com.evrblk.grackle.corepb.ArriveAtBarrierRequest.MetadataEntry
+	20, // 8: com.evrblk.grackle.corepb.ArriveAtBarrierResponse.barrier:type_name -> com.evrblk.grackle.corepb.Barrier
+	21, // 9: com.evrblk.grackle.corepb.GetBarrierRequest.barrier_id:type_name -> com.evrblk.grackle.corepb.BarrierId
+	20, // 10: com.evrblk.grackle.corepb.GetBarrierResponse.barrier:type_name -> com.evrblk.grackle.corepb.Barrier
+	31, // 11: com.evrblk.grackle.corepb.GetBarrierByNameRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	20, // 12: com.evrblk.grackle.corepb.GetBarrierByNameResponse.barrier:type_name -> com.evrblk.grackle.corepb.Barrier
+	31, // 13: com.evrblk.grackle.corepb.DeleteBarrierRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	31, // 14: com.evrblk.grackle.corepb.ListBarriersRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	32, // 15: com.evrblk.grackle.corepb.ListBarriersRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	20, // 16: com.evrblk.grackle.corepb.ListBarriersResponse.barriers:type_name -> com.evrblk.grackle.corepb.Barrier
+	32, // 17: com.evrblk.grackle.corepb.ListBarriersResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	32, // 18: com.evrblk.grackle.corepb.ListBarriersResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	31, // 19: com.evrblk.grackle.corepb.ListBarrierParticipantsRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	32, // 20: com.evrblk.grackle.corepb.ListBarrierParticipantsRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	25, // 21: com.evrblk.grackle.corepb.ListBarrierParticipantsResponse.participants:type_name -> com.evrblk.grackle.corepb.BarrierParticipant
+	32, // 22: com.evrblk.grackle.corepb.ListBarrierParticipantsResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	32, // 23: com.evrblk.grackle.corepb.ListBarrierParticipantsResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	31, // 24: com.evrblk.grackle.corepb.BarriersDeleteNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	21, // 25: com.evrblk.grackle.corepb.Barrier.id:type_name -> com.evrblk.grackle.corepb.BarrierId
+	29, // 26: com.evrblk.grackle.corepb.Barrier.metadata:type_name -> com.evrblk.grackle.corepb.Barrier.MetadataEntry
+	31, // 27: com.evrblk.grackle.corepb.BarriersGarbageCollectionRecord.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	21, // 28: com.evrblk.grackle.corepb.BarriersGarbageCollectionRecord.barrier_id:type_name -> com.evrblk.grackle.corepb.BarrierId
+	21, // 29: com.evrblk.grackle.corepb.BarriersDeletionRecord.barrier_id:type_name -> com.evrblk.grackle.corepb.BarrierId
+	30, // 30: com.evrblk.grackle.corepb.BarrierParticipant.metadata:type_name -> com.evrblk.grackle.corepb.BarrierParticipant.MetadataEntry
+	31, // [31:31] is the sub-list for method output_type
+	31, // [31:31] is the sub-list for method input_type
+	31, // [31:31] is the sub-list for extension type_name
+	31, // [31:31] is the sub-list for extension extendee
+	0,  // [0:31] is the sub-list for field type_name
 }
 
 func init() { file_pkg_corepb_barriers_proto_init() }
@@ -1969,7 +1909,7 @@ func file_pkg_corepb_barriers_proto_init() {
 	}
 	file_pkg_corepb_common_proto_init()
 	file_pkg_corepb_namespaces_proto_init()
-	file_pkg_corepb_barriers_proto_msgTypes[25].OneofWrappers = []any{
+	file_pkg_corepb_barriers_proto_msgTypes[23].OneofWrappers = []any{
 		(*BarriersGarbageCollectionRecord_NamespaceId)(nil),
 		(*BarriersGarbageCollectionRecord_BarrierId)(nil),
 	}
@@ -1979,7 +1919,7 @@ func file_pkg_corepb_barriers_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_corepb_barriers_proto_rawDesc), len(file_pkg_corepb_barriers_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   33,
+			NumMessages:   31,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

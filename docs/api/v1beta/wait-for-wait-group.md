@@ -36,7 +36,8 @@ __Completed before timeout:__
     "counter": 110,
     "completed_jobs": 110,
     "expires_at": 1718236800000000000,
-    "finished_at": 1718150700000000000
+    "finished_at": 1718150700000000000,
+    "last_activity_at": 1718150700000000000
   },
   "completed": true,
   "timed_out": false
@@ -52,7 +53,8 @@ __Timeout fired first:__
     "status": "ACTIVE",
     "counter": 110,
     "completed_jobs": 73,
-    "expires_at": 1718236800000000000
+    "expires_at": 1718236800000000000,
+    "last_activity_at": 1718150480000000000
   },
   "completed": false,
   "timed_out": true

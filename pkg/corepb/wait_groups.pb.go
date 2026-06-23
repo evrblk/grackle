@@ -1291,9 +1291,12 @@ type WaitGroup struct {
 	DeleteAfterFinishedSeconds int64                  `protobuf:"varint,12,opt,name=delete_after_finished_seconds,json=deleteAfterFinishedSeconds,proto3" json:"delete_after_finished_seconds,omitempty"`
 	// finished_at is the timestamp (ns) at which the wait group became finished
 	// (either completed or expired). Zero while the wait group is still active.
-	FinishedAt    int64 `protobuf:"varint,13,opt,name=finished_at,json=finishedAt,proto3" json:"finished_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	FinishedAt int64 `protobuf:"varint,13,opt,name=finished_at,json=finishedAt,proto3" json:"finished_at,omitempty"`
+	// last_activity_at is the timestamp (ns) of the most recent activity on this
+	// wait group (a job being reported completed). Not affected by reads.
+	LastActivityAt int64 `protobuf:"varint,14,opt,name=last_activity_at,json=lastActivityAt,proto3" json:"last_activity_at,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *WaitGroup) Reset() {
@@ -1413,6 +1416,13 @@ func (x *WaitGroup) GetDeleteAfterFinishedSeconds() int64 {
 func (x *WaitGroup) GetFinishedAt() int64 {
 	if x != nil {
 		return x.FinishedAt
+	}
+	return 0
+}
+
+func (x *WaitGroup) GetLastActivityAt() int64 {
+	if x != nil {
+		return x.LastActivityAt
 	}
 	return 0
 }
@@ -1943,7 +1953,7 @@ const file_pkg_corepb_wait_groups_proto_rawDesc = "" +
 	"\trecord_id\x18\x01 \x01(\x04R\brecordId\x12I\n" +
 	"\fnamespace_id\x18\x02 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x10\n" +
 	"\x03now\x18\x03 \x01(\x03R\x03now\"#\n" +
-	"!WaitGroupsDeleteNamespaceResponse\"\xe6\x04\n" +
+	"!WaitGroupsDeleteNamespaceResponse\"\x90\x05\n" +
 	"\tWaitGroup\x126\n" +
 	"\x02id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.WaitGroupIdR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
@@ -1962,7 +1972,8 @@ const file_pkg_corepb_wait_groups_proto_rawDesc = "" +
 	"\x06status\x18\v \x01(\x0e2*.com.evrblk.grackle.corepb.WaitGroupStatusR\x06status\x12A\n" +
 	"\x1ddelete_after_finished_seconds\x18\f \x01(\x03R\x1adeleteAfterFinishedSeconds\x12\x1f\n" +
 	"\vfinished_at\x18\r \x01(\x03R\n" +
-	"finishedAt\x1a;\n" +
+	"finishedAt\x12(\n" +
+	"\x10last_activity_at\x18\x0e \x01(\x03R\x0elastActivityAt\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xfc\x01\n" +

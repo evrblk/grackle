@@ -66,6 +66,24 @@ var (
 			Help: "Current requests per second (sliding window)",
 		},
 	)
+
+	// inflightBlockingGauge tracks blocking calls (acquire/wait) currently in flight
+	inflightBlockingGauge = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "load_generator_inflight_blocking",
+			Help: "Number of blocking calls (acquire/wait) currently in flight on background goroutines",
+		},
+	)
+
+	// blockingDroppedTotal counts blocking ops that were skipped because the
+	// in-flight cap was reached (so a worker never blocks waiting for a slot)
+	blockingDroppedTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "load_generator_blocking_dropped_total",
+			Help: "Blocking ops skipped because the in-flight cap was reached",
+		},
+		[]string{"operation"},
+	)
 )
 
 // RegisterMetrics registers all metrics with Prometheus
@@ -77,4 +95,6 @@ func RegisterMetrics() {
 	prometheus.MustRegister(acquiredLocksGauge)
 	prometheus.MustRegister(acquiredSemaphoresGauge)
 	prometheus.MustRegister(currentRPS)
+	prometheus.MustRegister(inflightBlockingGauge)
+	prometheus.MustRegister(blockingDroppedTotal)
 }

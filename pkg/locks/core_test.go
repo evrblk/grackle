@@ -2594,6 +2594,53 @@ func TestCore_ListLocksByLeaseId(t *testing.T) {
 	})
 }
 
+func TestCore_LastActivityAt(t *testing.T) {
+	t.Run("acquire sets it", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+		lockId := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "test_lock",
+		}
+
+		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+
+		acquireTime := now.Add(time.Minute)
+		success, lock := acquireLock(t, core, lockId, lease.Id, true, acquireTime)
+		require.True(t, success)
+		require.Equal(t, acquireTime.UnixNano(), lock.LastActivityAt)
+	})
+
+	t.Run("releasing a shared holder updates it on the surviving lock", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint32()
+		lockId := &corepb.LockId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LockName:    "test_lock",
+		}
+
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+
+		// Two shared holders so the lock survives a single release.
+		acquireLock(t, core, lockId, lease1.Id, false, now)
+		_, lock := acquireLock(t, core, lockId, lease2.Id, false, now.Add(time.Minute))
+		require.Equal(t, now.Add(time.Minute).UnixNano(), lock.LastActivityAt)
+
+		// Releasing one holder leaves the lock in place and records the release.
+		releaseTime := now.Add(2 * time.Minute)
+		released := releaseLock(t, core, lockId, lease1.Id, releaseTime)
+		require.Equal(t, corepb.LockState_LOCK_STATE_SHARED_LOCKED, released.State)
+		require.Equal(t, releaseTime.UnixNano(), released.LastActivityAt)
+	})
+}
+
 func newLocksCore(t *testing.T) *Core {
 	badgerStore, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)

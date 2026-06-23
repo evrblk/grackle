@@ -35,6 +35,8 @@ Read-only and safe to retry.
       "version": 1,
       "created_at": 1718150400000000000,
       "updated_at": 1718150420000000000,
+      "last_activity_at": 1718150420000000000,
+      "delete_inactive_after_seconds": 3600,
       "metadata": {
         "phase": "map"
       }

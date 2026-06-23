@@ -34,6 +34,8 @@ Safe to retry.
   pruning expired holders).
 * Expired holders are pruned during the call so a stale `active_holds` cannot block a legitimate
   shrink.
+* `last_activity_at` is not affected by updates — it only advances on `AcquireSemaphore` /
+  `ReleaseSemaphore`.
 
 ```json
 {
@@ -46,6 +48,7 @@ Safe to retry.
     "version": 2,
     "created_at": 1695826239671432000,
     "updated_at": 1695826239925421000,
+    "last_activity_at": 1695826239671432000,
     "metadata": {
       "vendor": "partner-1"
     }

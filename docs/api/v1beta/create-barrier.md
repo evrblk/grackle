@@ -8,8 +8,11 @@ Safe to retry — duplicate calls fail with `AlreadyExists`.
 
 * `expected_processes` is how many peers must arrive before the barrier releases. It must be greater
   than 0.
-* `expires_at` is an absolute timestamp after which the barrier and its participant records 
-  are reaped by GC regardless of state.
+* `delete_inactive_after_seconds` is the inactivity window after which the barrier is auto-deleted:
+  garbage collection removes the barrier and its participants once
+  `last_activity_at + delete_inactive_after_seconds` has passed. Every activity (creation and each
+  `ArriveAtBarrier`) advances `last_activity_at` and pushes the deletion out. It must be greater
+  than 0. Barriers do not expire on an absolute deadline.
 * `metadata` is an optional, opaque map of string key/value pairs stored alongside the barrier —
   see [Metadata](/docs/api-overview.md#metadata).
 
@@ -19,7 +22,7 @@ Safe to retry — duplicate calls fail with `AlreadyExists`.
   "barrier_name": "phase_1_complete",
   "description": "End of map phase",
   "expected_processes": 4,
-  "expires_at": 1718236800000000000,
+  "delete_inactive_after_seconds": 3600,
   "metadata": {
     "phase": "map"
   }
@@ -43,6 +46,8 @@ Safe to retry — duplicate calls fail with `AlreadyExists`.
     "version": 1,
     "created_at": 1718150400000000000,
     "updated_at": 1718150400000000000,
+    "last_activity_at": 1718150400000000000,
+    "delete_inactive_after_seconds": 3600,
     "metadata": {
       "phase": "map"
     }

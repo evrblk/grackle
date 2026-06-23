@@ -1634,13 +1634,16 @@ func (x *ListLockLeasesByProcessIdResponse) GetPreviousPaginationToken() *Pagina
 }
 
 type Lock struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            *LockId                `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	State         LockState              `protobuf:"varint,2,opt,name=state,proto3,enum=com.evrblk.grackle.corepb.LockState" json:"state,omitempty"`
-	LockedAt      int64                  `protobuf:"varint,3,opt,name=locked_at,json=lockedAt,proto3" json:"locked_at,omitempty"`
-	LockHolders   []*LockHolder          `protobuf:"bytes,4,rep,name=lock_holders,json=lockHolders,proto3" json:"lock_holders,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	Id          *LockId                `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	State       LockState              `protobuf:"varint,2,opt,name=state,proto3,enum=com.evrblk.grackle.corepb.LockState" json:"state,omitempty"`
+	LockedAt    int64                  `protobuf:"varint,3,opt,name=locked_at,json=lockedAt,proto3" json:"locked_at,omitempty"`
+	LockHolders []*LockHolder          `protobuf:"bytes,4,rep,name=lock_holders,json=lockHolders,proto3" json:"lock_holders,omitempty"`
+	// last_activity_at is the timestamp (ns) of the most recent activity on this
+	// lock (an acquire attempt or a release). Not affected by reads.
+	LastActivityAt int64 `protobuf:"varint,5,opt,name=last_activity_at,json=lastActivityAt,proto3" json:"last_activity_at,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *Lock) Reset() {
@@ -1699,6 +1702,13 @@ func (x *Lock) GetLockHolders() []*LockHolder {
 		return x.LockHolders
 	}
 	return nil
+}
+
+func (x *Lock) GetLastActivityAt() int64 {
+	if x != nil {
+		return x.LastActivityAt
+	}
+	return 0
 }
 
 type LockHolder struct {
@@ -2096,12 +2106,13 @@ const file_pkg_corepb_locks_proto_rawDesc = "" +
 	"!ListLockLeasesByProcessIdResponse\x128\n" +
 	"\x06leases\x18\x01 \x03(\v2 .com.evrblk.grackle.corepb.LeaseR\x06leases\x12^\n" +
 	"\x15next_pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x13nextPaginationToken\x12f\n" +
-	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"\xdc\x01\n" +
+	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"\x86\x02\n" +
 	"\x04Lock\x121\n" +
 	"\x02id\x18\x01 \x01(\v2!.com.evrblk.grackle.corepb.LockIdR\x02id\x12:\n" +
 	"\x05state\x18\x02 \x01(\x0e2$.com.evrblk.grackle.corepb.LockStateR\x05state\x12\x1b\n" +
 	"\tlocked_at\x18\x03 \x01(\x03R\blockedAt\x12H\n" +
-	"\flock_holders\x18\x04 \x03(\v2%.com.evrblk.grackle.corepb.LockHolderR\vlockHolders\"\xd2\x01\n" +
+	"\flock_holders\x18\x04 \x03(\v2%.com.evrblk.grackle.corepb.LockHolderR\vlockHolders\x12(\n" +
+	"\x10last_activity_at\x18\x05 \x01(\x03R\x0elastActivityAt\"\xd2\x01\n" +
 	"\n" +
 	"LockHolder\x12\x19\n" +
 	"\blease_id\x18\x01 \x01(\x04R\aleaseId\x12\x1b\n" +

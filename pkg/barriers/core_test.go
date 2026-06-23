@@ -1111,6 +1111,120 @@ func TestCore_RunBarriersGarbageCollection(t *testing.T) {
 	})
 }
 
+func TestCore_LastActivityAt(t *testing.T) {
+	t.Run("create sets it, arrive updates it, update does not", func(t *testing.T) {
+		core := newBarriersCore(t)
+		now := time.Now()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+		}
+		barrierId := &corepb.BarrierId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			BarrierId:   rand.Uint64(),
+		}
+
+		// Create records the creation time as the initial activity.
+		barrier := createBarrier(t, core, barrierId, "test_barrier", 3, 10, now)
+		require.Equal(t, now.UnixNano(), barrier.LastActivityAt)
+
+		// Update* must NOT touch last_activity_at.
+		updateTime := now.Add(time.Minute)
+		resp := updateBarrier(t, core, barrierId, "Updated description", 5, 1, updateTime)
+		require.Equal(t, now.UnixNano(), resp.Barrier.LastActivityAt)
+
+		// Arriving at the barrier is activity and updates the timestamp.
+		arriveTime := now.Add(2 * time.Minute)
+		arrived := arriveAtBarrier(t, core, namespaceId, "test_barrier", "process-1", 1, arriveTime)
+		require.Equal(t, arriveTime.UnixNano(), arrived.LastActivityAt)
+	})
+}
+
+func TestCore_AutoDeleteInactiveBarriers(t *testing.T) {
+	t.Run("inactive barrier is deleted after the inactivity window", func(t *testing.T) {
+		core := newBarriersCore(t)
+		now := time.Now()
+		deleteInactiveAfterSeconds := int64(600) // 10 minutes
+		barrierId := &corepb.BarrierId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+			BarrierId:   rand.Uint64(),
+		}
+
+		createBarrierWithDeletion(t, core, barrierId, "test_barrier", 3, deleteInactiveAfterSeconds, now)
+
+		// GC before the inactivity window elapses must not delete the barrier.
+		runBarriersGarbageCollection(t, core, now.Add(5*time.Minute), 100, 1000, 1000, 1000)
+		barrier := getBarrier(t, core, barrierId)
+		require.Equal(t, now.UnixNano(), barrier.LastActivityAt)
+
+		// GC after the inactivity window deletes the barrier.
+		runBarriersGarbageCollection(t, core, now.Add(time.Duration(deleteInactiveAfterSeconds)*time.Second).Add(time.Minute), 100, 1000, 1000, 1000)
+		appErr := getBarrierWithError(t, core, barrierId)
+		require.Equal(t, monsterax.NotFound, appErr.Code)
+	})
+
+	t.Run("activity pushes the deletion out", func(t *testing.T) {
+		core := newBarriersCore(t)
+		now := time.Now()
+		deleteInactiveAfterSeconds := int64(600) // 10 minutes
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+		}
+		barrierId := &corepb.BarrierId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			BarrierId:   rand.Uint64(),
+		}
+
+		createBarrierWithDeletion(t, core, barrierId, "test_barrier", 3, deleteInactiveAfterSeconds, now)
+
+		// A process arrives 5 minutes in — that activity resets the inactivity clock.
+		arriveTime := now.Add(5 * time.Minute)
+		arriveAtBarrier(t, core, namespaceId, "test_barrier", "process-1", 1, arriveTime)
+
+		// GC past the ORIGINAL deletion time (now + 10m) but within the window
+		// measured from the arrival (arrival + 10m) must not delete the barrier.
+		runBarriersGarbageCollection(t, core, now.Add(11*time.Minute), 100, 1000, 1000, 1000)
+		barrier := getBarrier(t, core, barrierId)
+		require.Equal(t, arriveTime.UnixNano(), barrier.LastActivityAt)
+
+		// GC past the new deletion time (arrival + 10m) deletes it.
+		runBarriersGarbageCollection(t, core, arriveTime.Add(time.Duration(deleteInactiveAfterSeconds)*time.Second).Add(time.Minute), 100, 1000, 1000, 1000)
+		appErr := getBarrierWithError(t, core, barrierId)
+		require.Equal(t, monsterax.NotFound, appErr.Code)
+	})
+}
+
+// createBarrierWithDeletion creates a barrier with an explicit
+// delete_inactive_after_seconds so auto-deletion can be exercised.
+func createBarrierWithDeletion(t *testing.T, core *Core, barrierId *corepb.BarrierId, name string, expectedProcesses uint64, deleteInactiveAfterSeconds int64, now time.Time) *corepb.Barrier {
+	t.Helper()
+
+	resp, err := core.CreateBarrier(&coreapis.CreateBarrierRequest{
+		Payload: &corepb.CreateBarrierRequest{
+			BarrierId:                       barrierId,
+			Name:                            name,
+			Description:                     "Test barrier description",
+			ExpectedProcesses:               expectedProcesses,
+			MaxNumberOfBarriersPerNamespace: 100,
+			Now:                             now.UnixNano(),
+			DeleteInactiveAfterSeconds:      deleteInactiveAfterSeconds,
+		},
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+	require.NotNil(t, resp.Payload.Barrier)
+	require.EqualValues(t, deleteInactiveAfterSeconds, resp.Payload.Barrier.DeleteInactiveAfterSeconds)
+
+	return resp.Payload.Barrier
+}
+
 func newBarriersCore(t *testing.T) *Core {
 	t.Helper()
 
@@ -1130,6 +1244,9 @@ func createBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, name s
 			ExpectedProcesses:               expectedProcesses,
 			MaxNumberOfBarriersPerNamespace: maxNumberOfBarriersPerNamespace,
 			Now:                             now.UnixNano(),
+			// Long inactivity window so barriers created by this helper are not
+			// auto-deleted by garbage collection during the test.
+			DeleteInactiveAfterSeconds: int64((time.Hour).Seconds()),
 		},
 	})
 
@@ -1153,6 +1270,7 @@ func createBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierI
 			ExpectedProcesses:               expectedProcesses,
 			MaxNumberOfBarriersPerNamespace: maxNumberOfBarriersPerNamespace,
 			Now:                             now.UnixNano(),
+			DeleteInactiveAfterSeconds:      int64((time.Hour).Seconds()),
 		},
 	})
 
@@ -1300,11 +1418,12 @@ func updateBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, descri
 
 	resp, err := core.UpdateBarrier(&coreapis.UpdateBarrierRequest{
 		Payload: &corepb.UpdateBarrierRequest{
-			BarrierId:         barrierId,
-			Description:       description,
-			ExpectedProcesses: expectedProcesses,
-			Now:               now.UnixNano(),
-			ExpectedVersion:   version,
+			BarrierId:                  barrierId,
+			Description:                description,
+			ExpectedProcesses:          expectedProcesses,
+			Now:                        now.UnixNano(),
+			ExpectedVersion:            version,
+			DeleteInactiveAfterSeconds: int64((time.Hour).Seconds()),
 		},
 	})
 
@@ -1321,11 +1440,12 @@ func updateBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierI
 
 	resp, err := core.UpdateBarrier(&coreapis.UpdateBarrierRequest{
 		Payload: &corepb.UpdateBarrierRequest{
-			BarrierId:         barrierId,
-			Description:       description,
-			ExpectedProcesses: expectedProcesses,
-			Now:               now.UnixNano(),
-			ExpectedVersion:   version,
+			BarrierId:                  barrierId,
+			Description:                description,
+			ExpectedProcesses:          expectedProcesses,
+			Now:                        now.UnixNano(),
+			ExpectedVersion:            version,
+			DeleteInactiveAfterSeconds: int64((time.Hour).Seconds()),
 		},
 	})
 

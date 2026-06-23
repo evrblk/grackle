@@ -35,9 +35,11 @@ func main() {
 	log.Printf("  Locks per namespace: %d", config.LocksPerNS)
 	log.Printf("  Semaphores per namespace: %d", config.SemaphoresPerNS)
 	log.Printf("  Wait groups per namespace: %d", config.WaitGroupsPerNS)
-	log.Printf("  Operation mix: Locks=%d%%, Semaphores=%d%%, WaitGroups=%d%%",
-		config.LocksPct, config.SemaphoresPct, config.WaitGroupsPct)
+	log.Printf("  Barriers per namespace: %d", config.BarriersPerNS)
+	log.Printf("  Operation mix: Locks=%d%%, Semaphores=%d%%, WaitGroups=%d%%, Barriers=%d%%",
+		config.LocksPct, config.SemaphoresPct, config.WaitGroupsPct, config.BarriersPct)
 	log.Printf("  Read operations: %d%%", config.ReadPct)
+	log.Printf("  Max in-flight blocking calls: %d", config.MaxInflightBlocking)
 
 	// Start Prometheus metrics server
 	RegisterMetrics()
@@ -67,6 +69,10 @@ func main() {
 	// Create stats collector
 	stats := NewStatsCollector()
 
+	// Shared pool that runs blocking calls (acquire/wait) on background
+	// goroutines so they never stall the workers' load-generation loops.
+	blockingPool := NewBlockingPool(config.MaxInflightBlocking)
+
 	// Start stats logger goroutine
 	mainCtx, mainCancel := context.WithCancel(context.Background())
 	defer mainCancel()
@@ -86,6 +92,7 @@ func main() {
 				// Update acquired resource metrics
 				acquiredLocksGauge.Set(float64(resourcePool.CountAcquiredLocks()))
 				acquiredSemaphoresGauge.Set(float64(resourcePool.CountAcquiredSemaphores()))
+				inflightBlockingGauge.Set(float64(blockingPool.Inflight()))
 			}
 		}
 	}()
@@ -107,7 +114,7 @@ func main() {
 
 	for i := 0; i < config.Workers; i++ {
 		wg.Add(1)
-		worker := NewWorker(i, client, config, resourcePool, stats)
+		worker := NewWorker(i, client, config, resourcePool, stats, blockingPool)
 		go func() {
 			defer wg.Done()
 			worker.Run(workerCtx)
@@ -132,6 +139,9 @@ func main() {
 	log.Println("Stopping workers...")
 	mainCancel()
 	wg.Wait()
+	// Wait for in-flight blocking calls to unwind (their context is now
+	// cancelled, so they return promptly).
+	blockingPool.Wait()
 	activeWorkers.Set(0)
 	log.Println("All workers stopped")
 

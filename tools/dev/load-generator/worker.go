@@ -3,11 +3,50 @@ package main
 import (
 	"context"
 	"math/rand"
+	"sync"
 	"time"
 
 	grackle "github.com/evrblk/evrblk-go/grackle/v1beta"
 	"golang.org/x/time/rate"
 )
+
+// BlockingPool runs blocking operations (acquire/wait) on background goroutines
+// with a bounded number of slots, so a worker can fire a blocking call and keep
+// generating load instead of parking on the server-side wait. Dispatch never
+// blocks: if every slot is taken the op is dropped (and counted) rather than
+// stalling the worker loop.
+type BlockingPool struct {
+	slots chan struct{}
+	wg    sync.WaitGroup
+}
+
+// NewBlockingPool creates a pool that allows at most max concurrent blocking calls.
+func NewBlockingPool(max int) *BlockingPool {
+	return &BlockingPool{slots: make(chan struct{}, max)}
+}
+
+// Dispatch runs fn on a background goroutine if a slot is free, returning true.
+// If the pool is at capacity it returns false immediately without running fn.
+func (p *BlockingPool) Dispatch(fn func()) bool {
+	select {
+	case p.slots <- struct{}{}:
+		p.wg.Add(1)
+		go func() {
+			defer p.wg.Done()
+			defer func() { <-p.slots }()
+			fn()
+		}()
+		return true
+	default:
+		return false
+	}
+}
+
+// Inflight returns the number of blocking calls currently in flight.
+func (p *BlockingPool) Inflight() int { return len(p.slots) }
+
+// Wait blocks until all in-flight blocking calls have returned.
+func (p *BlockingPool) Wait() { p.wg.Wait() }
 
 // Worker represents a load generator worker
 type Worker struct {
@@ -18,10 +57,11 @@ type Worker struct {
 	stats        *StatsCollector
 	rng          *rand.Rand
 	limiter      *rate.Limiter
+	blocking     *BlockingPool
 }
 
 // NewWorker creates a new worker
-func NewWorker(id int, client grackle.GrackleApi, config *Config, pool *ResourcePool, stats *StatsCollector) *Worker {
+func NewWorker(id int, client grackle.GrackleApi, config *Config, pool *ResourcePool, stats *StatsCollector, blocking *BlockingPool) *Worker {
 	// Create per-worker RNG for thread safety
 	source := rand.NewSource(time.Now().UnixNano() + int64(id))
 	rng := rand.New(source)
@@ -41,6 +81,7 @@ func NewWorker(id int, client grackle.GrackleApi, config *Config, pool *Resource
 		stats:        stats,
 		rng:          rng,
 		limiter:      limiter,
+		blocking:     blocking,
 	}
 }
 
@@ -61,9 +102,26 @@ func (w *Worker) Run(ctx context.Context) {
 				}
 			}
 
-			// Select and execute operation
 			opType := w.selectOperation()
-			w.executeOperation(ctx, opType)
+
+			if opType.isBlocking() {
+				// Run blocking ops on the shared background pool so they never
+				// stall this worker's load generation. If the pool is full the
+				// op is dropped rather than blocking the worker. Each dispatched
+				// op gets its own RNG (seeded from the worker RNG, which is only
+				// touched on this goroutine) since math/rand is not safe for
+				// concurrent use.
+				seed := w.rng.Int63()
+				dispatched := w.blocking.Dispatch(func() {
+					rng := rand.New(rand.NewSource(seed))
+					w.runOperation(ctx, opType, rng)
+				})
+				if !dispatched {
+					blockingDroppedTotal.WithLabelValues(opType.String()).Inc()
+				}
+			} else {
+				w.runOperation(ctx, opType, w.rng)
+			}
 		}
 	}
 }
@@ -80,9 +138,7 @@ func (w *Worker) runLeaseRefresh(ctx context.Context) {
 		case <-ticker.C:
 			ttlSeconds := uint64(w.config.LeaseTTL.Seconds())
 
-			// Refresh all lock leases
-			lockLeases := w.resourcePool.GetAllLeases(w.id, "lock")
-			for _, lease := range lockLeases {
+			for _, lease := range w.resourcePool.GetAllLeases(w.id, "lock") {
 				_, _ = w.client.RefreshLockLease(ctx, &grackle.RefreshLockLeaseRequest{
 					NamespaceName: lease.Namespace,
 					LeaseId:       lease.LeaseID,
@@ -90,9 +146,7 @@ func (w *Worker) runLeaseRefresh(ctx context.Context) {
 				})
 			}
 
-			// Refresh all semaphore leases
-			semLeases := w.resourcePool.GetAllLeases(w.id, "semaphore")
-			for _, lease := range semLeases {
+			for _, lease := range w.resourcePool.GetAllLeases(w.id, "semaphore") {
 				_, _ = w.client.RefreshSemaphoreLease(ctx, &grackle.RefreshSemaphoreLeaseRequest{
 					NamespaceName: lease.Namespace,
 					LeaseId:       lease.LeaseID,
@@ -105,122 +159,155 @@ func (w *Worker) runLeaseRefresh(ctx context.Context) {
 
 // selectOperation selects an operation type based on configured percentages
 func (w *Worker) selectOperation() OperationType {
-	// Generate random number 0-99
 	r := w.rng.Intn(100)
+	c := w.config
 
-	// Determine operation category (locks, semaphores, waitgroups)
-	var category string
-	if r < w.config.LocksPct {
-		category = "locks"
-	} else if r < w.config.LocksPct+w.config.SemaphoresPct {
-		category = "semaphores"
-	} else {
-		category = "waitgroups"
-	}
-
-	// Within each category, choose specific operation based on read-pct
-	readOp := w.rng.Intn(100) < w.config.ReadPct
-
-	switch category {
-	case "locks":
-		if readOp {
-			return OpGetLock
-		}
-		// For writes, randomly choose between acquire and release
-		if w.rng.Intn(2) == 0 {
-			return OpAcquireLock
-		}
-		return OpReleaseLock
-
-	case "semaphores":
-		if readOp {
-			return OpGetSemaphore
-		}
-		// For writes, randomly choose between acquire and release
-		if w.rng.Intn(2) == 0 {
-			return OpAcquireSemaphore
-		}
-		return OpReleaseSemaphore
-
-	case "waitgroups":
-		if readOp {
-			return OpGetWaitGroup
-		}
-		// // For writes, randomly choose between add and complete
-		// if w.rng.Intn(2) == 0 {
-		// 	return OpUpdateWaitGroup
-		// }
-		// TODO
-		return OpCompleteWaitGroupJobs
-
+	switch {
+	case r < c.LocksPct:
+		return w.selectLockOp()
+	case r < c.LocksPct+c.SemaphoresPct:
+		return w.selectSemaphoreOp()
+	case r < c.LocksPct+c.SemaphoresPct+c.WaitGroupsPct:
+		return w.selectWaitGroupOp()
 	default:
-		return OpGetLock
+		return w.selectBarrierOp()
 	}
 }
 
-// executeOperation executes a specific operation and records metrics
-func (w *Worker) executeOperation(ctx context.Context, opType OperationType) {
+func (w *Worker) isRead() bool { return w.rng.Intn(100) < w.config.ReadPct }
+
+func (w *Worker) selectLockOp() OperationType {
+	if w.isRead() {
+		if w.rng.Intn(10) == 0 {
+			return OpListLocks
+		}
+		return OpGetLock
+	}
+	if w.rng.Intn(2) == 0 {
+		return OpAcquireLock
+	}
+	return OpReleaseLock
+}
+
+func (w *Worker) selectSemaphoreOp() OperationType {
+	if w.isRead() {
+		if w.rng.Intn(10) == 0 {
+			return OpListSemaphores
+		}
+		return OpGetSemaphore
+	}
+	if w.rng.Intn(2) == 0 {
+		return OpAcquireSemaphore
+	}
+	return OpReleaseSemaphore
+}
+
+func (w *Worker) selectWaitGroupOp() OperationType {
+	if w.isRead() {
+		switch w.rng.Intn(10) {
+		case 0:
+			return OpListWaitGroups
+		case 1, 2:
+			return OpWaitForWaitGroup // blocking observer
+		default:
+			return OpGetWaitGroup
+		}
+	}
+	// Mostly complete jobs; occasionally raise the counter.
+	if w.rng.Intn(10) == 0 {
+		return OpUpdateWaitGroup
+	}
+	return OpCompleteWaitGroupJobs
+}
+
+func (w *Worker) selectBarrierOp() OperationType {
+	if w.isRead() {
+		switch w.rng.Intn(10) {
+		case 0:
+			return OpListBarriers
+		case 1, 2:
+			return OpWaitAtBarrier // blocking
+		default:
+			return OpGetBarrier
+		}
+	}
+	// Mostly arrive; occasionally update.
+	if w.rng.Intn(10) == 0 {
+		return OpUpdateBarrier
+	}
+	return OpArriveAtBarrier
+}
+
+// runOperation executes a specific operation and records metrics. For blocking
+// ops this runs on a background goroutine from the BlockingPool, with its own
+// rng.
+func (w *Worker) runOperation(ctx context.Context, opType OperationType, rng *rand.Rand) {
 	startTime := time.Now()
 
 	var err error
 	switch opType {
 	case OpAcquireLock:
-		err = executeAcquireLock(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
+		err = executeAcquireLock(ctx, w.client, w.resourcePool, w.id, rng, w.config)
 	case OpReleaseLock:
-		err = executeReleaseLock(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
+		err = executeReleaseLock(ctx, w.client, w.resourcePool, w.id, rng, w.config)
 	case OpGetLock:
-		err = executeGetLock(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
+		err = executeGetLock(ctx, w.client, w.resourcePool, w.id, rng, w.config)
 	case OpListLocks:
-		err = executeListLocks(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
+		err = executeListLocks(ctx, w.client, w.resourcePool, w.id, rng, w.config)
 	case OpCreateLockLease:
-		err = executeCreateLockLease(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
-	case OpRefreshLockLease:
-		err = executeRefreshLockLease(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
-	case OpRevokeLockLease:
-		err = executeRevokeLockLease(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
-	case OpListLockLeases:
-		err = executeListLockLeases(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
+		err = executeCreateLockLease(ctx, w.client, w.resourcePool, w.id, rng, w.config)
 	case OpAcquireSemaphore:
-		err = executeAcquireSemaphore(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
+		err = executeAcquireSemaphore(ctx, w.client, w.resourcePool, w.id, rng, w.config)
 	case OpReleaseSemaphore:
-		err = executeReleaseSemaphore(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
+		err = executeReleaseSemaphore(ctx, w.client, w.resourcePool, w.id, rng, w.config)
 	case OpGetSemaphore:
-		err = executeGetSemaphore(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
+		err = executeGetSemaphore(ctx, w.client, w.resourcePool, w.id, rng, w.config)
 	case OpListSemaphores:
-		err = executeListSemaphores(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
+		err = executeListSemaphores(ctx, w.client, w.resourcePool, w.id, rng, w.config)
 	case OpCreateSemaphoreLease:
-		err = executeCreateSemaphoreLease(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
-	case OpRefreshSemaphoreLease:
-		err = executeRefreshSemaphoreLease(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
-	case OpRevokeSemaphoreLease:
-		err = executeRevokeSemaphoreLease(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
-	case OpListSemaphoreLeases:
-		err = executeListSemaphoreLeases(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
+		err = executeCreateSemaphoreLease(ctx, w.client, w.resourcePool, w.id, rng, w.config)
 	case OpCompleteWaitGroupJobs:
-		err = executeCompleteWaitGroupJobs(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
+		err = executeCompleteWaitGroupJobs(ctx, w.client, w.resourcePool, w.id, rng, w.config)
+	case OpUpdateWaitGroup:
+		err = executeUpdateWaitGroup(ctx, w.client, w.resourcePool, w.id, rng, w.config)
+	case OpWaitForWaitGroup:
+		err = executeWaitForWaitGroup(ctx, w.client, w.resourcePool, w.id, rng, w.config)
 	case OpGetWaitGroup:
-		err = executeGetWaitGroup(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
+		err = executeGetWaitGroup(ctx, w.client, w.resourcePool, w.id, rng, w.config)
 	case OpListWaitGroups:
-		err = executeListWaitGroups(ctx, w.client, w.resourcePool, w.id, w.rng, w.config)
+		err = executeListWaitGroups(ctx, w.client, w.resourcePool, w.id, rng, w.config)
+	case OpArriveAtBarrier:
+		err = executeArriveAtBarrier(ctx, w.client, w.resourcePool, w.id, rng, w.config)
+	case OpWaitAtBarrier:
+		err = executeWaitAtBarrier(ctx, w.client, w.resourcePool, w.id, rng, w.config)
+	case OpUpdateBarrier:
+		err = executeUpdateBarrier(ctx, w.client, w.resourcePool, w.id, rng, w.config)
+	case OpGetBarrier:
+		err = executeGetBarrier(ctx, w.client, w.resourcePool, w.id, rng, w.config)
+	case OpListBarriers:
+		err = executeListBarriers(ctx, w.client, w.resourcePool, w.id, rng, w.config)
+	}
+
+	// Operations issued after the context is cancelled (e.g. during shutdown)
+	// fail with a cancellation error that is not interesting load-test signal.
+	if ctx.Err() != nil {
+		return
 	}
 
 	duration := time.Since(startTime).Seconds()
 
-	// Record metrics
 	success := err == nil
-	status := "success"
+	statusLabel := "success"
 	if !success {
-		status = "error"
+		statusLabel = "error"
 	}
 
-	requestsTotal.WithLabelValues(opType.String(), status).Inc()
+	requestsTotal.WithLabelValues(opType.String(), statusLabel).Inc()
 	requestDuration.WithLabelValues(opType.String()).Observe(duration)
 
 	if err != nil {
-		errType := getErrorType(err)
-		errorsTotal.WithLabelValues(opType.String(), errType).Inc()
+		errorsTotal.WithLabelValues(opType.String(), getErrorType(err)).Inc()
 	}
 
-	// Record in stats
 	w.stats.RecordRequest(opType, success)
 }

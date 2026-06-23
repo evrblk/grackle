@@ -40,6 +40,7 @@ Read-only and safe to retry.
       "expires_at": 1718236800000000000,
       "delete_after_finished_seconds": 3600,
       "finished_at": 0,
+      "last_activity_at": 1718150480000000000,
       "metadata": {
         "pipeline": "etl-daily"
       }

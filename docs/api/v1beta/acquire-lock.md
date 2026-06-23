@@ -48,6 +48,7 @@ __Success:__
     "name": "users/123/profile",
     "state": "EXCLUSIVE_LOCKED",
     "locked_at": 1695826239671432000,
+    "last_activity_at": 1695826239671432000,
     "lock_holders": [
       {
         "lease_id": "ll_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
@@ -70,6 +71,7 @@ __Held by someone else:__
     "name": "users/123/profile",
     "state": "EXCLUSIVE_LOCKED",
     "locked_at": 1695826200000000000,
+    "last_activity_at": 1695826200000000000,
     "lock_holders": [
       {
         "lease_id": "ll_qB7XwYzAaaaaaaaaaaaaaaaaaaaa",

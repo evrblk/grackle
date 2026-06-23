@@ -45,7 +45,8 @@ is opaque to Grackle and is returned by `ListWaitGroupCompletedJobs` — see
     "updated_at": 1718150480000000000,
     "expires_at": 1718236800000000000,
     "delete_after_finished_seconds": 3600,
-    "finished_at": 0
+    "finished_at": 0,
+    "last_activity_at": 1718150480000000000
   }
 }
 ```

@@ -1064,6 +1064,7 @@ func (s *GrackleApiServerHandler) CreateBarrier(ctx context.Context, req *grackl
 		Now:                             now.UnixNano(),
 		Metadata:                        req.Metadata,
 		MaxNumberOfBarriersPerNamespace: limits.MaxNumberOfBarriersPerNamespace,
+		DeleteInactiveAfterSeconds:      req.DeleteInactiveAfterSeconds,
 	})
 	if err != nil {
 		return nil, monsterax.ErrorToGRPC(err)
@@ -1189,12 +1190,13 @@ func (s *GrackleApiServerHandler) UpdateBarrier(ctx context.Context, req *grackl
 
 	// Update barrier
 	resp3, err := s.grackleClient.UpdateBarrier(ctx, &corepb.UpdateBarrierRequest{
-		BarrierId:         resp2.Barrier.Id,
-		Description:       req.Description,
-		ExpectedProcesses: req.ExpectedProcesses,
-		Now:               now.UnixNano(),
-		Metadata:          req.Metadata,
-		ExpectedVersion:   req.ExpectedVersion,
+		BarrierId:                  resp2.Barrier.Id,
+		Description:                req.Description,
+		ExpectedProcesses:          req.ExpectedProcesses,
+		Now:                        now.UnixNano(),
+		Metadata:                   req.Metadata,
+		ExpectedVersion:            req.ExpectedVersion,
+		DeleteInactiveAfterSeconds: req.DeleteInactiveAfterSeconds,
 	})
 	if err != nil {
 		return nil, monsterax.ErrorToGRPC(err)
@@ -1230,13 +1232,9 @@ func (s *GrackleApiServerHandler) ArriveAtBarrier(ctx context.Context, req *grac
 		return nil, monsterax.ErrorToGRPC(err)
 	}
 
-	// Check if all processes have arrived at the expected generation
-	allArrived := resp2.Barrier.ArrivedProcesses >= resp2.Barrier.ExpectedProcesses &&
-		resp2.Barrier.Generation == req.ExpectedGeneration
-
 	return &gracklepb.ArriveAtBarrierResponse{
 		Barrier:        barrierToFront(resp2.Barrier),
-		AllArrived:     allArrived,
+		AllArrived:     resp2.AllArrived,
 		NextGeneration: resp2.Barrier.Generation + 1,
 	}, nil
 }

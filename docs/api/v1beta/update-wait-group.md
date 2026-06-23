@@ -44,6 +44,7 @@ Safe to retry.
 * Returns `InvalidArgument` if the wait group is not `active` (it has already completed or expired).
 * Returns `InvalidArgument` if `expected_version` does not match the wait group's current `version`.
 * Returns `InvalidArgument` if the new `counter` is below the current `completed_jobs` count.
+* `last_activity_at` is not affected by updates — it only advances on `CompleteJobsFromWaitGroup`.
 
 ```json
 {
@@ -59,6 +60,7 @@ Safe to retry.
     "expires_at": 1718323200000000000,
     "delete_after_finished_seconds": 3600,
     "finished_at": 0,
+    "last_activity_at": 1718150420000000000,
     "metadata": { "team": "data", "pipeline": "etl", "priority": "high" }
   }
 }

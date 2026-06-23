@@ -62,6 +62,10 @@ and returned with the holder on `GetLock` / `ListLocks`. (Metadata lives on the 
 lock itself, since a shared lock can have many holders.) Metadata is opaque to Grackle — see
 [Metadata](/docs/api-overview.md#metadata) for the shared semantics and limits.
 
+### Activity tracking
+Each lock carries a `last_activity_at` timestamp — the time of the most recent activity on it,
+namely an `AcquireLock` or `ReleaseLock`. Reads (`GetLock`, `ListLocks`) do not change it.
+
 ## Example workflow
 
 Process `host-123/pid-4567` creates a lease. `ttl_seconds` is added to "now" server-side.
@@ -113,6 +117,7 @@ AcquireLockResponse (success):
     "name": "users/123/profile",
     "state": "EXCLUSIVE_LOCKED",
     "locked_at": 1695826239671432000,
+    "last_activity_at": 1695826239671432000,
     "lock_holders": [
       {
         "lease_id": "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
@@ -131,6 +136,7 @@ AcquireLockResponse (already locked by someone else — not an error):
     "name": "users/123/profile",
     "state": "EXCLUSIVE_LOCKED",
     "locked_at": 1695826200000000000,
+    "last_activity_at": 1695826200000000000,
     "lock_holders": [
       {
         "lease_id": "ls_qB7XwYzAaaaaaaaaaaaaaaaaaaaa",
@@ -160,6 +166,7 @@ ReleaseLockResponse:
     "name": "users/123/profile",
     "state": "UNLOCKED",
     "locked_at": 0,
+    "last_activity_at": 1695826239671432000,
     "lock_holders": []
   }
 }
@@ -175,6 +182,7 @@ AcquireLockResponse:
     "name": "users/123/profile",
     "state": "SHARED_LOCKED",
     "locked_at": 1695826239671432000,
+    "last_activity_at": 1695826240120000000,
     "lock_holders": [
       {
         "lease_id": "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",

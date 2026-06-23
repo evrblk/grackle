@@ -28,6 +28,7 @@ Safe to retry.
     "name": "users/123/profile",
     "state": "UNLOCKED",
     "locked_at": 0,
+    "last_activity_at": 1695826239671432000,
     "lock_holders": []
   }
 }

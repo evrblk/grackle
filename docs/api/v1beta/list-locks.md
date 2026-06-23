@@ -31,6 +31,7 @@ Read-only and safe to retry.
       "name": "users/123/profile",
       "state": "EXCLUSIVE_LOCKED",
       "locked_at": 1695826239671432000,
+      "last_activity_at": 1695826239671432000,
       "lock_holders": [
         {
           "lease_id": "ll_NfKKeiPbP18NFeU3lLGrRWWgDJRB",

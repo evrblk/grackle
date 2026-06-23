@@ -136,14 +136,15 @@ func (c *Core) CreateSemaphore(req *coreapis.CreateSemaphoreRequest) (*coreapis.
 	}
 
 	semaphore := &corepb.Semaphore{
-		Id:          req.Payload.SemaphoreId,
-		Name:        req.Payload.Name,
-		Description: req.Payload.Description,
-		Permits:     req.Payload.Permits,
-		CreatedAt:   req.Payload.Now,
-		UpdatedAt:   req.Payload.Now,
-		Metadata:    req.Payload.Metadata,
-		Version:     1,
+		Id:             req.Payload.SemaphoreId,
+		Name:           req.Payload.Name,
+		Description:    req.Payload.Description,
+		Permits:        req.Payload.Permits,
+		CreatedAt:      req.Payload.Now,
+		UpdatedAt:      req.Payload.Now,
+		Metadata:       req.Payload.Metadata,
+		Version:        1,
+		LastActivityAt: req.Payload.Now,
 	}
 
 	appError, err := c.semaphores.Create(txn, semaphore)
@@ -734,6 +735,9 @@ func (c *Core) AcquireSemaphore(req *coreapis.AcquireSemaphoreRequest) (*coreapi
 		}
 	}
 
+	// Record the acquire attempt (whether or not it succeeded).
+	updatedSemaphore.LastActivityAt = req.Payload.Now
+
 	err = c.semaphores.Update(txn, updatedSemaphore)
 	if err != nil {
 		return nil, err
@@ -852,6 +856,7 @@ func (c *Core) ReleaseSemaphore(req *coreapis.ReleaseSemaphoreRequest) (*coreapi
 
 	updatedSemaphore.ActiveHolds -= existingHolder.Weight
 	updatedSemaphore.ActiveHoldersCount -= 1
+	updatedSemaphore.LastActivityAt = req.Payload.Now
 
 	if semaphore.EarliestHolderExpiresAt != updatedSemaphore.EarliestHolderExpiresAt {
 		// Remove a semaphore from expirationRecords at old position

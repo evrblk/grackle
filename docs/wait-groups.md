@@ -73,6 +73,11 @@ replaced by `UpdateWaitGroup`. Each completed job can also carry its own `metada
 `CompleteJobsFromWaitGroup` and returned by `ListWaitGroupCompletedJobs`. Metadata is opaque to
 Grackle — see [Metadata](/docs/api-overview.md#metadata) for the shared semantics and limits.
 
+### Activity tracking
+Each wait group carries a `last_activity_at` timestamp — the time of the most recent activity on
+it, namely a job being reported via `CompleteJobsFromWaitGroup`. It is set at creation and is not
+changed by `UpdateWaitGroup` or by reads.
+
 ## Example workflow
 
 The producer creates a wait group for a batch of 100 jobs, gives it an absolute deadline, and asks
@@ -107,6 +112,7 @@ CreateWaitGroupResponse:
     "expires_at": 1718236800000000000,
     "delete_after_finished_seconds": 3600,
     "finished_at": 0,
+    "last_activity_at": 1718150400000000000,
     "metadata": { "team": "data", "pipeline": "etl" }
   }
 }
@@ -253,6 +259,7 @@ UpdateWaitGroupResponse:
     "version": 3,
     "expires_at": 1718323200000000000,
     "delete_after_finished_seconds": 3600,
+    "last_activity_at": 1718150480000000000,
     "metadata": { "team": "data", "pipeline": "etl", "priority": "high" }
   }
 }

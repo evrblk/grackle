@@ -22,6 +22,8 @@ type StatsCollector struct {
 	semaphoreErrors   uint64
 	waitgroupRequests uint64
 	waitgroupErrors   uint64
+	barrierRequests   uint64
+	barrierErrors     uint64
 
 	// For RPS calculation
 	lastWindowRequests uint64
@@ -49,20 +51,25 @@ func (s *StatsCollector) RecordRequest(opType OperationType, success bool) {
 
 	// Track by operation type
 	switch opType {
-	case OpAcquireLock, OpReleaseLock, OpGetLock:
+	case OpAcquireLock, OpReleaseLock, OpGetLock, OpListLocks, OpCreateLockLease:
 		s.lockRequests++
 		if !success {
 			s.lockErrors++
 		}
-	case OpAcquireSemaphore, OpReleaseSemaphore, OpGetSemaphore:
+	case OpAcquireSemaphore, OpReleaseSemaphore, OpGetSemaphore, OpListSemaphores, OpCreateSemaphoreLease:
 		s.semaphoreRequests++
 		if !success {
 			s.semaphoreErrors++
 		}
-	case OpCompleteWaitGroupJobs, OpGetWaitGroup:
+	case OpCompleteWaitGroupJobs, OpUpdateWaitGroup, OpWaitForWaitGroup, OpGetWaitGroup, OpListWaitGroups:
 		s.waitgroupRequests++
 		if !success {
 			s.waitgroupErrors++
+		}
+	case OpArriveAtBarrier, OpWaitAtBarrier, OpUpdateBarrier, OpGetBarrier, OpListBarriers:
+		s.barrierRequests++
+		if !success {
+			s.barrierErrors++
 		}
 	}
 }
@@ -125,11 +132,13 @@ func (s *StatsCollector) PrintStats() {
 		lockPct := float64(s.lockRequests) / float64(s.totalRequests) * 100
 		semaphorePct := float64(s.semaphoreRequests) / float64(s.totalRequests) * 100
 		waitgroupPct := float64(s.waitgroupRequests) / float64(s.totalRequests) * 100
+		barrierPct := float64(s.barrierRequests) / float64(s.totalRequests) * 100
 
-		fmt.Printf("  Locks: %s (%.0f%%) | Semaphores: %s (%.0f%%) | WaitGroups: %s (%.0f%%)\n",
+		fmt.Printf("  Locks: %s (%.0f%%) | Semaphores: %s (%.0f%%) | WaitGroups: %s (%.0f%%) | Barriers: %s (%.0f%%)\n",
 			formatNumber(s.lockRequests), lockPct,
 			formatNumber(s.semaphoreRequests), semaphorePct,
 			formatNumber(s.waitgroupRequests), waitgroupPct,
+			formatNumber(s.barrierRequests), barrierPct,
 		)
 	}
 }

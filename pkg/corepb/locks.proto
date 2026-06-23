@@ -161,6 +161,9 @@ message Lock {
   LockState state = 2;
   int64 locked_at = 3;
   repeated LockHolder lock_holders = 4;
+  // last_activity_at is the timestamp (ns) of the most recent activity on this
+  // lock (an acquire attempt or a release). Not affected by reads.
+  int64 last_activity_at = 5;
 }
 
 message LockHolder {

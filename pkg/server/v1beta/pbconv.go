@@ -91,6 +91,7 @@ func waitGroupToFront(waitGroup *corepb.WaitGroup) *gracklepb.WaitGroup {
 		Status:                     waitGroupStatusToFront(waitGroup.Status),
 		DeleteAfterFinishedSeconds: waitGroup.DeleteAfterFinishedSeconds,
 		FinishedAt:                 waitGroup.FinishedAt,
+		LastActivityAt:             waitGroup.LastActivityAt,
 	}
 }
 
@@ -129,10 +130,11 @@ func lockToFront(lock *corepb.Lock) *gracklepb.Lock {
 	}
 
 	return &gracklepb.Lock{
-		Name:        lock.Id.LockName,
-		State:       lockStateToFront(lock.State),
-		LockedAt:    lock.LockedAt,
-		LockHolders: lockHoldersToFront(lock.LockHolders, lock.Id.AccountId, lock.Id.NamespaceId),
+		Name:           lock.Id.LockName,
+		State:          lockStateToFront(lock.State),
+		LockedAt:       lock.LockedAt,
+		LockHolders:    lockHoldersToFront(lock.LockHolders, lock.Id.AccountId, lock.Id.NamespaceId),
+		LastActivityAt: lock.LastActivityAt,
 	}
 }
 
@@ -175,6 +177,7 @@ func semaphoreToFront(semaphore *corepb.Semaphore) *gracklepb.Semaphore {
 		ActiveHolds:        semaphore.ActiveHolds,
 		ActiveHoldersCount: semaphore.ActiveHoldersCount,
 		Metadata:           semaphore.Metadata,
+		LastActivityAt:     semaphore.LastActivityAt,
 	}
 }
 
@@ -217,15 +220,17 @@ func barrierToFront(barrier *corepb.Barrier) *gracklepb.Barrier {
 	}
 
 	return &gracklepb.Barrier{
-		Name:              barrier.Name,
-		Description:       barrier.Description,
-		ExpectedProcesses: barrier.ExpectedProcesses,
-		ArrivedProcesses:  barrier.ArrivedProcesses,
-		Generation:        barrier.Generation,
-		CreatedAt:         barrier.CreatedAt,
-		UpdatedAt:         barrier.UpdatedAt,
-		Version:           barrier.Version,
-		Metadata:          barrier.Metadata,
+		Name:                       barrier.Name,
+		Description:                barrier.Description,
+		ExpectedProcesses:          barrier.ExpectedProcesses,
+		ArrivedProcesses:           barrier.ArrivedProcesses,
+		Generation:                 barrier.Generation,
+		CreatedAt:                  barrier.CreatedAt,
+		UpdatedAt:                  barrier.UpdatedAt,
+		Version:                    barrier.Version,
+		Metadata:                   barrier.Metadata,
+		LastActivityAt:             barrier.LastActivityAt,
+		DeleteInactiveAfterSeconds: barrier.DeleteInactiveAfterSeconds,
 	}
 }
 

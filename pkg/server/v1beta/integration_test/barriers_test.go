@@ -48,10 +48,10 @@ func TestListBarriers(t *testing.T) {
 		// Create 25 barriers to test pagination (3 pages with limit 10)
 		for i := range 25 {
 			_, err := server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
-				NamespaceName:     "test-namespace",
-				BarrierName:       fmt.Sprintf("barrier_%03d", i+1),
-				ExpectedProcesses: 3,
-				ExpiresAt:         time.Now().Add(10 * time.Minute).UnixNano(),
+				NamespaceName:              "test-namespace",
+				BarrierName:                fmt.Sprintf("barrier_%03d", i+1),
+				ExpectedProcesses:          3,
+				DeleteInactiveAfterSeconds: int64((10 * time.Minute).Seconds()),
 			})
 			require.NoError(t, err)
 		}
@@ -153,10 +153,10 @@ func TestGetBarrier(t *testing.T) {
 
 		// Create barrier
 		_, err = server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
-			NamespaceName:     "namespace1",
-			BarrierName:       "barrier1",
-			ExpectedProcesses: 3,
-			ExpiresAt:         time.Now().Add(10 * time.Minute).UnixNano(),
+			NamespaceName:              "namespace1",
+			BarrierName:                "barrier1",
+			ExpectedProcesses:          3,
+			DeleteInactiveAfterSeconds: int64((10 * time.Minute).Seconds()),
 		})
 		require.NoError(t, err)
 
@@ -191,10 +191,10 @@ func TestCreateBarrier(t *testing.T) {
 
 		// Valid request
 		resp, err := server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
-			NamespaceName:     "namespace1",
-			BarrierName:       "barrier1",
-			ExpectedProcesses: 3,
-			ExpiresAt:         time.Now().Add(10 * time.Minute).UnixNano(),
+			NamespaceName:              "namespace1",
+			BarrierName:                "barrier1",
+			ExpectedProcesses:          3,
+			DeleteInactiveAfterSeconds: int64((10 * time.Minute).Seconds()),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp.Barrier)
@@ -202,19 +202,19 @@ func TestCreateBarrier(t *testing.T) {
 
 		// Invalid request - invalid namespace name
 		_, err = server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
-			NamespaceName:     "invalid@namespace",
-			BarrierName:       "barrier2",
-			ExpectedProcesses: 3,
-			ExpiresAt:         time.Now().Add(10 * time.Minute).UnixNano(),
+			NamespaceName:              "invalid@namespace",
+			BarrierName:                "barrier2",
+			ExpectedProcesses:          3,
+			DeleteInactiveAfterSeconds: int64((10 * time.Minute).Seconds()),
 		})
 		require.Error(t, err)
 
 		// Invalid request - expected processes zero
 		_, err = server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
-			NamespaceName:     "namespace1",
-			BarrierName:       "barrier3",
-			ExpectedProcesses: 0,
-			ExpiresAt:         time.Now().Add(10 * time.Minute).UnixNano(),
+			NamespaceName:              "namespace1",
+			BarrierName:                "barrier3",
+			ExpectedProcesses:          0,
+			DeleteInactiveAfterSeconds: int64((10 * time.Minute).Seconds()),
 		})
 		require.Error(t, err)
 	})
@@ -233,11 +233,11 @@ func TestUpdateBarrier(t *testing.T) {
 
 		// Create barrier
 		createResp, err := server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
-			NamespaceName:     "namespace1",
-			BarrierName:       "barrier1",
-			Description:       "Original description",
-			ExpectedProcesses: 3,
-			ExpiresAt:         time.Now().Add(10 * time.Minute).UnixNano(),
+			NamespaceName:              "namespace1",
+			BarrierName:                "barrier1",
+			Description:                "Original description",
+			ExpectedProcesses:          3,
+			DeleteInactiveAfterSeconds: int64((10 * time.Minute).Seconds()),
 		})
 		require.NoError(t, err)
 		require.Equal(t, "Original description", createResp.Barrier.Description)
@@ -245,11 +245,12 @@ func TestUpdateBarrier(t *testing.T) {
 
 		// Valid request - update barrier
 		updateResp, err := server.UpdateBarrier(ctx, &gracklepb.UpdateBarrierRequest{
-			NamespaceName:     "namespace1",
-			BarrierName:       "barrier1",
-			Description:       "Updated description",
-			ExpectedProcesses: 5,
-			ExpectedVersion:   1,
+			NamespaceName:              "namespace1",
+			BarrierName:                "barrier1",
+			Description:                "Updated description",
+			ExpectedProcesses:          5,
+			ExpectedVersion:            1,
+			DeleteInactiveAfterSeconds: int64((10 * time.Minute).Seconds()),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, updateResp.Barrier)
@@ -258,21 +259,23 @@ func TestUpdateBarrier(t *testing.T) {
 
 		// Invalid request - invalid namespace name
 		_, err = server.UpdateBarrier(ctx, &gracklepb.UpdateBarrierRequest{
-			NamespaceName:     "invalid@namespace",
-			BarrierName:       "barrier1",
-			Description:       "desc",
-			ExpectedProcesses: 5,
-			ExpectedVersion:   1,
+			NamespaceName:              "invalid@namespace",
+			BarrierName:                "barrier1",
+			Description:                "desc",
+			ExpectedProcesses:          5,
+			ExpectedVersion:            1,
+			DeleteInactiveAfterSeconds: int64((10 * time.Minute).Seconds()),
 		})
 		require.Error(t, err)
 
 		// Invalid request - expected processes zero
 		_, err = server.UpdateBarrier(ctx, &gracklepb.UpdateBarrierRequest{
-			NamespaceName:     "namespace1",
-			BarrierName:       "barrier1",
-			Description:       "desc",
-			ExpectedProcesses: 0,
-			ExpectedVersion:   1,
+			NamespaceName:              "namespace1",
+			BarrierName:                "barrier1",
+			Description:                "desc",
+			ExpectedProcesses:          0,
+			ExpectedVersion:            1,
+			DeleteInactiveAfterSeconds: int64((10 * time.Minute).Seconds()),
 		})
 		require.Error(t, err)
 	})
@@ -289,11 +292,11 @@ func TestUpdateBarrier(t *testing.T) {
 
 		// Create barrier
 		createResp, err := server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
-			NamespaceName:     "test-namespace",
-			BarrierName:       "test-barrier",
-			Description:       "Original description",
-			ExpectedProcesses: 3,
-			ExpiresAt:         time.Now().Add(10 * time.Minute).UnixNano(),
+			NamespaceName:              "test-namespace",
+			BarrierName:                "test-barrier",
+			Description:                "Original description",
+			ExpectedProcesses:          3,
+			DeleteInactiveAfterSeconds: int64((10 * time.Minute).Seconds()),
 		})
 		require.NoError(t, err)
 		originalCreatedAt := createResp.Barrier.CreatedAt
@@ -302,11 +305,12 @@ func TestUpdateBarrier(t *testing.T) {
 		// Update barrier
 		time.Sleep(10 * time.Millisecond) // Ensure UpdatedAt will be different
 		updateResp, err := server.UpdateBarrier(ctx, &gracklepb.UpdateBarrierRequest{
-			NamespaceName:     "test-namespace",
-			BarrierName:       "test-barrier",
-			Description:       "Updated description",
-			ExpectedProcesses: 10,
-			ExpectedVersion:   1,
+			NamespaceName:              "test-namespace",
+			BarrierName:                "test-barrier",
+			Description:                "Updated description",
+			ExpectedProcesses:          10,
+			ExpectedVersion:            1,
+			DeleteInactiveAfterSeconds: int64((10 * time.Minute).Seconds()),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, updateResp.Barrier)
@@ -338,11 +342,11 @@ func TestUpdateBarrier(t *testing.T) {
 
 		// Create barrier with expected_processes = 5
 		_, err = server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
-			NamespaceName:     "test-namespace",
-			BarrierName:       "test-barrier",
-			Description:       "Test barrier",
-			ExpectedProcesses: 5,
-			ExpiresAt:         time.Now().Add(10 * time.Minute).UnixNano(),
+			NamespaceName:              "test-namespace",
+			BarrierName:                "test-barrier",
+			Description:                "Test barrier",
+			ExpectedProcesses:          5,
+			DeleteInactiveAfterSeconds: int64((10 * time.Minute).Seconds()),
 		})
 		require.NoError(t, err)
 
@@ -359,33 +363,36 @@ func TestUpdateBarrier(t *testing.T) {
 
 		// Try to update expected_processes to 2 (less than 3 arrived processes) - should fail
 		_, err = server.UpdateBarrier(ctx, &gracklepb.UpdateBarrierRequest{
-			NamespaceName:     "test-namespace",
-			BarrierName:       "test-barrier",
-			Description:       "Updated",
-			ExpectedProcesses: 2,
-			ExpectedVersion:   1,
+			NamespaceName:              "test-namespace",
+			BarrierName:                "test-barrier",
+			Description:                "Updated",
+			ExpectedProcesses:          2,
+			ExpectedVersion:            1,
+			DeleteInactiveAfterSeconds: int64((10 * time.Minute).Seconds()),
 		})
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "there are currently more arrived processes than the new expected processes")
 
 		// Update to expected_processes = 3 (equal to arrived_processes) - should succeed
 		updateResp, err := server.UpdateBarrier(ctx, &gracklepb.UpdateBarrierRequest{
-			NamespaceName:     "test-namespace",
-			BarrierName:       "test-barrier",
-			Description:       "Updated",
-			ExpectedProcesses: 3,
-			ExpectedVersion:   1,
+			NamespaceName:              "test-namespace",
+			BarrierName:                "test-barrier",
+			Description:                "Updated",
+			ExpectedProcesses:          3,
+			ExpectedVersion:            1,
+			DeleteInactiveAfterSeconds: int64((10 * time.Minute).Seconds()),
 		})
 		require.NoError(t, err)
 		require.EqualValues(t, 3, updateResp.Barrier.ExpectedProcesses)
 
 		// Update to expected_processes = 10 (greater than arrived_processes) - should succeed
 		updateResp2, err := server.UpdateBarrier(ctx, &gracklepb.UpdateBarrierRequest{
-			NamespaceName:     "test-namespace",
-			BarrierName:       "test-barrier",
-			Description:       "Updated again",
-			ExpectedProcesses: 10,
-			ExpectedVersion:   2,
+			NamespaceName:              "test-namespace",
+			BarrierName:                "test-barrier",
+			Description:                "Updated again",
+			ExpectedProcesses:          10,
+			ExpectedVersion:            2,
+			DeleteInactiveAfterSeconds: int64((10 * time.Minute).Seconds()),
 		})
 		require.NoError(t, err)
 		require.EqualValues(t, 10, updateResp2.Barrier.ExpectedProcesses)
@@ -403,11 +410,12 @@ func TestUpdateBarrier(t *testing.T) {
 
 		// Try to update a barrier that doesn't exist
 		_, err = server.UpdateBarrier(ctx, &gracklepb.UpdateBarrierRequest{
-			NamespaceName:     "test-namespace",
-			BarrierName:       "nonexistent-barrier",
-			Description:       "desc",
-			ExpectedProcesses: 5,
-			ExpectedVersion:   1,
+			NamespaceName:              "test-namespace",
+			BarrierName:                "nonexistent-barrier",
+			Description:                "desc",
+			ExpectedProcesses:          5,
+			ExpectedVersion:            1,
+			DeleteInactiveAfterSeconds: int64((10 * time.Minute).Seconds()),
 		})
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "barrier not found")
@@ -427,10 +435,10 @@ func TestArriveAtBarrier(t *testing.T) {
 
 		// Create a barrier
 		_, err = server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
-			NamespaceName:     "namespace1",
-			BarrierName:       "barrier1",
-			ExpectedProcesses: 3,
-			ExpiresAt:         time.Now().Add(10 * time.Minute).UnixNano(),
+			NamespaceName:              "namespace1",
+			BarrierName:                "barrier1",
+			ExpectedProcesses:          3,
+			DeleteInactiveAfterSeconds: int64((10 * time.Minute).Seconds()),
 		})
 		require.NoError(t, err)
 
@@ -476,10 +484,10 @@ func TestListBarrierParticipants(t *testing.T) {
 
 		// Create barrier
 		_, err = server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
-			NamespaceName:     "namespace1",
-			BarrierName:       "barrier1",
-			ExpectedProcesses: 3,
-			ExpiresAt:         time.Now().Add(10 * time.Minute).UnixNano(),
+			NamespaceName:              "namespace1",
+			BarrierName:                "barrier1",
+			ExpectedProcesses:          3,
+			DeleteInactiveAfterSeconds: int64((10 * time.Minute).Seconds()),
 		})
 		require.NoError(t, err)
 
@@ -513,10 +521,10 @@ func TestListBarrierParticipants(t *testing.T) {
 
 		// Create barrier expecting 25 processes
 		_, err = server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
-			NamespaceName:     "test-namespace",
-			BarrierName:       "test-barrier",
-			ExpectedProcesses: 25,
-			ExpiresAt:         time.Now().Add(10 * time.Minute).UnixNano(),
+			NamespaceName:              "test-namespace",
+			BarrierName:                "test-barrier",
+			ExpectedProcesses:          25,
+			DeleteInactiveAfterSeconds: int64((10 * time.Minute).Seconds()),
 		})
 		require.NoError(t, err)
 
@@ -609,10 +617,10 @@ func TestWaitAtBarrier(t *testing.T) {
 
 		// Create barrier
 		_, err = server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
-			NamespaceName:     "namespace1",
-			BarrierName:       "barrier1",
-			ExpectedProcesses: 3,
-			ExpiresAt:         time.Now().Add(10 * time.Minute).UnixNano(),
+			NamespaceName:              "namespace1",
+			BarrierName:                "barrier1",
+			ExpectedProcesses:          3,
+			DeleteInactiveAfterSeconds: int64((10 * time.Minute).Seconds()),
 		})
 		require.NoError(t, err)
 
@@ -665,10 +673,10 @@ func TestWaitAtBarrier(t *testing.T) {
 
 		// Create barrier expecting 3 processes
 		_, err = server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
-			NamespaceName:     "test-namespace",
-			BarrierName:       "test-barrier",
-			ExpectedProcesses: 3,
-			ExpiresAt:         time.Now().Add(10 * time.Minute).UnixNano(),
+			NamespaceName:              "test-namespace",
+			BarrierName:                "test-barrier",
+			ExpectedProcesses:          3,
+			DeleteInactiveAfterSeconds: int64((10 * time.Minute).Seconds()),
 		})
 		require.NoError(t, err)
 
@@ -731,10 +739,10 @@ func TestWaitAtBarrier(t *testing.T) {
 
 		// Create barrier that won't complete
 		_, err = server.CreateBarrier(ctx, &gracklepb.CreateBarrierRequest{
-			NamespaceName:     "test-namespace",
-			BarrierName:       "test-barrier-timeout",
-			ExpectedProcesses: 5,
-			ExpiresAt:         time.Now().Add(10 * time.Minute).UnixNano(),
+			NamespaceName:              "test-namespace",
+			BarrierName:                "test-barrier-timeout",
+			ExpectedProcesses:          5,
+			DeleteInactiveAfterSeconds: int64((10 * time.Minute).Seconds()),
 		})
 		require.NoError(t, err)
 

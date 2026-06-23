@@ -433,6 +433,9 @@ func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest) (*coreapis.AcquireL
 		return nil, fmt.Errorf("invalid lock state")
 	}
 
+	// Record the (successful) acquire.
+	updatedLock.LastActivityAt = req.Payload.Now
+
 	// Update lock
 	err = c.locks.Update(txn, updatedLock)
 	if err != nil {
@@ -560,6 +563,9 @@ func (c *Core) ReleaseLock(req *coreapis.ReleaseLockRequest) (*coreapis.ReleaseL
 
 			counters.NumberOfLocks -= 1
 		} else {
+			// Record the release; the lock still has other holders.
+			updatedLock.LastActivityAt = req.Payload.Now
+
 			// Update lock
 			err = c.locks.Update(txn, updatedLock)
 			if err != nil {

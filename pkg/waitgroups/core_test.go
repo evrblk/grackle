@@ -1875,6 +1875,47 @@ func requireWaitGroupNotFound(t *testing.T, core *Core, waitGroupId *corepb.Wait
 	require.Equal(t, monsterax.NotFound, resp.ApplicationError.Code)
 }
 
+func TestCore_LastActivityAt(t *testing.T) {
+	t.Run("create sets it, completing jobs updates it, update does not", func(t *testing.T) {
+		core := newWaitGroupsCore(t)
+		now := time.Now()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint32(),
+		}
+		waitGroupId := &corepb.WaitGroupId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			WaitGroupId: rand.Uint64(),
+		}
+
+		// Create records the creation time as the initial activity.
+		wg := createWaitGroup(t, core, waitGroupId, "test_wait_group", 10, now)
+		require.Equal(t, now.UnixNano(), wg.LastActivityAt)
+
+		// Update* must NOT touch last_activity_at.
+		updateResp, err := core.UpdateWaitGroup(&coreapis.UpdateWaitGroupRequest{
+			Payload: &corepb.UpdateWaitGroupRequest{
+				NamespaceId:     namespaceId,
+				WaitGroupName:   "test_wait_group",
+				Description:     "new description",
+				Counter:         10,
+				ExpiresAt:       now.Add(2 * time.Hour).UnixNano(),
+				Now:             now.Add(time.Minute).UnixNano(),
+				ExpectedVersion: 1,
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, updateResp.ApplicationError)
+		require.Equal(t, now.UnixNano(), updateResp.Payload.WaitGroup.LastActivityAt)
+
+		// Reporting a completed job is activity and updates the timestamp.
+		completeTime := now.Add(2 * time.Minute)
+		wg2 := completeJobsFromWaitGroup(t, core, namespaceId, "test_wait_group", []string{"job_1"}, completeTime)
+		require.Equal(t, completeTime.UnixNano(), wg2.LastActivityAt)
+	})
+}
+
 // completeJobRequests builds a slice of CompleteJobRequest from plain job ids
 // (without metadata), which is the common case in these tests.
 func completeJobRequests(jobIds []string) []*corepb.CompleteJobRequest {

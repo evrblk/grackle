@@ -47,7 +47,8 @@ __Success:__
     "active_holders_count": 1,
     "version": 1,
     "created_at": 1695826239671432000,
-    "updated_at": 1695826239671432000
+    "updated_at": 1695826239671432000,
+    "last_activity_at": 1695826239671432000
   },
   "success": true
 }
@@ -61,7 +62,8 @@ __No permits left:__
     "name": "partner_1",
     "permits": 20,
     "active_holds": 20,
-    "active_holders_count": 7
+    "active_holders_count": 7,
+    "last_activity_at": 1695826239671432000
   },
   "success": false
 }

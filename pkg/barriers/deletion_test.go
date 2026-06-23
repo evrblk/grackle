@@ -10,14 +10,14 @@ import (
 	"github.com/evrblk/grackle/pkg/corepb"
 )
 
-func TestExpirationRecordsTable_Add(t *testing.T) {
-	t.Run("adds an expiration record", func(t *testing.T) {
+func TestDeletionRecordsTable_Add(t *testing.T) {
+	t.Run("adds an deletion record", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x01})
 
-		expiresAt := int64(1000)
+		deleteAt := int64(1000)
 		barrierId := &corepb.BarrierId{
 			AccountId:   rand.Uint64(),
 			NamespaceId: rand.Uint32(),
@@ -26,14 +26,14 @@ func TestExpirationRecordsTable_Add(t *testing.T) {
 
 		// Add record
 		txn := badgerStore.Update()
-		err = table.Add(txn, expiresAt, barrierId)
+		err = table.Add(txn, deleteAt, barrierId)
 		require.NoError(t, err)
 		require.NoError(t, txn.Commit())
 
 		// Verify it was added by listing
 		txn = badgerStore.View()
-		var records []*corepb.BarriersExpirationRecord
-		err = table.List(txn, 0, 2000, func(record *corepb.BarriersExpirationRecord) (bool, error) {
+		var records []*corepb.BarriersDeletionRecord
+		err = table.ListByDeletion(txn, 0, 2000, func(record *corepb.BarriersDeletionRecord) (bool, error) {
 			records = append(records, record)
 			return true, nil
 		})
@@ -41,15 +41,15 @@ func TestExpirationRecordsTable_Add(t *testing.T) {
 
 		require.NoError(t, err)
 		require.Len(t, records, 1)
-		require.Equal(t, expiresAt, records[0].ExpiresAt)
+		require.Equal(t, deleteAt, records[0].DeleteAt)
 		require.Equal(t, barrierId, records[0].BarrierId)
 	})
 
-	t.Run("adds multiple expiration records", func(t *testing.T) {
+	t.Run("adds multiple deletion records", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint32()
@@ -69,8 +69,8 @@ func TestExpirationRecordsTable_Add(t *testing.T) {
 
 		// Verify all were added
 		txn = badgerStore.View()
-		var records []*corepb.BarriersExpirationRecord
-		err = table.List(txn, 0, 10000, func(record *corepb.BarriersExpirationRecord) (bool, error) {
+		var records []*corepb.BarriersDeletionRecord
+		err = table.ListByDeletion(txn, 0, 10000, func(record *corepb.BarriersDeletionRecord) (bool, error) {
 			records = append(records, record)
 			return true, nil
 		})
@@ -80,19 +80,19 @@ func TestExpirationRecordsTable_Add(t *testing.T) {
 		require.Len(t, records, 5)
 		// Verify they are sorted by timestamp
 		for i := range 5 {
-			require.Equal(t, int64((i+1)*1000), records[i].ExpiresAt)
+			require.Equal(t, int64((i+1)*1000), records[i].DeleteAt)
 		}
 	})
 
-	t.Run("overwrites existing expiration record with same key", func(t *testing.T) {
+	t.Run("overwrites existing deletion record with same key", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint32()
-		expiresAt := int64(1000)
+		deleteAt := int64(1000)
 		barrierId := &corepb.BarrierId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -101,20 +101,20 @@ func TestExpirationRecordsTable_Add(t *testing.T) {
 
 		// Add first record
 		txn := badgerStore.Update()
-		err = table.Add(txn, expiresAt, barrierId)
+		err = table.Add(txn, deleteAt, barrierId)
 		require.NoError(t, err)
 		require.NoError(t, txn.Commit())
 
 		// Add again with same key (should overwrite)
 		txn = badgerStore.Update()
-		err = table.Add(txn, expiresAt, barrierId)
+		err = table.Add(txn, deleteAt, barrierId)
 		require.NoError(t, err)
 		require.NoError(t, txn.Commit())
 
 		// Verify only one record exists
 		txn = badgerStore.View()
-		var records []*corepb.BarriersExpirationRecord
-		err = table.List(txn, 0, 2000, func(record *corepb.BarriersExpirationRecord) (bool, error) {
+		var records []*corepb.BarriersDeletionRecord
+		err = table.ListByDeletion(txn, 0, 2000, func(record *corepb.BarriersDeletionRecord) (bool, error) {
 			records = append(records, record)
 			return true, nil
 		})
@@ -125,36 +125,36 @@ func TestExpirationRecordsTable_Add(t *testing.T) {
 	})
 }
 
-func TestExpirationRecordsTable_Delete(t *testing.T) {
-	t.Run("deletes an expiration record", func(t *testing.T) {
+func TestDeletionRecordsTable_Delete(t *testing.T) {
+	t.Run("deletes an deletion record", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x01})
 
 		barrierId := &corepb.BarrierId{
 			AccountId:   rand.Uint64(),
 			NamespaceId: rand.Uint32(),
 			BarrierId:   rand.Uint64(),
 		}
-		expiresAt := int64(1000)
+		deleteAt := int64(1000)
 
 		// Add record
 		txn := badgerStore.Update()
-		err = table.Add(txn, expiresAt, barrierId)
+		err = table.Add(txn, deleteAt, barrierId)
 		require.NoError(t, err)
 		require.NoError(t, txn.Commit())
 
 		// Delete record
 		txn = badgerStore.Update()
-		err = table.Delete(txn, expiresAt, barrierId)
+		err = table.Delete(txn, deleteAt, barrierId)
 		require.NoError(t, err)
 		require.NoError(t, txn.Commit())
 
 		// Verify it was deleted
 		txn = badgerStore.View()
-		var records []*corepb.BarriersExpirationRecord
-		err = table.List(txn, 0, 2000, func(record *corepb.BarriersExpirationRecord) (bool, error) {
+		var records []*corepb.BarriersDeletionRecord
+		err = table.ListByDeletion(txn, 0, 2000, func(record *corepb.BarriersDeletionRecord) (bool, error) {
 			records = append(records, record)
 			return true, nil
 		})
@@ -164,11 +164,11 @@ func TestExpirationRecordsTable_Delete(t *testing.T) {
 		require.Empty(t, records)
 	})
 
-	t.Run("deletes a non-existent expiration record", func(t *testing.T) {
+	t.Run("deletes a non-existent deletion record", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x01})
 
 		barrierId := &corepb.BarrierId{
 			AccountId:   rand.Uint64(),
@@ -184,8 +184,8 @@ func TestExpirationRecordsTable_Delete(t *testing.T) {
 
 		// Verify list is still empty
 		txn = badgerStore.View()
-		var records []*corepb.BarriersExpirationRecord
-		err = table.List(txn, 0, 2000, func(record *corepb.BarriersExpirationRecord) (bool, error) {
+		var records []*corepb.BarriersDeletionRecord
+		err = table.ListByDeletion(txn, 0, 2000, func(record *corepb.BarriersDeletionRecord) (bool, error) {
 			records = append(records, record)
 			return true, nil
 		})
@@ -195,11 +195,11 @@ func TestExpirationRecordsTable_Delete(t *testing.T) {
 		require.Empty(t, records)
 	})
 
-	t.Run("deletes one of multiple expiration records", func(t *testing.T) {
+	t.Run("deletes one of multiple deletion records", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint32()
@@ -226,8 +226,8 @@ func TestExpirationRecordsTable_Delete(t *testing.T) {
 
 		// Verify only 2 records remain
 		txn = badgerStore.View()
-		var records []*corepb.BarriersExpirationRecord
-		err = table.List(txn, 0, 10000, func(record *corepb.BarriersExpirationRecord) (bool, error) {
+		var records []*corepb.BarriersDeletionRecord
+		err = table.ListByDeletion(txn, 0, 10000, func(record *corepb.BarriersDeletionRecord) (bool, error) {
 			records = append(records, record)
 			return true, nil
 		})
@@ -235,21 +235,21 @@ func TestExpirationRecordsTable_Delete(t *testing.T) {
 
 		require.NoError(t, err)
 		require.Len(t, records, 2)
-		require.Equal(t, int64(1000), records[0].ExpiresAt)
-		require.Equal(t, int64(3000), records[1].ExpiresAt)
+		require.Equal(t, int64(1000), records[0].DeleteAt)
+		require.Equal(t, int64(3000), records[1].DeleteAt)
 	})
 }
 
-func TestExpirationRecordsTable_List(t *testing.T) {
-	t.Run("lists empty expiration records", func(t *testing.T) {
+func TestDeletionRecordsTable_List(t *testing.T) {
+	t.Run("lists empty deletion records", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x01})
 
 		txn := badgerStore.View()
-		var records []*corepb.BarriersExpirationRecord
-		err = table.List(txn, 0, 10000, func(record *corepb.BarriersExpirationRecord) (bool, error) {
+		var records []*corepb.BarriersDeletionRecord
+		err = table.ListByDeletion(txn, 0, 10000, func(record *corepb.BarriersDeletionRecord) (bool, error) {
 			records = append(records, record)
 			return true, nil
 		})
@@ -259,15 +259,15 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		require.Empty(t, records)
 	})
 
-	t.Run("lists single expiration record", func(t *testing.T) {
+	t.Run("lists single deletion record", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint32()
-		expiresAt := int64(1000)
+		deleteAt := int64(1000)
 		barrierId := &corepb.BarrierId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -275,13 +275,13 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		}
 
 		txn := badgerStore.Update()
-		err = table.Add(txn, expiresAt, barrierId)
+		err = table.Add(txn, deleteAt, barrierId)
 		require.NoError(t, err)
 		require.NoError(t, txn.Commit())
 
 		txn = badgerStore.View()
-		var records []*corepb.BarriersExpirationRecord
-		err = table.List(txn, 0, 2000, func(record *corepb.BarriersExpirationRecord) (bool, error) {
+		var records []*corepb.BarriersDeletionRecord
+		err = table.ListByDeletion(txn, 0, 2000, func(record *corepb.BarriersDeletionRecord) (bool, error) {
 			records = append(records, record)
 			return true, nil
 		})
@@ -289,15 +289,15 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 
 		require.NoError(t, err)
 		require.Len(t, records, 1)
-		require.Equal(t, expiresAt, records[0].ExpiresAt)
+		require.Equal(t, deleteAt, records[0].DeleteAt)
 		require.Equal(t, barrierId, records[0].BarrierId)
 	})
 
-	t.Run("lists multiple expiration records in order", func(t *testing.T) {
+	t.Run("lists multiple deletion records in order", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint32()
@@ -315,8 +315,8 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		require.NoError(t, txn.Commit())
 
 		txn = badgerStore.View()
-		var records []*corepb.BarriersExpirationRecord
-		err = table.List(txn, 0, 10000, func(record *corepb.BarriersExpirationRecord) (bool, error) {
+		var records []*corepb.BarriersDeletionRecord
+		err = table.ListByDeletion(txn, 0, 10000, func(record *corepb.BarriersDeletionRecord) (bool, error) {
 			records = append(records, record)
 			return true, nil
 		})
@@ -325,15 +325,15 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, records, 5)
 		for i := range 5 {
-			require.Equal(t, int64((i+1)*1000), records[i].ExpiresAt)
+			require.Equal(t, int64((i+1)*1000), records[i].DeleteAt)
 		}
 	})
 
-	t.Run("lists expiration records within time range", func(t *testing.T) {
+	t.Run("lists deletion records within time range", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint32()
@@ -353,8 +353,8 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 
 		// List records from 3000 to 7000 (should include 3000, 4000, 5000, 6000, 7000)
 		txn = badgerStore.View()
-		var records []*corepb.BarriersExpirationRecord
-		err = table.List(txn, 3000, 7000, func(record *corepb.BarriersExpirationRecord) (bool, error) {
+		var records []*corepb.BarriersDeletionRecord
+		err = table.ListByDeletion(txn, 3000, 7000, func(record *corepb.BarriersDeletionRecord) (bool, error) {
 			records = append(records, record)
 			return true, nil
 		})
@@ -362,15 +362,15 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 
 		require.NoError(t, err)
 		require.Len(t, records, 5)
-		require.Equal(t, int64(3000), records[0].ExpiresAt)
-		require.Equal(t, int64(7000), records[4].ExpiresAt)
+		require.Equal(t, int64(3000), records[0].DeleteAt)
+		require.Equal(t, int64(7000), records[4].DeleteAt)
 	})
 
-	t.Run("lists expiration records with early stop", func(t *testing.T) {
+	t.Run("lists deletion records with early stop", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint32()
@@ -389,8 +389,8 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 
 		// List records but stop after 2
 		txn = badgerStore.View()
-		var records []*corepb.BarriersExpirationRecord
-		err = table.List(txn, 0, 10000, func(record *corepb.BarriersExpirationRecord) (bool, error) {
+		var records []*corepb.BarriersDeletionRecord
+		err = table.ListByDeletion(txn, 0, 10000, func(record *corepb.BarriersDeletionRecord) (bool, error) {
 			records = append(records, record)
 			return len(records) < 2, nil // Continue only if we have less than 2 records
 		})
@@ -398,15 +398,15 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 
 		require.NoError(t, err)
 		require.Len(t, records, 2)
-		require.Equal(t, int64(1000), records[0].ExpiresAt)
-		require.Equal(t, int64(2000), records[1].ExpiresAt)
+		require.Equal(t, int64(1000), records[0].DeleteAt)
+		require.Equal(t, int64(2000), records[1].DeleteAt)
 	})
 
-	t.Run("lists expiration records from different barriers", func(t *testing.T) {
+	t.Run("lists deletion records from different barriers", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint32()
@@ -425,8 +425,8 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		require.NoError(t, txn.Commit())
 
 		txn = badgerStore.View()
-		var records []*corepb.BarriersExpirationRecord
-		err = table.List(txn, 0, 2000, func(record *corepb.BarriersExpirationRecord) (bool, error) {
+		var records []*corepb.BarriersDeletionRecord
+		err = table.ListByDeletion(txn, 0, 2000, func(record *corepb.BarriersDeletionRecord) (bool, error) {
 			records = append(records, record)
 			return true, nil
 		})
@@ -435,15 +435,15 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, records, 3)
 		for i := range 3 {
-			require.Equal(t, int64(1000), records[i].ExpiresAt)
+			require.Equal(t, int64(1000), records[i].DeleteAt)
 		}
 	})
 
-	t.Run("lists expiration records from different accounts", func(t *testing.T) {
+	t.Run("lists deletion records from different accounts", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x01})
 
 		namespaceId := rand.Uint32()
 		barrierId := rand.Uint64()
@@ -462,8 +462,8 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		require.NoError(t, txn.Commit())
 
 		txn = badgerStore.View()
-		var records []*corepb.BarriersExpirationRecord
-		err = table.List(txn, 0, 2000, func(record *corepb.BarriersExpirationRecord) (bool, error) {
+		var records []*corepb.BarriersDeletionRecord
+		err = table.ListByDeletion(txn, 0, 2000, func(record *corepb.BarriersDeletionRecord) (bool, error) {
 			records = append(records, record)
 			return true, nil
 		})
@@ -482,7 +482,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x01})
 
 		barrierId := &corepb.BarrierId{
 			AccountId:   rand.Uint64(),
@@ -498,8 +498,8 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 
 		// List records from 2000 to 3000 (should be empty)
 		txn = badgerStore.View()
-		var records []*corepb.BarriersExpirationRecord
-		err = table.List(txn, 2000, 3000, func(record *corepb.BarriersExpirationRecord) (bool, error) {
+		var records []*corepb.BarriersDeletionRecord
+		err = table.ListByDeletion(txn, 2000, 3000, func(record *corepb.BarriersDeletionRecord) (bool, error) {
 			records = append(records, record)
 			return true, nil
 		})
@@ -510,9 +510,9 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 	})
 }
 
-func TestExpirationRecordsTable_GetTableKeyRange(t *testing.T) {
+func TestDeletionRecordsTable_GetTableKeyRange(t *testing.T) {
 	t.Run("get table key range", func(t *testing.T) {
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x01})
 
 		keyRange := table.GetTableKeyRange()
 		require.NotNil(t, keyRange)

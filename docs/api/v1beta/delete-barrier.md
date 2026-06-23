@@ -2,8 +2,8 @@
 
 Deletes a barrier. Any in-flight `WaitAtBarrier` callers will see `NotFound`.
 
-A barrier that reaches its `expires_at` is deleted automatically — explicit delete is only
-needed for early cleanup.
+A barrier is deleted automatically once it has been inactive for `delete_inactive_after_seconds`
+(measured from its last activity) — explicit delete is only needed for early cleanup.
 
 Safe to retry.
 

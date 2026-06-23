@@ -138,6 +138,9 @@ message WaitGroup {
   // finished_at is the timestamp (ns) at which the wait group became finished
   // (either completed or expired). Zero while the wait group is still active.
   int64 finished_at = 13;
+  // last_activity_at is the timestamp (ns) of the most recent activity on this
+  // wait group (a job being reported completed). Not affected by reads.
+  int64 last_activity_at = 14;
 }
 
 // WaitGroupStatus is the lifecycle state of a wait group. A wait group starts

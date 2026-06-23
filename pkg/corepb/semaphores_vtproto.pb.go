@@ -2059,6 +2059,11 @@ func (m *Semaphore) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
+	if m.LastActivityAt != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.LastActivityAt))
+		i--
+		dAtA[i] = 0x60
+	}
 	if m.EarliestHolderExpiresAt != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.EarliestHolderExpiresAt))
 		i--
@@ -3287,6 +3292,9 @@ func (m *Semaphore) SizeVT() (n int) {
 	}
 	if m.EarliestHolderExpiresAt != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.EarliestHolderExpiresAt))
+	}
+	if m.LastActivityAt != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.LastActivityAt))
 	}
 	n += len(m.unknownFields)
 	return n
@@ -8906,6 +8914,25 @@ func (m *Semaphore) UnmarshalVT(dAtA []byte) error {
 				b := dAtA[iNdEx]
 				iNdEx++
 				m.EarliestHolderExpiresAt |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 12:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LastActivityAt", wireType)
+			}
+			m.LastActivityAt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LastActivityAt |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

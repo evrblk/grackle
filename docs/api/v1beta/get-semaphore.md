@@ -32,6 +32,7 @@ whose lease has expired by the time of the call.
     "version": 1,
     "created_at": 1695826239671432000,
     "updated_at": 1695826239671432000,
+    "last_activity_at": 1695826239671432000,
     "metadata": {
       "vendor": "partner-1"
     }

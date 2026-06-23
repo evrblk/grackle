@@ -50,7 +50,7 @@ func RegisterGracklePrefixes(registry monsterax.TableRegistry) {
 		"Grackle.BarriersCore.Barriers.NamesIndex":            registry.RegisterPrefix([]byte{0x61}),
 		"Grackle.BarriersCore.Counters.Table":                 registry.RegisterPrefix([]byte{0x62}),
 		"Grackle.BarriersCore.GarbageCollectionRecords.Table": registry.RegisterPrefix([]byte{0x63}),
-		"Grackle.BarriersCore.ExpirationRecords.Table":        registry.RegisterPrefix([]byte{0x64}),
+		"Grackle.BarriersCore.DeletionRecords.Table":          registry.RegisterPrefix([]byte{0x64}),
 		"Grackle.BarriersCore.Participants.Table":             registry.RegisterPrefix([]byte{0x65}),
 	}
 }

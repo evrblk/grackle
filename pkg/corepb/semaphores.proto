@@ -225,6 +225,9 @@ message Semaphore {
   uint64 active_holds = 9;
   uint64 active_holders_count = 10;
   int64 earliest_holder_expires_at = 11;
+  // last_activity_at is the timestamp (ns) of the most recent activity on this
+  // semaphore (an acquire attempt or a release). Not affected by reads.
+  int64 last_activity_at = 12;
 }
 
 message SemaphoreHolder {
