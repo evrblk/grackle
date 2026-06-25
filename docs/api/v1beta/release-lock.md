@@ -26,7 +26,7 @@ Safe to retry.
 {
   "lock": {
     "name": "users/123/profile",
-    "state": "UNLOCKED",
+    "state": "LOCK_STATE_UNLOCKED",
     "locked_at": 0,
     "last_activity_at": 1695826239671432000,
     "lock_holders": []

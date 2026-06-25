@@ -119,7 +119,7 @@ AcquireLockResponse (acquired):
 {
   "lock": {
     "name": "users/123/profile",
-    "state": "EXCLUSIVE_LOCKED",
+    "state": "LOCK_STATE_EXCLUSIVE_LOCKED",
     "locked_at": 1695826239671432000,
     "last_activity_at": 1695826239671432000,
     "lock_holders": [
@@ -138,7 +138,7 @@ AcquireLockResponse (already locked by someone else — not an error):
 {
   "lock": {
     "name": "users/123/profile",
-    "state": "EXCLUSIVE_LOCKED",
+    "state": "LOCK_STATE_EXCLUSIVE_LOCKED",
     "locked_at": 1695826200000000000,
     "last_activity_at": 1695826200000000000,
     "lock_holders": [
@@ -168,7 +168,7 @@ ReleaseLockResponse:
 {
   "lock": {
     "name": "users/123/profile",
-    "state": "UNLOCKED",
+    "state": "LOCK_STATE_UNLOCKED",
     "locked_at": 0,
     "last_activity_at": 1695826239671432000,
     "lock_holders": []
@@ -184,7 +184,7 @@ AcquireLockResponse:
 {
   "lock": {
     "name": "users/123/profile",
-    "state": "SHARED_LOCKED",
+    "state": "LOCK_STATE_SHARED_LOCKED",
     "locked_at": 1695826239671432000,
     "last_activity_at": 1695826240120000000,
     "lock_holders": [

@@ -26,7 +26,7 @@ __Currently held:__
 {
   "lock": {
     "name": "users/123/profile",
-    "state": "EXCLUSIVE_LOCKED",
+    "state": "LOCK_STATE_EXCLUSIVE_LOCKED",
     "locked_at": 1695826239671432000,
     "last_activity_at": 1695826239671432000,
     "lock_holders": [
@@ -48,7 +48,7 @@ __Not held:__
 {
   "lock": {
     "name": "users/123/profile",
-    "state": "UNLOCKED",
+    "state": "LOCK_STATE_UNLOCKED",
     "locked_at": 0,
     "last_activity_at": 0,
     "lock_holders": []
