@@ -127,7 +127,7 @@ type listHoldersResult struct {
 	previousPaginationToken *corepb.PaginationToken
 }
 
-func (t *holdersTable) List(txn *store.Txn, accountId uint64, namespaceId uint32, semaphoreId uint64,
+func (t *holdersTable) List(txn *store.Txn, accountId uint64, namespaceId uint64, semaphoreId uint64,
 	paginationToken *corepb.PaginationToken, limit int) (*listHoldersResult, error) {
 	result, err := t.table.ListPaginated(txn,
 		t.tablePK(accountId, namespaceId, semaphoreId),
@@ -162,7 +162,7 @@ func (t *holdersTable) ListByExpiration(txn *store.Txn, semaphoreId *corepb.Sema
 	})
 }
 
-func (t *holdersTable) tablePK(accountId uint64, namespaceId uint32, semaphoreId uint64) []byte {
+func (t *holdersTable) tablePK(accountId uint64, namespaceId uint64, semaphoreId uint64) []byte {
 	return utils.ConcatBytes(
 		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,
@@ -177,7 +177,7 @@ func (t *holdersTable) tableSK(leaseId uint64) []byte {
 	)
 }
 
-func (t *holdersTable) expirationIndexPK(accountId uint64, namespaceId uint32, semaphoreId uint64) []byte {
+func (t *holdersTable) expirationIndexPK(accountId uint64, namespaceId uint64, semaphoreId uint64) []byte {
 	return utils.ConcatBytes(
 		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,

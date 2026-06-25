@@ -40,14 +40,14 @@ func (t *participantsTable) GetTableKeyRange() monsterax.KeyRange {
 	return t.table.GetTableKeyRange()
 }
 
-func (t *participantsTable) Get(txn *store.Txn, accountId uint64, namespaceId uint32, barrierId uint64, generation uint64, processId string) (*corepb.BarrierParticipant, error) {
+func (t *participantsTable) Get(txn *store.Txn, accountId uint64, namespaceId uint64, barrierId uint64, generation int64, processId string) (*corepb.BarrierParticipant, error) {
 	return t.table.Get(txn,
 		utils.ConcatBytes(
 			t.tablePK(accountId, namespaceId, barrierId),
 			t.tableSK(generation, processId)))
 }
 
-func (t *participantsTable) Create(txn *store.Txn, accountId uint64, namespaceId uint32, barrierId uint64, participant *corepb.BarrierParticipant) error {
+func (t *participantsTable) Create(txn *store.Txn, accountId uint64, namespaceId uint64, barrierId uint64, participant *corepb.BarrierParticipant) error {
 	return t.table.Set(txn,
 		utils.ConcatBytes(
 			t.tablePK(accountId, namespaceId, barrierId),
@@ -55,7 +55,7 @@ func (t *participantsTable) Create(txn *store.Txn, accountId uint64, namespaceId
 		participant)
 }
 
-func (t *participantsTable) Delete(txn *store.Txn, accountId uint64, namespaceId uint32, barrierId uint64, generation uint64, processId string) error {
+func (t *participantsTable) Delete(txn *store.Txn, accountId uint64, namespaceId uint64, barrierId uint64, generation int64, processId string) error {
 	return t.table.Delete(txn,
 		utils.ConcatBytes(
 			t.tablePK(accountId, namespaceId, barrierId),
@@ -68,7 +68,7 @@ type listParticipantResult struct {
 	previousPaginationToken *corepb.PaginationToken
 }
 
-func (t *participantsTable) List(txn *store.Txn, accountId uint64, namespaceId uint32, barrierId uint64,
+func (t *participantsTable) List(txn *store.Txn, accountId uint64, namespaceId uint64, barrierId uint64,
 	paginationToken *corepb.PaginationToken, limit int) (*listParticipantResult, error) {
 	result, err := t.table.ListPaginated(txn,
 		t.tablePK(accountId, namespaceId, barrierId),
@@ -85,7 +85,7 @@ func (t *participantsTable) List(txn *store.Txn, accountId uint64, namespaceId u
 	}, nil
 }
 
-func (t *participantsTable) tablePK(accountId uint64, namespaceId uint32, barrierId uint64) []byte {
+func (t *participantsTable) tablePK(accountId uint64, namespaceId uint64, barrierId uint64) []byte {
 	return utils.ConcatBytes(
 		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,
@@ -94,7 +94,7 @@ func (t *participantsTable) tablePK(accountId uint64, namespaceId uint32, barrie
 	)
 }
 
-func (t *participantsTable) tableSK(generation uint64, processId string) []byte {
+func (t *participantsTable) tableSK(generation int64, processId string) []byte {
 	return utils.ConcatBytes(
 		generation,
 		processId,

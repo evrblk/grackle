@@ -32,7 +32,7 @@ func (s *GrackleApiServerHandler) CreateNamespace(ctx context.Context, req *grac
 	resp, err := s.grackleClient.CreateNamespace(ctx, &corepb.CreateNamespaceRequest{
 		NamespaceId: &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		},
 		Name:                  req.Name,
 		Description:           req.Description,
@@ -191,7 +191,7 @@ func (s *GrackleApiServerHandler) CreateWaitGroup(ctx context.Context, req *grac
 	now := time.Now()
 
 	// Validate wait group size doesn't exceed account limits
-	if req.Counter > uint64(limits.MaxWaitGroupSize) {
+	if req.Counter > limits.MaxWaitGroupSize {
 		return nil, status.Errorf(codes.InvalidArgument, "wait group size is too big, max: %d", limits.MaxWaitGroupSize)
 	}
 
@@ -234,7 +234,7 @@ func (s *GrackleApiServerHandler) UpdateWaitGroup(ctx context.Context, req *grac
 
 	// Validate wait group size doesn't exceed account limits
 	// TODO: consistent error format with Validate* methods
-	if req.Counter > uint64(limits.MaxWaitGroupSize) {
+	if req.Counter > limits.MaxWaitGroupSize {
 		return nil, status.Errorf(codes.InvalidArgument, "wait group size is too big, max: %d", limits.MaxWaitGroupSize)
 	}
 
@@ -324,15 +324,25 @@ func (s *GrackleApiServerHandler) WaitForWaitGroup(ctx context.Context, req *gra
 			return nil, monsterax.ErrorToGRPC(err)
 		}
 
-		// Check completion and timeout conditions
-		timedOut := time.Now().After(deadline)
-		completed := resp2.WaitGroup.Counter == resp2.WaitGroup.CompletedJobs
-
-		if timedOut || completed {
+		// Return as soon as the wait group has finished (completed or expired),
+		// or once the deadline passes while it is still active.
+		switch resp2.WaitGroup.Status {
+		case corepb.WaitGroupStatus_WAIT_GROUP_STATUS_COMPLETED:
 			return &gracklepb.WaitForWaitGroupResponse{
 				WaitGroup: waitGroupToFront(resp2.WaitGroup),
-				Completed: completed,
-				TimedOut:  timedOut,
+				Outcome:   gracklepb.WaitGroupWaitOutcome_WAIT_GROUP_WAIT_OUTCOME_COMPLETED,
+			}, nil
+		case corepb.WaitGroupStatus_WAIT_GROUP_STATUS_EXPIRED:
+			return &gracklepb.WaitForWaitGroupResponse{
+				WaitGroup: waitGroupToFront(resp2.WaitGroup),
+				Outcome:   gracklepb.WaitGroupWaitOutcome_WAIT_GROUP_WAIT_OUTCOME_EXPIRED,
+			}, nil
+		}
+
+		if time.Now().After(deadline) {
+			return &gracklepb.WaitForWaitGroupResponse{
+				WaitGroup: waitGroupToFront(resp2.WaitGroup),
+				Outcome:   gracklepb.WaitGroupWaitOutcome_WAIT_GROUP_WAIT_OUTCOME_TIMED_OUT,
 			}, nil
 		}
 
@@ -463,7 +473,7 @@ func (s *GrackleApiServerHandler) ListWaitGroupCompletedJobs(ctx context.Context
 	}
 
 	// List jobs associated with the wait group
-	resp2, err := s.grackleClient.ListWaitGroupJobs(ctx, &corepb.ListWaitGroupJobsRequest{
+	resp2, err := s.grackleClient.ListWaitGroupCompletedJobs(ctx, &corepb.ListWaitGroupCompletedJobsRequest{
 		NamespaceId:     resp1.Namespace.Id,
 		WaitGroupName:   req.WaitGroupName,
 		PaginationToken: paginationToken,
@@ -540,12 +550,17 @@ func (s *GrackleApiServerHandler) AcquireLock(ctx context.Context, req *gracklep
 			return nil, monsterax.ErrorToGRPC(err)
 		}
 
-		// Return on success or once the deadline has passed
-		timedOut := time.Now().After(deadline)
-		if resp2.Success || timedOut {
+		// Return as soon as the lock is acquired, or once the deadline passes.
+		if resp2.Success {
 			return &gracklepb.AcquireLockResponse{
 				Lock:    lockToFront(resp2.Lock),
-				Success: resp2.Success,
+				Outcome: gracklepb.AcquireOutcome_ACQUIRE_OUTCOME_ACQUIRED,
+			}, nil
+		}
+		if time.Now().After(deadline) {
+			return &gracklepb.AcquireLockResponse{
+				Lock:    lockToFront(resp2.Lock),
+				Outcome: acquireFailureOutcome(req.TimeoutSeconds),
 			}, nil
 		}
 
@@ -714,7 +729,7 @@ func (s *GrackleApiServerHandler) CreateSemaphore(ctx context.Context, req *grac
 	now := time.Now()
 
 	// Validate semaphore size doesn't exceed account limits
-	if req.Permits > uint64(limits.MaxNumberOfSemaphoreHolders) {
+	if req.Permits > limits.MaxNumberOfSemaphoreHolders {
 		return nil, status.Errorf(codes.InvalidArgument, "semaphore size is too big, max: %d", limits.MaxNumberOfSemaphoreHolders)
 	}
 
@@ -916,12 +931,17 @@ func (s *GrackleApiServerHandler) AcquireSemaphore(ctx context.Context, req *gra
 			return nil, monsterax.ErrorToGRPC(err)
 		}
 
-		// Return on success or once the deadline has passed
-		timedOut := time.Now().After(deadline)
-		if resp2.Success || timedOut {
+		// Return as soon as the semaphore is acquired, or once the deadline passes.
+		if resp2.Success {
 			return &gracklepb.AcquireSemaphoreResponse{
 				Semaphore: semaphoreToFront(resp2.Semaphore),
-				Success:   resp2.Success,
+				Outcome:   gracklepb.AcquireOutcome_ACQUIRE_OUTCOME_ACQUIRED,
+			}, nil
+		}
+		if time.Now().After(deadline) {
+			return &gracklepb.AcquireSemaphoreResponse{
+				Semaphore: semaphoreToFront(resp2.Semaphore),
+				Outcome:   acquireFailureOutcome(req.TimeoutSeconds),
 			}, nil
 		}
 
@@ -984,7 +1004,7 @@ func (s *GrackleApiServerHandler) UpdateSemaphore(ctx context.Context, req *grac
 	now := time.Now()
 
 	// Validate semaphore size doesn't exceed account limits
-	if req.Permits > uint64(limits.MaxNumberOfSemaphoreHolders) {
+	if req.Permits > limits.MaxNumberOfSemaphoreHolders {
 		return nil, status.Errorf(codes.InvalidArgument, "semaphore size is too big, max: %d", limits.MaxNumberOfSemaphoreHolders)
 	}
 
@@ -1233,9 +1253,8 @@ func (s *GrackleApiServerHandler) ArriveAtBarrier(ctx context.Context, req *grac
 	}
 
 	return &gracklepb.ArriveAtBarrierResponse{
-		Barrier:        barrierToFront(resp2.Barrier),
-		AllArrived:     resp2.AllArrived,
-		NextGeneration: resp2.Barrier.Generation + 1,
+		Barrier:    barrierToFront(resp2.Barrier),
+		AllArrived: resp2.AllArrived,
 	}, nil
 }
 
@@ -1274,25 +1293,25 @@ func (s *GrackleApiServerHandler) WaitAtBarrier(ctx context.Context, req *grackl
 		// The barrier auto-trips inside ArriveAtBarrier by advancing Generation. From the
 		// waiter's perspective, the trip has happened iff the barrier's current Generation
 		// is strictly greater than the one we were registered to wait at.
-		allArrived := resp2.Barrier.Generation > req.ExpectedGeneration
+		tripped := resp2.Barrier.Generation > req.ExpectedGeneration
 
-		// Check if timeout has been reached
-		timedOut := time.Now().After(deadline)
-
-		if timedOut || allArrived {
-			// On a successful trip the barrier's Generation is already the new "current"
-			// generation; that's the value clients should use for the next round. On a
-			// timeout, no trip happened — fall back to ExpectedGeneration+1 so the caller
-			// still has a hint at where the next round would land.
-			nextGeneration := resp2.Barrier.Generation
-			if !allArrived {
-				nextGeneration = req.ExpectedGeneration + 1
-			}
+		if tripped {
+			// The barrier tripped. The caller's next round is deterministically
+			// ExpectedGeneration+1 (generations advance by exactly one per trip), so
+			// no next-generation value is returned. barrier.Generation reflects where
+			// the barrier actually is now — it may already be further ahead if a later
+			// cohort tripped it again while this waiter was between polls.
 			return &gracklepb.WaitAtBarrierResponse{
-				Barrier:        barrierToFront(resp2.Barrier),
-				AllArrived:     allArrived,
-				NextGeneration: nextGeneration,
-				TimedOut:       timedOut,
+				Barrier: barrierToFront(resp2.Barrier),
+				Outcome: gracklepb.BarrierWaitOutcome_BARRIER_WAIT_OUTCOME_TRIPPED,
+			}, nil
+		}
+
+		if time.Now().After(deadline) {
+			// Deadline passed without the barrier tripping.
+			return &gracklepb.WaitAtBarrierResponse{
+				Barrier: barrierToFront(resp2.Barrier),
+				Outcome: gracklepb.BarrierWaitOutcome_BARRIER_WAIT_OUTCOME_TIMED_OUT,
 			}, nil
 		}
 
@@ -1738,4 +1757,14 @@ func NewGrackleApiServerHandler(grackleClient coreapis.GrackleClientApi) *Grackl
 	return &GrackleApiServerHandler{
 		grackleClient: grackleClient,
 	}
+}
+
+// acquireFailureOutcome maps a failed acquisition to a terminal outcome: a
+// non-blocking attempt (timeout_seconds == 0) reports UNAVAILABLE, while a
+// blocking attempt that ran out the clock reports TIMED_OUT.
+func acquireFailureOutcome(timeoutSeconds int32) gracklepb.AcquireOutcome {
+	if timeoutSeconds <= 0 {
+		return gracklepb.AcquireOutcome_ACQUIRE_OUTCOME_UNAVAILABLE
+	}
+	return gracklepb.AcquireOutcome_ACQUIRE_OUTCOME_TIMED_OUT
 }

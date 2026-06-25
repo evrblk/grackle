@@ -10,7 +10,7 @@ message CreateNamespaceRequest {
   NamespaceId namespace_id = 1;
   string name = 2;
   string description = 3;
-  int64 now = 4;
+  sfixed64 now = 4;
   map<string, string> metadata = 5;
   int64 max_number_of_namespaces = 6;
 }
@@ -20,7 +20,7 @@ message CreateNamespaceResponse {
 }
 
 message ListNamespacesRequest {
-  uint64 account_id = 1;
+  fixed64 account_id = 1;
   PaginationToken pagination_token = 2;
   int32 limit = 3;
 }
@@ -40,7 +40,7 @@ message GetNamespaceResponse {
 }
 
 message GetNamespaceByNameRequest {
-  uint64 account_id = 1;
+  fixed64 account_id = 1;
   string namespace_name = 2;
 }
 
@@ -49,20 +49,20 @@ message GetNamespaceByNameResponse {
 }
 
 message DeleteNamespaceRequest {
-  uint64 account_id = 1;
+  fixed64 account_id = 1;
   string namespace_name = 2;
-  int64 now = 3;
+  sfixed64 now = 3;
 }
 
 message DeleteNamespaceResponse {}
 
 message UpdateNamespaceRequest {
-  uint64 account_id = 1;
+  fixed64 account_id = 1;
   string namespace_name = 2;
   string description = 3;
   map<string, string> metadata = 4;
-  uint64 expected_version = 5;
-  int64 now = 6;
+  int64 expected_version = 5;
+  sfixed64 now = 6;
 }
 
 message UpdateNamespaceResponse {
@@ -73,15 +73,15 @@ message Namespace {
   NamespaceId id = 1;
   string name = 2;
   string description = 3;
-  int64 created_at = 4;
-  int64 updated_at = 5;
-  uint64 version = 6;
+  sfixed64 created_at = 4;
+  sfixed64 updated_at = 5;
+  int64 version = 6;
   map<string, string> metadata = 7;
 }
 
 message NamespaceId {
-  uint64 account_id = 1;
-  uint32 namespace_id = 2;
+  fixed64 account_id = 1;
+  fixed64 namespace_id = 2;
 }
 
 message NamespacesCounter {

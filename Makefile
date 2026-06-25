@@ -2,6 +2,8 @@
 
 DONT_FIND := -name .git -prune -o -name .cache -prune -o -name .pkg -prune -o
 
+GO_BUILD_ENV := GOAMD64=v2
+
 # Lint, static checks, vuln shecks
 lint:
 	go fmt ./...
@@ -11,7 +13,7 @@ lint:
 
 # Builds all artifacts
 build:
-	go build ./...
+	$(GO_BUILD_ENV) go build ./...
 
 # Generates protos and go:generate
 generate:
@@ -31,7 +33,7 @@ generate:
 	go run ./tools/codegen/genmarshal -dir ./pkg/corepb -output ./pkg/corepb/marshal_gen.go
 
 grackle: build
-	go build -o ./cmd/grackle/grackle ./cmd/grackle
+	$(GO_BUILD_ENV) go build -o ./cmd/grackle/grackle ./cmd/grackle
 
 format:
 	find . $(DONT_FIND) -name '*.pb.go' \

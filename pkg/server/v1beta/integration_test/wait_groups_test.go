@@ -34,18 +34,20 @@ func TestCreateWaitGroup(t *testing.T) {
 
 		// Valid request
 		resp, err := server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
-			NamespaceName: "namespace1",
-			WaitGroupName: "waitgroup1",
-			Counter:       1,
+			NamespaceName:              "namespace1",
+			WaitGroupName:              "waitgroup1",
+			Counter:                    1,
+			DeleteAfterFinishedSeconds: 60,
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp.WaitGroup)
 
 		// Invalid request - invalid namespace name
 		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
-			NamespaceName: "invalid@namespace",
-			WaitGroupName: "waitgroup1",
-			Counter:       1,
+			NamespaceName:              "invalid@namespace",
+			WaitGroupName:              "waitgroup1",
+			Counter:                    1,
+			DeleteAfterFinishedSeconds: 60,
 		})
 		require.Error(t, err)
 	})
@@ -62,9 +64,10 @@ func TestCreateWaitGroup(t *testing.T) {
 
 		// Test valid wait group size (within limits)
 		resp, err := server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
-			NamespaceName: "namespace1",
-			WaitGroupName: "waitgroup1",
-			Counter:       uint64(grackle.DefaultServiceLimits.MaxWaitGroupSize), // Max allowed by account limits
+			NamespaceName:              "namespace1",
+			WaitGroupName:              "waitgroup1",
+			Counter:                    grackle.DefaultServiceLimits.MaxWaitGroupSize, // Max allowed by account limits
+			DeleteAfterFinishedSeconds: 60,
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp.WaitGroup)
@@ -72,9 +75,10 @@ func TestCreateWaitGroup(t *testing.T) {
 
 		// Test wait group size exceeding account limits
 		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
-			NamespaceName: "namespace1",
-			WaitGroupName: "waitgroup2",
-			Counter:       uint64(grackle.DefaultServiceLimits.MaxWaitGroupSize + 1), // Exceeds MaxWaitGroupSize
+			NamespaceName:              "namespace1",
+			WaitGroupName:              "waitgroup2",
+			Counter:                    grackle.DefaultServiceLimits.MaxWaitGroupSize + 1, // Exceeds MaxWaitGroupSize
+			DeleteAfterFinishedSeconds: 60,
 		})
 		require.Error(t, err)
 		require.Contains(t, err.Error(), fmt.Sprintf("wait group size is too big, max: %d", uint64(grackle.DefaultServiceLimits.MaxWaitGroupSize)))
@@ -94,9 +98,10 @@ func TestGetWaitGroup(t *testing.T) {
 
 		// Create wait group
 		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
-			NamespaceName: "namespace1",
-			WaitGroupName: "waitgroup1",
-			Counter:       1,
+			NamespaceName:              "namespace1",
+			WaitGroupName:              "waitgroup1",
+			Counter:                    1,
+			DeleteAfterFinishedSeconds: 60,
 		})
 		require.NoError(t, err)
 
@@ -130,9 +135,10 @@ func TestCompleteJobsFromWaitGroup(t *testing.T) {
 
 		// Create wait group
 		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
-			NamespaceName: "namespace1",
-			WaitGroupName: "waitgroup1",
-			Counter:       2,
+			NamespaceName:              "namespace1",
+			WaitGroupName:              "waitgroup1",
+			Counter:                    2,
+			DeleteAfterFinishedSeconds: 60,
 		})
 		require.NoError(t, err)
 
@@ -166,9 +172,10 @@ func TestCompleteJobsFromWaitGroup(t *testing.T) {
 
 		// Create wait group with a small counter
 		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
-			NamespaceName: "namespace1",
-			WaitGroupName: "waitgroup1",
-			Counter:       2,
+			NamespaceName:              "namespace1",
+			WaitGroupName:              "waitgroup1",
+			Counter:                    2,
+			DeleteAfterFinishedSeconds: 60,
 		})
 		require.NoError(t, err)
 
@@ -219,9 +226,10 @@ func TestDeleteWaitGroup(t *testing.T) {
 
 		// Create wait group
 		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
-			NamespaceName: "namespace1",
-			WaitGroupName: "waitgroup1",
-			Counter:       1,
+			NamespaceName:              "namespace1",
+			WaitGroupName:              "waitgroup1",
+			Counter:                    1,
+			DeleteAfterFinishedSeconds: 60,
 		})
 		require.NoError(t, err)
 
@@ -279,10 +287,11 @@ func TestListWaitGroups(t *testing.T) {
 		// Create 25 wait groups to test pagination (3 pages with limit 10)
 		for i := range 25 {
 			_, err := server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
-				NamespaceName: "test-namespace",
-				WaitGroupName: fmt.Sprintf("waitgroup_%03d", i+1),
-				Description:   fmt.Sprintf("Test wait group %d", i+1),
-				Counter:       10,
+				NamespaceName:              "test-namespace",
+				WaitGroupName:              fmt.Sprintf("waitgroup_%03d", i+1),
+				Description:                fmt.Sprintf("Test wait group %d", i+1),
+				Counter:                    10,
+				DeleteAfterFinishedSeconds: 60,
 			})
 			require.NoError(t, err)
 		}
@@ -357,9 +366,10 @@ func TestListWaitGroupCompletedJobs(t *testing.T) {
 
 		// Create wait group
 		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
-			NamespaceName: "namespace1",
-			WaitGroupName: "waitgroup1",
-			Counter:       10,
+			NamespaceName:              "namespace1",
+			WaitGroupName:              "waitgroup1",
+			Counter:                    10,
+			DeleteAfterFinishedSeconds: 60,
 		})
 		require.NoError(t, err)
 
@@ -391,9 +401,10 @@ func TestListWaitGroupCompletedJobs(t *testing.T) {
 
 		// Create a wait group with 25 jobs
 		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
-			NamespaceName: "test-namespace",
-			WaitGroupName: "test-waitgroup",
-			Counter:       25,
+			NamespaceName:              "test-namespace",
+			WaitGroupName:              "test-waitgroup",
+			Counter:                    25,
+			DeleteAfterFinishedSeconds: 60,
 		})
 		require.NoError(t, err)
 
@@ -459,9 +470,10 @@ func TestWaitForWaitGroup(t *testing.T) {
 
 		// Create wait group
 		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
-			NamespaceName: "namespace1",
-			WaitGroupName: "waitgroup1",
-			Counter:       10,
+			NamespaceName:              "namespace1",
+			WaitGroupName:              "waitgroup1",
+			Counter:                    10,
+			DeleteAfterFinishedSeconds: 60,
 		})
 		require.NoError(t, err)
 
@@ -502,9 +514,10 @@ func TestWaitForWaitGroup(t *testing.T) {
 
 		// Create wait group with counter=2
 		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
-			NamespaceName: "test-namespace",
-			WaitGroupName: "test-wg",
-			Counter:       2,
+			NamespaceName:              "test-namespace",
+			WaitGroupName:              "test-wg",
+			Counter:                    2,
+			DeleteAfterFinishedSeconds: 60,
 		})
 		require.NoError(t, err)
 
@@ -534,10 +547,10 @@ func TestWaitForWaitGroup(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp)
-		require.True(t, resp.Completed)
-		require.False(t, resp.TimedOut)
-		require.Equal(t, uint64(2), resp.WaitGroup.Counter)
-		require.Equal(t, uint64(2), resp.WaitGroup.CompletedJobs)
+		require.Equal(t, gracklepb.WaitGroupWaitOutcome_WAIT_GROUP_WAIT_OUTCOME_COMPLETED, resp.Outcome)
+		require.Equal(t, gracklepb.WaitGroupStatus_WAIT_GROUP_STATUS_COMPLETED, resp.WaitGroup.Status)
+		require.EqualValues(t, 2, resp.WaitGroup.Counter)
+		require.EqualValues(t, 2, resp.WaitGroup.CompletedJobs)
 	})
 
 	t.Run("timeout", func(t *testing.T) {
@@ -552,9 +565,10 @@ func TestWaitForWaitGroup(t *testing.T) {
 
 		// Create wait group that won't complete
 		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
-			NamespaceName: "test-namespace",
-			WaitGroupName: "test-wg-timeout",
-			Counter:       10,
+			NamespaceName:              "test-namespace",
+			WaitGroupName:              "test-wg-timeout",
+			Counter:                    10,
+			DeleteAfterFinishedSeconds: 60,
 		})
 		require.NoError(t, err)
 
@@ -575,9 +589,9 @@ func TestWaitForWaitGroup(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp)
-		require.False(t, resp.Completed)
-		require.True(t, resp.TimedOut)
-		require.Equal(t, uint64(10), resp.WaitGroup.Counter)
-		require.Equal(t, uint64(5), resp.WaitGroup.CompletedJobs)
+		require.Equal(t, gracklepb.WaitGroupWaitOutcome_WAIT_GROUP_WAIT_OUTCOME_TIMED_OUT, resp.Outcome)
+		require.Equal(t, gracklepb.WaitGroupStatus_WAIT_GROUP_STATUS_ACTIVE, resp.WaitGroup.Status)
+		require.EqualValues(t, 10, resp.WaitGroup.Counter)
+		require.EqualValues(t, 5, resp.WaitGroup.CompletedJobs)
 	})
 }

@@ -28,7 +28,7 @@ func TestCore_CreateBarrier(t *testing.T) {
 		now := time.Now()
 		barrierId := &corepb.BarrierId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			BarrierId:   rand.Uint64(),
 		}
 
@@ -49,7 +49,7 @@ func TestCore_CreateBarrier(t *testing.T) {
 		core := newBarriersCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		barrierName := "duplicate_barrier"
 		barrierId1 := &corepb.BarrierId{
 			AccountId:   accountId,
@@ -82,7 +82,7 @@ func TestCore_CreateBarrier(t *testing.T) {
 		core := newBarriersCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		maxBarriers := int64(3)
 
 		// Create barriers up to the limit
@@ -114,7 +114,7 @@ func TestCore_CreateBarrier(t *testing.T) {
 		now := time.Now()
 		barrierId := &corepb.BarrierId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			BarrierId:   rand.Uint64(),
 		}
 
@@ -132,7 +132,7 @@ func TestCore_GetBarrier(t *testing.T) {
 		now := time.Now()
 		barrierId := &corepb.BarrierId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			BarrierId:   rand.Uint64(),
 		}
 
@@ -153,7 +153,7 @@ func TestCore_GetBarrier(t *testing.T) {
 		core := newBarriersCore(t)
 		barrierId := &corepb.BarrierId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			BarrierId:   rand.Uint64(),
 		}
 
@@ -171,7 +171,7 @@ func TestCore_GetBarrierByName(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		barrierId := &corepb.BarrierId{
 			AccountId:   namespaceId.AccountId,
@@ -193,7 +193,7 @@ func TestCore_GetBarrierByName(t *testing.T) {
 		core := newBarriersCore(t)
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Get nonexistent barrier by name
@@ -208,7 +208,7 @@ func TestCore_ListBarriers(t *testing.T) {
 		core := newBarriersCore(t)
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// List barriers in empty namespace
@@ -221,7 +221,7 @@ func TestCore_ListBarriers(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create multiple barriers
@@ -232,7 +232,7 @@ func TestCore_ListBarriers(t *testing.T) {
 				BarrierId:   rand.Uint64(),
 			}
 
-			_ = createBarrier(t, core, barrierId, fmt.Sprintf("barrier_%d", i), uint64(i+1), 10, now)
+			_ = createBarrier(t, core, barrierId, fmt.Sprintf("barrier_%d", i), int64(i+1), 10, now)
 		}
 
 		// List barriers
@@ -246,11 +246,11 @@ func TestCore_ListBarriers(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId1 := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		namespaceId2 := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create barriers in namespace 1
@@ -291,7 +291,7 @@ func TestCore_DeleteBarrier(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		barrierId := &corepb.BarrierId{
@@ -315,7 +315,7 @@ func TestCore_DeleteBarrier(t *testing.T) {
 		core := newBarriersCore(t)
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Delete nonexistent barrier - should not error
@@ -327,7 +327,7 @@ func TestCore_DeleteBarrier(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create two barriers
@@ -365,7 +365,7 @@ func TestCore_UpdateBarrier(t *testing.T) {
 		now := time.Now()
 		barrierId := &corepb.BarrierId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			BarrierId:   rand.Uint64(),
 		}
 
@@ -398,7 +398,7 @@ func TestCore_UpdateBarrier(t *testing.T) {
 		now := time.Now()
 		barrierId := &corepb.BarrierId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			BarrierId:   rand.Uint64(),
 		}
 
@@ -413,7 +413,7 @@ func TestCore_UpdateBarrier(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		barrierId := &corepb.BarrierId{
 			AccountId:   namespaceId.AccountId,
@@ -451,7 +451,7 @@ func TestCore_UpdateBarrier(t *testing.T) {
 		now := time.Now()
 		barrierId := &corepb.BarrierId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			BarrierId:   rand.Uint64(),
 		}
 
@@ -473,7 +473,7 @@ func TestCore_UpdateBarrier(t *testing.T) {
 		now := time.Now()
 		barrierId := &corepb.BarrierId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			BarrierId:   rand.Uint64(),
 		}
 
@@ -499,7 +499,7 @@ func TestCore_UpdateBarrier(t *testing.T) {
 		now := time.Now()
 		barrierId := &corepb.BarrierId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			BarrierId:   rand.Uint64(),
 		}
 
@@ -516,7 +516,7 @@ func TestCore_UpdateBarrier(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		barrierId := &corepb.BarrierId{
 			AccountId:   namespaceId.AccountId,
@@ -553,7 +553,7 @@ func TestCore_UpdateBarrier(t *testing.T) {
 		now := time.Now()
 		barrierId := &corepb.BarrierId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			BarrierId:   rand.Uint64(),
 		}
 
@@ -576,7 +576,7 @@ func TestCore_ArriveAtBarrier(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		barrierId := &corepb.BarrierId{
 			AccountId:   namespaceId.AccountId,
@@ -622,7 +622,7 @@ func TestCore_ArriveAtBarrier(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		barrierId := &corepb.BarrierId{
 			AccountId:   namespaceId.AccountId,
@@ -649,7 +649,7 @@ func TestCore_ArriveAtBarrier(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Try to arrive at nonexistent barrier
@@ -664,7 +664,7 @@ func TestCore_ArriveAtBarrier(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		barrierId := &corepb.BarrierId{
 			AccountId:   namespaceId.AccountId,
@@ -710,7 +710,7 @@ func TestCore_ArriveAtBarrier(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		barrierId := &corepb.BarrierId{
 			AccountId:   namespaceId.AccountId,
@@ -732,7 +732,7 @@ func TestCore_ArriveAtBarrier(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		barrierId := &corepb.BarrierId{
 			AccountId:   namespaceId.AccountId,
@@ -767,7 +767,7 @@ func TestCore_BarrierMetadata(t *testing.T) {
 	now := time.Now()
 	namespaceId := &corepb.NamespaceId{
 		AccountId:   rand.Uint64(),
-		NamespaceId: rand.Uint32(),
+		NamespaceId: rand.Uint64(),
 	}
 	barrierId := &corepb.BarrierId{
 		AccountId:   namespaceId.AccountId,
@@ -857,7 +857,7 @@ func TestCore_ListBarrierParticipants(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		barrierId := &corepb.BarrierId{
 			AccountId:   namespaceId.AccountId,
@@ -894,7 +894,7 @@ func TestCore_ListBarrierParticipants(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		barrierId := &corepb.BarrierId{
 			AccountId:   namespaceId.AccountId,
@@ -914,7 +914,7 @@ func TestCore_ListBarrierParticipants(t *testing.T) {
 		core := newBarriersCore(t)
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Try to list participants of nonexistent barrier
@@ -928,7 +928,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 	now := time.Now()
 	namespaceId := &corepb.NamespaceId{
 		AccountId:   rand.Uint64(),
-		NamespaceId: rand.Uint32(),
+		NamespaceId: rand.Uint64(),
 	}
 	barrierId := &corepb.BarrierId{
 		AccountId:   namespaceId.AccountId,
@@ -983,7 +983,7 @@ func TestCore_RunBarriersGarbageCollection(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		barrierId := &corepb.BarrierId{
 			AccountId:   namespaceId.AccountId,
@@ -1053,8 +1053,8 @@ func TestCore_RunBarriersGarbageCollection(t *testing.T) {
 		now := time.Now()
 
 		// Two namespaces: one will be deleted, the other must survive.
-		deletedNs := &corepb.NamespaceId{AccountId: rand.Uint64(), NamespaceId: rand.Uint32()}
-		keepNs := &corepb.NamespaceId{AccountId: deletedNs.AccountId, NamespaceId: rand.Uint32()}
+		deletedNs := &corepb.NamespaceId{AccountId: rand.Uint64(), NamespaceId: rand.Uint64()}
+		keepNs := &corepb.NamespaceId{AccountId: deletedNs.AccountId, NamespaceId: rand.Uint64()}
 
 		// Populate the doomed namespace with two barriers, each with several participants.
 		for i := range 2 {
@@ -1117,7 +1117,7 @@ func TestCore_LastActivityAt(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		barrierId := &corepb.BarrierId{
 			AccountId:   namespaceId.AccountId,
@@ -1148,7 +1148,7 @@ func TestCore_AutoDeleteInactiveBarriers(t *testing.T) {
 		deleteInactiveAfterSeconds := int64(600) // 10 minutes
 		barrierId := &corepb.BarrierId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			BarrierId:   rand.Uint64(),
 		}
 
@@ -1171,7 +1171,7 @@ func TestCore_AutoDeleteInactiveBarriers(t *testing.T) {
 		deleteInactiveAfterSeconds := int64(600) // 10 minutes
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		barrierId := &corepb.BarrierId{
 			AccountId:   namespaceId.AccountId,
@@ -1200,7 +1200,7 @@ func TestCore_AutoDeleteInactiveBarriers(t *testing.T) {
 
 // createBarrierWithDeletion creates a barrier with an explicit
 // delete_inactive_after_seconds so auto-deletion can be exercised.
-func createBarrierWithDeletion(t *testing.T, core *Core, barrierId *corepb.BarrierId, name string, expectedProcesses uint64, deleteInactiveAfterSeconds int64, now time.Time) *corepb.Barrier {
+func createBarrierWithDeletion(t *testing.T, core *Core, barrierId *corepb.BarrierId, name string, expectedProcesses int64, deleteInactiveAfterSeconds int64, now time.Time) *corepb.Barrier {
 	t.Helper()
 
 	resp, err := core.CreateBarrier(&coreapis.CreateBarrierRequest{
@@ -1233,7 +1233,7 @@ func newBarriersCore(t *testing.T) *Core {
 	return NewCore(badgerStore, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 }
 
-func createBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, name string, expectedProcesses uint64, maxNumberOfBarriersPerNamespace int64, now time.Time) *corepb.Barrier {
+func createBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, name string, expectedProcesses int64, maxNumberOfBarriersPerNamespace int64, now time.Time) *corepb.Barrier {
 	t.Helper()
 
 	resp, err := core.CreateBarrier(&coreapis.CreateBarrierRequest{
@@ -1259,7 +1259,7 @@ func createBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, name s
 	return resp.Payload.Barrier
 }
 
-func createBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierId, name string, expectedProcesses uint64, maxNumberOfBarriersPerNamespace int64, now time.Time) *monsterax.Error {
+func createBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierId, name string, expectedProcesses int64, maxNumberOfBarriersPerNamespace int64, now time.Time) *monsterax.Error {
 	t.Helper()
 
 	resp, err := core.CreateBarrier(&coreapis.CreateBarrierRequest{
@@ -1282,7 +1282,7 @@ func createBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierI
 	return resp.ApplicationError
 }
 
-func arriveAtBarrier(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, barrierName string, processId string, generation uint64, now time.Time) *corepb.Barrier {
+func arriveAtBarrier(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, barrierName string, processId string, generation int64, now time.Time) *corepb.Barrier {
 	t.Helper()
 
 	resp, err := core.ArriveAtBarrier(&coreapis.ArriveAtBarrierRequest{
@@ -1304,7 +1304,7 @@ func arriveAtBarrier(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, 
 	return resp.Payload.Barrier
 }
 
-func arriveAtBarrierWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, barrierName string, processId string, generation uint64, now time.Time) *monsterax.Error {
+func arriveAtBarrierWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, barrierName string, processId string, generation int64, now time.Time) *monsterax.Error {
 	t.Helper()
 
 	resp, err := core.ArriveAtBarrier(&coreapis.ArriveAtBarrierRequest{
@@ -1413,7 +1413,7 @@ func listBarrierParticipantsWithError(t *testing.T, core *Core, namespaceId *cor
 	return resp.ApplicationError
 }
 
-func updateBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, description string, expectedProcesses uint64, version uint64, now time.Time) *corepb.UpdateBarrierResponse {
+func updateBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, description string, expectedProcesses int64, version int64, now time.Time) *corepb.UpdateBarrierResponse {
 	t.Helper()
 
 	resp, err := core.UpdateBarrier(&coreapis.UpdateBarrierRequest{
@@ -1435,7 +1435,7 @@ func updateBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, descri
 	return resp.Payload
 }
 
-func updateBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierId, description string, expectedProcesses uint64, version uint64, now time.Time) *monsterax.Error {
+func updateBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierId, description string, expectedProcesses int64, version int64, now time.Time) *monsterax.Error {
 	t.Helper()
 
 	resp, err := core.UpdateBarrier(&coreapis.UpdateBarrierRequest{

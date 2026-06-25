@@ -27,7 +27,7 @@ func TestCore_CreateNamespace(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create namespace
@@ -47,7 +47,7 @@ func TestCore_CreateNamespace(t *testing.T) {
 		// Get nonexistent namespace
 		appErr := getNamespaceWithError(t, core, &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		})
 		require.Equal(t, monsterax.NotFound, appErr.Code)
 	})
@@ -58,11 +58,11 @@ func TestCore_CreateNamespace(t *testing.T) {
 		accountId := rand.Uint64()
 		namespace1Id := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		namespace2Id := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create namespace 1
@@ -79,11 +79,11 @@ func TestCore_CreateNamespace(t *testing.T) {
 		accountId := rand.Uint64()
 		namespace1Id := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		namespace2Id := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create first namespace
@@ -101,11 +101,11 @@ func TestCore_CreateNamespace(t *testing.T) {
 		accountId2 := rand.Uint64()
 		namespace1Id := &corepb.NamespaceId{
 			AccountId:   accountId1,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		namespace2Id := &corepb.NamespaceId{
 			AccountId:   accountId2,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create namespace in first account
@@ -125,7 +125,7 @@ func TestCore_GetNamespaceByName(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create namespace
@@ -155,7 +155,7 @@ func TestCore_GetNamespaceByName(t *testing.T) {
 		accountId2 := rand.Uint64()
 		namespace1Id := &corepb.NamespaceId{
 			AccountId:   accountId1,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create namespace in account 1
@@ -177,7 +177,7 @@ func TestCore_GetNamespaceByName(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create namespace
@@ -201,11 +201,11 @@ func TestCore_GetNamespaceByName(t *testing.T) {
 		accountId := rand.Uint64()
 		namespace1Id := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		namespace2Id := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create multiple namespaces
@@ -231,11 +231,11 @@ func TestCore_ListNamespaces(t *testing.T) {
 	accountId := rand.Uint64()
 	namespace1Id := &corepb.NamespaceId{
 		AccountId:   accountId,
-		NamespaceId: rand.Uint32(),
+		NamespaceId: rand.Uint64(),
 	}
 	namespace2Id := &corepb.NamespaceId{
 		AccountId:   accountId,
-		NamespaceId: rand.Uint32(),
+		NamespaceId: rand.Uint64(),
 	}
 
 	// Create two namespaces
@@ -254,7 +254,7 @@ func TestCore_UpdateNamespace(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create a namespace first
@@ -287,7 +287,7 @@ func TestCore_UpdateNamespace(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// A freshly created namespace starts at version 1
@@ -309,7 +309,7 @@ func TestCore_UpdateNamespace(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		_ = createNamespace(t, core, namespaceId, "namespace_1", 20, now)
@@ -334,7 +334,7 @@ func TestCore_UpdateNamespace(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		_ = createNamespace(t, core, namespaceId, "namespace_1", 20, now)
@@ -353,7 +353,7 @@ func TestCore_DeleteNamespace(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create a namespace first
@@ -383,11 +383,11 @@ func TestCore_DeleteNamespace(t *testing.T) {
 		accountId := rand.Uint64()
 		namespace1Id := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		namespace2Id := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create multiple namespaces
@@ -422,15 +422,15 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 		accountId := rand.Uint64()
 		namespace1Id := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		namespace2Id := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		namespace3Id := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create two cores for testing snapshot and restore
@@ -485,8 +485,8 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 		now := time.Now()
 		accountId1 := rand.Uint64()
 		accountId2 := rand.Uint64()
-		namespace1Id := &corepb.NamespaceId{AccountId: accountId1, NamespaceId: rand.Uint32()}
-		namespace2Id := &corepb.NamespaceId{AccountId: accountId2, NamespaceId: rand.Uint32()}
+		namespace1Id := &corepb.NamespaceId{AccountId: accountId1, NamespaceId: rand.Uint64()}
+		namespace2Id := &corepb.NamespaceId{AccountId: accountId2, NamespaceId: rand.Uint64()}
 
 		// Create two cores for testing snapshot and restore
 		core1 := newNamespacesCore(t)
@@ -550,8 +550,8 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 	t.Run("restore and continue operations", func(t *testing.T) {
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespace1Id := &corepb.NamespaceId{AccountId: accountId, NamespaceId: rand.Uint32()}
-		namespace2Id := &corepb.NamespaceId{AccountId: accountId, NamespaceId: rand.Uint32()}
+		namespace1Id := &corepb.NamespaceId{AccountId: accountId, NamespaceId: rand.Uint64()}
+		namespace2Id := &corepb.NamespaceId{AccountId: accountId, NamespaceId: rand.Uint64()}
 
 		// Create two cores for testing snapshot and restore
 		core1 := newNamespacesCore(t)
@@ -590,7 +590,7 @@ func TestCore_NamespaceMetadata(t *testing.T) {
 	accountId := rand.Uint64()
 	namespaceId := &corepb.NamespaceId{
 		AccountId:   accountId,
-		NamespaceId: rand.Uint32(),
+		NamespaceId: rand.Uint64(),
 	}
 
 	// Create namespace with metadata
@@ -770,7 +770,7 @@ func listNamespaces(t *testing.T, core *Core, accountId uint64) *corepb.ListName
 	return resp.Payload
 }
 
-func updateNamespace(t *testing.T, core *Core, accountId uint64, namespaceName string, description string, version uint64, now time.Time) *corepb.Namespace {
+func updateNamespace(t *testing.T, core *Core, accountId uint64, namespaceName string, description string, version int64, now time.Time) *corepb.Namespace {
 	t.Helper()
 
 	resp, err := core.UpdateNamespace(&coreapis.UpdateNamespaceRequest{
@@ -792,7 +792,7 @@ func updateNamespace(t *testing.T, core *Core, accountId uint64, namespaceName s
 	return resp.Payload.Namespace
 }
 
-func updateNamespaceWithError(t *testing.T, core *Core, accountId uint64, namespaceName string, description string, version uint64, now time.Time) *monsterax.Error {
+func updateNamespaceWithError(t *testing.T, core *Core, accountId uint64, namespaceName string, description string, version int64, now time.Time) *monsterax.Error {
 	t.Helper()
 
 	resp, err := core.UpdateNamespace(&coreapis.UpdateNamespaceRequest{

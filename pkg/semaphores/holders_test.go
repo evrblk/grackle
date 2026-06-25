@@ -19,7 +19,7 @@ func TestHoldersTable_Get(t *testing.T) {
 	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	semaphoreId := rand.Uint64()
 	leaseId := rand.Uint64()
 	now := time.Now()
@@ -65,7 +65,7 @@ func TestHoldersTable_GetNonExistent(t *testing.T) {
 	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	semaphoreId := rand.Uint64()
 	leaseId := rand.Uint64()
 
@@ -91,7 +91,7 @@ func TestHoldersTable_Create(t *testing.T) {
 	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	semaphoreId := rand.Uint64()
 	leaseId := rand.Uint64()
 	now := time.Now()
@@ -141,7 +141,7 @@ func TestHoldersTable_Update(t *testing.T) {
 	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	semaphoreId := rand.Uint64()
 	leaseId := rand.Uint64()
 	now := time.Now()
@@ -183,7 +183,7 @@ func TestHoldersTable_Update(t *testing.T) {
 	actual, err := table.Get(txn, holder.Id)
 	require.NoError(t, err)
 	require.Equal(t, newExpiresAt, actual.ExpiresAt)
-	require.Equal(t, uint64(3), actual.Weight)
+	require.EqualValues(t, 3, actual.Weight)
 
 	// Verify old expiration index entry was deleted
 	oldIndexKey := utils.ConcatBytes(
@@ -213,7 +213,7 @@ func TestHoldersTable_UpdateSameExpiration(t *testing.T) {
 	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	semaphoreId := rand.Uint64()
 	leaseId := rand.Uint64()
 	now := time.Now()
@@ -255,7 +255,7 @@ func TestHoldersTable_UpdateSameExpiration(t *testing.T) {
 	actual, err := table.Get(txn, holder.Id)
 	require.NoError(t, err)
 	require.Equal(t, expiresAt, actual.ExpiresAt)
-	require.Equal(t, uint64(2), actual.Weight)
+	require.EqualValues(t, 2, actual.Weight)
 
 	// Verify expiration index entry still exists
 	indexKey := utils.ConcatBytes(
@@ -276,7 +276,7 @@ func TestHoldersTable_UpdateNonExistent(t *testing.T) {
 	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	semaphoreId := rand.Uint64()
 	leaseId := rand.Uint64()
 	now := time.Now()
@@ -308,7 +308,7 @@ func TestHoldersTable_Delete(t *testing.T) {
 	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	semaphoreId := rand.Uint64()
 	leaseId := rand.Uint64()
 	now := time.Now()
@@ -362,7 +362,7 @@ func TestHoldersTable_List(t *testing.T) {
 	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	semaphoreId := rand.Uint64()
 	now := time.Now()
 
@@ -378,7 +378,7 @@ func TestHoldersTable_List(t *testing.T) {
 			},
 			LockedAt:  now.Add(time.Duration(i) * time.Minute).UnixNano(),
 			ExpiresAt: now.Add(time.Duration(i+1) * time.Hour).UnixNano(),
-			Weight:    uint64(i + 1),
+			Weight:    int64(i + 1),
 		}
 	}
 
@@ -412,7 +412,7 @@ func TestHoldersTable_ListWithPagination(t *testing.T) {
 	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	semaphoreId := rand.Uint64()
 	now := time.Now()
 
@@ -428,7 +428,7 @@ func TestHoldersTable_ListWithPagination(t *testing.T) {
 			},
 			LockedAt:  now.Add(time.Duration(i) * time.Minute).UnixNano(),
 			ExpiresAt: now.Add(time.Duration(i+1) * time.Hour).UnixNano(),
-			Weight:    uint64(i + 1),
+			Weight:    int64(i + 1),
 		}
 
 		txn := store.Update()
@@ -492,7 +492,7 @@ func TestHoldersTable_ListEmpty(t *testing.T) {
 	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	semaphoreId := rand.Uint64()
 
 	txn := store.View()
@@ -511,7 +511,7 @@ func TestHoldersTable_ListByExpiration(t *testing.T) {
 	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	semaphoreId := rand.Uint64()
 	now := time.Now()
 
@@ -600,7 +600,7 @@ func TestHoldersTable_ListByExpirationStopEarly(t *testing.T) {
 	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	semaphoreId := rand.Uint64()
 	now := time.Now()
 
@@ -651,7 +651,7 @@ func TestHoldersTable_ListByExpirationEmpty(t *testing.T) {
 	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	semaphoreId := rand.Uint64()
 	leaseId := rand.Uint64()
 	now := time.Now()
@@ -701,7 +701,7 @@ func TestHoldersTable_MultipleSemaphores(t *testing.T) {
 	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	semaphoreId1 := rand.Uint64()
 	semaphoreId2 := rand.Uint64()
 	now := time.Now()

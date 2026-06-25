@@ -173,6 +173,26 @@ $ evrblk authn generate-alfa-key
 Read [Authentication](https://everblack.dev/docs/api/authentication/) documentation to learm more about how it works 
 and how to generate keys.
 
+## Project Status
+
+Grackle is being actively developed. However, feature-wise it already has the shape I originally envisioned for it.
+Public API version is `v1beta` - expect some breaking changes before it becomes `v1`. Disk-level compatibility can
+also be broken before `v1`.
+
+## Contributing
+
+Ways to contribute:
+
+- Bug reports: Use the [GitHub issue tracker](https://github.com/evrblk/grackle/issues/new).
+- Feature requests: Use the [GitHub issue tracker](https://github.com/evrblk/grackle/issues/new).
+- Code changes: Submit a pull request.
+- Documentation: Submit a pull request.
+
+Before you contribute:
+
+- Check [open issues](https://github.com/evrblk/grackle/issues) and 
+  [pull requests](https://github.com/evrblk/grackle/pulls) to avoid duplicating work.
+
 ## License
 
 Everblack Grackle is released under the [AGPL-3 License](https://opensource.org/license/agpl-v3).

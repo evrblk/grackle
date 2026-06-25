@@ -199,7 +199,7 @@ func (t *locksTable) Delete(txn *store.Txn, lockId *corepb.LockId) error {
 	return t.table.Delete(txn, tableKey)
 }
 
-func (t *locksTable) tablePK(accountId uint64, namespaceId uint32) []byte {
+func (t *locksTable) tablePK(accountId uint64, namespaceId uint64) []byte {
 	return utils.ConcatBytes(
 		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,
@@ -213,7 +213,7 @@ func (t *locksTable) tableSK(lockName string) []byte {
 	)
 }
 
-func (t *locksTable) leaseIdIndexPK(accountId uint64, namespaceId uint32, leaseId uint64) []byte {
+func (t *locksTable) leaseIdIndexPK(accountId uint64, namespaceId uint64, leaseId uint64) []byte {
 	return utils.ConcatBytes(
 		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,

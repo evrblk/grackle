@@ -75,7 +75,7 @@ func (t *lockAncestorsTable) Delete(txn *store.Txn, lockId *corepb.LockId) error
 			t.tableSK(lockId.LockName)))
 }
 
-func (t *lockAncestorsTable) tablePK(accountId uint64, namespaceId uint32) []byte {
+func (t *lockAncestorsTable) tablePK(accountId uint64, namespaceId uint64) []byte {
 	return utils.ConcatBytes(
 		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,

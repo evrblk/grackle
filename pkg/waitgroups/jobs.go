@@ -45,7 +45,7 @@ type listWaitGroupJobsResult struct {
 	previousPaginationToken *corepb.PaginationToken
 }
 
-func (t *jobsTable) List(txn *store.Txn, accountId uint64, namespaceId uint32, waitGroupId uint64, paginationToken *corepb.PaginationToken, limit int) (*listWaitGroupJobsResult, error) {
+func (t *jobsTable) List(txn *store.Txn, accountId uint64, namespaceId uint64, waitGroupId uint64, paginationToken *corepb.PaginationToken, limit int) (*listWaitGroupJobsResult, error) {
 	result, err := t.table.ListPaginated(txn, tablePK(accountId, namespaceId, waitGroupId), pagination.CoreToMonstera(paginationToken), limit)
 	if err != nil {
 		return nil, err
@@ -80,7 +80,7 @@ func (t *jobsTable) Delete(txn *store.Txn, waitGroupJobId *corepb.WaitGroupJobId
 			tableSK(waitGroupJobId.JobId)))
 }
 
-func tablePK(accountId uint64, namespaceId uint32, waitGroupId uint64) []byte {
+func tablePK(accountId uint64, namespaceId uint64, waitGroupId uint64) []byte {
 	return utils.ConcatBytes(
 		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,

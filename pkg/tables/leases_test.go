@@ -19,7 +19,7 @@ func TestLeasesTable_Get(t *testing.T) {
 	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	leaseId := rand.Uint64()
 	processId := "test_process_1"
 	now := time.Now()
@@ -63,7 +63,7 @@ func TestLeasesTable_GetNonExistent(t *testing.T) {
 	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	leaseId := rand.Uint64()
 
 	leaseIdObj := &corepb.LeaseId{
@@ -87,7 +87,7 @@ func TestLeasesTable_CreateMultipleLeases(t *testing.T) {
 	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	processId := "test_process_1"
 	now := time.Now()
 
@@ -150,7 +150,7 @@ func TestLeasesTable_Update(t *testing.T) {
 	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	leaseId := rand.Uint64()
 	processId := "test_process_1"
 	now := time.Now()
@@ -198,7 +198,7 @@ func TestLeasesTable_UpdateNonExistent(t *testing.T) {
 	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	leaseId := rand.Uint64()
 	processId := "test_process_1"
 	now := time.Now()
@@ -229,7 +229,7 @@ func TestLeasesTable_UpdateExpirationIndexMaintenance(t *testing.T) {
 	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	leaseId := rand.Uint64()
 	processId := "test_process_1"
 	now := time.Now()
@@ -311,7 +311,7 @@ func TestLeasesTable_Delete(t *testing.T) {
 	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	leaseId := rand.Uint64()
 	processId := "test_process_1"
 	now := time.Now()
@@ -355,7 +355,7 @@ func TestLeasesTable_DeleteIndexMaintenance(t *testing.T) {
 	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	leaseId := rand.Uint64()
 	processId := "test_process_1"
 	now := time.Now()
@@ -415,7 +415,7 @@ func TestLeasesTable_List(t *testing.T) {
 	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	processId := "test_process_1"
 	now := time.Now()
 
@@ -461,7 +461,7 @@ func TestLeasesTable_ListEmpty(t *testing.T) {
 	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 
 	txn := store.View()
 	result, err := table.List(txn, &corepb.NamespaceId{
@@ -481,7 +481,7 @@ func TestLeasesTable_ListWithPagination(t *testing.T) {
 	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	processId := "test_process_1"
 	now := time.Now()
 
@@ -541,7 +541,7 @@ func TestLeasesTable_ListByExpiration(t *testing.T) {
 	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	processId := "test_process_1"
 	now := time.Now()
 
@@ -627,7 +627,7 @@ func TestLeasesTable_ListByExpirationEarlyStop(t *testing.T) {
 	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	processId := "test_process_1"
 	now := time.Now()
 
@@ -674,7 +674,7 @@ func TestLeasesTable_ListByProcessId(t *testing.T) {
 	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	processId1 := "test_process_1"
 	processId2 := "test_process_2"
 	now := time.Now()
@@ -759,7 +759,7 @@ func TestLeasesTable_ListByProcessIdEmpty(t *testing.T) {
 	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	processId := "nonexistent_process"
 
 	txn := store.View()
@@ -780,7 +780,7 @@ func TestLeasesTable_ListByProcessIdWithPagination(t *testing.T) {
 	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	processId := "test_process_1"
 	now := time.Now()
 
@@ -842,7 +842,7 @@ func TestLeasesTable_IndexConsistency(t *testing.T) {
 	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	leaseId := rand.Uint64()
 	processId := "test_process_1"
 	now := time.Now()
@@ -903,8 +903,8 @@ func TestLeasesTable_MultipleNamespaces(t *testing.T) {
 	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
-	namespaceId1 := rand.Uint32()
-	namespaceId2 := rand.Uint32()
+	namespaceId1 := rand.Uint64()
+	namespaceId2 := rand.Uint64()
 	processId := "test_process_1"
 	now := time.Now()
 
@@ -968,7 +968,7 @@ func TestLeasesTable_ListByExpirationWithError(t *testing.T) {
 	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	processId := "test_process_1"
 	now := time.Now()
 

@@ -19,7 +19,7 @@ func TestAncestors_ExclusiveLock(t *testing.T) {
 
 	lockId := &corepb.LockId{
 		AccountId:   rand.Uint64(),
-		NamespaceId: rand.Uint32(),
+		NamespaceId: rand.Uint64(),
 		LockName:    "a/b/c",
 	}
 
@@ -58,7 +58,7 @@ func TestAncestors_SharedLock(t *testing.T) {
 
 	lockId := &corepb.LockId{
 		AccountId:   rand.Uint64(),
-		NamespaceId: rand.Uint32(),
+		NamespaceId: rand.Uint64(),
 		LockName:    "a/b/c",
 	}
 
@@ -97,7 +97,7 @@ func TestAncestors_MultipleLocksSameAncestor(t *testing.T) {
 	now := time.Now()
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 
 	lockId1 := &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a/b/c"}
 	lockId2 := &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a/b/d"}
@@ -158,7 +158,7 @@ func TestAncestors_FlatLockNoAncestors(t *testing.T) {
 
 	lockId := &corepb.LockId{
 		AccountId:   rand.Uint64(),
-		NamespaceId: rand.Uint32(),
+		NamespaceId: rand.Uint64(),
 		LockName:    "flat_lock",
 	}
 
@@ -184,7 +184,7 @@ func TestAncestors_ExpirationCleansUpAncestors(t *testing.T) {
 
 	lockId := &corepb.LockId{
 		AccountId:   rand.Uint64(),
-		NamespaceId: rand.Uint32(),
+		NamespaceId: rand.Uint64(),
 		LockName:    "a/b/c",
 	}
 
@@ -212,7 +212,7 @@ func TestAncestors_GarbageCollectionCleansUpAncestors(t *testing.T) {
 
 	lockId := &corepb.LockId{
 		AccountId:   rand.Uint64(),
-		NamespaceId: rand.Uint32(),
+		NamespaceId: rand.Uint64(),
 		LockName:    "x/y/z",
 	}
 
@@ -250,7 +250,7 @@ func TestAncestors_NamespaceGCCleansUpAncestors(t *testing.T) {
 	now := time.Now()
 	namespaceId := &corepb.NamespaceId{
 		AccountId:   rand.Uint64(),
-		NamespaceId: rand.Uint32(),
+		NamespaceId: rand.Uint64(),
 	}
 	lockId := &corepb.LockId{
 		AccountId:   namespaceId.AccountId,
@@ -304,7 +304,7 @@ func TestAncestors_ReacquireExpiredWithDifferentMode(t *testing.T) {
 
 	lockId := &corepb.LockId{
 		AccountId:   rand.Uint64(),
-		NamespaceId: rand.Uint32(),
+		NamespaceId: rand.Uint64(),
 		LockName:    "a/b/c",
 	}
 
@@ -336,7 +336,7 @@ func TestAncestors_SnapshotRestore(t *testing.T) {
 
 	lockId := &corepb.LockId{
 		AccountId:   rand.Uint64(),
-		NamespaceId: rand.Uint32(),
+		NamespaceId: rand.Uint64(),
 		LockName:    "a/b/c",
 	}
 

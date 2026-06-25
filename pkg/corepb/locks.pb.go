@@ -7,11 +7,12 @@
 package corepb
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -76,10 +77,10 @@ func (LockState) EnumDescriptor() ([]byte, []int) {
 type AcquireLockRequest struct {
 	state                        protoimpl.MessageState `protogen:"open.v1"`
 	LockId                       *LockId                `protobuf:"bytes,1,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty"`
-	LeaseId                      uint64                 `protobuf:"varint,2,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
+	LeaseId                      uint64                 `protobuf:"fixed64,2,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
 	Exclusive                    bool                   `protobuf:"varint,3,opt,name=exclusive,proto3" json:"exclusive,omitempty"`
 	Metadata                     map[string]string      `protobuf:"bytes,4,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	Now                          int64                  `protobuf:"varint,5,opt,name=now,proto3" json:"now,omitempty"`
+	Now                          int64                  `protobuf:"fixed64,5,opt,name=now,proto3" json:"now,omitempty"`
 	MaxNumberOfLocksPerNamespace int64                  `protobuf:"varint,6,opt,name=max_number_of_locks_per_namespace,json=maxNumberOfLocksPerNamespace,proto3" json:"max_number_of_locks_per_namespace,omitempty"`
 	unknownFields                protoimpl.UnknownFields
 	sizeCache                    protoimpl.SizeCache
@@ -212,8 +213,8 @@ func (x *AcquireLockResponse) GetSuccess() bool {
 type ReleaseLockRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	LockId        *LockId                `protobuf:"bytes,1,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty"`
-	LeaseId       uint64                 `protobuf:"varint,2,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
-	Now           int64                  `protobuf:"varint,3,opt,name=now,proto3" json:"now,omitempty"`
+	LeaseId       uint64                 `protobuf:"fixed64,2,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
+	Now           int64                  `protobuf:"fixed64,3,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -316,7 +317,7 @@ func (x *ReleaseLockResponse) GetLock() *Lock {
 type GetLockRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	LockId        *LockId                `protobuf:"bytes,1,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty"`
-	Now           int64                  `protobuf:"varint,2,opt,name=now,proto3" json:"now,omitempty"`
+	Now           int64                  `protobuf:"fixed64,2,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -412,7 +413,7 @@ func (x *GetLockResponse) GetLock() *Lock {
 type DeleteLockRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	LockId        *LockId                `protobuf:"bytes,1,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty"`
-	Now           int64                  `protobuf:"varint,2,opt,name=now,proto3" json:"now,omitempty"`
+	Now           int64                  `protobuf:"fixed64,2,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -500,7 +501,7 @@ func (*DeleteLockResponse) Descriptor() ([]byte, []int) {
 type ListLocksRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	NamespaceId     *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	Now             int64                  `protobuf:"varint,2,opt,name=now,proto3" json:"now,omitempty"`
+	Now             int64                  `protobuf:"fixed64,2,opt,name=now,proto3" json:"now,omitempty"`
 	PaginationToken *PaginationToken       `protobuf:"bytes,3,opt,name=pagination_token,json=paginationToken,proto3" json:"pagination_token,omitempty"`
 	Limit           int32                  `protobuf:"varint,4,opt,name=limit,proto3" json:"limit,omitempty"`
 	unknownFields   protoimpl.UnknownFields
@@ -628,7 +629,7 @@ func (x *ListLocksResponse) GetPreviousPaginationToken() *PaginationToken {
 type ListLocksByLeaseIdRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	LeaseId         *LeaseId               `protobuf:"bytes,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
-	Now             int64                  `protobuf:"varint,2,opt,name=now,proto3" json:"now,omitempty"`
+	Now             int64                  `protobuf:"fixed64,2,opt,name=now,proto3" json:"now,omitempty"`
 	PaginationToken *PaginationToken       `protobuf:"bytes,3,opt,name=pagination_token,json=paginationToken,proto3" json:"pagination_token,omitempty"`
 	Limit           int32                  `protobuf:"varint,4,opt,name=limit,proto3" json:"limit,omitempty"`
 	unknownFields   protoimpl.UnknownFields
@@ -755,7 +756,7 @@ func (x *ListLocksByLeaseIdResponse) GetPreviousPaginationToken() *PaginationTok
 
 type RunLocksGarbageCollectionRequest struct {
 	state                 protoimpl.MessageState `protogen:"open.v1"`
-	Now                   int64                  `protobuf:"varint,1,opt,name=now,proto3" json:"now,omitempty"`
+	Now                   int64                  `protobuf:"fixed64,1,opt,name=now,proto3" json:"now,omitempty"`
 	GcRecordsPageSize     int64                  `protobuf:"varint,2,opt,name=gc_records_page_size,json=gcRecordsPageSize,proto3" json:"gc_records_page_size,omitempty"`
 	GcRecordLocksPageSize int64                  `protobuf:"varint,3,opt,name=gc_record_locks_page_size,json=gcRecordLocksPageSize,proto3" json:"gc_record_locks_page_size,omitempty"`
 	MaxVisitedLocks       int64                  `protobuf:"varint,4,opt,name=max_visited_locks,json=maxVisitedLocks,proto3" json:"max_visited_locks,omitempty"`
@@ -860,8 +861,8 @@ func (*RunLocksGarbageCollectionResponse) Descriptor() ([]byte, []int) {
 type LocksDeleteNamespaceRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	RecordId      uint64                 `protobuf:"varint,2,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
-	Now           int64                  `protobuf:"varint,3,opt,name=now,proto3" json:"now,omitempty"`
+	RecordId      uint64                 `protobuf:"fixed64,2,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
+	Now           int64                  `protobuf:"fixed64,3,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -957,8 +958,8 @@ type CreateLockLeaseRequest struct {
 	state                 protoimpl.MessageState `protogen:"open.v1"`
 	LeaseId               *LeaseId               `protobuf:"bytes,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
 	ProcessId             string                 `protobuf:"bytes,2,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
-	TtlSeconds            uint64                 `protobuf:"varint,3,opt,name=ttl_seconds,json=ttlSeconds,proto3" json:"ttl_seconds,omitempty"`
-	Now                   int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
+	TtlSeconds            int64                  `protobuf:"varint,3,opt,name=ttl_seconds,json=ttlSeconds,proto3" json:"ttl_seconds,omitempty"`
+	Now                   int64                  `protobuf:"fixed64,4,opt,name=now,proto3" json:"now,omitempty"`
 	Metadata              map[string]string      `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	MaxNumberOfLockLeases int64                  `protobuf:"varint,6,opt,name=max_number_of_lock_leases,json=maxNumberOfLockLeases,proto3" json:"max_number_of_lock_leases,omitempty"`
 	unknownFields         protoimpl.UnknownFields
@@ -1009,7 +1010,7 @@ func (x *CreateLockLeaseRequest) GetProcessId() string {
 	return ""
 }
 
-func (x *CreateLockLeaseRequest) GetTtlSeconds() uint64 {
+func (x *CreateLockLeaseRequest) GetTtlSeconds() int64 {
 	if x != nil {
 		return x.TtlSeconds
 	}
@@ -1084,7 +1085,7 @@ func (x *CreateLockLeaseResponse) GetLease() *Lease {
 type RevokeLockLeaseRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	LeaseId       *LeaseId               `protobuf:"bytes,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
-	Now           int64                  `protobuf:"varint,2,opt,name=now,proto3" json:"now,omitempty"`
+	Now           int64                  `protobuf:"fixed64,2,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1172,8 +1173,8 @@ func (*RevokeLockLeaseResponse) Descriptor() ([]byte, []int) {
 type RefreshLockLeaseRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	LeaseId       *LeaseId               `protobuf:"bytes,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
-	TtlSeconds    uint64                 `protobuf:"varint,2,opt,name=ttl_seconds,json=ttlSeconds,proto3" json:"ttl_seconds,omitempty"`
-	Now           int64                  `protobuf:"varint,3,opt,name=now,proto3" json:"now,omitempty"`
+	TtlSeconds    int64                  `protobuf:"varint,2,opt,name=ttl_seconds,json=ttlSeconds,proto3" json:"ttl_seconds,omitempty"`
+	Now           int64                  `protobuf:"fixed64,3,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1215,7 +1216,7 @@ func (x *RefreshLockLeaseRequest) GetLeaseId() *LeaseId {
 	return nil
 }
 
-func (x *RefreshLockLeaseRequest) GetTtlSeconds() uint64 {
+func (x *RefreshLockLeaseRequest) GetTtlSeconds() int64 {
 	if x != nil {
 		return x.TtlSeconds
 	}
@@ -1276,7 +1277,7 @@ func (x *RefreshLockLeaseResponse) GetLease() *Lease {
 type GetLockLeaseRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	LeaseId       *LeaseId               `protobuf:"bytes,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
-	Now           int64                  `protobuf:"varint,2,opt,name=now,proto3" json:"now,omitempty"`
+	Now           int64                  `protobuf:"fixed64,2,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1372,7 +1373,7 @@ func (x *GetLockLeaseResponse) GetLease() *Lease {
 type ListLockLeasesRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	NamespaceId     *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	Now             int64                  `protobuf:"varint,2,opt,name=now,proto3" json:"now,omitempty"`
+	Now             int64                  `protobuf:"fixed64,2,opt,name=now,proto3" json:"now,omitempty"`
 	PaginationToken *PaginationToken       `protobuf:"bytes,3,opt,name=pagination_token,json=paginationToken,proto3" json:"pagination_token,omitempty"`
 	Limit           int32                  `protobuf:"varint,4,opt,name=limit,proto3" json:"limit,omitempty"`
 	unknownFields   protoimpl.UnknownFields
@@ -1501,7 +1502,7 @@ type ListLockLeasesByProcessIdRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	NamespaceId     *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	ProcessId       string                 `protobuf:"bytes,2,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
-	Now             int64                  `protobuf:"varint,3,opt,name=now,proto3" json:"now,omitempty"`
+	Now             int64                  `protobuf:"fixed64,3,opt,name=now,proto3" json:"now,omitempty"`
 	PaginationToken *PaginationToken       `protobuf:"bytes,4,opt,name=pagination_token,json=paginationToken,proto3" json:"pagination_token,omitempty"`
 	Limit           int32                  `protobuf:"varint,5,opt,name=limit,proto3" json:"limit,omitempty"`
 	unknownFields   protoimpl.UnknownFields
@@ -1637,11 +1638,11 @@ type Lock struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
 	Id          *LockId                `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	State       LockState              `protobuf:"varint,2,opt,name=state,proto3,enum=com.evrblk.grackle.corepb.LockState" json:"state,omitempty"`
-	LockedAt    int64                  `protobuf:"varint,3,opt,name=locked_at,json=lockedAt,proto3" json:"locked_at,omitempty"`
+	LockedAt    int64                  `protobuf:"fixed64,3,opt,name=locked_at,json=lockedAt,proto3" json:"locked_at,omitempty"`
 	LockHolders []*LockHolder          `protobuf:"bytes,4,rep,name=lock_holders,json=lockHolders,proto3" json:"lock_holders,omitempty"`
 	// last_activity_at is the timestamp (ns) of the most recent activity on this
 	// lock (an acquire attempt or a release). Not affected by reads.
-	LastActivityAt int64 `protobuf:"varint,5,opt,name=last_activity_at,json=lastActivityAt,proto3" json:"last_activity_at,omitempty"`
+	LastActivityAt int64 `protobuf:"fixed64,5,opt,name=last_activity_at,json=lastActivityAt,proto3" json:"last_activity_at,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -1713,8 +1714,8 @@ func (x *Lock) GetLastActivityAt() int64 {
 
 type LockHolder struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	LeaseId       uint64                 `protobuf:"varint,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
-	LockedAt      int64                  `protobuf:"varint,2,opt,name=locked_at,json=lockedAt,proto3" json:"locked_at,omitempty"`
+	LeaseId       uint64                 `protobuf:"fixed64,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
+	LockedAt      int64                  `protobuf:"fixed64,2,opt,name=locked_at,json=lockedAt,proto3" json:"locked_at,omitempty"`
 	Metadata      map[string]string      `protobuf:"bytes,3,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1773,8 +1774,8 @@ func (x *LockHolder) GetMetadata() map[string]string {
 
 type LockId struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	AccountId     uint64                 `protobuf:"varint,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
-	NamespaceId   uint32                 `protobuf:"varint,2,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
+	AccountId     uint64                 `protobuf:"fixed64,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	NamespaceId   uint64                 `protobuf:"fixed64,2,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	LockName      string                 `protobuf:"bytes,3,opt,name=lock_name,json=lockName,proto3" json:"lock_name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1817,7 +1818,7 @@ func (x *LockId) GetAccountId() uint64 {
 	return 0
 }
 
-func (x *LockId) GetNamespaceId() uint32 {
+func (x *LockId) GetNamespaceId() uint64 {
 	if x != nil {
 		return x.NamespaceId
 	}
@@ -1885,7 +1886,7 @@ func (x *LocksCounter) GetNumberOfLeases() int64 {
 
 type LocksGarbageCollectionRecord struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id            uint64                 `protobuf:"fixed64,1,opt,name=id,proto3" json:"id,omitempty"`
 	NamespaceId   *NamespaceId           `protobuf:"bytes,2,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2002,10 +2003,10 @@ const file_pkg_corepb_locks_proto_rawDesc = "" +
 	"\x16pkg/corepb/locks.proto\x12\x19com.evrblk.grackle.corepb\x1a\x17pkg/corepb/common.proto\x1a\x1bpkg/corepb/namespaces.proto\"\xfa\x02\n" +
 	"\x12AcquireLockRequest\x12:\n" +
 	"\alock_id\x18\x01 \x01(\v2!.com.evrblk.grackle.corepb.LockIdR\x06lockId\x12\x19\n" +
-	"\blease_id\x18\x02 \x01(\x04R\aleaseId\x12\x1c\n" +
+	"\blease_id\x18\x02 \x01(\x06R\aleaseId\x12\x1c\n" +
 	"\texclusive\x18\x03 \x01(\bR\texclusive\x12W\n" +
 	"\bmetadata\x18\x04 \x03(\v2;.com.evrblk.grackle.corepb.AcquireLockRequest.MetadataEntryR\bmetadata\x12\x10\n" +
-	"\x03now\x18\x05 \x01(\x03R\x03now\x12G\n" +
+	"\x03now\x18\x05 \x01(\x10R\x03now\x12G\n" +
 	"!max_number_of_locks_per_namespace\x18\x06 \x01(\x03R\x1cmaxNumberOfLocksPerNamespace\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
@@ -2015,22 +2016,22 @@ const file_pkg_corepb_locks_proto_rawDesc = "" +
 	"\asuccess\x18\x02 \x01(\bR\asuccess\"}\n" +
 	"\x12ReleaseLockRequest\x12:\n" +
 	"\alock_id\x18\x01 \x01(\v2!.com.evrblk.grackle.corepb.LockIdR\x06lockId\x12\x19\n" +
-	"\blease_id\x18\x02 \x01(\x04R\aleaseId\x12\x10\n" +
-	"\x03now\x18\x03 \x01(\x03R\x03now\"J\n" +
+	"\blease_id\x18\x02 \x01(\x06R\aleaseId\x12\x10\n" +
+	"\x03now\x18\x03 \x01(\x10R\x03now\"J\n" +
 	"\x13ReleaseLockResponse\x123\n" +
 	"\x04lock\x18\x01 \x01(\v2\x1f.com.evrblk.grackle.corepb.LockR\x04lock\"^\n" +
 	"\x0eGetLockRequest\x12:\n" +
 	"\alock_id\x18\x01 \x01(\v2!.com.evrblk.grackle.corepb.LockIdR\x06lockId\x12\x10\n" +
-	"\x03now\x18\x02 \x01(\x03R\x03now\"F\n" +
+	"\x03now\x18\x02 \x01(\x10R\x03now\"F\n" +
 	"\x0fGetLockResponse\x123\n" +
 	"\x04lock\x18\x01 \x01(\v2\x1f.com.evrblk.grackle.corepb.LockR\x04lock\"a\n" +
 	"\x11DeleteLockRequest\x12:\n" +
 	"\alock_id\x18\x01 \x01(\v2!.com.evrblk.grackle.corepb.LockIdR\x06lockId\x12\x10\n" +
-	"\x03now\x18\x02 \x01(\x03R\x03now\"\x14\n" +
+	"\x03now\x18\x02 \x01(\x10R\x03now\"\x14\n" +
 	"\x12DeleteLockResponse\"\xdc\x01\n" +
 	"\x10ListLocksRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x10\n" +
-	"\x03now\x18\x02 \x01(\x03R\x03now\x12U\n" +
+	"\x03now\x18\x02 \x01(\x10R\x03now\x12U\n" +
 	"\x10pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x0fpaginationToken\x12\x14\n" +
 	"\x05limit\x18\x04 \x01(\x05R\x05limit\"\x92\x02\n" +
 	"\x11ListLocksResponse\x125\n" +
@@ -2039,7 +2040,7 @@ const file_pkg_corepb_locks_proto_rawDesc = "" +
 	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"\xd9\x01\n" +
 	"\x19ListLocksByLeaseIdRequest\x12=\n" +
 	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\x12\x10\n" +
-	"\x03now\x18\x02 \x01(\x03R\x03now\x12U\n" +
+	"\x03now\x18\x02 \x01(\x10R\x03now\x12U\n" +
 	"\x10pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x0fpaginationToken\x12\x14\n" +
 	"\x05limit\x18\x04 \x01(\x05R\x05limit\"\x9b\x02\n" +
 	"\x1aListLocksByLeaseIdResponse\x125\n" +
@@ -2047,23 +2048,23 @@ const file_pkg_corepb_locks_proto_rawDesc = "" +
 	"\x15next_pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x13nextPaginationToken\x12f\n" +
 	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"\xcb\x01\n" +
 	" RunLocksGarbageCollectionRequest\x12\x10\n" +
-	"\x03now\x18\x01 \x01(\x03R\x03now\x12/\n" +
+	"\x03now\x18\x01 \x01(\x10R\x03now\x12/\n" +
 	"\x14gc_records_page_size\x18\x02 \x01(\x03R\x11gcRecordsPageSize\x128\n" +
 	"\x19gc_record_locks_page_size\x18\x03 \x01(\x03R\x15gcRecordLocksPageSize\x12*\n" +
 	"\x11max_visited_locks\x18\x04 \x01(\x03R\x0fmaxVisitedLocks\"#\n" +
 	"!RunLocksGarbageCollectionResponse\"\x97\x01\n" +
 	"\x1bLocksDeleteNamespaceRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x1b\n" +
-	"\trecord_id\x18\x02 \x01(\x04R\brecordId\x12\x10\n" +
-	"\x03now\x18\x03 \x01(\x03R\x03now\"\x1e\n" +
+	"\trecord_id\x18\x02 \x01(\x06R\brecordId\x12\x10\n" +
+	"\x03now\x18\x03 \x01(\x10R\x03now\"\x1e\n" +
 	"\x1cLocksDeleteNamespaceResponse\"\xfd\x02\n" +
 	"\x16CreateLockLeaseRequest\x12=\n" +
 	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\x12\x1d\n" +
 	"\n" +
 	"process_id\x18\x02 \x01(\tR\tprocessId\x12\x1f\n" +
-	"\vttl_seconds\x18\x03 \x01(\x04R\n" +
+	"\vttl_seconds\x18\x03 \x01(\x03R\n" +
 	"ttlSeconds\x12\x10\n" +
-	"\x03now\x18\x04 \x01(\x03R\x03now\x12[\n" +
+	"\x03now\x18\x04 \x01(\x10R\x03now\x12[\n" +
 	"\bmetadata\x18\x05 \x03(\v2?.com.evrblk.grackle.corepb.CreateLockLeaseRequest.MetadataEntryR\bmetadata\x128\n" +
 	"\x19max_number_of_lock_leases\x18\x06 \x01(\x03R\x15maxNumberOfLockLeases\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
@@ -2073,23 +2074,23 @@ const file_pkg_corepb_locks_proto_rawDesc = "" +
 	"\x05lease\x18\x01 \x01(\v2 .com.evrblk.grackle.corepb.LeaseR\x05lease\"i\n" +
 	"\x16RevokeLockLeaseRequest\x12=\n" +
 	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\x12\x10\n" +
-	"\x03now\x18\x02 \x01(\x03R\x03now\"\x19\n" +
+	"\x03now\x18\x02 \x01(\x10R\x03now\"\x19\n" +
 	"\x17RevokeLockLeaseResponse\"\x8b\x01\n" +
 	"\x17RefreshLockLeaseRequest\x12=\n" +
 	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\x12\x1f\n" +
-	"\vttl_seconds\x18\x02 \x01(\x04R\n" +
+	"\vttl_seconds\x18\x02 \x01(\x03R\n" +
 	"ttlSeconds\x12\x10\n" +
-	"\x03now\x18\x03 \x01(\x03R\x03now\"R\n" +
+	"\x03now\x18\x03 \x01(\x10R\x03now\"R\n" +
 	"\x18RefreshLockLeaseResponse\x126\n" +
 	"\x05lease\x18\x01 \x01(\v2 .com.evrblk.grackle.corepb.LeaseR\x05lease\"f\n" +
 	"\x13GetLockLeaseRequest\x12=\n" +
 	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\x12\x10\n" +
-	"\x03now\x18\x02 \x01(\x03R\x03now\"N\n" +
+	"\x03now\x18\x02 \x01(\x10R\x03now\"N\n" +
 	"\x14GetLockLeaseResponse\x126\n" +
 	"\x05lease\x18\x01 \x01(\v2 .com.evrblk.grackle.corepb.LeaseR\x05lease\"\xe1\x01\n" +
 	"\x15ListLockLeasesRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x10\n" +
-	"\x03now\x18\x02 \x01(\x03R\x03now\x12U\n" +
+	"\x03now\x18\x02 \x01(\x10R\x03now\x12U\n" +
 	"\x10pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x0fpaginationToken\x12\x14\n" +
 	"\x05limit\x18\x04 \x01(\x05R\x05limit\"\x9a\x02\n" +
 	"\x16ListLockLeasesResponse\x128\n" +
@@ -2100,7 +2101,7 @@ const file_pkg_corepb_locks_proto_rawDesc = "" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x1d\n" +
 	"\n" +
 	"process_id\x18\x02 \x01(\tR\tprocessId\x12\x10\n" +
-	"\x03now\x18\x03 \x01(\x03R\x03now\x12U\n" +
+	"\x03now\x18\x03 \x01(\x10R\x03now\x12U\n" +
 	"\x10pagination_token\x18\x04 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x0fpaginationToken\x12\x14\n" +
 	"\x05limit\x18\x05 \x01(\x05R\x05limit\"\xa5\x02\n" +
 	"!ListLockLeasesByProcessIdResponse\x128\n" +
@@ -2110,27 +2111,27 @@ const file_pkg_corepb_locks_proto_rawDesc = "" +
 	"\x04Lock\x121\n" +
 	"\x02id\x18\x01 \x01(\v2!.com.evrblk.grackle.corepb.LockIdR\x02id\x12:\n" +
 	"\x05state\x18\x02 \x01(\x0e2$.com.evrblk.grackle.corepb.LockStateR\x05state\x12\x1b\n" +
-	"\tlocked_at\x18\x03 \x01(\x03R\blockedAt\x12H\n" +
+	"\tlocked_at\x18\x03 \x01(\x10R\blockedAt\x12H\n" +
 	"\flock_holders\x18\x04 \x03(\v2%.com.evrblk.grackle.corepb.LockHolderR\vlockHolders\x12(\n" +
-	"\x10last_activity_at\x18\x05 \x01(\x03R\x0elastActivityAt\"\xd2\x01\n" +
+	"\x10last_activity_at\x18\x05 \x01(\x10R\x0elastActivityAt\"\xd2\x01\n" +
 	"\n" +
 	"LockHolder\x12\x19\n" +
-	"\blease_id\x18\x01 \x01(\x04R\aleaseId\x12\x1b\n" +
-	"\tlocked_at\x18\x02 \x01(\x03R\blockedAt\x12O\n" +
+	"\blease_id\x18\x01 \x01(\x06R\aleaseId\x12\x1b\n" +
+	"\tlocked_at\x18\x02 \x01(\x10R\blockedAt\x12O\n" +
 	"\bmetadata\x18\x03 \x03(\v23.com.evrblk.grackle.corepb.LockHolder.MetadataEntryR\bmetadata\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"g\n" +
 	"\x06LockId\x12\x1d\n" +
 	"\n" +
-	"account_id\x18\x01 \x01(\x04R\taccountId\x12!\n" +
-	"\fnamespace_id\x18\x02 \x01(\rR\vnamespaceId\x12\x1b\n" +
+	"account_id\x18\x01 \x01(\x06R\taccountId\x12!\n" +
+	"\fnamespace_id\x18\x02 \x01(\x06R\vnamespaceId\x12\x1b\n" +
 	"\tlock_name\x18\x03 \x01(\tR\blockName\"`\n" +
 	"\fLocksCounter\x12&\n" +
 	"\x0fnumber_of_locks\x18\x01 \x01(\x03R\rnumberOfLocks\x12(\n" +
 	"\x10number_of_leases\x18\x02 \x01(\x03R\x0enumberOfLeases\"y\n" +
 	"\x1cLocksGarbageCollectionRecord\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x04R\x02id\x12I\n" +
+	"\x02id\x18\x01 \x01(\x06R\x02id\x12I\n" +
 	"\fnamespace_id\x18\x02 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\"\x8d\x01\n" +
 	"\fLockAncestor\x121\n" +
 	"\x02id\x18\x01 \x01(\v2!.com.evrblk.grackle.corepb.LockIdR\x02id\x12'\n" +

@@ -16,15 +16,15 @@ message PaginationToken {
 }
 
 message LeaseId {
-  uint64 account_id = 1;
-  uint32 namespace_id = 2;
-  uint64 lease_id = 3;
+  fixed64 account_id = 1;
+  fixed64 namespace_id = 2;
+  fixed64 lease_id = 3;
 }
 
 message Lease {
   LeaseId id = 1;
   string process_id = 2;
-  int64 created_at = 3;
-  int64 expires_at = 4;
+  sfixed64 created_at = 3;
+  sfixed64 expires_at = 4;
   map<string, string> metadata = 5;
 }

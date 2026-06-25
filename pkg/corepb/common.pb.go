@@ -7,11 +7,12 @@
 package corepb
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -124,9 +125,9 @@ func (x *PaginationToken) GetValue() []byte {
 
 type LeaseId struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	AccountId     uint64                 `protobuf:"varint,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
-	NamespaceId   uint32                 `protobuf:"varint,2,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	LeaseId       uint64                 `protobuf:"varint,3,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
+	AccountId     uint64                 `protobuf:"fixed64,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	NamespaceId   uint64                 `protobuf:"fixed64,2,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
+	LeaseId       uint64                 `protobuf:"fixed64,3,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -168,7 +169,7 @@ func (x *LeaseId) GetAccountId() uint64 {
 	return 0
 }
 
-func (x *LeaseId) GetNamespaceId() uint32 {
+func (x *LeaseId) GetNamespaceId() uint64 {
 	if x != nil {
 		return x.NamespaceId
 	}
@@ -186,8 +187,8 @@ type Lease struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            *LeaseId               `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	ProcessId     string                 `protobuf:"bytes,2,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
-	CreatedAt     int64                  `protobuf:"varint,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	ExpiresAt     int64                  `protobuf:"varint,4,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	CreatedAt     int64                  `protobuf:"fixed64,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	ExpiresAt     int64                  `protobuf:"fixed64,4,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	Metadata      map[string]string      `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -272,17 +273,17 @@ const file_pkg_corepb_common_proto_rawDesc = "" +
 	"\bPREVIOUS\x10\x02\"f\n" +
 	"\aLeaseId\x12\x1d\n" +
 	"\n" +
-	"account_id\x18\x01 \x01(\x04R\taccountId\x12!\n" +
-	"\fnamespace_id\x18\x02 \x01(\rR\vnamespaceId\x12\x19\n" +
-	"\blease_id\x18\x03 \x01(\x04R\aleaseId\"\xa1\x02\n" +
+	"account_id\x18\x01 \x01(\x06R\taccountId\x12!\n" +
+	"\fnamespace_id\x18\x02 \x01(\x06R\vnamespaceId\x12\x19\n" +
+	"\blease_id\x18\x03 \x01(\x06R\aleaseId\"\xa1\x02\n" +
 	"\x05Lease\x122\n" +
 	"\x02id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\x02id\x12\x1d\n" +
 	"\n" +
 	"process_id\x18\x02 \x01(\tR\tprocessId\x12\x1d\n" +
 	"\n" +
-	"created_at\x18\x03 \x01(\x03R\tcreatedAt\x12\x1d\n" +
+	"created_at\x18\x03 \x01(\x10R\tcreatedAt\x12\x1d\n" +
 	"\n" +
-	"expires_at\x18\x04 \x01(\x03R\texpiresAt\x12J\n" +
+	"expires_at\x18\x04 \x01(\x10R\texpiresAt\x12J\n" +
 	"\bmetadata\x18\x05 \x03(\v2..com.evrblk.grackle.corepb.Lease.MetadataEntryR\bmetadata\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +

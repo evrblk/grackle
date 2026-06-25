@@ -1135,29 +1135,29 @@ func (m *ListSemaphoresResponse) MarshalBinary() (data []byte, err error) {
 	return m.MarshalVT()
 }
 
-// ListWaitGroupJobsRequest
+// ListWaitGroupCompletedJobsRequest
 
-var _ encoding.BinaryMarshaler = (*ListWaitGroupJobsRequest)(nil)
-var _ encoding.BinaryUnmarshaler = (*ListWaitGroupJobsRequest)(nil)
+var _ encoding.BinaryMarshaler = (*ListWaitGroupCompletedJobsRequest)(nil)
+var _ encoding.BinaryUnmarshaler = (*ListWaitGroupCompletedJobsRequest)(nil)
 
-func (m *ListWaitGroupJobsRequest) UnmarshalBinary(data []byte) error {
+func (m *ListWaitGroupCompletedJobsRequest) UnmarshalBinary(data []byte) error {
 	return m.UnmarshalVT(data)
 }
 
-func (m *ListWaitGroupJobsRequest) MarshalBinary() (data []byte, err error) {
+func (m *ListWaitGroupCompletedJobsRequest) MarshalBinary() (data []byte, err error) {
 	return m.MarshalVT()
 }
 
-// ListWaitGroupJobsResponse
+// ListWaitGroupCompletedJobsResponse
 
-var _ encoding.BinaryMarshaler = (*ListWaitGroupJobsResponse)(nil)
-var _ encoding.BinaryUnmarshaler = (*ListWaitGroupJobsResponse)(nil)
+var _ encoding.BinaryMarshaler = (*ListWaitGroupCompletedJobsResponse)(nil)
+var _ encoding.BinaryUnmarshaler = (*ListWaitGroupCompletedJobsResponse)(nil)
 
-func (m *ListWaitGroupJobsResponse) UnmarshalBinary(data []byte) error {
+func (m *ListWaitGroupCompletedJobsResponse) UnmarshalBinary(data []byte) error {
 	return m.UnmarshalVT(data)
 }
 
-func (m *ListWaitGroupJobsResponse) MarshalBinary() (data []byte, err error) {
+func (m *ListWaitGroupCompletedJobsResponse) MarshalBinary() (data []byte, err error) {
 	return m.MarshalVT()
 }
 

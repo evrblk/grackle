@@ -42,8 +42,9 @@ next cycle starts fresh with `arrived_processes = 0`. Every `ArriveAtBarrier` an
 contribute to a later cycle, and so a fast client can wait specifically for the cycle it cares
 about.
 
-When the barrier releases, `WaitAtBarrier` returns the `next_generation` value the peers should
-use for their next round.
+Generations advance by exactly one per trip, so peers compute the next round themselves: after a
+call that waited at `expected_generation: N` releases, the next round is `expected_generation: N+1`.
+The barrier's actual current generation is always available on `barrier.generation`.
 
 ### Activity tracking
 Each barrier carries a `last_activity_at` timestamp — the time of the most recent activity on it,
@@ -69,9 +70,11 @@ There are two ways to interact with a barrier:
 - `ArriveAtBarrier` — records the caller's arrival and returns **immediately**. The response
   carries the current barrier state and `all_arrived` so a caller that does not need to block can
   fire-and-go.
-- `WaitAtBarrier` — blocks until the barrier releases for the requested generation (returns
-  `all_arrived: true`) or `timeout_seconds` elapses (returns `timed_out: true`). The wait call
-  does not register an arrival — peers usually call `ArriveAtBarrier` first, then
+- `WaitAtBarrier` — blocks until the barrier releases for the requested generation or
+  `timeout_seconds` elapses. The response carries an `outcome` enum: `BARRIER_WAIT_OUTCOME_TRIPPED`
+  when all expected processes arrived and the barrier advanced a generation, or
+  `BARRIER_WAIT_OUTCOME_TIMED_OUT` when `timeout_seconds` elapsed before the barrier tripped. The
+  wait call does not register an arrival — peers usually call `ArriveAtBarrier` first, then
   `WaitAtBarrier`.
 
 ### Metadata
@@ -138,8 +141,7 @@ ArriveAtBarrierResponse (not yet released):
     "arrived_processes": 1,
     "generation": 1
   },
-  "all_arrived": false,
-  "next_generation": 2
+  "all_arrived": false
 }
 ```
 
@@ -156,22 +158,21 @@ WaitAtBarrierRequest:
 }
 ```
 
-WaitAtBarrierResponse (all peers arrived before timeout):
+WaitAtBarrierResponse (all peers arrived before timeout — the barrier has advanced to generation 2
+and `arrived_processes` reset to 0):
 ```json
 {
   "barrier": {
     "name": "phase_1_complete",
     "expected_processes": 4,
-    "arrived_processes": 4,
-    "generation": 1
+    "arrived_processes": 0,
+    "generation": 2
   },
-  "all_arrived": true,
-  "next_generation": 2,
-  "timed_out": false
+  "outcome": "BARRIER_WAIT_OUTCOME_TRIPPED"
 }
 ```
 
-WaitAtBarrierResponse (timeout fired first):
+WaitAtBarrierResponse (timeout fired first — no trip, so the barrier is unchanged):
 ```json
 {
   "barrier": {
@@ -180,15 +181,13 @@ WaitAtBarrierResponse (timeout fired first):
     "arrived_processes": 3,
     "generation": 1
   },
-  "all_arrived": false,
-  "next_generation": 2,
-  "timed_out": true
+  "outcome": "BARRIER_WAIT_OUTCOME_TIMED_OUT"
 }
 ```
 
 A timed-out caller can simply call `WaitAtBarrier` again — late arrivals continue to accumulate
-in the background. For the next phase, every peer uses `expected_generation: 1` from
-`next_generation` and the cycle repeats.
+in the background. Once the barrier trips, the next phase uses `expected_generation: 2` (one more
+than the round that just completed) and the cycle repeats.
 
 Inspect the barrier at any time with `GetBarrier`, or enumerate who has arrived in a given
 generation with `ListBarrierParticipants`. `DeleteBarrier` removes the barrier and its

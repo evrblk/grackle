@@ -74,7 +74,7 @@ func TestAcquireLock(t *testing.T) {
 				TimeoutSeconds: 5,
 			})
 			require.NoError(t, err)
-			require.True(t, acqResp.Success)
+			require.Equal(t, gracklepb.AcquireOutcome_ACQUIRE_OUTCOME_ACQUIRED, acqResp.Outcome)
 
 			// Create second lease for the waiter
 			waiterLease, err := server.CreateLockLease(ctx, &gracklepb.CreateLockLeaseRequest{
@@ -104,7 +104,7 @@ func TestAcquireLock(t *testing.T) {
 			})
 			require.NoError(t, err)
 			require.NotNil(t, resp)
-			require.True(t, resp.Success)
+			require.Equal(t, gracklepb.AcquireOutcome_ACQUIRE_OUTCOME_ACQUIRED, resp.Outcome)
 		})
 	})
 
@@ -134,7 +134,7 @@ func TestAcquireLock(t *testing.T) {
 			TimeoutSeconds: 5,
 		})
 		require.NoError(t, err)
-		require.True(t, acqResp.Success)
+		require.Equal(t, gracklepb.AcquireOutcome_ACQUIRE_OUTCOME_ACQUIRED, acqResp.Outcome)
 
 		// Create second lease for the waiter
 		waiterLease, err := server.CreateLockLease(ctx, &gracklepb.CreateLockLeaseRequest{
@@ -144,7 +144,7 @@ func TestAcquireLock(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// AcquireLock should block until timeout and return Success=false since the holder never releases
+		// AcquireLock should block until timeout and return TIMED_OUT since the holder never releases
 		resp, err := server.AcquireLock(ctx, &gracklepb.AcquireLockRequest{
 			NamespaceName:  "test-namespace",
 			LockName:       "test-lock",
@@ -154,7 +154,7 @@ func TestAcquireLock(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp)
-		require.False(t, resp.Success)
+		require.Equal(t, gracklepb.AcquireOutcome_ACQUIRE_OUTCOME_TIMED_OUT, resp.Outcome)
 	})
 }
 
@@ -623,7 +623,7 @@ func TestGetLockLease(t *testing.T) {
 		// Invalid request - lease not found
 		_, err = server.GetLockLease(ctx, &gracklepb.GetLockLeaseRequest{
 			NamespaceName: "namespace1",
-			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 		})
 		require.Error(t, err)
 	})

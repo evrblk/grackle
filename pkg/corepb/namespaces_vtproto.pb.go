@@ -5,10 +5,12 @@
 package corepb
 
 import (
+	binary "encoding/binary"
 	fmt "fmt"
+	io "io"
+
 	protohelpers "github.com/planetscale/vtprotobuf/protohelpers"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	io "io"
 )
 
 const (
@@ -73,9 +75,10 @@ func (m *CreateNamespaceRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error
 		}
 	}
 	if m.Now != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Now))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
 		i--
-		dAtA[i] = 0x20
+		dAtA[i] = 0x21
 	}
 	if len(m.Description) > 0 {
 		i -= len(m.Description)
@@ -193,9 +196,10 @@ func (m *ListNamespacesRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error)
 		dAtA[i] = 0x12
 	}
 	if m.AccountId != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.AccountId))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.AccountId))
 		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0x9
 	}
 	return len(dAtA) - i, nil
 }
@@ -389,9 +393,10 @@ func (m *GetNamespaceByNameRequest) MarshalToSizedBufferVT(dAtA []byte) (int, er
 		dAtA[i] = 0x12
 	}
 	if m.AccountId != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.AccountId))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.AccountId))
 		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0x9
 	}
 	return len(dAtA) - i, nil
 }
@@ -470,9 +475,10 @@ func (m *DeleteNamespaceRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error
 		copy(dAtA[i:], m.unknownFields)
 	}
 	if m.Now != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Now))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
 		i--
-		dAtA[i] = 0x18
+		dAtA[i] = 0x19
 	}
 	if len(m.NamespaceName) > 0 {
 		i -= len(m.NamespaceName)
@@ -482,9 +488,10 @@ func (m *DeleteNamespaceRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error
 		dAtA[i] = 0x12
 	}
 	if m.AccountId != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.AccountId))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.AccountId))
 		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0x9
 	}
 	return len(dAtA) - i, nil
 }
@@ -553,9 +560,10 @@ func (m *UpdateNamespaceRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error
 		copy(dAtA[i:], m.unknownFields)
 	}
 	if m.Now != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Now))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
 		i--
-		dAtA[i] = 0x30
+		dAtA[i] = 0x31
 	}
 	if m.ExpectedVersion != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.ExpectedVersion))
@@ -596,9 +604,10 @@ func (m *UpdateNamespaceRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error
 		dAtA[i] = 0x12
 	}
 	if m.AccountId != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.AccountId))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.AccountId))
 		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0x9
 	}
 	return len(dAtA) - i, nil
 }
@@ -701,14 +710,16 @@ func (m *Namespace) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		dAtA[i] = 0x30
 	}
 	if m.UpdatedAt != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.UpdatedAt))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.UpdatedAt))
 		i--
-		dAtA[i] = 0x28
+		dAtA[i] = 0x29
 	}
 	if m.CreatedAt != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.CreatedAt))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.CreatedAt))
 		i--
-		dAtA[i] = 0x20
+		dAtA[i] = 0x21
 	}
 	if len(m.Description) > 0 {
 		i -= len(m.Description)
@@ -768,14 +779,16 @@ func (m *NamespaceId) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		copy(dAtA[i:], m.unknownFields)
 	}
 	if m.NamespaceId != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.NamespaceId))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.NamespaceId))
 		i--
-		dAtA[i] = 0x10
+		dAtA[i] = 0x11
 	}
 	if m.AccountId != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.AccountId))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.AccountId))
 		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0x9
 	}
 	return len(dAtA) - i, nil
 }
@@ -837,7 +850,7 @@ func (m *CreateNamespaceRequest) SizeVT() (n int) {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	if m.Now != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.Now))
+		n += 9
 	}
 	if len(m.Metadata) > 0 {
 		for k, v := range m.Metadata {
@@ -875,7 +888,7 @@ func (m *ListNamespacesRequest) SizeVT() (n int) {
 	var l int
 	_ = l
 	if m.AccountId != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.AccountId))
+		n += 9
 	}
 	if m.PaginationToken != nil {
 		l = m.PaginationToken.SizeVT()
@@ -947,7 +960,7 @@ func (m *GetNamespaceByNameRequest) SizeVT() (n int) {
 	var l int
 	_ = l
 	if m.AccountId != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.AccountId))
+		n += 9
 	}
 	l = len(m.NamespaceName)
 	if l > 0 {
@@ -978,14 +991,14 @@ func (m *DeleteNamespaceRequest) SizeVT() (n int) {
 	var l int
 	_ = l
 	if m.AccountId != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.AccountId))
+		n += 9
 	}
 	l = len(m.NamespaceName)
 	if l > 0 {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	if m.Now != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.Now))
+		n += 9
 	}
 	n += len(m.unknownFields)
 	return n
@@ -1008,7 +1021,7 @@ func (m *UpdateNamespaceRequest) SizeVT() (n int) {
 	var l int
 	_ = l
 	if m.AccountId != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.AccountId))
+		n += 9
 	}
 	l = len(m.NamespaceName)
 	if l > 0 {
@@ -1030,7 +1043,7 @@ func (m *UpdateNamespaceRequest) SizeVT() (n int) {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.ExpectedVersion))
 	}
 	if m.Now != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.Now))
+		n += 9
 	}
 	n += len(m.unknownFields)
 	return n
@@ -1069,10 +1082,10 @@ func (m *Namespace) SizeVT() (n int) {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	if m.CreatedAt != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.CreatedAt))
+		n += 9
 	}
 	if m.UpdatedAt != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.UpdatedAt))
+		n += 9
 	}
 	if m.Version != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.Version))
@@ -1096,10 +1109,10 @@ func (m *NamespaceId) SizeVT() (n int) {
 	var l int
 	_ = l
 	if m.AccountId != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.AccountId))
+		n += 9
 	}
 	if m.NamespaceId != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.NamespaceId))
+		n += 9
 	}
 	n += len(m.unknownFields)
 	return n
@@ -1248,24 +1261,15 @@ func (m *CreateNamespaceRequest) UnmarshalVT(dAtA []byte) error {
 			m.Description = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
 			}
 			m.Now = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Now |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
@@ -1551,24 +1555,15 @@ func (m *ListNamespacesRequest) UnmarshalVT(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AccountId", wireType)
 			}
 			m.AccountId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.AccountId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.AccountId = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field PaginationToken", wireType)
@@ -2007,24 +2002,15 @@ func (m *GetNamespaceByNameRequest) UnmarshalVT(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AccountId", wireType)
 			}
 			m.AccountId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.AccountId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.AccountId = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NamespaceName", wireType)
@@ -2196,24 +2182,15 @@ func (m *DeleteNamespaceRequest) UnmarshalVT(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AccountId", wireType)
 			}
 			m.AccountId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.AccountId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.AccountId = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NamespaceName", wireType)
@@ -2247,24 +2224,15 @@ func (m *DeleteNamespaceRequest) UnmarshalVT(dAtA []byte) error {
 			m.NamespaceName = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
 			}
 			m.Now = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Now |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -2368,24 +2336,15 @@ func (m *UpdateNamespaceRequest) UnmarshalVT(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AccountId", wireType)
 			}
 			m.AccountId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.AccountId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.AccountId = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NamespaceName", wireType)
@@ -2591,30 +2550,21 @@ func (m *UpdateNamespaceRequest) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ExpectedVersion |= uint64(b&0x7F) << shift
+				m.ExpectedVersion |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 6:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
 			}
 			m.Now = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Now |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -2854,43 +2804,25 @@ func (m *Namespace) UnmarshalVT(dAtA []byte) error {
 			m.Description = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CreatedAt", wireType)
 			}
 			m.CreatedAt = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.CreatedAt |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.CreatedAt = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 5:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field UpdatedAt", wireType)
 			}
 			m.UpdatedAt = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.UpdatedAt |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.UpdatedAt = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 6:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Version", wireType)
@@ -2905,7 +2837,7 @@ func (m *Namespace) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Version |= uint64(b&0x7F) << shift
+				m.Version |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -3089,43 +3021,25 @@ func (m *NamespaceId) UnmarshalVT(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AccountId", wireType)
 			}
 			m.AccountId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.AccountId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.AccountId = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 2:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NamespaceId", wireType)
 			}
 			m.NamespaceId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.NamespaceId |= uint32(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.NamespaceId = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])

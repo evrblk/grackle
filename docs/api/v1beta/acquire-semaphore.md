@@ -31,10 +31,19 @@ create a second holder.
 ## Response 
 
 * Returns `NotFound` if the namespace does not exist.
-* Either succeeds atomically with `success: true`, or returns `success: false` (without an error) 
-  when permits are unavailable.
+* The `outcome` enum reports the result: `ACQUIRE_OUTCOME_ACQUIRED` when the lease now holds the
+  permits (acquired atomically), `ACQUIRE_OUTCOME_UNAVAILABLE` when a non-blocking attempt
+  (`timeout_seconds: 0`) found the permits held by others and returned without waiting, or
+  `ACQUIRE_OUTCOME_TIMED_OUT` when the call blocked until `timeout_seconds` elapsed without ever
+  acquiring. The non-acquired outcomes return the current semaphore state without an error.
+* Returns `InvalidArgument` ("weight exceeds semaphore permits") if `weight` is greater than the
+  semaphore's total `permits` — such a request can never be satisfied, so it is rejected
+  immediately rather than blocked. A `weight` that merely exceeds the currently available permits
+  (`weight <= permits` but `active_holds + weight > permits`) still blocks and is reported via
+  `outcome`.
 * Returns `NotFound` if the lease or the semaphore does not exist (or the lease has expired).
-* Use `ListSemaphoreHolders` to see who currently holds permits when `success: false`.
+* Use `ListSemaphoreHolders` to see who currently holds permits when the outcome is not
+  `ACQUIRE_OUTCOME_ACQUIRED`.
 
 __Success:__
 
@@ -50,7 +59,7 @@ __Success:__
     "updated_at": 1695826239671432000,
     "last_activity_at": 1695826239671432000
   },
-  "success": true
+  "outcome": "ACQUIRE_OUTCOME_ACQUIRED"
 }
 ```
 
@@ -65,6 +74,6 @@ __No permits left:__
     "active_holders_count": 7,
     "last_activity_at": 1695826239671432000
   },
-  "success": false
+  "outcome": "ACQUIRE_OUTCOME_TIMED_OUT"
 }
 ```

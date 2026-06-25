@@ -7,11 +7,12 @@
 package corepb
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -84,9 +85,9 @@ type CreateWaitGroupRequest struct {
 	WaitGroupId                       *WaitGroupId           `protobuf:"bytes,1,opt,name=wait_group_id,json=waitGroupId,proto3" json:"wait_group_id,omitempty"`
 	Name                              string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Description                       string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	Now                               int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
-	Counter                           uint64                 `protobuf:"varint,5,opt,name=counter,proto3" json:"counter,omitempty"`
-	ExpiresAt                         int64                  `protobuf:"varint,6,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	Now                               int64                  `protobuf:"fixed64,4,opt,name=now,proto3" json:"now,omitempty"`
+	Counter                           int64                  `protobuf:"varint,5,opt,name=counter,proto3" json:"counter,omitempty"`
+	ExpiresAt                         int64                  `protobuf:"fixed64,6,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	Metadata                          map[string]string      `protobuf:"bytes,7,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	MaxNumberOfWaitGroupsPerNamespace int64                  `protobuf:"varint,8,opt,name=max_number_of_wait_groups_per_namespace,json=maxNumberOfWaitGroupsPerNamespace,proto3" json:"max_number_of_wait_groups_per_namespace,omitempty"`
 	DeleteAfterFinishedSeconds        int64                  `protobuf:"varint,9,opt,name=delete_after_finished_seconds,json=deleteAfterFinishedSeconds,proto3" json:"delete_after_finished_seconds,omitempty"`
@@ -152,7 +153,7 @@ func (x *CreateWaitGroupRequest) GetNow() int64 {
 	return 0
 }
 
-func (x *CreateWaitGroupRequest) GetCounter() uint64 {
+func (x *CreateWaitGroupRequest) GetCounter() int64 {
 	if x != nil {
 		return x.Counter
 	}
@@ -236,11 +237,11 @@ type UpdateWaitGroupRequest struct {
 	NamespaceId                *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	WaitGroupName              string                 `protobuf:"bytes,2,opt,name=wait_group_name,json=waitGroupName,proto3" json:"wait_group_name,omitempty"`
 	Description                string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	Now                        int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
-	ExpiresAt                  int64                  `protobuf:"varint,5,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	Counter                    uint64                 `protobuf:"varint,6,opt,name=counter,proto3" json:"counter,omitempty"`
+	Now                        int64                  `protobuf:"fixed64,4,opt,name=now,proto3" json:"now,omitempty"`
+	ExpiresAt                  int64                  `protobuf:"fixed64,5,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	Counter                    int64                  `protobuf:"varint,6,opt,name=counter,proto3" json:"counter,omitempty"`
 	Metadata                   map[string]string      `protobuf:"bytes,7,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	ExpectedVersion            uint64                 `protobuf:"varint,8,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
+	ExpectedVersion            int64                  `protobuf:"varint,8,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
 	DeleteAfterFinishedSeconds int64                  `protobuf:"varint,9,opt,name=delete_after_finished_seconds,json=deleteAfterFinishedSeconds,proto3" json:"delete_after_finished_seconds,omitempty"`
 	unknownFields              protoimpl.UnknownFields
 	sizeCache                  protoimpl.SizeCache
@@ -311,7 +312,7 @@ func (x *UpdateWaitGroupRequest) GetExpiresAt() int64 {
 	return 0
 }
 
-func (x *UpdateWaitGroupRequest) GetCounter() uint64 {
+func (x *UpdateWaitGroupRequest) GetCounter() int64 {
 	if x != nil {
 		return x.Counter
 	}
@@ -325,7 +326,7 @@ func (x *UpdateWaitGroupRequest) GetMetadata() map[string]string {
 	return nil
 }
 
-func (x *UpdateWaitGroupRequest) GetExpectedVersion() uint64 {
+func (x *UpdateWaitGroupRequest) GetExpectedVersion() int64 {
 	if x != nil {
 		return x.ExpectedVersion
 	}
@@ -691,7 +692,7 @@ type DeleteWaitGroupRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	WaitGroupName string                 `protobuf:"bytes,2,opt,name=wait_group_name,json=waitGroupName,proto3" json:"wait_group_name,omitempty"`
-	RecordId      uint64                 `protobuf:"varint,3,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
+	RecordId      uint64                 `protobuf:"fixed64,3,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -788,7 +789,7 @@ type CompleteJobsFromWaitGroupRequest struct {
 	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	WaitGroupName string                 `protobuf:"bytes,2,opt,name=wait_group_name,json=waitGroupName,proto3" json:"wait_group_name,omitempty"`
 	Jobs          []*CompleteJobRequest  `protobuf:"bytes,3,rep,name=jobs,proto3" json:"jobs,omitempty"`
-	Now           int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
+	Now           int64                  `protobuf:"fixed64,4,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -947,7 +948,7 @@ func (x *CompleteJobsFromWaitGroupResponse) GetWaitGroup() *WaitGroup {
 	return nil
 }
 
-type ListWaitGroupJobsRequest struct {
+type ListWaitGroupCompletedJobsRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	NamespaceId     *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	WaitGroupName   string                 `protobuf:"bytes,2,opt,name=wait_group_name,json=waitGroupName,proto3" json:"wait_group_name,omitempty"`
@@ -957,20 +958,20 @@ type ListWaitGroupJobsRequest struct {
 	sizeCache       protoimpl.SizeCache
 }
 
-func (x *ListWaitGroupJobsRequest) Reset() {
-	*x = ListWaitGroupJobsRequest{}
+func (x *ListWaitGroupCompletedJobsRequest) Reset() {
+	*x = ListWaitGroupCompletedJobsRequest{}
 	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListWaitGroupJobsRequest) String() string {
+func (x *ListWaitGroupCompletedJobsRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListWaitGroupJobsRequest) ProtoMessage() {}
+func (*ListWaitGroupCompletedJobsRequest) ProtoMessage() {}
 
-func (x *ListWaitGroupJobsRequest) ProtoReflect() protoreflect.Message {
+func (x *ListWaitGroupCompletedJobsRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -982,40 +983,40 @@ func (x *ListWaitGroupJobsRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListWaitGroupJobsRequest.ProtoReflect.Descriptor instead.
-func (*ListWaitGroupJobsRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListWaitGroupCompletedJobsRequest.ProtoReflect.Descriptor instead.
+func (*ListWaitGroupCompletedJobsRequest) Descriptor() ([]byte, []int) {
 	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{15}
 }
 
-func (x *ListWaitGroupJobsRequest) GetNamespaceId() *NamespaceId {
+func (x *ListWaitGroupCompletedJobsRequest) GetNamespaceId() *NamespaceId {
 	if x != nil {
 		return x.NamespaceId
 	}
 	return nil
 }
 
-func (x *ListWaitGroupJobsRequest) GetWaitGroupName() string {
+func (x *ListWaitGroupCompletedJobsRequest) GetWaitGroupName() string {
 	if x != nil {
 		return x.WaitGroupName
 	}
 	return ""
 }
 
-func (x *ListWaitGroupJobsRequest) GetPaginationToken() *PaginationToken {
+func (x *ListWaitGroupCompletedJobsRequest) GetPaginationToken() *PaginationToken {
 	if x != nil {
 		return x.PaginationToken
 	}
 	return nil
 }
 
-func (x *ListWaitGroupJobsRequest) GetLimit() int32 {
+func (x *ListWaitGroupCompletedJobsRequest) GetLimit() int32 {
 	if x != nil {
 		return x.Limit
 	}
 	return 0
 }
 
-type ListWaitGroupJobsResponse struct {
+type ListWaitGroupCompletedJobsResponse struct {
 	state                   protoimpl.MessageState `protogen:"open.v1"`
 	Jobs                    []*WaitGroupJob        `protobuf:"bytes,1,rep,name=jobs,proto3" json:"jobs,omitempty"`
 	NextPaginationToken     *PaginationToken       `protobuf:"bytes,2,opt,name=next_pagination_token,json=nextPaginationToken,proto3" json:"next_pagination_token,omitempty"`
@@ -1024,20 +1025,20 @@ type ListWaitGroupJobsResponse struct {
 	sizeCache               protoimpl.SizeCache
 }
 
-func (x *ListWaitGroupJobsResponse) Reset() {
-	*x = ListWaitGroupJobsResponse{}
+func (x *ListWaitGroupCompletedJobsResponse) Reset() {
+	*x = ListWaitGroupCompletedJobsResponse{}
 	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListWaitGroupJobsResponse) String() string {
+func (x *ListWaitGroupCompletedJobsResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListWaitGroupJobsResponse) ProtoMessage() {}
+func (*ListWaitGroupCompletedJobsResponse) ProtoMessage() {}
 
-func (x *ListWaitGroupJobsResponse) ProtoReflect() protoreflect.Message {
+func (x *ListWaitGroupCompletedJobsResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_corepb_wait_groups_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1049,26 +1050,26 @@ func (x *ListWaitGroupJobsResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListWaitGroupJobsResponse.ProtoReflect.Descriptor instead.
-func (*ListWaitGroupJobsResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListWaitGroupCompletedJobsResponse.ProtoReflect.Descriptor instead.
+func (*ListWaitGroupCompletedJobsResponse) Descriptor() ([]byte, []int) {
 	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{16}
 }
 
-func (x *ListWaitGroupJobsResponse) GetJobs() []*WaitGroupJob {
+func (x *ListWaitGroupCompletedJobsResponse) GetJobs() []*WaitGroupJob {
 	if x != nil {
 		return x.Jobs
 	}
 	return nil
 }
 
-func (x *ListWaitGroupJobsResponse) GetNextPaginationToken() *PaginationToken {
+func (x *ListWaitGroupCompletedJobsResponse) GetNextPaginationToken() *PaginationToken {
 	if x != nil {
 		return x.NextPaginationToken
 	}
 	return nil
 }
 
-func (x *ListWaitGroupJobsResponse) GetPreviousPaginationToken() *PaginationToken {
+func (x *ListWaitGroupCompletedJobsResponse) GetPreviousPaginationToken() *PaginationToken {
 	if x != nil {
 		return x.PreviousPaginationToken
 	}
@@ -1077,7 +1078,7 @@ func (x *ListWaitGroupJobsResponse) GetPreviousPaginationToken() *PaginationToke
 
 type RunWaitGroupsGarbageCollectionRequest struct {
 	state                      protoimpl.MessageState `protogen:"open.v1"`
-	Now                        int64                  `protobuf:"varint,1,opt,name=now,proto3" json:"now,omitempty"`
+	Now                        int64                  `protobuf:"fixed64,1,opt,name=now,proto3" json:"now,omitempty"`
 	GcRecordsPageSize          int64                  `protobuf:"varint,2,opt,name=gc_records_page_size,json=gcRecordsPageSize,proto3" json:"gc_records_page_size,omitempty"`
 	GcRecordWaitGroupsPageSize int64                  `protobuf:"varint,3,opt,name=gc_record_wait_groups_page_size,json=gcRecordWaitGroupsPageSize,proto3" json:"gc_record_wait_groups_page_size,omitempty"`
 	MaxDeletedObjects          int64                  `protobuf:"varint,4,opt,name=max_deleted_objects,json=maxDeletedObjects,proto3" json:"max_deleted_objects,omitempty"`
@@ -1181,9 +1182,9 @@ func (*RunWaitGroupsGarbageCollectionResponse) Descriptor() ([]byte, []int) {
 
 type WaitGroupsDeleteNamespaceRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	RecordId      uint64                 `protobuf:"varint,1,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
+	RecordId      uint64                 `protobuf:"fixed64,1,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
 	NamespaceId   *NamespaceId           `protobuf:"bytes,2,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	Now           int64                  `protobuf:"varint,3,opt,name=now,proto3" json:"now,omitempty"`
+	Now           int64                  `protobuf:"fixed64,3,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1280,21 +1281,21 @@ type WaitGroup struct {
 	Id                         *WaitGroupId           `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name                       string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Description                string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	CreatedAt                  int64                  `protobuf:"varint,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt                  int64                  `protobuf:"varint,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	Version                    uint64                 `protobuf:"varint,6,opt,name=version,proto3" json:"version,omitempty"`
-	ExpiresAt                  int64                  `protobuf:"varint,7,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	Counter                    uint64                 `protobuf:"varint,8,opt,name=counter,proto3" json:"counter,omitempty"`
-	CompletedJobs              uint64                 `protobuf:"varint,9,opt,name=completed_jobs,json=completedJobs,proto3" json:"completed_jobs,omitempty"`
+	CreatedAt                  int64                  `protobuf:"fixed64,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt                  int64                  `protobuf:"fixed64,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Version                    int64                  `protobuf:"varint,6,opt,name=version,proto3" json:"version,omitempty"`
+	ExpiresAt                  int64                  `protobuf:"fixed64,7,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	Counter                    int64                  `protobuf:"varint,8,opt,name=counter,proto3" json:"counter,omitempty"`
+	CompletedJobs              int64                  `protobuf:"varint,9,opt,name=completed_jobs,json=completedJobs,proto3" json:"completed_jobs,omitempty"`
 	Metadata                   map[string]string      `protobuf:"bytes,10,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	Status                     WaitGroupStatus        `protobuf:"varint,11,opt,name=status,proto3,enum=com.evrblk.grackle.corepb.WaitGroupStatus" json:"status,omitempty"`
 	DeleteAfterFinishedSeconds int64                  `protobuf:"varint,12,opt,name=delete_after_finished_seconds,json=deleteAfterFinishedSeconds,proto3" json:"delete_after_finished_seconds,omitempty"`
 	// finished_at is the timestamp (ns) at which the wait group became finished
 	// (either completed or expired). Zero while the wait group is still active.
-	FinishedAt int64 `protobuf:"varint,13,opt,name=finished_at,json=finishedAt,proto3" json:"finished_at,omitempty"`
+	FinishedAt int64 `protobuf:"fixed64,13,opt,name=finished_at,json=finishedAt,proto3" json:"finished_at,omitempty"`
 	// last_activity_at is the timestamp (ns) of the most recent activity on this
 	// wait group (a job being reported completed). Not affected by reads.
-	LastActivityAt int64 `protobuf:"varint,14,opt,name=last_activity_at,json=lastActivityAt,proto3" json:"last_activity_at,omitempty"`
+	LastActivityAt int64 `protobuf:"fixed64,14,opt,name=last_activity_at,json=lastActivityAt,proto3" json:"last_activity_at,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -1364,7 +1365,7 @@ func (x *WaitGroup) GetUpdatedAt() int64 {
 	return 0
 }
 
-func (x *WaitGroup) GetVersion() uint64 {
+func (x *WaitGroup) GetVersion() int64 {
 	if x != nil {
 		return x.Version
 	}
@@ -1378,14 +1379,14 @@ func (x *WaitGroup) GetExpiresAt() int64 {
 	return 0
 }
 
-func (x *WaitGroup) GetCounter() uint64 {
+func (x *WaitGroup) GetCounter() int64 {
 	if x != nil {
 		return x.Counter
 	}
 	return 0
 }
 
-func (x *WaitGroup) GetCompletedJobs() uint64 {
+func (x *WaitGroup) GetCompletedJobs() int64 {
 	if x != nil {
 		return x.CompletedJobs
 	}
@@ -1430,7 +1431,7 @@ func (x *WaitGroup) GetLastActivityAt() int64 {
 type WaitGroupJob struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            *WaitGroupJobId        `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	CompletedAt   int64                  `protobuf:"varint,2,opt,name=completed_at,json=completedAt,proto3" json:"completed_at,omitempty"`
+	CompletedAt   int64                  `protobuf:"fixed64,2,opt,name=completed_at,json=completedAt,proto3" json:"completed_at,omitempty"`
 	Metadata      map[string]string      `protobuf:"bytes,3,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1489,9 +1490,9 @@ func (x *WaitGroupJob) GetMetadata() map[string]string {
 
 type WaitGroupJobId struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	AccountId     uint64                 `protobuf:"varint,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
-	NamespaceId   uint32                 `protobuf:"varint,2,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	WaitGroupId   uint64                 `protobuf:"varint,3,opt,name=wait_group_id,json=waitGroupId,proto3" json:"wait_group_id,omitempty"`
+	AccountId     uint64                 `protobuf:"fixed64,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	NamespaceId   uint64                 `protobuf:"fixed64,2,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
+	WaitGroupId   uint64                 `protobuf:"fixed64,3,opt,name=wait_group_id,json=waitGroupId,proto3" json:"wait_group_id,omitempty"`
 	JobId         string                 `protobuf:"bytes,4,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1534,7 +1535,7 @@ func (x *WaitGroupJobId) GetAccountId() uint64 {
 	return 0
 }
 
-func (x *WaitGroupJobId) GetNamespaceId() uint32 {
+func (x *WaitGroupJobId) GetNamespaceId() uint64 {
 	if x != nil {
 		return x.NamespaceId
 	}
@@ -1557,9 +1558,9 @@ func (x *WaitGroupJobId) GetJobId() string {
 
 type WaitGroupId struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	AccountId     uint64                 `protobuf:"varint,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
-	NamespaceId   uint32                 `protobuf:"varint,2,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	WaitGroupId   uint64                 `protobuf:"varint,3,opt,name=wait_group_id,json=waitGroupId,proto3" json:"wait_group_id,omitempty"`
+	AccountId     uint64                 `protobuf:"fixed64,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	NamespaceId   uint64                 `protobuf:"fixed64,2,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
+	WaitGroupId   uint64                 `protobuf:"fixed64,3,opt,name=wait_group_id,json=waitGroupId,proto3" json:"wait_group_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1601,7 +1602,7 @@ func (x *WaitGroupId) GetAccountId() uint64 {
 	return 0
 }
 
-func (x *WaitGroupId) GetNamespaceId() uint32 {
+func (x *WaitGroupId) GetNamespaceId() uint64 {
 	if x != nil {
 		return x.NamespaceId
 	}
@@ -1661,7 +1662,7 @@ func (x *WaitGroupsCounter) GetNumberOfWaitGroups() int64 {
 
 type WaitGroupsGarbageCollectionRecord struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	Id    uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id    uint64                 `protobuf:"fixed64,1,opt,name=id,proto3" json:"id,omitempty"`
 	// Types that are valid to be assigned to Record:
 	//
 	//	*WaitGroupsGarbageCollectionRecord_NamespaceId
@@ -1752,7 +1753,7 @@ func (*WaitGroupsGarbageCollectionRecord_WaitGroupId) isWaitGroupsGarbageCollect
 type WaitGroupsExpirationRecord struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	WaitGroupId   *WaitGroupId           `protobuf:"bytes,1,opt,name=wait_group_id,json=waitGroupId,proto3" json:"wait_group_id,omitempty"`
-	ExpiresAt     int64                  `protobuf:"varint,2,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	ExpiresAt     int64                  `protobuf:"fixed64,2,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1807,7 +1808,7 @@ func (x *WaitGroupsExpirationRecord) GetExpiresAt() int64 {
 type WaitGroupsDeletionRecord struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	WaitGroupId   *WaitGroupId           `protobuf:"bytes,1,opt,name=wait_group_id,json=waitGroupId,proto3" json:"wait_group_id,omitempty"`
-	DeleteAt      int64                  `protobuf:"varint,2,opt,name=delete_at,json=deleteAt,proto3" json:"delete_at,omitempty"`
+	DeleteAt      int64                  `protobuf:"fixed64,2,opt,name=delete_at,json=deleteAt,proto3" json:"delete_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1865,10 +1866,10 @@ const file_pkg_corepb_wait_groups_proto_rawDesc = "" +
 	"\rwait_group_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.WaitGroupIdR\vwaitGroupId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x10\n" +
-	"\x03now\x18\x04 \x01(\x03R\x03now\x12\x18\n" +
-	"\acounter\x18\x05 \x01(\x04R\acounter\x12\x1d\n" +
+	"\x03now\x18\x04 \x01(\x10R\x03now\x12\x18\n" +
+	"\acounter\x18\x05 \x01(\x03R\acounter\x12\x1d\n" +
 	"\n" +
-	"expires_at\x18\x06 \x01(\x03R\texpiresAt\x12[\n" +
+	"expires_at\x18\x06 \x01(\x10R\texpiresAt\x12[\n" +
 	"\bmetadata\x18\a \x03(\v2?.com.evrblk.grackle.corepb.CreateWaitGroupRequest.MetadataEntryR\bmetadata\x12R\n" +
 	"'max_number_of_wait_groups_per_namespace\x18\b \x01(\x03R!maxNumberOfWaitGroupsPerNamespace\x12A\n" +
 	"\x1ddelete_after_finished_seconds\x18\t \x01(\x03R\x1adeleteAfterFinishedSeconds\x1a;\n" +
@@ -1882,12 +1883,12 @@ const file_pkg_corepb_wait_groups_proto_rawDesc = "" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12&\n" +
 	"\x0fwait_group_name\x18\x02 \x01(\tR\rwaitGroupName\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x10\n" +
-	"\x03now\x18\x04 \x01(\x03R\x03now\x12\x1d\n" +
+	"\x03now\x18\x04 \x01(\x10R\x03now\x12\x1d\n" +
 	"\n" +
-	"expires_at\x18\x05 \x01(\x03R\texpiresAt\x12\x18\n" +
-	"\acounter\x18\x06 \x01(\x04R\acounter\x12[\n" +
+	"expires_at\x18\x05 \x01(\x10R\texpiresAt\x12\x18\n" +
+	"\acounter\x18\x06 \x01(\x03R\acounter\x12[\n" +
 	"\bmetadata\x18\a \x03(\v2?.com.evrblk.grackle.corepb.UpdateWaitGroupRequest.MetadataEntryR\bmetadata\x12)\n" +
-	"\x10expected_version\x18\b \x01(\x04R\x0fexpectedVersion\x12A\n" +
+	"\x10expected_version\x18\b \x01(\x03R\x0fexpectedVersion\x12A\n" +
 	"\x1ddelete_after_finished_seconds\x18\t \x01(\x03R\x1adeleteAfterFinishedSeconds\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
@@ -1918,13 +1919,13 @@ const file_pkg_corepb_wait_groups_proto_rawDesc = "" +
 	"\x16DeleteWaitGroupRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12&\n" +
 	"\x0fwait_group_name\x18\x02 \x01(\tR\rwaitGroupName\x12\x1b\n" +
-	"\trecord_id\x18\x03 \x01(\x04R\brecordId\"\x19\n" +
+	"\trecord_id\x18\x03 \x01(\x06R\brecordId\"\x19\n" +
 	"\x17DeleteWaitGroupResponse\"\xea\x01\n" +
 	" CompleteJobsFromWaitGroupRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12&\n" +
 	"\x0fwait_group_name\x18\x02 \x01(\tR\rwaitGroupName\x12A\n" +
 	"\x04jobs\x18\x03 \x03(\v2-.com.evrblk.grackle.corepb.CompleteJobRequestR\x04jobs\x12\x10\n" +
-	"\x03now\x18\x04 \x01(\x03R\x03now\"\xc1\x01\n" +
+	"\x03now\x18\x04 \x01(\x10R\x03now\"\xc1\x01\n" +
 	"\x12CompleteJobRequest\x12\x15\n" +
 	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12W\n" +
 	"\bmetadata\x18\x02 \x03(\v2;.com.evrblk.grackle.corepb.CompleteJobRequest.MetadataEntryR\bmetadata\x1a;\n" +
@@ -1933,82 +1934,82 @@ const file_pkg_corepb_wait_groups_proto_rawDesc = "" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"h\n" +
 	"!CompleteJobsFromWaitGroupResponse\x12C\n" +
 	"\n" +
-	"wait_group\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.WaitGroupR\twaitGroup\"\xfa\x01\n" +
-	"\x18ListWaitGroupJobsRequest\x12I\n" +
+	"wait_group\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.WaitGroupR\twaitGroup\"\x83\x02\n" +
+	"!ListWaitGroupCompletedJobsRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12&\n" +
 	"\x0fwait_group_name\x18\x02 \x01(\tR\rwaitGroupName\x12U\n" +
 	"\x10pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x0fpaginationToken\x12\x14\n" +
-	"\x05limit\x18\x04 \x01(\x05R\x05limit\"\xa0\x02\n" +
-	"\x19ListWaitGroupJobsResponse\x12;\n" +
+	"\x05limit\x18\x04 \x01(\x05R\x05limit\"\xa9\x02\n" +
+	"\"ListWaitGroupCompletedJobsResponse\x12;\n" +
 	"\x04jobs\x18\x01 \x03(\v2'.com.evrblk.grackle.corepb.WaitGroupJobR\x04jobs\x12^\n" +
 	"\x15next_pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x13nextPaginationToken\x12f\n" +
 	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"\xdf\x01\n" +
 	"%RunWaitGroupsGarbageCollectionRequest\x12\x10\n" +
-	"\x03now\x18\x01 \x01(\x03R\x03now\x12/\n" +
+	"\x03now\x18\x01 \x01(\x10R\x03now\x12/\n" +
 	"\x14gc_records_page_size\x18\x02 \x01(\x03R\x11gcRecordsPageSize\x12C\n" +
 	"\x1fgc_record_wait_groups_page_size\x18\x03 \x01(\x03R\x1agcRecordWaitGroupsPageSize\x12.\n" +
 	"\x13max_deleted_objects\x18\x04 \x01(\x03R\x11maxDeletedObjects\"(\n" +
 	"&RunWaitGroupsGarbageCollectionResponse\"\x9c\x01\n" +
 	" WaitGroupsDeleteNamespaceRequest\x12\x1b\n" +
-	"\trecord_id\x18\x01 \x01(\x04R\brecordId\x12I\n" +
+	"\trecord_id\x18\x01 \x01(\x06R\brecordId\x12I\n" +
 	"\fnamespace_id\x18\x02 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x10\n" +
-	"\x03now\x18\x03 \x01(\x03R\x03now\"#\n" +
+	"\x03now\x18\x03 \x01(\x10R\x03now\"#\n" +
 	"!WaitGroupsDeleteNamespaceResponse\"\x90\x05\n" +
 	"\tWaitGroup\x126\n" +
 	"\x02id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.WaitGroupIdR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x1d\n" +
 	"\n" +
-	"created_at\x18\x04 \x01(\x03R\tcreatedAt\x12\x1d\n" +
+	"created_at\x18\x04 \x01(\x10R\tcreatedAt\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\x05 \x01(\x03R\tupdatedAt\x12\x18\n" +
-	"\aversion\x18\x06 \x01(\x04R\aversion\x12\x1d\n" +
+	"updated_at\x18\x05 \x01(\x10R\tupdatedAt\x12\x18\n" +
+	"\aversion\x18\x06 \x01(\x03R\aversion\x12\x1d\n" +
 	"\n" +
-	"expires_at\x18\a \x01(\x03R\texpiresAt\x12\x18\n" +
-	"\acounter\x18\b \x01(\x04R\acounter\x12%\n" +
-	"\x0ecompleted_jobs\x18\t \x01(\x04R\rcompletedJobs\x12N\n" +
+	"expires_at\x18\a \x01(\x10R\texpiresAt\x12\x18\n" +
+	"\acounter\x18\b \x01(\x03R\acounter\x12%\n" +
+	"\x0ecompleted_jobs\x18\t \x01(\x03R\rcompletedJobs\x12N\n" +
 	"\bmetadata\x18\n" +
 	" \x03(\v22.com.evrblk.grackle.corepb.WaitGroup.MetadataEntryR\bmetadata\x12B\n" +
 	"\x06status\x18\v \x01(\x0e2*.com.evrblk.grackle.corepb.WaitGroupStatusR\x06status\x12A\n" +
 	"\x1ddelete_after_finished_seconds\x18\f \x01(\x03R\x1adeleteAfterFinishedSeconds\x12\x1f\n" +
-	"\vfinished_at\x18\r \x01(\x03R\n" +
+	"\vfinished_at\x18\r \x01(\x10R\n" +
 	"finishedAt\x12(\n" +
-	"\x10last_activity_at\x18\x0e \x01(\x03R\x0elastActivityAt\x1a;\n" +
+	"\x10last_activity_at\x18\x0e \x01(\x10R\x0elastActivityAt\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xfc\x01\n" +
 	"\fWaitGroupJob\x129\n" +
 	"\x02id\x18\x01 \x01(\v2).com.evrblk.grackle.corepb.WaitGroupJobIdR\x02id\x12!\n" +
-	"\fcompleted_at\x18\x02 \x01(\x03R\vcompletedAt\x12Q\n" +
+	"\fcompleted_at\x18\x02 \x01(\x10R\vcompletedAt\x12Q\n" +
 	"\bmetadata\x18\x03 \x03(\v25.com.evrblk.grackle.corepb.WaitGroupJob.MetadataEntryR\bmetadata\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x8d\x01\n" +
 	"\x0eWaitGroupJobId\x12\x1d\n" +
 	"\n" +
-	"account_id\x18\x01 \x01(\x04R\taccountId\x12!\n" +
-	"\fnamespace_id\x18\x02 \x01(\rR\vnamespaceId\x12\"\n" +
-	"\rwait_group_id\x18\x03 \x01(\x04R\vwaitGroupId\x12\x15\n" +
+	"account_id\x18\x01 \x01(\x06R\taccountId\x12!\n" +
+	"\fnamespace_id\x18\x02 \x01(\x06R\vnamespaceId\x12\"\n" +
+	"\rwait_group_id\x18\x03 \x01(\x06R\vwaitGroupId\x12\x15\n" +
 	"\x06job_id\x18\x04 \x01(\tR\x05jobId\"s\n" +
 	"\vWaitGroupId\x12\x1d\n" +
 	"\n" +
-	"account_id\x18\x01 \x01(\x04R\taccountId\x12!\n" +
-	"\fnamespace_id\x18\x02 \x01(\rR\vnamespaceId\x12\"\n" +
-	"\rwait_group_id\x18\x03 \x01(\x04R\vwaitGroupId\"F\n" +
+	"account_id\x18\x01 \x01(\x06R\taccountId\x12!\n" +
+	"\fnamespace_id\x18\x02 \x01(\x06R\vnamespaceId\x12\"\n" +
+	"\rwait_group_id\x18\x03 \x01(\x06R\vwaitGroupId\"F\n" +
 	"\x11WaitGroupsCounter\x121\n" +
 	"\x15number_of_wait_groups\x18\x01 \x01(\x03R\x12numberOfWaitGroups\"\xd8\x01\n" +
 	"!WaitGroupsGarbageCollectionRecord\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x04R\x02id\x12K\n" +
+	"\x02id\x18\x01 \x01(\x06R\x02id\x12K\n" +
 	"\fnamespace_id\x18\x02 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdH\x00R\vnamespaceId\x12L\n" +
 	"\rwait_group_id\x18\x03 \x01(\v2&.com.evrblk.grackle.corepb.WaitGroupIdH\x00R\vwaitGroupIdB\b\n" +
 	"\x06record\"\x87\x01\n" +
 	"\x1aWaitGroupsExpirationRecord\x12J\n" +
 	"\rwait_group_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.WaitGroupIdR\vwaitGroupId\x12\x1d\n" +
 	"\n" +
-	"expires_at\x18\x02 \x01(\x03R\texpiresAt\"\x83\x01\n" +
+	"expires_at\x18\x02 \x01(\x10R\texpiresAt\"\x83\x01\n" +
 	"\x18WaitGroupsDeletionRecord\x12J\n" +
 	"\rwait_group_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.WaitGroupIdR\vwaitGroupId\x12\x1b\n" +
-	"\tdelete_at\x18\x02 \x01(\x03R\bdeleteAt*\x8e\x01\n" +
+	"\tdelete_at\x18\x02 \x01(\x10R\bdeleteAt*\x8e\x01\n" +
 	"\x0fWaitGroupStatus\x12\x1d\n" +
 	"\x19WAIT_GROUP_STATUS_INVALID\x10\x00\x12\x1c\n" +
 	"\x18WAIT_GROUP_STATUS_ACTIVE\x10\x01\x12\x1d\n" +
@@ -2046,8 +2047,8 @@ var file_pkg_corepb_wait_groups_proto_goTypes = []any{
 	(*CompleteJobsFromWaitGroupRequest)(nil),       // 13: com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupRequest
 	(*CompleteJobRequest)(nil),                     // 14: com.evrblk.grackle.corepb.CompleteJobRequest
 	(*CompleteJobsFromWaitGroupResponse)(nil),      // 15: com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupResponse
-	(*ListWaitGroupJobsRequest)(nil),               // 16: com.evrblk.grackle.corepb.ListWaitGroupJobsRequest
-	(*ListWaitGroupJobsResponse)(nil),              // 17: com.evrblk.grackle.corepb.ListWaitGroupJobsResponse
+	(*ListWaitGroupCompletedJobsRequest)(nil),      // 16: com.evrblk.grackle.corepb.ListWaitGroupCompletedJobsRequest
+	(*ListWaitGroupCompletedJobsResponse)(nil),     // 17: com.evrblk.grackle.corepb.ListWaitGroupCompletedJobsResponse
 	(*RunWaitGroupsGarbageCollectionRequest)(nil),  // 18: com.evrblk.grackle.corepb.RunWaitGroupsGarbageCollectionRequest
 	(*RunWaitGroupsGarbageCollectionResponse)(nil), // 19: com.evrblk.grackle.corepb.RunWaitGroupsGarbageCollectionResponse
 	(*WaitGroupsDeleteNamespaceRequest)(nil),       // 20: com.evrblk.grackle.corepb.WaitGroupsDeleteNamespaceRequest
@@ -2089,11 +2090,11 @@ var file_pkg_corepb_wait_groups_proto_depIdxs = []int32{
 	14, // 17: com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupRequest.jobs:type_name -> com.evrblk.grackle.corepb.CompleteJobRequest
 	32, // 18: com.evrblk.grackle.corepb.CompleteJobRequest.metadata:type_name -> com.evrblk.grackle.corepb.CompleteJobRequest.MetadataEntry
 	22, // 19: com.evrblk.grackle.corepb.CompleteJobsFromWaitGroupResponse.wait_group:type_name -> com.evrblk.grackle.corepb.WaitGroup
-	35, // 20: com.evrblk.grackle.corepb.ListWaitGroupJobsRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
-	36, // 21: com.evrblk.grackle.corepb.ListWaitGroupJobsRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	23, // 22: com.evrblk.grackle.corepb.ListWaitGroupJobsResponse.jobs:type_name -> com.evrblk.grackle.corepb.WaitGroupJob
-	36, // 23: com.evrblk.grackle.corepb.ListWaitGroupJobsResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
-	36, // 24: com.evrblk.grackle.corepb.ListWaitGroupJobsResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	35, // 20: com.evrblk.grackle.corepb.ListWaitGroupCompletedJobsRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
+	36, // 21: com.evrblk.grackle.corepb.ListWaitGroupCompletedJobsRequest.pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	23, // 22: com.evrblk.grackle.corepb.ListWaitGroupCompletedJobsResponse.jobs:type_name -> com.evrblk.grackle.corepb.WaitGroupJob
+	36, // 23: com.evrblk.grackle.corepb.ListWaitGroupCompletedJobsResponse.next_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
+	36, // 24: com.evrblk.grackle.corepb.ListWaitGroupCompletedJobsResponse.previous_pagination_token:type_name -> com.evrblk.grackle.corepb.PaginationToken
 	35, // 25: com.evrblk.grackle.corepb.WaitGroupsDeleteNamespaceRequest.namespace_id:type_name -> com.evrblk.grackle.corepb.NamespaceId
 	25, // 26: com.evrblk.grackle.corepb.WaitGroup.id:type_name -> com.evrblk.grackle.corepb.WaitGroupId
 	33, // 27: com.evrblk.grackle.corepb.WaitGroup.metadata:type_name -> com.evrblk.grackle.corepb.WaitGroup.MetadataEntry

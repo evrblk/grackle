@@ -7,11 +7,12 @@
 package corepb
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -26,8 +27,8 @@ type CreateSemaphoreRequest struct {
 	SemaphoreId                       *SemaphoreId           `protobuf:"bytes,1,opt,name=semaphore_id,json=semaphoreId,proto3" json:"semaphore_id,omitempty"`
 	Name                              string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Description                       string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	Now                               int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
-	Permits                           uint64                 `protobuf:"varint,5,opt,name=permits,proto3" json:"permits,omitempty"`
+	Now                               int64                  `protobuf:"fixed64,4,opt,name=now,proto3" json:"now,omitempty"`
+	Permits                           int64                  `protobuf:"varint,5,opt,name=permits,proto3" json:"permits,omitempty"`
 	Metadata                          map[string]string      `protobuf:"bytes,6,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	MaxNumberOfSemaphoresPerNamespace int64                  `protobuf:"varint,7,opt,name=max_number_of_semaphores_per_namespace,json=maxNumberOfSemaphoresPerNamespace,proto3" json:"max_number_of_semaphores_per_namespace,omitempty"`
 	unknownFields                     protoimpl.UnknownFields
@@ -92,7 +93,7 @@ func (x *CreateSemaphoreRequest) GetNow() int64 {
 	return 0
 }
 
-func (x *CreateSemaphoreRequest) GetPermits() uint64 {
+func (x *CreateSemaphoreRequest) GetPermits() int64 {
 	if x != nil {
 		return x.Permits
 	}
@@ -162,7 +163,7 @@ type ListSemaphoresRequest struct {
 	NamespaceId     *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	PaginationToken *PaginationToken       `protobuf:"bytes,2,opt,name=pagination_token,json=paginationToken,proto3" json:"pagination_token,omitempty"`
 	Limit           int32                  `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
-	Now             int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
+	Now             int64                  `protobuf:"fixed64,4,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -290,7 +291,7 @@ type ListSemaphoresByLeaseIdRequest struct {
 	LeaseId         *LeaseId               `protobuf:"bytes,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
 	PaginationToken *PaginationToken       `protobuf:"bytes,2,opt,name=pagination_token,json=paginationToken,proto3" json:"pagination_token,omitempty"`
 	Limit           int32                  `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
-	Now             int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
+	Now             int64                  `protobuf:"fixed64,4,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -416,7 +417,7 @@ func (x *ListSemaphoresByLeaseIdResponse) GetPreviousPaginationToken() *Paginati
 type GetSemaphoreRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	SemaphoreId   *SemaphoreId           `protobuf:"bytes,1,opt,name=semaphore_id,json=semaphoreId,proto3" json:"semaphore_id,omitempty"`
-	Now           int64                  `protobuf:"varint,2,opt,name=now,proto3" json:"now,omitempty"`
+	Now           int64                  `protobuf:"fixed64,2,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -513,7 +514,7 @@ type GetSemaphoreByNameRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	SemaphoreName string                 `protobuf:"bytes,2,opt,name=semaphore_name,json=semaphoreName,proto3" json:"semaphore_name,omitempty"`
-	Now           int64                  `protobuf:"varint,3,opt,name=now,proto3" json:"now,omitempty"`
+	Now           int64                  `protobuf:"fixed64,3,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -617,9 +618,9 @@ type AcquireSemaphoreRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	SemaphoreName string                 `protobuf:"bytes,2,opt,name=semaphore_name,json=semaphoreName,proto3" json:"semaphore_name,omitempty"`
-	LeaseId       uint64                 `protobuf:"varint,3,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
-	Weight        uint64                 `protobuf:"varint,4,opt,name=weight,proto3" json:"weight,omitempty"`
-	Now           int64                  `protobuf:"varint,5,opt,name=now,proto3" json:"now,omitempty"`
+	LeaseId       uint64                 `protobuf:"fixed64,3,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
+	Weight        int64                  `protobuf:"varint,4,opt,name=weight,proto3" json:"weight,omitempty"`
+	Now           int64                  `protobuf:"fixed64,5,opt,name=now,proto3" json:"now,omitempty"`
 	Metadata      map[string]string      `protobuf:"bytes,6,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -676,7 +677,7 @@ func (x *AcquireSemaphoreRequest) GetLeaseId() uint64 {
 	return 0
 }
 
-func (x *AcquireSemaphoreRequest) GetWeight() uint64 {
+func (x *AcquireSemaphoreRequest) GetWeight() int64 {
 	if x != nil {
 		return x.Weight
 	}
@@ -753,8 +754,8 @@ type ReleaseSemaphoreRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	SemaphoreName string                 `protobuf:"bytes,2,opt,name=semaphore_name,json=semaphoreName,proto3" json:"semaphore_name,omitempty"`
-	LeaseId       uint64                 `protobuf:"varint,3,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
-	Now           int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
+	LeaseId       uint64                 `protobuf:"fixed64,3,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
+	Now           int64                  `protobuf:"fixed64,4,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -866,10 +867,10 @@ type UpdateSemaphoreRequest struct {
 	NamespaceId     *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	SemaphoreName   string                 `protobuf:"bytes,2,opt,name=semaphore_name,json=semaphoreName,proto3" json:"semaphore_name,omitempty"`
 	Description     string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	Permits         uint64                 `protobuf:"varint,4,opt,name=permits,proto3" json:"permits,omitempty"`
-	Now             int64                  `protobuf:"varint,5,opt,name=now,proto3" json:"now,omitempty"`
+	Permits         int64                  `protobuf:"varint,4,opt,name=permits,proto3" json:"permits,omitempty"`
+	Now             int64                  `protobuf:"fixed64,5,opt,name=now,proto3" json:"now,omitempty"`
 	Metadata        map[string]string      `protobuf:"bytes,6,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	ExpectedVersion uint64                 `protobuf:"varint,7,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
+	ExpectedVersion int64                  `protobuf:"varint,7,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -925,7 +926,7 @@ func (x *UpdateSemaphoreRequest) GetDescription() string {
 	return ""
 }
 
-func (x *UpdateSemaphoreRequest) GetPermits() uint64 {
+func (x *UpdateSemaphoreRequest) GetPermits() int64 {
 	if x != nil {
 		return x.Permits
 	}
@@ -946,7 +947,7 @@ func (x *UpdateSemaphoreRequest) GetMetadata() map[string]string {
 	return nil
 }
 
-func (x *UpdateSemaphoreRequest) GetExpectedVersion() uint64 {
+func (x *UpdateSemaphoreRequest) GetExpectedVersion() int64 {
 	if x != nil {
 		return x.ExpectedVersion
 	}
@@ -1001,7 +1002,7 @@ type DeleteSemaphoreRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	SemaphoreName string                 `protobuf:"bytes,2,opt,name=semaphore_name,json=semaphoreName,proto3" json:"semaphore_name,omitempty"`
-	RecordId      uint64                 `protobuf:"varint,3,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
+	RecordId      uint64                 `protobuf:"fixed64,3,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1099,7 +1100,7 @@ type ListSemaphoreHoldersRequest struct {
 	SemaphoreName   string                 `protobuf:"bytes,2,opt,name=semaphore_name,json=semaphoreName,proto3" json:"semaphore_name,omitempty"`
 	PaginationToken *PaginationToken       `protobuf:"bytes,3,opt,name=pagination_token,json=paginationToken,proto3" json:"pagination_token,omitempty"`
 	Limit           int32                  `protobuf:"varint,4,opt,name=limit,proto3" json:"limit,omitempty"`
-	Now             int64                  `protobuf:"varint,5,opt,name=now,proto3" json:"now,omitempty"`
+	Now             int64                  `protobuf:"fixed64,5,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -1234,7 +1235,7 @@ type ListSemaphoreLeasesRequest struct {
 	NamespaceId     *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	PaginationToken *PaginationToken       `protobuf:"bytes,2,opt,name=pagination_token,json=paginationToken,proto3" json:"pagination_token,omitempty"`
 	Limit           int32                  `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
-	Now             int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
+	Now             int64                  `protobuf:"fixed64,4,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -1363,7 +1364,7 @@ type ListSemaphoreLeasesByProcessIdRequest struct {
 	ProcessId       string                 `protobuf:"bytes,2,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
 	PaginationToken *PaginationToken       `protobuf:"bytes,3,opt,name=pagination_token,json=paginationToken,proto3" json:"pagination_token,omitempty"`
 	Limit           int32                  `protobuf:"varint,4,opt,name=limit,proto3" json:"limit,omitempty"`
-	Now             int64                  `protobuf:"varint,5,opt,name=now,proto3" json:"now,omitempty"`
+	Now             int64                  `protobuf:"fixed64,5,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -1496,7 +1497,7 @@ func (x *ListSemaphoreLeasesByProcessIdResponse) GetPreviousPaginationToken() *P
 type GetSemaphoreLeaseRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	LeaseId       *LeaseId               `protobuf:"bytes,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
-	Now           int64                  `protobuf:"varint,2,opt,name=now,proto3" json:"now,omitempty"`
+	Now           int64                  `protobuf:"fixed64,2,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1593,8 +1594,8 @@ type CreateSemaphoreLeaseRequest struct {
 	state                      protoimpl.MessageState `protogen:"open.v1"`
 	LeaseId                    *LeaseId               `protobuf:"bytes,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
 	ProcessId                  string                 `protobuf:"bytes,2,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
-	TtlSeconds                 uint64                 `protobuf:"varint,3,opt,name=ttl_seconds,json=ttlSeconds,proto3" json:"ttl_seconds,omitempty"`
-	Now                        int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
+	TtlSeconds                 int64                  `protobuf:"varint,3,opt,name=ttl_seconds,json=ttlSeconds,proto3" json:"ttl_seconds,omitempty"`
+	Now                        int64                  `protobuf:"fixed64,4,opt,name=now,proto3" json:"now,omitempty"`
 	Metadata                   map[string]string      `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	MaxNumberOfSemaphoreLeases int64                  `protobuf:"varint,6,opt,name=max_number_of_semaphore_leases,json=maxNumberOfSemaphoreLeases,proto3" json:"max_number_of_semaphore_leases,omitempty"`
 	unknownFields              protoimpl.UnknownFields
@@ -1645,7 +1646,7 @@ func (x *CreateSemaphoreLeaseRequest) GetProcessId() string {
 	return ""
 }
 
-func (x *CreateSemaphoreLeaseRequest) GetTtlSeconds() uint64 {
+func (x *CreateSemaphoreLeaseRequest) GetTtlSeconds() int64 {
 	if x != nil {
 		return x.TtlSeconds
 	}
@@ -1720,7 +1721,7 @@ func (x *CreateSemaphoreLeaseResponse) GetLease() *Lease {
 type RevokeSemaphoreLeaseRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	LeaseId       *LeaseId               `protobuf:"bytes,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
-	Now           int64                  `protobuf:"varint,2,opt,name=now,proto3" json:"now,omitempty"`
+	Now           int64                  `protobuf:"fixed64,2,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1808,8 +1809,8 @@ func (*RevokeSemaphoreLeaseResponse) Descriptor() ([]byte, []int) {
 type RefreshSemaphoreLeaseRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	LeaseId       *LeaseId               `protobuf:"bytes,1,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
-	TtlSeconds    uint64                 `protobuf:"varint,2,opt,name=ttl_seconds,json=ttlSeconds,proto3" json:"ttl_seconds,omitempty"`
-	Now           int64                  `protobuf:"varint,3,opt,name=now,proto3" json:"now,omitempty"`
+	TtlSeconds    int64                  `protobuf:"varint,2,opt,name=ttl_seconds,json=ttlSeconds,proto3" json:"ttl_seconds,omitempty"`
+	Now           int64                  `protobuf:"fixed64,3,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1851,7 +1852,7 @@ func (x *RefreshSemaphoreLeaseRequest) GetLeaseId() *LeaseId {
 	return nil
 }
 
-func (x *RefreshSemaphoreLeaseRequest) GetTtlSeconds() uint64 {
+func (x *RefreshSemaphoreLeaseRequest) GetTtlSeconds() int64 {
 	if x != nil {
 		return x.TtlSeconds
 	}
@@ -1911,9 +1912,9 @@ func (x *RefreshSemaphoreLeaseResponse) GetLease() *Lease {
 
 type SemaphoresDeleteNamespaceRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	RecordId      uint64                 `protobuf:"varint,1,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
+	RecordId      uint64                 `protobuf:"fixed64,1,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
 	NamespaceId   *NamespaceId           `protobuf:"bytes,2,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	Now           int64                  `protobuf:"varint,3,opt,name=now,proto3" json:"now,omitempty"`
+	Now           int64                  `protobuf:"fixed64,3,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2007,7 +2008,7 @@ func (*SemaphoresDeleteNamespaceResponse) Descriptor() ([]byte, []int) {
 
 type RunSemaphoresGarbageCollectionRequest struct {
 	state                      protoimpl.MessageState `protogen:"open.v1"`
-	Now                        int64                  `protobuf:"varint,1,opt,name=now,proto3" json:"now,omitempty"`
+	Now                        int64                  `protobuf:"fixed64,1,opt,name=now,proto3" json:"now,omitempty"`
 	GcRecordsPageSize          int64                  `protobuf:"varint,2,opt,name=gc_records_page_size,json=gcRecordsPageSize,proto3" json:"gc_records_page_size,omitempty"`
 	GcRecordSemaphoresPageSize int64                  `protobuf:"varint,3,opt,name=gc_record_semaphores_page_size,json=gcRecordSemaphoresPageSize,proto3" json:"gc_record_semaphores_page_size,omitempty"`
 	// Maximum number of records (holders + semaphores + leases) deleted by one GC pass.
@@ -2124,17 +2125,17 @@ type Semaphore struct {
 	Id                      *SemaphoreId           `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name                    string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Description             string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	CreatedAt               int64                  `protobuf:"varint,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt               int64                  `protobuf:"varint,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	Version                 uint64                 `protobuf:"varint,6,opt,name=version,proto3" json:"version,omitempty"`
-	Permits                 uint64                 `protobuf:"varint,7,opt,name=permits,proto3" json:"permits,omitempty"`
+	CreatedAt               int64                  `protobuf:"fixed64,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt               int64                  `protobuf:"fixed64,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Version                 int64                  `protobuf:"varint,6,opt,name=version,proto3" json:"version,omitempty"`
+	Permits                 int64                  `protobuf:"varint,7,opt,name=permits,proto3" json:"permits,omitempty"`
 	Metadata                map[string]string      `protobuf:"bytes,8,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	ActiveHolds             uint64                 `protobuf:"varint,9,opt,name=active_holds,json=activeHolds,proto3" json:"active_holds,omitempty"`
-	ActiveHoldersCount      uint64                 `protobuf:"varint,10,opt,name=active_holders_count,json=activeHoldersCount,proto3" json:"active_holders_count,omitempty"`
-	EarliestHolderExpiresAt int64                  `protobuf:"varint,11,opt,name=earliest_holder_expires_at,json=earliestHolderExpiresAt,proto3" json:"earliest_holder_expires_at,omitempty"`
+	ActiveHolds             int64                  `protobuf:"varint,9,opt,name=active_holds,json=activeHolds,proto3" json:"active_holds,omitempty"`
+	ActiveHoldersCount      int64                  `protobuf:"varint,10,opt,name=active_holders_count,json=activeHoldersCount,proto3" json:"active_holders_count,omitempty"`
+	EarliestHolderExpiresAt int64                  `protobuf:"fixed64,11,opt,name=earliest_holder_expires_at,json=earliestHolderExpiresAt,proto3" json:"earliest_holder_expires_at,omitempty"`
 	// last_activity_at is the timestamp (ns) of the most recent activity on this
 	// semaphore (an acquire attempt or a release). Not affected by reads.
-	LastActivityAt int64 `protobuf:"varint,12,opt,name=last_activity_at,json=lastActivityAt,proto3" json:"last_activity_at,omitempty"`
+	LastActivityAt int64 `protobuf:"fixed64,12,opt,name=last_activity_at,json=lastActivityAt,proto3" json:"last_activity_at,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -2204,14 +2205,14 @@ func (x *Semaphore) GetUpdatedAt() int64 {
 	return 0
 }
 
-func (x *Semaphore) GetVersion() uint64 {
+func (x *Semaphore) GetVersion() int64 {
 	if x != nil {
 		return x.Version
 	}
 	return 0
 }
 
-func (x *Semaphore) GetPermits() uint64 {
+func (x *Semaphore) GetPermits() int64 {
 	if x != nil {
 		return x.Permits
 	}
@@ -2225,14 +2226,14 @@ func (x *Semaphore) GetMetadata() map[string]string {
 	return nil
 }
 
-func (x *Semaphore) GetActiveHolds() uint64 {
+func (x *Semaphore) GetActiveHolds() int64 {
 	if x != nil {
 		return x.ActiveHolds
 	}
 	return 0
 }
 
-func (x *Semaphore) GetActiveHoldersCount() uint64 {
+func (x *Semaphore) GetActiveHoldersCount() int64 {
 	if x != nil {
 		return x.ActiveHoldersCount
 	}
@@ -2256,9 +2257,9 @@ func (x *Semaphore) GetLastActivityAt() int64 {
 type SemaphoreHolder struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            *SemaphoreHolderId     `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	LockedAt      int64                  `protobuf:"varint,2,opt,name=locked_at,json=lockedAt,proto3" json:"locked_at,omitempty"`
-	ExpiresAt     int64                  `protobuf:"varint,3,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	Weight        uint64                 `protobuf:"varint,4,opt,name=weight,proto3" json:"weight,omitempty"`
+	LockedAt      int64                  `protobuf:"fixed64,2,opt,name=locked_at,json=lockedAt,proto3" json:"locked_at,omitempty"`
+	ExpiresAt     int64                  `protobuf:"fixed64,3,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	Weight        int64                  `protobuf:"varint,4,opt,name=weight,proto3" json:"weight,omitempty"`
 	Metadata      map[string]string      `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2315,7 +2316,7 @@ func (x *SemaphoreHolder) GetExpiresAt() int64 {
 	return 0
 }
 
-func (x *SemaphoreHolder) GetWeight() uint64 {
+func (x *SemaphoreHolder) GetWeight() int64 {
 	if x != nil {
 		return x.Weight
 	}
@@ -2331,10 +2332,10 @@ func (x *SemaphoreHolder) GetMetadata() map[string]string {
 
 type SemaphoreHolderId struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	AccountId     uint64                 `protobuf:"varint,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
-	NamespaceId   uint32                 `protobuf:"varint,2,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	SemaphoreId   uint64                 `protobuf:"varint,3,opt,name=semaphore_id,json=semaphoreId,proto3" json:"semaphore_id,omitempty"`
-	LeaseId       uint64                 `protobuf:"varint,4,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
+	AccountId     uint64                 `protobuf:"fixed64,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	NamespaceId   uint64                 `protobuf:"fixed64,2,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
+	SemaphoreId   uint64                 `protobuf:"fixed64,3,opt,name=semaphore_id,json=semaphoreId,proto3" json:"semaphore_id,omitempty"`
+	LeaseId       uint64                 `protobuf:"fixed64,4,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2376,7 +2377,7 @@ func (x *SemaphoreHolderId) GetAccountId() uint64 {
 	return 0
 }
 
-func (x *SemaphoreHolderId) GetNamespaceId() uint32 {
+func (x *SemaphoreHolderId) GetNamespaceId() uint64 {
 	if x != nil {
 		return x.NamespaceId
 	}
@@ -2399,9 +2400,9 @@ func (x *SemaphoreHolderId) GetLeaseId() uint64 {
 
 type SemaphoreId struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	AccountId     uint64                 `protobuf:"varint,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
-	NamespaceId   uint32                 `protobuf:"varint,2,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	SemaphoreId   uint64                 `protobuf:"varint,3,opt,name=semaphore_id,json=semaphoreId,proto3" json:"semaphore_id,omitempty"`
+	AccountId     uint64                 `protobuf:"fixed64,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	NamespaceId   uint64                 `protobuf:"fixed64,2,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
+	SemaphoreId   uint64                 `protobuf:"fixed64,3,opt,name=semaphore_id,json=semaphoreId,proto3" json:"semaphore_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2443,7 +2444,7 @@ func (x *SemaphoreId) GetAccountId() uint64 {
 	return 0
 }
 
-func (x *SemaphoreId) GetNamespaceId() uint32 {
+func (x *SemaphoreId) GetNamespaceId() uint64 {
 	if x != nil {
 		return x.NamespaceId
 	}
@@ -2459,7 +2460,7 @@ func (x *SemaphoreId) GetSemaphoreId() uint64 {
 
 type SemaphoresGarbageCollectionRecord struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	Id    uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id    uint64                 `protobuf:"fixed64,1,opt,name=id,proto3" json:"id,omitempty"`
 	// Types that are valid to be assigned to Record:
 	//
 	//	*SemaphoresGarbageCollectionRecord_NamespaceId
@@ -2602,7 +2603,7 @@ func (x *SemaphoresCounter) GetNumberOfLeases() int64 {
 type SemaphoresExpirationRecord struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	SemaphoreId   *SemaphoreId           `protobuf:"bytes,1,opt,name=semaphore_id,json=semaphoreId,proto3" json:"semaphore_id,omitempty"`
-	ExpiresAt     int64                  `protobuf:"varint,2,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	ExpiresAt     int64                  `protobuf:"fixed64,2,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2660,8 +2661,8 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\fsemaphore_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.SemaphoreIdR\vsemaphoreId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x10\n" +
-	"\x03now\x18\x04 \x01(\x03R\x03now\x12\x18\n" +
-	"\apermits\x18\x05 \x01(\x04R\apermits\x12[\n" +
+	"\x03now\x18\x04 \x01(\x10R\x03now\x12\x18\n" +
+	"\apermits\x18\x05 \x01(\x03R\apermits\x12[\n" +
 	"\bmetadata\x18\x06 \x03(\v2?.com.evrblk.grackle.corepb.CreateSemaphoreRequest.MetadataEntryR\bmetadata\x12Q\n" +
 	"&max_number_of_semaphores_per_namespace\x18\a \x01(\x03R!maxNumberOfSemaphoresPerNamespace\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
@@ -2673,7 +2674,7 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12U\n" +
 	"\x10pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x0fpaginationToken\x12\x14\n" +
 	"\x05limit\x18\x03 \x01(\x05R\x05limit\x12\x10\n" +
-	"\x03now\x18\x04 \x01(\x03R\x03now\"\xa6\x02\n" +
+	"\x03now\x18\x04 \x01(\x10R\x03now\"\xa6\x02\n" +
 	"\x16ListSemaphoresResponse\x12D\n" +
 	"\n" +
 	"semaphores\x18\x01 \x03(\v2$.com.evrblk.grackle.corepb.SemaphoreR\n" +
@@ -2684,7 +2685,7 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\x12U\n" +
 	"\x10pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x0fpaginationToken\x12\x14\n" +
 	"\x05limit\x18\x03 \x01(\x05R\x05limit\x12\x10\n" +
-	"\x03now\x18\x04 \x01(\x03R\x03now\"\xaf\x02\n" +
+	"\x03now\x18\x04 \x01(\x10R\x03now\"\xaf\x02\n" +
 	"\x1fListSemaphoresByLeaseIdResponse\x12D\n" +
 	"\n" +
 	"semaphores\x18\x01 \x03(\v2$.com.evrblk.grackle.corepb.SemaphoreR\n" +
@@ -2693,21 +2694,21 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"r\n" +
 	"\x13GetSemaphoreRequest\x12I\n" +
 	"\fsemaphore_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.SemaphoreIdR\vsemaphoreId\x12\x10\n" +
-	"\x03now\x18\x02 \x01(\x03R\x03now\"Z\n" +
+	"\x03now\x18\x02 \x01(\x10R\x03now\"Z\n" +
 	"\x14GetSemaphoreResponse\x12B\n" +
 	"\tsemaphore\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.SemaphoreR\tsemaphore\"\x9f\x01\n" +
 	"\x19GetSemaphoreByNameRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12%\n" +
 	"\x0esemaphore_name\x18\x02 \x01(\tR\rsemaphoreName\x12\x10\n" +
-	"\x03now\x18\x03 \x01(\x03R\x03now\"`\n" +
+	"\x03now\x18\x03 \x01(\x10R\x03now\"`\n" +
 	"\x1aGetSemaphoreByNameResponse\x12B\n" +
 	"\tsemaphore\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.SemaphoreR\tsemaphore\"\xeb\x02\n" +
 	"\x17AcquireSemaphoreRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12%\n" +
 	"\x0esemaphore_name\x18\x02 \x01(\tR\rsemaphoreName\x12\x19\n" +
-	"\blease_id\x18\x03 \x01(\x04R\aleaseId\x12\x16\n" +
-	"\x06weight\x18\x04 \x01(\x04R\x06weight\x12\x10\n" +
-	"\x03now\x18\x05 \x01(\x03R\x03now\x12\\\n" +
+	"\blease_id\x18\x03 \x01(\x06R\aleaseId\x12\x16\n" +
+	"\x06weight\x18\x04 \x01(\x03R\x06weight\x12\x10\n" +
+	"\x03now\x18\x05 \x01(\x10R\x03now\x12\\\n" +
 	"\bmetadata\x18\x06 \x03(\v2@.com.evrblk.grackle.corepb.AcquireSemaphoreRequest.MetadataEntryR\bmetadata\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
@@ -2718,18 +2719,18 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\x17ReleaseSemaphoreRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12%\n" +
 	"\x0esemaphore_name\x18\x02 \x01(\tR\rsemaphoreName\x12\x19\n" +
-	"\blease_id\x18\x03 \x01(\x04R\aleaseId\x12\x10\n" +
-	"\x03now\x18\x04 \x01(\x03R\x03now\"^\n" +
+	"\blease_id\x18\x03 \x01(\x06R\aleaseId\x12\x10\n" +
+	"\x03now\x18\x04 \x01(\x10R\x03now\"^\n" +
 	"\x18ReleaseSemaphoreResponse\x12B\n" +
 	"\tsemaphore\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.SemaphoreR\tsemaphore\"\x9d\x03\n" +
 	"\x16UpdateSemaphoreRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12%\n" +
 	"\x0esemaphore_name\x18\x02 \x01(\tR\rsemaphoreName\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x18\n" +
-	"\apermits\x18\x04 \x01(\x04R\apermits\x12\x10\n" +
-	"\x03now\x18\x05 \x01(\x03R\x03now\x12[\n" +
+	"\apermits\x18\x04 \x01(\x03R\apermits\x12\x10\n" +
+	"\x03now\x18\x05 \x01(\x10R\x03now\x12[\n" +
 	"\bmetadata\x18\x06 \x03(\v2?.com.evrblk.grackle.corepb.UpdateSemaphoreRequest.MetadataEntryR\bmetadata\x12)\n" +
-	"\x10expected_version\x18\a \x01(\x04R\x0fexpectedVersion\x1a;\n" +
+	"\x10expected_version\x18\a \x01(\x03R\x0fexpectedVersion\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"]\n" +
@@ -2738,14 +2739,14 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\x16DeleteSemaphoreRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12%\n" +
 	"\x0esemaphore_name\x18\x02 \x01(\tR\rsemaphoreName\x12\x1b\n" +
-	"\trecord_id\x18\x03 \x01(\x04R\brecordId\"\x19\n" +
+	"\trecord_id\x18\x03 \x01(\x06R\brecordId\"\x19\n" +
 	"\x17DeleteSemaphoreResponse\"\x8e\x02\n" +
 	"\x1bListSemaphoreHoldersRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12%\n" +
 	"\x0esemaphore_name\x18\x02 \x01(\tR\rsemaphoreName\x12U\n" +
 	"\x10pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x0fpaginationToken\x12\x14\n" +
 	"\x05limit\x18\x04 \x01(\x05R\x05limit\x12\x10\n" +
-	"\x03now\x18\x05 \x01(\x03R\x03now\"\xac\x02\n" +
+	"\x03now\x18\x05 \x01(\x10R\x03now\"\xac\x02\n" +
 	"\x1cListSemaphoreHoldersResponse\x12D\n" +
 	"\aholders\x18\x01 \x03(\v2*.com.evrblk.grackle.corepb.SemaphoreHolderR\aholders\x12^\n" +
 	"\x15next_pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x13nextPaginationToken\x12f\n" +
@@ -2754,7 +2755,7 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12U\n" +
 	"\x10pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x0fpaginationToken\x12\x14\n" +
 	"\x05limit\x18\x03 \x01(\x05R\x05limit\x12\x10\n" +
-	"\x03now\x18\x04 \x01(\x03R\x03now\"\x9f\x02\n" +
+	"\x03now\x18\x04 \x01(\x10R\x03now\"\x9f\x02\n" +
 	"\x1bListSemaphoreLeasesResponse\x128\n" +
 	"\x06leases\x18\x01 \x03(\v2 .com.evrblk.grackle.corepb.LeaseR\x06leases\x12^\n" +
 	"\x15next_pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x13nextPaginationToken\x12f\n" +
@@ -2765,23 +2766,23 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"process_id\x18\x02 \x01(\tR\tprocessId\x12U\n" +
 	"\x10pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x0fpaginationToken\x12\x14\n" +
 	"\x05limit\x18\x04 \x01(\x05R\x05limit\x12\x10\n" +
-	"\x03now\x18\x05 \x01(\x03R\x03now\"\xaa\x02\n" +
+	"\x03now\x18\x05 \x01(\x10R\x03now\"\xaa\x02\n" +
 	"&ListSemaphoreLeasesByProcessIdResponse\x128\n" +
 	"\x06leases\x18\x01 \x03(\v2 .com.evrblk.grackle.corepb.LeaseR\x06leases\x12^\n" +
 	"\x15next_pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x13nextPaginationToken\x12f\n" +
 	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"k\n" +
 	"\x18GetSemaphoreLeaseRequest\x12=\n" +
 	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\x12\x10\n" +
-	"\x03now\x18\x02 \x01(\x03R\x03now\"S\n" +
+	"\x03now\x18\x02 \x01(\x10R\x03now\"S\n" +
 	"\x19GetSemaphoreLeaseResponse\x126\n" +
 	"\x05lease\x18\x01 \x01(\v2 .com.evrblk.grackle.corepb.LeaseR\x05lease\"\x91\x03\n" +
 	"\x1bCreateSemaphoreLeaseRequest\x12=\n" +
 	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\x12\x1d\n" +
 	"\n" +
 	"process_id\x18\x02 \x01(\tR\tprocessId\x12\x1f\n" +
-	"\vttl_seconds\x18\x03 \x01(\x04R\n" +
+	"\vttl_seconds\x18\x03 \x01(\x03R\n" +
 	"ttlSeconds\x12\x10\n" +
-	"\x03now\x18\x04 \x01(\x03R\x03now\x12`\n" +
+	"\x03now\x18\x04 \x01(\x10R\x03now\x12`\n" +
 	"\bmetadata\x18\x05 \x03(\v2D.com.evrblk.grackle.corepb.CreateSemaphoreLeaseRequest.MetadataEntryR\bmetadata\x12B\n" +
 	"\x1emax_number_of_semaphore_leases\x18\x06 \x01(\x03R\x1amaxNumberOfSemaphoreLeases\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
@@ -2791,22 +2792,22 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\x05lease\x18\x01 \x01(\v2 .com.evrblk.grackle.corepb.LeaseR\x05lease\"n\n" +
 	"\x1bRevokeSemaphoreLeaseRequest\x12=\n" +
 	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\x12\x10\n" +
-	"\x03now\x18\x02 \x01(\x03R\x03now\"\x1e\n" +
+	"\x03now\x18\x02 \x01(\x10R\x03now\"\x1e\n" +
 	"\x1cRevokeSemaphoreLeaseResponse\"\x90\x01\n" +
 	"\x1cRefreshSemaphoreLeaseRequest\x12=\n" +
 	"\blease_id\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.LeaseIdR\aleaseId\x12\x1f\n" +
-	"\vttl_seconds\x18\x02 \x01(\x04R\n" +
+	"\vttl_seconds\x18\x02 \x01(\x03R\n" +
 	"ttlSeconds\x12\x10\n" +
-	"\x03now\x18\x03 \x01(\x03R\x03now\"W\n" +
+	"\x03now\x18\x03 \x01(\x10R\x03now\"W\n" +
 	"\x1dRefreshSemaphoreLeaseResponse\x126\n" +
 	"\x05lease\x18\x01 \x01(\v2 .com.evrblk.grackle.corepb.LeaseR\x05lease\"\x9c\x01\n" +
 	" SemaphoresDeleteNamespaceRequest\x12\x1b\n" +
-	"\trecord_id\x18\x01 \x01(\x04R\brecordId\x12I\n" +
+	"\trecord_id\x18\x01 \x01(\x06R\brecordId\x12I\n" +
 	"\fnamespace_id\x18\x02 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x10\n" +
-	"\x03now\x18\x03 \x01(\x03R\x03now\"#\n" +
+	"\x03now\x18\x03 \x01(\x10R\x03now\"#\n" +
 	"!SemaphoresDeleteNamespaceResponse\"\x8d\x02\n" +
 	"%RunSemaphoresGarbageCollectionRequest\x12\x10\n" +
-	"\x03now\x18\x01 \x01(\x03R\x03now\x12/\n" +
+	"\x03now\x18\x01 \x01(\x10R\x03now\x12/\n" +
 	"\x14gc_records_page_size\x18\x02 \x01(\x03R\x11gcRecordsPageSize\x12B\n" +
 	"\x1egc_record_semaphores_page_size\x18\x03 \x01(\x03R\x1agcRecordSemaphoresPageSize\x12\x1f\n" +
 	"\vmax_visited\x18\x04 \x01(\x03R\n" +
@@ -2818,43 +2819,43 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x1d\n" +
 	"\n" +
-	"created_at\x18\x04 \x01(\x03R\tcreatedAt\x12\x1d\n" +
+	"created_at\x18\x04 \x01(\x10R\tcreatedAt\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\x05 \x01(\x03R\tupdatedAt\x12\x18\n" +
-	"\aversion\x18\x06 \x01(\x04R\aversion\x12\x18\n" +
-	"\apermits\x18\a \x01(\x04R\apermits\x12N\n" +
+	"updated_at\x18\x05 \x01(\x10R\tupdatedAt\x12\x18\n" +
+	"\aversion\x18\x06 \x01(\x03R\aversion\x12\x18\n" +
+	"\apermits\x18\a \x01(\x03R\apermits\x12N\n" +
 	"\bmetadata\x18\b \x03(\v22.com.evrblk.grackle.corepb.Semaphore.MetadataEntryR\bmetadata\x12!\n" +
-	"\factive_holds\x18\t \x01(\x04R\vactiveHolds\x120\n" +
+	"\factive_holds\x18\t \x01(\x03R\vactiveHolds\x120\n" +
 	"\x14active_holders_count\x18\n" +
-	" \x01(\x04R\x12activeHoldersCount\x12;\n" +
-	"\x1aearliest_holder_expires_at\x18\v \x01(\x03R\x17earliestHolderExpiresAt\x12(\n" +
-	"\x10last_activity_at\x18\f \x01(\x03R\x0elastActivityAt\x1a;\n" +
+	" \x01(\x03R\x12activeHoldersCount\x12;\n" +
+	"\x1aearliest_holder_expires_at\x18\v \x01(\x10R\x17earliestHolderExpiresAt\x12(\n" +
+	"\x10last_activity_at\x18\f \x01(\x10R\x0elastActivityAt\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xb6\x02\n" +
 	"\x0fSemaphoreHolder\x12<\n" +
 	"\x02id\x18\x01 \x01(\v2,.com.evrblk.grackle.corepb.SemaphoreHolderIdR\x02id\x12\x1b\n" +
-	"\tlocked_at\x18\x02 \x01(\x03R\blockedAt\x12\x1d\n" +
+	"\tlocked_at\x18\x02 \x01(\x10R\blockedAt\x12\x1d\n" +
 	"\n" +
-	"expires_at\x18\x03 \x01(\x03R\texpiresAt\x12\x16\n" +
-	"\x06weight\x18\x04 \x01(\x04R\x06weight\x12T\n" +
+	"expires_at\x18\x03 \x01(\x10R\texpiresAt\x12\x16\n" +
+	"\x06weight\x18\x04 \x01(\x03R\x06weight\x12T\n" +
 	"\bmetadata\x18\x05 \x03(\v28.com.evrblk.grackle.corepb.SemaphoreHolder.MetadataEntryR\bmetadata\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x93\x01\n" +
 	"\x11SemaphoreHolderId\x12\x1d\n" +
 	"\n" +
-	"account_id\x18\x01 \x01(\x04R\taccountId\x12!\n" +
-	"\fnamespace_id\x18\x02 \x01(\rR\vnamespaceId\x12!\n" +
-	"\fsemaphore_id\x18\x03 \x01(\x04R\vsemaphoreId\x12\x19\n" +
-	"\blease_id\x18\x04 \x01(\x04R\aleaseId\"r\n" +
+	"account_id\x18\x01 \x01(\x06R\taccountId\x12!\n" +
+	"\fnamespace_id\x18\x02 \x01(\x06R\vnamespaceId\x12!\n" +
+	"\fsemaphore_id\x18\x03 \x01(\x06R\vsemaphoreId\x12\x19\n" +
+	"\blease_id\x18\x04 \x01(\x06R\aleaseId\"r\n" +
 	"\vSemaphoreId\x12\x1d\n" +
 	"\n" +
-	"account_id\x18\x01 \x01(\x04R\taccountId\x12!\n" +
-	"\fnamespace_id\x18\x02 \x01(\rR\vnamespaceId\x12!\n" +
-	"\fsemaphore_id\x18\x03 \x01(\x04R\vsemaphoreId\"\xd7\x01\n" +
+	"account_id\x18\x01 \x01(\x06R\taccountId\x12!\n" +
+	"\fnamespace_id\x18\x02 \x01(\x06R\vnamespaceId\x12!\n" +
+	"\fsemaphore_id\x18\x03 \x01(\x06R\vsemaphoreId\"\xd7\x01\n" +
 	"!SemaphoresGarbageCollectionRecord\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x04R\x02id\x12K\n" +
+	"\x02id\x18\x01 \x01(\x06R\x02id\x12K\n" +
 	"\fnamespace_id\x18\x02 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdH\x00R\vnamespaceId\x12K\n" +
 	"\fsemaphore_id\x18\x03 \x01(\v2&.com.evrblk.grackle.corepb.SemaphoreIdH\x00R\vsemaphoreIdB\b\n" +
 	"\x06record\"o\n" +
@@ -2864,7 +2865,7 @@ const file_pkg_corepb_semaphores_proto_rawDesc = "" +
 	"\x1aSemaphoresExpirationRecord\x12I\n" +
 	"\fsemaphore_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.SemaphoreIdR\vsemaphoreId\x12\x1d\n" +
 	"\n" +
-	"expires_at\x18\x02 \x01(\x03R\texpiresAtB&Z$github.com/evrblk/grackle/pkg/corepbb\x06proto3"
+	"expires_at\x18\x02 \x01(\x10R\texpiresAtB&Z$github.com/evrblk/grackle/pkg/corepbb\x06proto3"
 
 var (
 	file_pkg_corepb_semaphores_proto_rawDescOnce sync.Once

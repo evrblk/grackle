@@ -28,7 +28,7 @@ import (
 // 3. namespace name
 type namespacesTable struct {
 	table      *monsterax.BinaryTable[*corepb.Namespace, corepb.Namespace]
-	namesIndex *monsterax.Uint32Table
+	namesIndex *monsterax.Uint64Table
 }
 
 func newNamespacesTable(shardLowerBound []byte, shardUpperBound []byte) *namespacesTable {
@@ -38,7 +38,7 @@ func newNamespacesTable(shardLowerBound []byte, shardUpperBound []byte) *namespa
 			shardLowerBound,
 			shardUpperBound,
 		),
-		namesIndex: monsterax.NewUint32Table(
+		namesIndex: monsterax.NewUint64Table(
 			tables.Grackle["Grackle.NamespacesCore.Namespaces.NamesIndex"].Bytes(),
 			shardLowerBound,
 			shardUpperBound,
@@ -138,7 +138,7 @@ func (t *namespacesTable) tablePK(accountId uint64) []byte {
 	)
 }
 
-func (t *namespacesTable) tableSK(namespaceId uint32) []byte {
+func (t *namespacesTable) tableSK(namespaceId uint64) []byte {
 	return utils.ConcatBytes(
 		namespaceId,
 	)

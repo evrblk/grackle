@@ -7,11 +7,12 @@
 package corepb
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -26,7 +27,7 @@ type CreateNamespaceRequest struct {
 	NamespaceId           *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	Name                  string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Description           string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	Now                   int64                  `protobuf:"varint,4,opt,name=now,proto3" json:"now,omitempty"`
+	Now                   int64                  `protobuf:"fixed64,4,opt,name=now,proto3" json:"now,omitempty"`
 	Metadata              map[string]string      `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	MaxNumberOfNamespaces int64                  `protobuf:"varint,6,opt,name=max_number_of_namespaces,json=maxNumberOfNamespaces,proto3" json:"max_number_of_namespaces,omitempty"`
 	unknownFields         protoimpl.UnknownFields
@@ -151,7 +152,7 @@ func (x *CreateNamespaceResponse) GetNamespace() *Namespace {
 
 type ListNamespacesRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
-	AccountId       uint64                 `protobuf:"varint,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	AccountId       uint64                 `protobuf:"fixed64,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
 	PaginationToken *PaginationToken       `protobuf:"bytes,2,opt,name=pagination_token,json=paginationToken,proto3" json:"pagination_token,omitempty"`
 	Limit           int32                  `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
 	unknownFields   protoimpl.UnknownFields
@@ -359,7 +360,7 @@ func (x *GetNamespaceResponse) GetNamespace() *Namespace {
 
 type GetNamespaceByNameRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	AccountId     uint64                 `protobuf:"varint,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	AccountId     uint64                 `protobuf:"fixed64,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
 	NamespaceName string                 `protobuf:"bytes,2,opt,name=namespace_name,json=namespaceName,proto3" json:"namespace_name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -455,9 +456,9 @@ func (x *GetNamespaceByNameResponse) GetNamespace() *Namespace {
 
 type DeleteNamespaceRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	AccountId     uint64                 `protobuf:"varint,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	AccountId     uint64                 `protobuf:"fixed64,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
 	NamespaceName string                 `protobuf:"bytes,2,opt,name=namespace_name,json=namespaceName,proto3" json:"namespace_name,omitempty"`
-	Now           int64                  `protobuf:"varint,3,opt,name=now,proto3" json:"now,omitempty"`
+	Now           int64                  `protobuf:"fixed64,3,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -551,12 +552,12 @@ func (*DeleteNamespaceResponse) Descriptor() ([]byte, []int) {
 
 type UpdateNamespaceRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
-	AccountId       uint64                 `protobuf:"varint,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	AccountId       uint64                 `protobuf:"fixed64,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
 	NamespaceName   string                 `protobuf:"bytes,2,opt,name=namespace_name,json=namespaceName,proto3" json:"namespace_name,omitempty"`
 	Description     string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	Metadata        map[string]string      `protobuf:"bytes,4,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	ExpectedVersion uint64                 `protobuf:"varint,5,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
-	Now             int64                  `protobuf:"varint,6,opt,name=now,proto3" json:"now,omitempty"`
+	ExpectedVersion int64                  `protobuf:"varint,5,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
+	Now             int64                  `protobuf:"fixed64,6,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -619,7 +620,7 @@ func (x *UpdateNamespaceRequest) GetMetadata() map[string]string {
 	return nil
 }
 
-func (x *UpdateNamespaceRequest) GetExpectedVersion() uint64 {
+func (x *UpdateNamespaceRequest) GetExpectedVersion() int64 {
 	if x != nil {
 		return x.ExpectedVersion
 	}
@@ -682,9 +683,9 @@ type Namespace struct {
 	Id            *NamespaceId           `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	CreatedAt     int64                  `protobuf:"varint,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt     int64                  `protobuf:"varint,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	Version       uint64                 `protobuf:"varint,6,opt,name=version,proto3" json:"version,omitempty"`
+	CreatedAt     int64                  `protobuf:"fixed64,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt     int64                  `protobuf:"fixed64,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Version       int64                  `protobuf:"varint,6,opt,name=version,proto3" json:"version,omitempty"`
 	Metadata      map[string]string      `protobuf:"bytes,7,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -755,7 +756,7 @@ func (x *Namespace) GetUpdatedAt() int64 {
 	return 0
 }
 
-func (x *Namespace) GetVersion() uint64 {
+func (x *Namespace) GetVersion() int64 {
 	if x != nil {
 		return x.Version
 	}
@@ -771,8 +772,8 @@ func (x *Namespace) GetMetadata() map[string]string {
 
 type NamespaceId struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	AccountId     uint64                 `protobuf:"varint,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
-	NamespaceId   uint32                 `protobuf:"varint,2,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
+	AccountId     uint64                 `protobuf:"fixed64,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	NamespaceId   uint64                 `protobuf:"fixed64,2,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -814,7 +815,7 @@ func (x *NamespaceId) GetAccountId() uint64 {
 	return 0
 }
 
-func (x *NamespaceId) GetNamespaceId() uint32 {
+func (x *NamespaceId) GetNamespaceId() uint64 {
 	if x != nil {
 		return x.NamespaceId
 	}
@@ -874,7 +875,7 @@ const file_pkg_corepb_namespaces_proto_rawDesc = "" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x10\n" +
-	"\x03now\x18\x04 \x01(\x03R\x03now\x12[\n" +
+	"\x03now\x18\x04 \x01(\x10R\x03now\x12[\n" +
 	"\bmetadata\x18\x05 \x03(\v2?.com.evrblk.grackle.corepb.CreateNamespaceRequest.MetadataEntryR\bmetadata\x127\n" +
 	"\x18max_number_of_namespaces\x18\x06 \x01(\x03R\x15maxNumberOfNamespaces\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
@@ -884,7 +885,7 @@ const file_pkg_corepb_namespaces_proto_rawDesc = "" +
 	"\tnamespace\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.NamespaceR\tnamespace\"\xa3\x01\n" +
 	"\x15ListNamespacesRequest\x12\x1d\n" +
 	"\n" +
-	"account_id\x18\x01 \x01(\x04R\taccountId\x12U\n" +
+	"account_id\x18\x01 \x01(\x06R\taccountId\x12U\n" +
 	"\x10pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x0fpaginationToken\x12\x14\n" +
 	"\x05limit\x18\x03 \x01(\x05R\x05limit\"\xa6\x02\n" +
 	"\x16ListNamespacesResponse\x12D\n" +
@@ -899,24 +900,24 @@ const file_pkg_corepb_namespaces_proto_rawDesc = "" +
 	"\tnamespace\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.NamespaceR\tnamespace\"a\n" +
 	"\x19GetNamespaceByNameRequest\x12\x1d\n" +
 	"\n" +
-	"account_id\x18\x01 \x01(\x04R\taccountId\x12%\n" +
+	"account_id\x18\x01 \x01(\x06R\taccountId\x12%\n" +
 	"\x0enamespace_name\x18\x02 \x01(\tR\rnamespaceName\"`\n" +
 	"\x1aGetNamespaceByNameResponse\x12B\n" +
 	"\tnamespace\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.NamespaceR\tnamespace\"p\n" +
 	"\x16DeleteNamespaceRequest\x12\x1d\n" +
 	"\n" +
-	"account_id\x18\x01 \x01(\x04R\taccountId\x12%\n" +
+	"account_id\x18\x01 \x01(\x06R\taccountId\x12%\n" +
 	"\x0enamespace_name\x18\x02 \x01(\tR\rnamespaceName\x12\x10\n" +
-	"\x03now\x18\x03 \x01(\x03R\x03now\"\x19\n" +
+	"\x03now\x18\x03 \x01(\x10R\x03now\"\x19\n" +
 	"\x17DeleteNamespaceResponse\"\xd7\x02\n" +
 	"\x16UpdateNamespaceRequest\x12\x1d\n" +
 	"\n" +
-	"account_id\x18\x01 \x01(\x04R\taccountId\x12%\n" +
+	"account_id\x18\x01 \x01(\x06R\taccountId\x12%\n" +
 	"\x0enamespace_name\x18\x02 \x01(\tR\rnamespaceName\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12[\n" +
 	"\bmetadata\x18\x04 \x03(\v2?.com.evrblk.grackle.corepb.UpdateNamespaceRequest.MetadataEntryR\bmetadata\x12)\n" +
-	"\x10expected_version\x18\x05 \x01(\x04R\x0fexpectedVersion\x12\x10\n" +
-	"\x03now\x18\x06 \x01(\x03R\x03now\x1a;\n" +
+	"\x10expected_version\x18\x05 \x01(\x03R\x0fexpectedVersion\x12\x10\n" +
+	"\x03now\x18\x06 \x01(\x10R\x03now\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"]\n" +
@@ -927,18 +928,18 @@ const file_pkg_corepb_namespaces_proto_rawDesc = "" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x1d\n" +
 	"\n" +
-	"created_at\x18\x04 \x01(\x03R\tcreatedAt\x12\x1d\n" +
+	"created_at\x18\x04 \x01(\x10R\tcreatedAt\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\x05 \x01(\x03R\tupdatedAt\x12\x18\n" +
-	"\aversion\x18\x06 \x01(\x04R\aversion\x12N\n" +
+	"updated_at\x18\x05 \x01(\x10R\tupdatedAt\x12\x18\n" +
+	"\aversion\x18\x06 \x01(\x03R\aversion\x12N\n" +
 	"\bmetadata\x18\a \x03(\v22.com.evrblk.grackle.corepb.Namespace.MetadataEntryR\bmetadata\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"O\n" +
 	"\vNamespaceId\x12\x1d\n" +
 	"\n" +
-	"account_id\x18\x01 \x01(\x04R\taccountId\x12!\n" +
-	"\fnamespace_id\x18\x02 \x01(\rR\vnamespaceId\"E\n" +
+	"account_id\x18\x01 \x01(\x06R\taccountId\x12!\n" +
+	"\fnamespace_id\x18\x02 \x01(\x06R\vnamespaceId\"E\n" +
 	"\x11NamespacesCounter\x120\n" +
 	"\x14number_of_namespaces\x18\x01 \x01(\x03R\x12numberOfNamespacesB&Z$github.com/evrblk/grackle/pkg/corepbb\x06proto3"
 

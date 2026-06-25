@@ -31,15 +31,15 @@ type WaitGroupState struct {
 	config *Config
 
 	mu         sync.Mutex
-	counter    uint64
-	nextJob    uint64 // next job index to reserve for completion
-	version    uint64
+	counter    int64
+	nextJob    int64 // next job index to reserve for completion
+	version    int64
 	finished   bool
 	recreating bool
 }
 
 // NewWaitGroupState builds an (uncreated) wait group state.
-func NewWaitGroupState(namespace, name string, counter uint64, config *Config) *WaitGroupState {
+func NewWaitGroupState(namespace, name string, counter int64, config *Config) *WaitGroupState {
 	return &WaitGroupState{
 		namespace: namespace,
 		name:      name,
@@ -105,7 +105,7 @@ func (s *WaitGroupState) CompleteBatch(ctx context.Context, client grackle.Grack
 	}
 
 	start := s.nextJob
-	end := start + uint64(batchSize)
+	end := start + int64(batchSize)
 	if end > s.counter {
 		end = s.counter
 	}
@@ -139,7 +139,7 @@ func (s *WaitGroupState) CompleteBatch(ctx context.Context, client grackle.Grack
 
 // RaiseCounter raises the counter of an active wait group by delta. The state
 // lock is held across the RPC so concurrent updates do not race on the version.
-func (s *WaitGroupState) RaiseCounter(ctx context.Context, client grackle.GrackleApi, delta uint64, config *Config) error {
+func (s *WaitGroupState) RaiseCounter(ctx context.Context, client grackle.GrackleApi, delta int64, config *Config) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.recreating || s.finished {

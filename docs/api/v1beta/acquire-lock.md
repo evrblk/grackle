@@ -35,8 +35,11 @@ giving up.
 ## Response
 
 * Returns `NotFound` if the namespace does not exist.
-* Either succeeds with `success: true`, or returns `success: false` (without an error) with the
-current lock state so the caller can see who is holding it.
+* The `outcome` enum reports the result: `ACQUIRE_OUTCOME_ACQUIRED` when the lease now holds the
+lock, `ACQUIRE_OUTCOME_UNAVAILABLE` when a non-blocking attempt (`timeout_seconds: 0`) found it
+held by someone else and returned without waiting, or `ACQUIRE_OUTCOME_TIMED_OUT` when the call
+blocked until `timeout_seconds` elapsed without ever acquiring. The non-acquired outcomes return
+(without an error) the current lock state so the caller can see who is holding it.
 * Returns `NotFound` if the lease does not exist or has already expired.
 * Returns `ResourceExhausted` if creating a new lock would exceed the namespace's lock quota.
 
@@ -59,7 +62,7 @@ __Success:__
       }
     ]
   },
-  "success": true
+  "outcome": "ACQUIRE_OUTCOME_ACQUIRED"
 }
 ```
 
@@ -82,6 +85,6 @@ __Held by someone else:__
       }
     ]
   },
-  "success": false
+  "outcome": "ACQUIRE_OUTCOME_TIMED_OUT"
 }
 ```

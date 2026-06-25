@@ -717,14 +717,12 @@ func TestWaitAtBarrier(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp)
-		require.True(t, resp.AllArrived)
-		require.False(t, resp.TimedOut)
-		require.Equal(t, uint64(3), resp.Barrier.ExpectedProcesses)
+		require.Equal(t, gracklepb.BarrierWaitOutcome_BARRIER_WAIT_OUTCOME_TRIPPED, resp.Outcome)
+		require.EqualValues(t, 3, resp.Barrier.ExpectedProcesses)
 		// The barrier auto-trips on the third arrival: ArrivedProcesses is reset to 0
 		// and Generation advances from 1 to 2.
-		require.Equal(t, uint64(0), resp.Barrier.ArrivedProcesses)
-		require.Equal(t, uint64(2), resp.Barrier.Generation)
-		require.Equal(t, uint64(2), resp.NextGeneration)
+		require.EqualValues(t, 0, resp.Barrier.ArrivedProcesses)
+		require.EqualValues(t, 2, resp.Barrier.Generation)
 	})
 
 	t.Run("timeout", func(t *testing.T) {
@@ -772,9 +770,8 @@ func TestWaitAtBarrier(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp)
-		require.False(t, resp.AllArrived)
-		require.True(t, resp.TimedOut)
-		require.Equal(t, uint64(5), resp.Barrier.ExpectedProcesses)
-		require.Equal(t, uint64(2), resp.Barrier.ArrivedProcesses)
+		require.Equal(t, gracklepb.BarrierWaitOutcome_BARRIER_WAIT_OUTCOME_TIMED_OUT, resp.Outcome)
+		require.EqualValues(t, 5, resp.Barrier.ExpectedProcesses)
+		require.EqualValues(t, 2, resp.Barrier.ArrivedProcesses)
 	})
 }

@@ -21,7 +21,7 @@ func TestSemaphoresTable_Get(t *testing.T) {
 		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		semaphoreId := rand.Uint64()
 		now := time.Now()
 
@@ -70,7 +70,7 @@ func TestSemaphoresTable_Get(t *testing.T) {
 		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		semaphoreId := rand.Uint64()
 
 		semaphoreIdProto := &corepb.SemaphoreId{
@@ -95,7 +95,7 @@ func TestSemaphoresTable_GetByName(t *testing.T) {
 		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		semaphoreId := rand.Uint64()
 		now := time.Now()
 
@@ -140,7 +140,7 @@ func TestSemaphoresTable_GetByName(t *testing.T) {
 		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		txn := store.View()
 		_, err = table.GetByName(txn, accountId, namespaceId, "nonexistent_semaphore")
@@ -159,7 +159,7 @@ func TestSemaphoresTable_Create(t *testing.T) {
 		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		semaphoreId := rand.Uint64()
 		now := time.Now()
 
@@ -207,7 +207,7 @@ func TestSemaphoresTable_Create(t *testing.T) {
 		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		now := time.Now()
 
 		semaphore1 := &corepb.Semaphore{
@@ -266,7 +266,7 @@ func TestSemaphoresTable_Update(t *testing.T) {
 		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		semaphoreId := rand.Uint64()
 		now := time.Now()
 
@@ -320,9 +320,9 @@ func TestSemaphoresTable_Update(t *testing.T) {
 
 		require.NoError(t, err)
 		require.Equal(t, "updated description", actual.Description)
-		require.Equal(t, uint64(10), actual.Permits)
-		require.Equal(t, uint64(3), actual.ActiveHolds)
-		require.Equal(t, uint64(2), actual.ActiveHoldersCount)
+		require.EqualValues(t, 10, actual.Permits)
+		require.EqualValues(t, 3, actual.ActiveHolds)
+		require.EqualValues(t, 2, actual.ActiveHoldersCount)
 		require.Equal(t, updatedSemaphore.UpdatedAt, actual.UpdatedAt)
 	})
 }
@@ -335,7 +335,7 @@ func TestSemaphoresTable_Delete(t *testing.T) {
 		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		semaphoreId := rand.Uint64()
 		now := time.Now()
 
@@ -383,7 +383,7 @@ func TestSemaphoresTable_Delete(t *testing.T) {
 		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		now := time.Now()
 
 		semaphore := &corepb.Semaphore{
@@ -438,7 +438,7 @@ func TestSemaphoresTable_Delete(t *testing.T) {
 		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		now := time.Now()
 		name := "recycled_name"
 
@@ -494,7 +494,7 @@ func TestSemaphoresTable_Delete(t *testing.T) {
 		txn.Discard()
 		require.NoError(t, err)
 		require.Equal(t, second.Id.SemaphoreId, actual.Id.SemaphoreId)
-		require.Equal(t, uint64(2), actual.Permits)
+		require.EqualValues(t, 2, actual.Permits)
 	})
 
 	t.Run("deletes a non-existent semaphore", func(t *testing.T) {
@@ -504,7 +504,7 @@ func TestSemaphoresTable_Delete(t *testing.T) {
 		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		semaphoreId := rand.Uint64()
 
 		semaphoreIdProto := &corepb.SemaphoreId{
@@ -529,7 +529,7 @@ func TestSemaphoresTable_List(t *testing.T) {
 		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		now := time.Now()
 
 		// Create multiple semaphores
@@ -545,7 +545,7 @@ func TestSemaphoresTable_List(t *testing.T) {
 				Description:        fmt.Sprintf("description %d", i),
 				CreatedAt:          now.Add(time.Duration(i) * time.Minute).UnixNano(),
 				UpdatedAt:          now.Add(time.Duration(i) * time.Minute).UnixNano(),
-				Permits:            uint64(i + 1),
+				Permits:            int64(i + 1),
 				ActiveHolds:        0,
 				ActiveHoldersCount: 0,
 			}
@@ -571,7 +571,7 @@ func TestSemaphoresTable_List(t *testing.T) {
 
 		// Verify semaphores are sorted by semaphore id (sort key)
 		for i, semaphore := range result.semaphores {
-			require.Equal(t, uint64(i+1), semaphore.Id.SemaphoreId)
+			require.EqualValues(t, i+1, int(semaphore.Id.SemaphoreId))
 			require.Equal(t, fmt.Sprintf("semaphore_%d", i), semaphore.Name)
 		}
 	})
@@ -583,7 +583,7 @@ func TestSemaphoresTable_List(t *testing.T) {
 		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		now := time.Now()
 
 		// Create multiple semaphores
@@ -599,7 +599,7 @@ func TestSemaphoresTable_List(t *testing.T) {
 				Description:        fmt.Sprintf("description %d", i),
 				CreatedAt:          now.Add(time.Duration(i) * time.Minute).UnixNano(),
 				UpdatedAt:          now.Add(time.Duration(i) * time.Minute).UnixNano(),
-				Permits:            uint64(i + 1),
+				Permits:            int64(i + 1),
 				ActiveHolds:        0,
 				ActiveHoldersCount: 0,
 			}
@@ -620,9 +620,9 @@ func TestSemaphoresTable_List(t *testing.T) {
 		require.Len(t, result1.semaphores, 3)
 		require.NotNil(t, result1.nextPaginationToken)
 		require.Nil(t, result1.previousPaginationToken)
-		require.Equal(t, uint64(1), result1.semaphores[0].Id.SemaphoreId)
-		require.Equal(t, uint64(2), result1.semaphores[1].Id.SemaphoreId)
-		require.Equal(t, uint64(3), result1.semaphores[2].Id.SemaphoreId)
+		require.EqualValues(t, 1, result1.semaphores[0].Id.SemaphoreId)
+		require.EqualValues(t, 2, result1.semaphores[1].Id.SemaphoreId)
+		require.EqualValues(t, 3, result1.semaphores[2].Id.SemaphoreId)
 
 		// List second page
 		txn = store.View()
@@ -633,9 +633,9 @@ func TestSemaphoresTable_List(t *testing.T) {
 		require.Len(t, result2.semaphores, 3)
 		require.NotNil(t, result2.nextPaginationToken)
 		require.NotNil(t, result2.previousPaginationToken)
-		require.Equal(t, uint64(4), result2.semaphores[0].Id.SemaphoreId)
-		require.Equal(t, uint64(5), result2.semaphores[1].Id.SemaphoreId)
-		require.Equal(t, uint64(6), result2.semaphores[2].Id.SemaphoreId)
+		require.EqualValues(t, 4, result2.semaphores[0].Id.SemaphoreId)
+		require.EqualValues(t, 5, result2.semaphores[1].Id.SemaphoreId)
+		require.EqualValues(t, 6, result2.semaphores[2].Id.SemaphoreId)
 
 		// List third page
 		txn = store.View()
@@ -656,7 +656,7 @@ func TestSemaphoresTable_List(t *testing.T) {
 		require.Len(t, result4.semaphores, 1)
 		require.Nil(t, result4.nextPaginationToken)
 		require.NotNil(t, result4.previousPaginationToken)
-		require.Equal(t, uint64(10), result4.semaphores[0].Id.SemaphoreId)
+		require.EqualValues(t, 10, result4.semaphores[0].Id.SemaphoreId)
 	})
 
 	t.Run("lists empty semaphores", func(t *testing.T) {
@@ -666,7 +666,7 @@ func TestSemaphoresTable_List(t *testing.T) {
 		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		txn := store.View()
 		result, err := table.List(txn, accountId, namespaceId, nil, 10)
@@ -683,8 +683,8 @@ func TestSemaphoresTable_List(t *testing.T) {
 		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId1 := rand.Uint32()
-		namespaceId2 := rand.Uint32()
+		namespaceId1 := rand.Uint64()
+		namespaceId2 := rand.Uint64()
 		now := time.Now()
 
 		// Create semaphore in first namespace
@@ -751,8 +751,8 @@ func TestSemaphoresTable_SameNameDifferentNamespaces(t *testing.T) {
 	table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 	accountId := rand.Uint64()
-	namespaceId1 := rand.Uint32()
-	namespaceId2 := rand.Uint32()
+	namespaceId1 := rand.Uint64()
+	namespaceId2 := rand.Uint64()
 	now := time.Now()
 
 	// Create semaphore with same name in first namespace
@@ -832,7 +832,7 @@ func TestSemaphoresTable_NameIndexConsistency(t *testing.T) {
 	table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	semaphoreId := rand.Uint64()
 	now := time.Now()
 

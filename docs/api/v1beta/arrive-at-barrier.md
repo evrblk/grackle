@@ -34,6 +34,8 @@ generation is a no-op.
 * Returns `NotFound` if the barrier does not exist.
 * Returns `InvalidRequest` if the call would push ArrivedProcesses above ExpectedProcesses.
 * Returns `InvalidArgument` if the generation is older than the current barrier generation.
+* When this arrival completes the rendezvous (`all_arrived: true`), the barrier has already
+  advanced: `generation` is incremented and `arrived_processes` resets to 0.
 
 __Not yet released:__
 
@@ -45,22 +47,20 @@ __Not yet released:__
     "arrived_processes": 1,
     "generation": 1
   },
-  "all_arrived": false,
-  "next_generation": 2
+  "all_arrived": false
 }
 ```
 
-__This caller's arrival completed the rendezvous:__
+__This caller's arrival completed the rendezvous__ (the barrier has advanced to generation 2):
 
 ```json
 {
   "barrier": {
     "name": "phase_1_complete",
     "expected_processes": 4,
-    "arrived_processes": 4,
-    "generation": 1
+    "arrived_processes": 0,
+    "generation": 2
   },
-  "all_arrived": true,
-  "next_generation": 2
+  "all_arrived": true
 }
 ```

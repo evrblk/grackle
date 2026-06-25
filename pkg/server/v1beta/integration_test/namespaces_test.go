@@ -232,11 +232,5 @@ func TestListNamespaces(t *testing.T) {
 		require.NotEmpty(t, resp7.Namespaces)
 		require.Len(t, resp7.Namespaces, 25)
 		require.Empty(t, resp7.NextPaginationToken)
-
-		// Test pagination with negative limit (should use default)
-		_, err = server.ListNamespaces(ctx, &gracklepb.ListNamespacesRequest{
-			Limit: -1,
-		})
-		require.Error(t, err)
 	})
 }

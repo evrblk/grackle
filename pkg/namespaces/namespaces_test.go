@@ -21,7 +21,7 @@ func TestNamespacesTable_Create(t *testing.T) {
 		namespace := &corepb.Namespace{
 			Id: &corepb.NamespaceId{
 				AccountId:   rand.Uint64(),
-				NamespaceId: rand.Uint32(),
+				NamespaceId: rand.Uint64(),
 			},
 			Name:        "test_namespace",
 			Description: "test description",
@@ -58,7 +58,7 @@ func TestNamespacesTable_Create(t *testing.T) {
 		namespace := &corepb.Namespace{
 			Id: &corepb.NamespaceId{
 				AccountId:   rand.Uint64(),
-				NamespaceId: rand.Uint32(),
+				NamespaceId: rand.Uint64(),
 			},
 			Name:        "test_namespace",
 			Description: "test description",
@@ -95,7 +95,7 @@ func TestNamespacesTable_Get(t *testing.T) {
 		namespace := &corepb.Namespace{
 			Id: &corepb.NamespaceId{
 				AccountId:   rand.Uint64(),
-				NamespaceId: rand.Uint32(),
+				NamespaceId: rand.Uint64(),
 			},
 			Name:        "test_namespace",
 			Description: "test description",
@@ -135,7 +135,7 @@ func TestNamespacesTable_Get(t *testing.T) {
 
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		retrieved, err := table.Get(txn, namespaceId)
@@ -155,7 +155,7 @@ func TestNamespacesTable_GetByName(t *testing.T) {
 		namespace := &corepb.Namespace{
 			Id: &corepb.NamespaceId{
 				AccountId:   rand.Uint64(),
-				NamespaceId: rand.Uint32(),
+				NamespaceId: rand.Uint64(),
 			},
 			Name:        "test_namespace",
 			Description: "test description",
@@ -208,7 +208,7 @@ func TestNamespacesTable_GetByName(t *testing.T) {
 		namespace := &corepb.Namespace{
 			Id: &corepb.NamespaceId{
 				AccountId:   accountId1,
-				NamespaceId: rand.Uint32(),
+				NamespaceId: rand.Uint64(),
 			},
 			Name:        "test_namespace",
 			Description: "test description",
@@ -243,7 +243,7 @@ func TestNamespacesTable_Update(t *testing.T) {
 		namespace := &corepb.Namespace{
 			Id: &corepb.NamespaceId{
 				AccountId:   rand.Uint64(),
-				NamespaceId: rand.Uint32(),
+				NamespaceId: rand.Uint64(),
 			},
 			Name:        "test_namespace",
 			Description: "original description",
@@ -291,7 +291,7 @@ func TestNamespacesTable_Delete(t *testing.T) {
 		namespace := &corepb.Namespace{
 			Id: &corepb.NamespaceId{
 				AccountId:   rand.Uint64(),
-				NamespaceId: rand.Uint32(),
+				NamespaceId: rand.Uint64(),
 			},
 			Name:        "test_namespace",
 			Description: "test description",
@@ -336,7 +336,7 @@ func TestNamespacesTable_Delete(t *testing.T) {
 		namespace := &corepb.Namespace{
 			Id: &corepb.NamespaceId{
 				AccountId:   rand.Uint64(),
-				NamespaceId: rand.Uint32(),
+				NamespaceId: rand.Uint64(),
 			},
 			Name:        "test_namespace",
 			Description: "test description",
@@ -367,7 +367,7 @@ func TestNamespacesTable_List(t *testing.T) {
 			namespace := &corepb.Namespace{
 				Id: &corepb.NamespaceId{
 					AccountId:   accountId,
-					NamespaceId: uint32(i),
+					NamespaceId: uint64(i),
 				},
 				Name:        "test_namespace_" + string(rune(i)),
 				Description: "test description",
@@ -408,7 +408,7 @@ func TestNamespacesTable_List(t *testing.T) {
 			namespace := &corepb.Namespace{
 				Id: &corepb.NamespaceId{
 					AccountId:   accountId,
-					NamespaceId: uint32(i),
+					NamespaceId: uint64(i),
 				},
 				Name:        "test_namespace_" + string(rune(i)),
 				Description: "test description",
@@ -477,7 +477,7 @@ func TestNamespacesTable_List(t *testing.T) {
 			namespace := &corepb.Namespace{
 				Id: &corepb.NamespaceId{
 					AccountId:   accountId1,
-					NamespaceId: uint32(i),
+					NamespaceId: uint64(i),
 				},
 				Name:        "test_namespace_acc1_" + string(rune(i)),
 				Description: "test description",
@@ -497,7 +497,7 @@ func TestNamespacesTable_List(t *testing.T) {
 			namespace := &corepb.Namespace{
 				Id: &corepb.NamespaceId{
 					AccountId:   accountId2,
-					NamespaceId: uint32(i),
+					NamespaceId: uint64(i),
 				},
 				Name:        "test_namespace_acc2_" + string(rune(i)),
 				Description: "test description",

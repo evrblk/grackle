@@ -212,37 +212,59 @@ func TestValidateUpdateNamespaceRequest(t *testing.T) {
 		{
 			name: "empty namespace name",
 			request: &gracklepb.UpdateNamespaceRequest{
-				NamespaceName: "",
+				NamespaceName:   "",
+				ExpectedVersion: 1,
 			},
 			shouldError: true,
 		},
 		{
 			name: "namespace name too long",
 			request: &gracklepb.UpdateNamespaceRequest{
-				NamespaceName: string(make([]byte, 129)),
+				NamespaceName:   string(make([]byte, 129)),
+				ExpectedVersion: 1,
 			},
 			shouldError: true,
 		},
 		{
 			name: "invalid namespace name characters",
 			request: &gracklepb.UpdateNamespaceRequest{
-				NamespaceName: "invalid name",
+				NamespaceName:   "invalid name",
+				ExpectedVersion: 1,
 			},
 			shouldError: true,
 		},
 		{
 			name: "description too long",
 			request: &gracklepb.UpdateNamespaceRequest{
+				NamespaceName:   "validname",
+				Description:     string(make([]byte, 1025)),
+				ExpectedVersion: 1,
+			},
+			shouldError: true,
+		},
+		{
+			name: "empty expected version",
+			request: &gracklepb.UpdateNamespaceRequest{
 				NamespaceName: "validname",
-				Description:   string(make([]byte, 1025)),
+				Description:   "Valid description",
+			},
+			shouldError: true,
+		},
+		{
+			name: "negative expected version",
+			request: &gracklepb.UpdateNamespaceRequest{
+				NamespaceName:   "validname",
+				Description:     "Valid description",
+				ExpectedVersion: -1,
 			},
 			shouldError: true,
 		},
 		{
 			name: "valid request",
 			request: &gracklepb.UpdateNamespaceRequest{
-				NamespaceName: "validname",
-				Description:   "Valid description",
+				NamespaceName:   "validname",
+				Description:     "Valid description",
+				ExpectedVersion: 1,
 			},
 			shouldError: false,
 		},
@@ -405,70 +427,97 @@ func TestValidateCreateWaitGroupRequest(t *testing.T) {
 		{
 			name: "empty namespace name",
 			request: &gracklepb.CreateWaitGroupRequest{
-				WaitGroupName: "validname",
-				Counter:       1,
+				WaitGroupName:              "validname",
+				Counter:                    1,
+				DeleteAfterFinishedSeconds: 60,
 			},
 			shouldError: true,
 		},
 		{
 			name: "empty wait group name",
 			request: &gracklepb.CreateWaitGroupRequest{
-				NamespaceName: "validname",
-				Counter:       1,
+				NamespaceName:              "validname",
+				Counter:                    1,
+				DeleteAfterFinishedSeconds: 60,
 			},
 			shouldError: true,
 		},
 		{
 			name: "namespace name too long",
 			request: &gracklepb.CreateWaitGroupRequest{
-				NamespaceName: string(make([]byte, 129)),
-				WaitGroupName: "validname",
-				Counter:       1,
+				NamespaceName:              string(make([]byte, 129)),
+				WaitGroupName:              "validname",
+				Counter:                    1,
+				DeleteAfterFinishedSeconds: 60,
 			},
 			shouldError: true,
 		},
 		{
 			name: "wait group name too long",
 			request: &gracklepb.CreateWaitGroupRequest{
-				NamespaceName: "validname",
-				WaitGroupName: string(make([]byte, 129)),
-				Counter:       1,
+				NamespaceName:              "validname",
+				WaitGroupName:              string(make([]byte, 129)),
+				Counter:                    1,
+				DeleteAfterFinishedSeconds: 60,
 			},
 			shouldError: true,
 		},
 		{
 			name: "invalid namespace name characters",
 			request: &gracklepb.CreateWaitGroupRequest{
-				NamespaceName: "invalid name",
-				WaitGroupName: "validname",
-				Counter:       1,
+				NamespaceName:              "invalid name",
+				WaitGroupName:              "validname",
+				Counter:                    1,
+				DeleteAfterFinishedSeconds: 60,
 			},
 			shouldError: true,
 		},
 		{
 			name: "invalid wait group name characters",
 			request: &gracklepb.CreateWaitGroupRequest{
-				NamespaceName: "validname",
-				WaitGroupName: "invalid name",
-				Counter:       1,
+				NamespaceName:              "validname",
+				WaitGroupName:              "invalid name",
+				Counter:                    1,
+				DeleteAfterFinishedSeconds: 60,
 			},
 			shouldError: true,
 		},
 		{
 			name: "counter must be greater than 0",
 			request: &gracklepb.CreateWaitGroupRequest{
+				NamespaceName:              "validname",
+				WaitGroupName:              "validwaitgroup",
+				Counter:                    0,
+				DeleteAfterFinishedSeconds: 60,
+			},
+			shouldError: true,
+		},
+		{
+			name: "empty auto deletion time",
+			request: &gracklepb.CreateWaitGroupRequest{
 				NamespaceName: "validname",
 				WaitGroupName: "validwaitgroup",
-				Counter:       0,
+				Counter:       1,
+			},
+			shouldError: true,
+		},
+		{
+			name: "too small auto deletion time",
+			request: &gracklepb.CreateWaitGroupRequest{
+				NamespaceName:              "validname",
+				WaitGroupName:              "validwaitgroup",
+				Counter:                    1,
+				DeleteAfterFinishedSeconds: 5,
 			},
 			shouldError: true,
 		},
 		{
 			name: "valid request",
 			request: &gracklepb.CreateWaitGroupRequest{
-				NamespaceName: "validname",
-				WaitGroupName: "validwaitgroup",
-				Counter:       1,
+				NamespaceName:              "validname",
+				WaitGroupName:              "validwaitgroup",
+				Counter:                    1,
+				DeleteAfterFinishedSeconds: 60,
 			},
 			shouldError: false,
 		},
@@ -711,7 +760,7 @@ func TestValidateWaitForWaitGroupRequest(t *testing.T) {
 				WaitGroupName:  "validname",
 				TimeoutSeconds: 0,
 			},
-			shouldError: true,
+			shouldError: false,
 		},
 		{
 			name: "timeout seconds negative",
@@ -1171,7 +1220,7 @@ func TestValidateReleaseLockRequest(t *testing.T) {
 			name: "empty namespace name",
 			request: &gracklepb.ReleaseLockRequest{
 				LockName: "validname",
-				LeaseId:  "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:  "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -1179,7 +1228,7 @@ func TestValidateReleaseLockRequest(t *testing.T) {
 			name: "empty lock name",
 			request: &gracklepb.ReleaseLockRequest{
 				NamespaceName: "validname",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -1196,7 +1245,7 @@ func TestValidateReleaseLockRequest(t *testing.T) {
 			request: &gracklepb.ReleaseLockRequest{
 				NamespaceName: string(make([]byte, 129)),
 				LockName:      "validname",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -1205,7 +1254,7 @@ func TestValidateReleaseLockRequest(t *testing.T) {
 			request: &gracklepb.ReleaseLockRequest{
 				NamespaceName: "validname",
 				LockName:      string(make([]byte, 129)),
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -1223,7 +1272,7 @@ func TestValidateReleaseLockRequest(t *testing.T) {
 			request: &gracklepb.ReleaseLockRequest{
 				NamespaceName: "invalid name",
 				LockName:      "validname",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -1232,7 +1281,7 @@ func TestValidateReleaseLockRequest(t *testing.T) {
 			request: &gracklepb.ReleaseLockRequest{
 				NamespaceName: "validname",
 				LockName:      "invalid name",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -1250,7 +1299,7 @@ func TestValidateReleaseLockRequest(t *testing.T) {
 			request: &gracklepb.ReleaseLockRequest{
 				NamespaceName: "validname",
 				LockName:      "validlock",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: false,
 		},
@@ -1282,7 +1331,7 @@ func TestValidateAcquireLockRequest(t *testing.T) {
 			name: "empty namespace name",
 			request: &gracklepb.AcquireLockRequest{
 				LockName: "validname",
-				LeaseId:  "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:  "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -1290,7 +1339,7 @@ func TestValidateAcquireLockRequest(t *testing.T) {
 			name: "empty lock name",
 			request: &gracklepb.AcquireLockRequest{
 				NamespaceName: "validname",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -1307,7 +1356,7 @@ func TestValidateAcquireLockRequest(t *testing.T) {
 			request: &gracklepb.AcquireLockRequest{
 				NamespaceName: string(make([]byte, 129)),
 				LockName:      "validname",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -1316,7 +1365,7 @@ func TestValidateAcquireLockRequest(t *testing.T) {
 			request: &gracklepb.AcquireLockRequest{
 				NamespaceName: "validname",
 				LockName:      string(make([]byte, 129)),
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -1334,7 +1383,7 @@ func TestValidateAcquireLockRequest(t *testing.T) {
 			request: &gracklepb.AcquireLockRequest{
 				NamespaceName: "invalid name",
 				LockName:      "validname",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -1343,7 +1392,7 @@ func TestValidateAcquireLockRequest(t *testing.T) {
 			request: &gracklepb.AcquireLockRequest{
 				NamespaceName: "validname",
 				LockName:      "invalid name",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -1361,7 +1410,7 @@ func TestValidateAcquireLockRequest(t *testing.T) {
 			request: &gracklepb.AcquireLockRequest{
 				NamespaceName: "validname",
 				LockName:      "validlock",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: false,
 		},
@@ -1573,7 +1622,7 @@ func TestValidateReleaseSemaphoreRequest(t *testing.T) {
 			name: "empty namespace name",
 			request: &gracklepb.ReleaseSemaphoreRequest{
 				SemaphoreName: "validname",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -1581,7 +1630,7 @@ func TestValidateReleaseSemaphoreRequest(t *testing.T) {
 			name: "empty semaphore name",
 			request: &gracklepb.ReleaseSemaphoreRequest{
 				NamespaceName: "validname",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -1598,7 +1647,7 @@ func TestValidateReleaseSemaphoreRequest(t *testing.T) {
 			request: &gracklepb.ReleaseSemaphoreRequest{
 				NamespaceName: string(make([]byte, 129)),
 				SemaphoreName: "validname",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -1607,7 +1656,7 @@ func TestValidateReleaseSemaphoreRequest(t *testing.T) {
 			request: &gracklepb.ReleaseSemaphoreRequest{
 				NamespaceName: "validname",
 				SemaphoreName: string(make([]byte, 129)),
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -1625,7 +1674,7 @@ func TestValidateReleaseSemaphoreRequest(t *testing.T) {
 			request: &gracklepb.ReleaseSemaphoreRequest{
 				NamespaceName: "invalid name",
 				SemaphoreName: "validname",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -1634,7 +1683,7 @@ func TestValidateReleaseSemaphoreRequest(t *testing.T) {
 			request: &gracklepb.ReleaseSemaphoreRequest{
 				NamespaceName: "validname",
 				SemaphoreName: "invalid name",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -1652,7 +1701,7 @@ func TestValidateReleaseSemaphoreRequest(t *testing.T) {
 			request: &gracklepb.ReleaseSemaphoreRequest{
 				NamespaceName: "validname",
 				SemaphoreName: "validsemaphore",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: false,
 		},
@@ -1683,78 +1732,96 @@ func TestValidateUpdateSemaphoreRequest(t *testing.T) {
 		{
 			name: "empty namespace name",
 			request: &gracklepb.UpdateSemaphoreRequest{
-				SemaphoreName: "validname",
-				Description:   "validdescription",
-				Permits:       1,
+				SemaphoreName:   "validname",
+				Description:     "validdescription",
+				Permits:         1,
+				ExpectedVersion: 1,
 			},
 			shouldError: true,
 		},
 		{
 			name: "empty semaphore name",
 			request: &gracklepb.UpdateSemaphoreRequest{
-				NamespaceName: "validname",
-				Description:   "validdescription",
-				Permits:       1,
+				NamespaceName:   "validname",
+				Description:     "validdescription",
+				Permits:         1,
+				ExpectedVersion: 1,
 			},
 			shouldError: true,
 		},
 		{
 			name: "namespace name too long",
 			request: &gracklepb.UpdateSemaphoreRequest{
-				NamespaceName: string(make([]byte, 129)),
-				SemaphoreName: "validname",
-				Description:   "validdescription",
-				Permits:       1,
+				NamespaceName:   string(make([]byte, 129)),
+				SemaphoreName:   "validname",
+				Description:     "validdescription",
+				Permits:         1,
+				ExpectedVersion: 1,
 			},
 			shouldError: true,
 		},
 		{
 			name: "semaphore name too long",
 			request: &gracklepb.UpdateSemaphoreRequest{
-				NamespaceName: "validname",
-				SemaphoreName: string(make([]byte, 129)),
-				Description:   "validdescription",
-				Permits:       1,
+				NamespaceName:   "validname",
+				SemaphoreName:   string(make([]byte, 129)),
+				Description:     "validdescription",
+				Permits:         1,
+				ExpectedVersion: 1,
 			},
 			shouldError: true,
 		},
 		{
 			name: "invalid namespace name characters",
 			request: &gracklepb.UpdateSemaphoreRequest{
-				NamespaceName: "invalid name",
-				SemaphoreName: "validname",
-				Description:   "validdescription",
-				Permits:       1,
+				NamespaceName:   "invalid name",
+				SemaphoreName:   "validname",
+				Description:     "validdescription",
+				Permits:         1,
+				ExpectedVersion: 1,
 			},
 			shouldError: true,
 		},
 		{
 			name: "invalid semaphore name characters",
 			request: &gracklepb.UpdateSemaphoreRequest{
-				NamespaceName: "validname",
-				SemaphoreName: "invalid name",
-				Description:   "validdescription",
-				Permits:       1,
+				NamespaceName:   "validname",
+				SemaphoreName:   "invalid name",
+				Description:     "validdescription",
+				Permits:         1,
+				ExpectedVersion: 1,
 			},
 			shouldError: true,
 		},
 		{
 			name: "permits must be greater than 0",
 			request: &gracklepb.UpdateSemaphoreRequest{
+				NamespaceName:   "validname",
+				SemaphoreName:   "validsemaphore",
+				Description:     "validdescription",
+				Permits:         0,
+				ExpectedVersion: 1,
+			},
+			shouldError: true,
+		},
+		{
+			name: "empty expected version",
+			request: &gracklepb.UpdateSemaphoreRequest{
 				NamespaceName: "validname",
 				SemaphoreName: "validsemaphore",
 				Description:   "validdescription",
-				Permits:       0,
+				Permits:       1,
 			},
 			shouldError: true,
 		},
 		{
 			name: "valid request",
 			request: &gracklepb.UpdateSemaphoreRequest{
-				NamespaceName: "validname",
-				SemaphoreName: "validsemaphore",
-				Description:   "validdescription",
-				Permits:       1,
+				NamespaceName:   "validname",
+				SemaphoreName:   "validsemaphore",
+				Description:     "validdescription",
+				Permits:         1,
+				ExpectedVersion: 1,
 			},
 			shouldError: false,
 		},
@@ -2134,7 +2201,7 @@ func TestValidateAcquireSemaphoreRequest(t *testing.T) {
 			name: "empty namespace name",
 			request: &gracklepb.AcquireSemaphoreRequest{
 				SemaphoreName:  "validname",
-				LeaseId:        "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:        "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TimeoutSeconds: 10,
 				Weight:         1,
 			},
@@ -2144,7 +2211,7 @@ func TestValidateAcquireSemaphoreRequest(t *testing.T) {
 			name: "empty semaphore name",
 			request: &gracklepb.AcquireSemaphoreRequest{
 				NamespaceName:  "validname",
-				LeaseId:        "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:        "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TimeoutSeconds: 10,
 				Weight:         1,
 			},
@@ -2165,7 +2232,7 @@ func TestValidateAcquireSemaphoreRequest(t *testing.T) {
 			request: &gracklepb.AcquireSemaphoreRequest{
 				NamespaceName:  string(make([]byte, 129)),
 				SemaphoreName:  "validname",
-				LeaseId:        "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:        "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TimeoutSeconds: 10,
 				Weight:         1,
 			},
@@ -2176,7 +2243,7 @@ func TestValidateAcquireSemaphoreRequest(t *testing.T) {
 			request: &gracklepb.AcquireSemaphoreRequest{
 				NamespaceName:  "validname",
 				SemaphoreName:  string(make([]byte, 129)),
-				LeaseId:        "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:        "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TimeoutSeconds: 10,
 				Weight:         1,
 			},
@@ -2198,7 +2265,7 @@ func TestValidateAcquireSemaphoreRequest(t *testing.T) {
 			request: &gracklepb.AcquireSemaphoreRequest{
 				NamespaceName:  "invalid name",
 				SemaphoreName:  "validname",
-				LeaseId:        "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:        "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TimeoutSeconds: 10,
 				Weight:         1,
 			},
@@ -2209,7 +2276,7 @@ func TestValidateAcquireSemaphoreRequest(t *testing.T) {
 			request: &gracklepb.AcquireSemaphoreRequest{
 				NamespaceName:  "validname",
 				SemaphoreName:  "invalid name",
-				LeaseId:        "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:        "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TimeoutSeconds: 10,
 				Weight:         1,
 			},
@@ -2231,18 +2298,18 @@ func TestValidateAcquireSemaphoreRequest(t *testing.T) {
 			request: &gracklepb.AcquireSemaphoreRequest{
 				NamespaceName:  "validname",
 				SemaphoreName:  "validname",
-				LeaseId:        "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:        "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TimeoutSeconds: 0,
 				Weight:         1,
 			},
-			shouldError: true,
+			shouldError: false,
 		},
 		{
 			name: "timeout seconds negative",
 			request: &gracklepb.AcquireSemaphoreRequest{
 				NamespaceName:  "validname",
 				SemaphoreName:  "validname",
-				LeaseId:        "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:        "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TimeoutSeconds: -1,
 				Weight:         1,
 			},
@@ -2253,7 +2320,7 @@ func TestValidateAcquireSemaphoreRequest(t *testing.T) {
 			request: &gracklepb.AcquireSemaphoreRequest{
 				NamespaceName:  "validname",
 				SemaphoreName:  "validname",
-				LeaseId:        "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:        "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TimeoutSeconds: 301,
 				Weight:         1,
 			},
@@ -2264,7 +2331,7 @@ func TestValidateAcquireSemaphoreRequest(t *testing.T) {
 			request: &gracklepb.AcquireSemaphoreRequest{
 				NamespaceName:  "validname",
 				SemaphoreName:  "validname",
-				LeaseId:        "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:        "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TimeoutSeconds: 10,
 				Weight:         0,
 			},
@@ -2275,7 +2342,7 @@ func TestValidateAcquireSemaphoreRequest(t *testing.T) {
 			request: &gracklepb.AcquireSemaphoreRequest{
 				NamespaceName:  "validname",
 				SemaphoreName:  "validname",
-				LeaseId:        "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:        "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TimeoutSeconds: 10,
 				Weight:         1,
 			},
@@ -2286,7 +2353,7 @@ func TestValidateAcquireSemaphoreRequest(t *testing.T) {
 			request: &gracklepb.AcquireSemaphoreRequest{
 				NamespaceName:  "validname",
 				SemaphoreName:  "validname",
-				LeaseId:        "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:        "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TimeoutSeconds: 300,
 				Weight:         1,
 			},
@@ -2964,6 +3031,7 @@ func TestValidateUpdateBarrierRequest(t *testing.T) {
 				BarrierName:       "validname",
 				Description:       "desc",
 				ExpectedProcesses: 3,
+				ExpectedVersion:   1,
 			},
 			shouldError: true,
 		},
@@ -2973,6 +3041,7 @@ func TestValidateUpdateBarrierRequest(t *testing.T) {
 				NamespaceName:     "validname",
 				Description:       "desc",
 				ExpectedProcesses: 3,
+				ExpectedVersion:   1,
 			},
 			shouldError: true,
 		},
@@ -2983,6 +3052,7 @@ func TestValidateUpdateBarrierRequest(t *testing.T) {
 				BarrierName:       "validname",
 				Description:       "desc",
 				ExpectedProcesses: 3,
+				ExpectedVersion:   1,
 			},
 			shouldError: true,
 		},
@@ -2993,6 +3063,7 @@ func TestValidateUpdateBarrierRequest(t *testing.T) {
 				BarrierName:       "invalid name",
 				Description:       "desc",
 				ExpectedProcesses: 3,
+				ExpectedVersion:   1,
 			},
 			shouldError: true,
 		},
@@ -3003,6 +3074,7 @@ func TestValidateUpdateBarrierRequest(t *testing.T) {
 				BarrierName:       "validname",
 				Description:       "desc",
 				ExpectedProcesses: 3,
+				ExpectedVersion:   1,
 			},
 			shouldError: true,
 		},
@@ -3013,6 +3085,7 @@ func TestValidateUpdateBarrierRequest(t *testing.T) {
 				BarrierName:       string(make([]byte, 129)),
 				Description:       "desc",
 				ExpectedProcesses: 3,
+				ExpectedVersion:   1,
 			},
 			shouldError: true,
 		},
@@ -3023,6 +3096,7 @@ func TestValidateUpdateBarrierRequest(t *testing.T) {
 				BarrierName:       "validname",
 				Description:       string(make([]byte, 1025)),
 				ExpectedProcesses: 3,
+				ExpectedVersion:   1,
 			},
 			shouldError: true,
 		},
@@ -3033,6 +3107,7 @@ func TestValidateUpdateBarrierRequest(t *testing.T) {
 				BarrierName:       "validname",
 				Description:       "desc",
 				ExpectedProcesses: 0,
+				ExpectedVersion:   1,
 			},
 			shouldError: true,
 		},
@@ -3044,6 +3119,18 @@ func TestValidateUpdateBarrierRequest(t *testing.T) {
 				Description:                "desc",
 				ExpectedProcesses:          3,
 				DeleteInactiveAfterSeconds: 0,
+				ExpectedVersion:            1,
+			},
+			shouldError: true,
+		},
+		{
+			name: "zero expected version",
+			request: &gracklepb.UpdateBarrierRequest{
+				NamespaceName:              "validname",
+				BarrierName:                "validname",
+				Description:                "Valid description",
+				ExpectedProcesses:          5,
+				DeleteInactiveAfterSeconds: 3600,
 			},
 			shouldError: true,
 		},
@@ -3055,6 +3142,7 @@ func TestValidateUpdateBarrierRequest(t *testing.T) {
 				Description:                "Valid description",
 				ExpectedProcesses:          5,
 				DeleteInactiveAfterSeconds: 3600,
+				ExpectedVersion:            1,
 			},
 			shouldError: false,
 		},
@@ -3289,7 +3377,7 @@ func TestValidateWaitAtBarrierRequest(t *testing.T) {
 				ExpectedGeneration: 1,
 				TimeoutSeconds:     0,
 			},
-			shouldError: true,
+			shouldError: false,
 		},
 		{
 			name: "timeout seconds negative",
@@ -3596,7 +3684,7 @@ func TestValidateRevokeSemaphoreLeaseRequest(t *testing.T) {
 			name: "empty namespace name",
 			request: &gracklepb.RevokeSemaphoreLeaseRequest{
 				NamespaceName: "",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -3604,7 +3692,7 @@ func TestValidateRevokeSemaphoreLeaseRequest(t *testing.T) {
 			name: "invalid namespace name characters",
 			request: &gracklepb.RevokeSemaphoreLeaseRequest{
 				NamespaceName: "invalid name",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -3612,7 +3700,7 @@ func TestValidateRevokeSemaphoreLeaseRequest(t *testing.T) {
 			name: "namespace name too long",
 			request: &gracklepb.RevokeSemaphoreLeaseRequest{
 				NamespaceName: string(make([]byte, 129)),
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -3636,7 +3724,7 @@ func TestValidateRevokeSemaphoreLeaseRequest(t *testing.T) {
 			name: "invalid lease id format (too long)",
 			request: &gracklepb.RevokeSemaphoreLeaseRequest{
 				NamespaceName: "validname",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRBsd",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQEsd",
 			},
 			shouldError: true,
 		},
@@ -3660,7 +3748,7 @@ func TestValidateRevokeSemaphoreLeaseRequest(t *testing.T) {
 			name: "valid request",
 			request: &gracklepb.RevokeSemaphoreLeaseRequest{
 				NamespaceName: "validname",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: false,
 		},
@@ -3687,7 +3775,7 @@ func TestValidateRefreshSemaphoreLeaseRequest(t *testing.T) {
 			name: "empty namespace name",
 			request: &gracklepb.RefreshSemaphoreLeaseRequest{
 				NamespaceName: "",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TtlSeconds:    60,
 			},
 			shouldError: true,
@@ -3696,7 +3784,7 @@ func TestValidateRefreshSemaphoreLeaseRequest(t *testing.T) {
 			name: "invalid namespace name characters",
 			request: &gracklepb.RefreshSemaphoreLeaseRequest{
 				NamespaceName: "invalid name",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TtlSeconds:    60,
 			},
 			shouldError: true,
@@ -3705,7 +3793,7 @@ func TestValidateRefreshSemaphoreLeaseRequest(t *testing.T) {
 			name: "namespace name too long",
 			request: &gracklepb.RefreshSemaphoreLeaseRequest{
 				NamespaceName: string(make([]byte, 129)),
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TtlSeconds:    60,
 			},
 			shouldError: true,
@@ -3741,7 +3829,7 @@ func TestValidateRefreshSemaphoreLeaseRequest(t *testing.T) {
 			name: "ttl seconds zero",
 			request: &gracklepb.RefreshSemaphoreLeaseRequest{
 				NamespaceName: "validname",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TtlSeconds:    0,
 			},
 			shouldError: true,
@@ -3750,7 +3838,7 @@ func TestValidateRefreshSemaphoreLeaseRequest(t *testing.T) {
 			name: "ttl seconds too large",
 			request: &gracklepb.RefreshSemaphoreLeaseRequest{
 				NamespaceName: "validname",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TtlSeconds:    301,
 			},
 			shouldError: true,
@@ -3759,7 +3847,7 @@ func TestValidateRefreshSemaphoreLeaseRequest(t *testing.T) {
 			name: "valid request",
 			request: &gracklepb.RefreshSemaphoreLeaseRequest{
 				NamespaceName: "validname",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TtlSeconds:    60,
 			},
 			shouldError: false,
@@ -3768,7 +3856,7 @@ func TestValidateRefreshSemaphoreLeaseRequest(t *testing.T) {
 			name: "valid request with max ttl",
 			request: &gracklepb.RefreshSemaphoreLeaseRequest{
 				NamespaceName: "validname",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TtlSeconds:    300,
 			},
 			shouldError: false,
@@ -3884,7 +3972,7 @@ func TestValidateGetSemaphoreLeaseRequest(t *testing.T) {
 			name: "empty namespace name",
 			request: &gracklepb.GetSemaphoreLeaseRequest{
 				NamespaceName: "",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -3892,7 +3980,7 @@ func TestValidateGetSemaphoreLeaseRequest(t *testing.T) {
 			name: "invalid namespace name characters",
 			request: &gracklepb.GetSemaphoreLeaseRequest{
 				NamespaceName: "invalid name",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -3900,7 +3988,7 @@ func TestValidateGetSemaphoreLeaseRequest(t *testing.T) {
 			name: "namespace name too long",
 			request: &gracklepb.GetSemaphoreLeaseRequest{
 				NamespaceName: string(make([]byte, 129)),
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -3932,7 +4020,7 @@ func TestValidateGetSemaphoreLeaseRequest(t *testing.T) {
 			name: "valid request",
 			request: &gracklepb.GetSemaphoreLeaseRequest{
 				NamespaceName: "validname",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: false,
 		},
@@ -4068,7 +4156,7 @@ func TestValidateRevokeLockLeaseRequest(t *testing.T) {
 			name: "empty namespace name",
 			request: &gracklepb.RevokeLockLeaseRequest{
 				NamespaceName: "",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -4076,7 +4164,7 @@ func TestValidateRevokeLockLeaseRequest(t *testing.T) {
 			name: "invalid namespace name characters",
 			request: &gracklepb.RevokeLockLeaseRequest{
 				NamespaceName: "invalid name",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -4084,7 +4172,7 @@ func TestValidateRevokeLockLeaseRequest(t *testing.T) {
 			name: "namespace name too long",
 			request: &gracklepb.RevokeLockLeaseRequest{
 				NamespaceName: string(make([]byte, 129)),
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -4108,7 +4196,7 @@ func TestValidateRevokeLockLeaseRequest(t *testing.T) {
 			name: "invalid lease id format (too long)",
 			request: &gracklepb.RevokeLockLeaseRequest{
 				NamespaceName: "validname",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRBsd",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQEsd",
 			},
 			shouldError: true,
 		},
@@ -4132,7 +4220,7 @@ func TestValidateRevokeLockLeaseRequest(t *testing.T) {
 			name: "valid request",
 			request: &gracklepb.RevokeLockLeaseRequest{
 				NamespaceName: "validname",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: false,
 		},
@@ -4159,7 +4247,7 @@ func TestValidateRefreshLockLeaseRequest(t *testing.T) {
 			name: "empty namespace name",
 			request: &gracklepb.RefreshLockLeaseRequest{
 				NamespaceName: "",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TtlSeconds:    60,
 			},
 			shouldError: true,
@@ -4168,7 +4256,7 @@ func TestValidateRefreshLockLeaseRequest(t *testing.T) {
 			name: "invalid namespace name characters",
 			request: &gracklepb.RefreshLockLeaseRequest{
 				NamespaceName: "invalid name",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TtlSeconds:    60,
 			},
 			shouldError: true,
@@ -4177,7 +4265,7 @@ func TestValidateRefreshLockLeaseRequest(t *testing.T) {
 			name: "namespace name too long",
 			request: &gracklepb.RefreshLockLeaseRequest{
 				NamespaceName: string(make([]byte, 129)),
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TtlSeconds:    60,
 			},
 			shouldError: true,
@@ -4213,7 +4301,7 @@ func TestValidateRefreshLockLeaseRequest(t *testing.T) {
 			name: "ttl seconds zero",
 			request: &gracklepb.RefreshLockLeaseRequest{
 				NamespaceName: "validname",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TtlSeconds:    0,
 			},
 			shouldError: true,
@@ -4222,7 +4310,7 @@ func TestValidateRefreshLockLeaseRequest(t *testing.T) {
 			name: "ttl seconds too large",
 			request: &gracklepb.RefreshLockLeaseRequest{
 				NamespaceName: "validname",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TtlSeconds:    301,
 			},
 			shouldError: true,
@@ -4231,7 +4319,7 @@ func TestValidateRefreshLockLeaseRequest(t *testing.T) {
 			name: "valid request",
 			request: &gracklepb.RefreshLockLeaseRequest{
 				NamespaceName: "validname",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TtlSeconds:    60,
 			},
 			shouldError: false,
@@ -4240,7 +4328,7 @@ func TestValidateRefreshLockLeaseRequest(t *testing.T) {
 			name: "valid request with max ttl",
 			request: &gracklepb.RefreshLockLeaseRequest{
 				NamespaceName: "validname",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 				TtlSeconds:    300,
 			},
 			shouldError: false,
@@ -4356,7 +4444,7 @@ func TestValidateGetLockLeaseRequest(t *testing.T) {
 			name: "empty namespace name",
 			request: &gracklepb.GetLockLeaseRequest{
 				NamespaceName: "",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -4364,7 +4452,7 @@ func TestValidateGetLockLeaseRequest(t *testing.T) {
 			name: "invalid namespace name characters",
 			request: &gracklepb.GetLockLeaseRequest{
 				NamespaceName: "invalid name",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -4372,7 +4460,7 @@ func TestValidateGetLockLeaseRequest(t *testing.T) {
 			name: "namespace name too long",
 			request: &gracklepb.GetLockLeaseRequest{
 				NamespaceName: string(make([]byte, 129)),
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: true,
 		},
@@ -4404,7 +4492,7 @@ func TestValidateGetLockLeaseRequest(t *testing.T) {
 			name: "valid request",
 			request: &gracklepb.GetLockLeaseRequest{
 				NamespaceName: "validname",
-				LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+				LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 			},
 			shouldError: false,
 		},

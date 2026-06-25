@@ -166,17 +166,17 @@ func (c *Core) ListWaitGroups(req *coreapis.ListWaitGroupsRequest) (*coreapis.Li
 	}, nil
 }
 
-// ListWaitGroupJobs returns a page of completed jobs for the named wait
+// ListWaitGroupCompletedJobs returns a page of completed jobs for the named wait
 // group. Returns a NotFound application error if the wait group does not
 // exist.
-func (c *Core) ListWaitGroupJobs(req *coreapis.ListWaitGroupJobsRequest) (*coreapis.ListWaitGroupJobsResponse, error) {
+func (c *Core) ListWaitGroupCompletedJobs(req *coreapis.ListWaitGroupCompletedJobsRequest) (*coreapis.ListWaitGroupCompletedJobsResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
 	waitGroup, err := c.waitGroups.GetByName(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, req.Payload.WaitGroupName)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return &coreapis.ListWaitGroupJobsResponse{
+			return &coreapis.ListWaitGroupCompletedJobsResponse{
 				ApplicationError: monsterax.NewErrorWithContext(
 					monsterax.NotFound,
 					"wait group not found",
@@ -194,8 +194,8 @@ func (c *Core) ListWaitGroupJobs(req *coreapis.ListWaitGroupJobsRequest) (*corea
 		return nil, err
 	}
 
-	return &coreapis.ListWaitGroupJobsResponse{
-		Payload: &corepb.ListWaitGroupJobsResponse{
+	return &coreapis.ListWaitGroupCompletedJobsResponse{
+		Payload: &corepb.ListWaitGroupCompletedJobsResponse{
 			Jobs:                    result.jobs,
 			NextPaginationToken:     result.nextPaginationToken,
 			PreviousPaginationToken: result.previousPaginationToken,

@@ -62,7 +62,7 @@ func (t *barriersTable) Get(txn *store.Txn, barrierId *corepb.BarrierId) (*corep
 			t.tableSK(barrierId.BarrierId)))
 }
 
-func (t *barriersTable) GetByName(txn *store.Txn, accountId uint64, namespaceId uint32, barrierName string) (*corepb.Barrier, error) {
+func (t *barriersTable) GetByName(txn *store.Txn, accountId uint64, namespaceId uint64, barrierName string) (*corepb.Barrier, error) {
 	barrierId, err := t.namesIndex.Get(txn, t.namesIndexPK(accountId, namespaceId, barrierName))
 	if err != nil {
 		return nil, err
@@ -137,7 +137,7 @@ type listBarriersResult struct {
 	previousPaginationToken *corepb.PaginationToken
 }
 
-func (t *barriersTable) List(txn *store.Txn, accountId uint64, namespaceId uint32, paginationToken *corepb.PaginationToken, limit int) (*listBarriersResult, error) {
+func (t *barriersTable) List(txn *store.Txn, accountId uint64, namespaceId uint64, paginationToken *corepb.PaginationToken, limit int) (*listBarriersResult, error) {
 	result, err := t.table.ListPaginated(txn, t.tablePK(accountId, namespaceId), pagination.CoreToMonstera(paginationToken), limit)
 	if err != nil {
 		return nil, err
@@ -150,7 +150,7 @@ func (t *barriersTable) List(txn *store.Txn, accountId uint64, namespaceId uint3
 	}, nil
 }
 
-func (t *barriersTable) tablePK(accountId uint64, namespaceId uint32) []byte {
+func (t *barriersTable) tablePK(accountId uint64, namespaceId uint64) []byte {
 	return utils.ConcatBytes(
 		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,
@@ -164,7 +164,7 @@ func (t *barriersTable) tableSK(barrierId uint64) []byte {
 	)
 }
 
-func (t *barriersTable) namesIndexPK(accountId uint64, namespaceId uint32, barrierName string) []byte {
+func (t *barriersTable) namesIndexPK(accountId uint64, namespaceId uint64, barrierName string) []byte {
 	return utils.ConcatBytes(
 		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,

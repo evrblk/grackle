@@ -26,3 +26,4 @@ make lint                     # run linter, statick check, go vet
 - Document all exported functions, types, and variables
 - Use table-driven tests when appropriate
 - Use `testify/require` for test assertions
+- In tests use `EqualValues` when comparing integers instead of `Equal` with a typecast

@@ -5,10 +5,12 @@
 package corepb
 
 import (
+	binary "encoding/binary"
 	fmt "fmt"
+	io "io"
+
 	protohelpers "github.com/planetscale/vtprotobuf/protohelpers"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	io "io"
 )
 
 const (
@@ -78,9 +80,10 @@ func (m *CreateWaitGroupRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error
 		}
 	}
 	if m.ExpiresAt != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.ExpiresAt))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.ExpiresAt))
 		i--
-		dAtA[i] = 0x30
+		dAtA[i] = 0x31
 	}
 	if m.Counter != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Counter))
@@ -88,9 +91,10 @@ func (m *CreateWaitGroupRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error
 		dAtA[i] = 0x28
 	}
 	if m.Now != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Now))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
 		i--
-		dAtA[i] = 0x20
+		dAtA[i] = 0x21
 	}
 	if len(m.Description) > 0 {
 		i -= len(m.Description)
@@ -227,14 +231,16 @@ func (m *UpdateWaitGroupRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error
 		dAtA[i] = 0x30
 	}
 	if m.ExpiresAt != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.ExpiresAt))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.ExpiresAt))
 		i--
-		dAtA[i] = 0x28
+		dAtA[i] = 0x29
 	}
 	if m.Now != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Now))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
 		i--
-		dAtA[i] = 0x20
+		dAtA[i] = 0x21
 	}
 	if len(m.Description) > 0 {
 		i -= len(m.Description)
@@ -639,9 +645,10 @@ func (m *DeleteWaitGroupRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error
 		copy(dAtA[i:], m.unknownFields)
 	}
 	if m.RecordId != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.RecordId))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.RecordId))
 		i--
-		dAtA[i] = 0x18
+		dAtA[i] = 0x19
 	}
 	if len(m.WaitGroupName) > 0 {
 		i -= len(m.WaitGroupName)
@@ -727,9 +734,10 @@ func (m *CompleteJobsFromWaitGroupRequest) MarshalToSizedBufferVT(dAtA []byte) (
 		copy(dAtA[i:], m.unknownFields)
 	}
 	if m.Now != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Now))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
 		i--
-		dAtA[i] = 0x20
+		dAtA[i] = 0x21
 	}
 	if len(m.Jobs) > 0 {
 		for iNdEx := len(m.Jobs) - 1; iNdEx >= 0; iNdEx-- {
@@ -865,7 +873,7 @@ func (m *CompleteJobsFromWaitGroupResponse) MarshalToSizedBufferVT(dAtA []byte) 
 	return len(dAtA) - i, nil
 }
 
-func (m *ListWaitGroupJobsRequest) MarshalVT() (dAtA []byte, err error) {
+func (m *ListWaitGroupCompletedJobsRequest) MarshalVT() (dAtA []byte, err error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -878,12 +886,12 @@ func (m *ListWaitGroupJobsRequest) MarshalVT() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *ListWaitGroupJobsRequest) MarshalToVT(dAtA []byte) (int, error) {
+func (m *ListWaitGroupCompletedJobsRequest) MarshalToVT(dAtA []byte) (int, error) {
 	size := m.SizeVT()
 	return m.MarshalToSizedBufferVT(dAtA[:size])
 }
 
-func (m *ListWaitGroupJobsRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+func (m *ListWaitGroupCompletedJobsRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -930,7 +938,7 @@ func (m *ListWaitGroupJobsRequest) MarshalToSizedBufferVT(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
-func (m *ListWaitGroupJobsResponse) MarshalVT() (dAtA []byte, err error) {
+func (m *ListWaitGroupCompletedJobsResponse) MarshalVT() (dAtA []byte, err error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -943,12 +951,12 @@ func (m *ListWaitGroupJobsResponse) MarshalVT() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *ListWaitGroupJobsResponse) MarshalToVT(dAtA []byte) (int, error) {
+func (m *ListWaitGroupCompletedJobsResponse) MarshalToVT(dAtA []byte) (int, error) {
 	size := m.SizeVT()
 	return m.MarshalToSizedBufferVT(dAtA[:size])
 }
 
-func (m *ListWaitGroupJobsResponse) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+func (m *ListWaitGroupCompletedJobsResponse) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -1041,9 +1049,10 @@ func (m *RunWaitGroupsGarbageCollectionRequest) MarshalToSizedBufferVT(dAtA []by
 		dAtA[i] = 0x10
 	}
 	if m.Now != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Now))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
 		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0x9
 	}
 	return len(dAtA) - i, nil
 }
@@ -1112,9 +1121,10 @@ func (m *WaitGroupsDeleteNamespaceRequest) MarshalToSizedBufferVT(dAtA []byte) (
 		copy(dAtA[i:], m.unknownFields)
 	}
 	if m.Now != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Now))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
 		i--
-		dAtA[i] = 0x18
+		dAtA[i] = 0x19
 	}
 	if m.NamespaceId != nil {
 		size, err := m.NamespaceId.MarshalToSizedBufferVT(dAtA[:i])
@@ -1127,9 +1137,10 @@ func (m *WaitGroupsDeleteNamespaceRequest) MarshalToSizedBufferVT(dAtA []byte) (
 		dAtA[i] = 0x12
 	}
 	if m.RecordId != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.RecordId))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.RecordId))
 		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0x9
 	}
 	return len(dAtA) - i, nil
 }
@@ -1198,14 +1209,16 @@ func (m *WaitGroup) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		copy(dAtA[i:], m.unknownFields)
 	}
 	if m.LastActivityAt != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.LastActivityAt))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.LastActivityAt))
 		i--
-		dAtA[i] = 0x70
+		dAtA[i] = 0x71
 	}
 	if m.FinishedAt != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.FinishedAt))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.FinishedAt))
 		i--
-		dAtA[i] = 0x68
+		dAtA[i] = 0x69
 	}
 	if m.DeleteAfterFinishedSeconds != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.DeleteAfterFinishedSeconds))
@@ -1247,9 +1260,10 @@ func (m *WaitGroup) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		dAtA[i] = 0x40
 	}
 	if m.ExpiresAt != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.ExpiresAt))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.ExpiresAt))
 		i--
-		dAtA[i] = 0x38
+		dAtA[i] = 0x39
 	}
 	if m.Version != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Version))
@@ -1257,14 +1271,16 @@ func (m *WaitGroup) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		dAtA[i] = 0x30
 	}
 	if m.UpdatedAt != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.UpdatedAt))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.UpdatedAt))
 		i--
-		dAtA[i] = 0x28
+		dAtA[i] = 0x29
 	}
 	if m.CreatedAt != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.CreatedAt))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.CreatedAt))
 		i--
-		dAtA[i] = 0x20
+		dAtA[i] = 0x21
 	}
 	if len(m.Description) > 0 {
 		i -= len(m.Description)
@@ -1343,9 +1359,10 @@ func (m *WaitGroupJob) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		}
 	}
 	if m.CompletedAt != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.CompletedAt))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.CompletedAt))
 		i--
-		dAtA[i] = 0x10
+		dAtA[i] = 0x11
 	}
 	if m.Id != nil {
 		size, err := m.Id.MarshalToSizedBufferVT(dAtA[:i])
@@ -1398,19 +1415,22 @@ func (m *WaitGroupJobId) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		dAtA[i] = 0x22
 	}
 	if m.WaitGroupId != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.WaitGroupId))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.WaitGroupId))
 		i--
-		dAtA[i] = 0x18
+		dAtA[i] = 0x19
 	}
 	if m.NamespaceId != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.NamespaceId))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.NamespaceId))
 		i--
-		dAtA[i] = 0x10
+		dAtA[i] = 0x11
 	}
 	if m.AccountId != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.AccountId))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.AccountId))
 		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0x9
 	}
 	return len(dAtA) - i, nil
 }
@@ -1446,19 +1466,22 @@ func (m *WaitGroupId) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		copy(dAtA[i:], m.unknownFields)
 	}
 	if m.WaitGroupId != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.WaitGroupId))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.WaitGroupId))
 		i--
-		dAtA[i] = 0x18
+		dAtA[i] = 0x19
 	}
 	if m.NamespaceId != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.NamespaceId))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.NamespaceId))
 		i--
-		dAtA[i] = 0x10
+		dAtA[i] = 0x11
 	}
 	if m.AccountId != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.AccountId))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.AccountId))
 		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0x9
 	}
 	return len(dAtA) - i, nil
 }
@@ -1541,9 +1564,10 @@ func (m *WaitGroupsGarbageCollectionRecord) MarshalToSizedBufferVT(dAtA []byte) 
 		i -= size
 	}
 	if m.Id != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Id))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Id))
 		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0x9
 	}
 	return len(dAtA) - i, nil
 }
@@ -1617,9 +1641,10 @@ func (m *WaitGroupsExpirationRecord) MarshalToSizedBufferVT(dAtA []byte) (int, e
 		copy(dAtA[i:], m.unknownFields)
 	}
 	if m.ExpiresAt != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.ExpiresAt))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.ExpiresAt))
 		i--
-		dAtA[i] = 0x10
+		dAtA[i] = 0x11
 	}
 	if m.WaitGroupId != nil {
 		size, err := m.WaitGroupId.MarshalToSizedBufferVT(dAtA[:i])
@@ -1665,9 +1690,10 @@ func (m *WaitGroupsDeletionRecord) MarshalToSizedBufferVT(dAtA []byte) (int, err
 		copy(dAtA[i:], m.unknownFields)
 	}
 	if m.DeleteAt != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.DeleteAt))
+		i -= 8
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.DeleteAt))
 		i--
-		dAtA[i] = 0x10
+		dAtA[i] = 0x11
 	}
 	if m.WaitGroupId != nil {
 		size, err := m.WaitGroupId.MarshalToSizedBufferVT(dAtA[:i])
@@ -1701,13 +1727,13 @@ func (m *CreateWaitGroupRequest) SizeVT() (n int) {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	if m.Now != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.Now))
+		n += 9
 	}
 	if m.Counter != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.Counter))
 	}
 	if m.ExpiresAt != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.ExpiresAt))
+		n += 9
 	}
 	if len(m.Metadata) > 0 {
 		for k, v := range m.Metadata {
@@ -1760,10 +1786,10 @@ func (m *UpdateWaitGroupRequest) SizeVT() (n int) {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	if m.Now != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.Now))
+		n += 9
 	}
 	if m.ExpiresAt != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.ExpiresAt))
+		n += 9
 	}
 	if m.Counter != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.Counter))
@@ -1920,7 +1946,7 @@ func (m *DeleteWaitGroupRequest) SizeVT() (n int) {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	if m.RecordId != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.RecordId))
+		n += 9
 	}
 	n += len(m.unknownFields)
 	return n
@@ -1957,7 +1983,7 @@ func (m *CompleteJobsFromWaitGroupRequest) SizeVT() (n int) {
 		}
 	}
 	if m.Now != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.Now))
+		n += 9
 	}
 	n += len(m.unknownFields)
 	return n
@@ -1999,7 +2025,7 @@ func (m *CompleteJobsFromWaitGroupResponse) SizeVT() (n int) {
 	return n
 }
 
-func (m *ListWaitGroupJobsRequest) SizeVT() (n int) {
+func (m *ListWaitGroupCompletedJobsRequest) SizeVT() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2024,7 +2050,7 @@ func (m *ListWaitGroupJobsRequest) SizeVT() (n int) {
 	return n
 }
 
-func (m *ListWaitGroupJobsResponse) SizeVT() (n int) {
+func (m *ListWaitGroupCompletedJobsResponse) SizeVT() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2055,7 +2081,7 @@ func (m *RunWaitGroupsGarbageCollectionRequest) SizeVT() (n int) {
 	var l int
 	_ = l
 	if m.Now != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.Now))
+		n += 9
 	}
 	if m.GcRecordsPageSize != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.GcRecordsPageSize))
@@ -2087,14 +2113,14 @@ func (m *WaitGroupsDeleteNamespaceRequest) SizeVT() (n int) {
 	var l int
 	_ = l
 	if m.RecordId != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.RecordId))
+		n += 9
 	}
 	if m.NamespaceId != nil {
 		l = m.NamespaceId.SizeVT()
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	if m.Now != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.Now))
+		n += 9
 	}
 	n += len(m.unknownFields)
 	return n
@@ -2129,16 +2155,16 @@ func (m *WaitGroup) SizeVT() (n int) {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	if m.CreatedAt != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.CreatedAt))
+		n += 9
 	}
 	if m.UpdatedAt != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.UpdatedAt))
+		n += 9
 	}
 	if m.Version != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.Version))
 	}
 	if m.ExpiresAt != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.ExpiresAt))
+		n += 9
 	}
 	if m.Counter != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.Counter))
@@ -2161,10 +2187,10 @@ func (m *WaitGroup) SizeVT() (n int) {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.DeleteAfterFinishedSeconds))
 	}
 	if m.FinishedAt != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.FinishedAt))
+		n += 9
 	}
 	if m.LastActivityAt != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.LastActivityAt))
+		n += 9
 	}
 	n += len(m.unknownFields)
 	return n
@@ -2181,7 +2207,7 @@ func (m *WaitGroupJob) SizeVT() (n int) {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	if m.CompletedAt != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.CompletedAt))
+		n += 9
 	}
 	if len(m.Metadata) > 0 {
 		for k, v := range m.Metadata {
@@ -2202,13 +2228,13 @@ func (m *WaitGroupJobId) SizeVT() (n int) {
 	var l int
 	_ = l
 	if m.AccountId != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.AccountId))
+		n += 9
 	}
 	if m.NamespaceId != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.NamespaceId))
+		n += 9
 	}
 	if m.WaitGroupId != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.WaitGroupId))
+		n += 9
 	}
 	l = len(m.JobId)
 	if l > 0 {
@@ -2225,13 +2251,13 @@ func (m *WaitGroupId) SizeVT() (n int) {
 	var l int
 	_ = l
 	if m.AccountId != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.AccountId))
+		n += 9
 	}
 	if m.NamespaceId != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.NamespaceId))
+		n += 9
 	}
 	if m.WaitGroupId != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.WaitGroupId))
+		n += 9
 	}
 	n += len(m.unknownFields)
 	return n
@@ -2257,7 +2283,7 @@ func (m *WaitGroupsGarbageCollectionRecord) SizeVT() (n int) {
 	var l int
 	_ = l
 	if m.Id != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.Id))
+		n += 9
 	}
 	if vtmsg, ok := m.Record.(interface{ SizeVT() int }); ok {
 		n += vtmsg.SizeVT()
@@ -2301,7 +2327,7 @@ func (m *WaitGroupsExpirationRecord) SizeVT() (n int) {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	if m.ExpiresAt != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.ExpiresAt))
+		n += 9
 	}
 	n += len(m.unknownFields)
 	return n
@@ -2318,7 +2344,7 @@ func (m *WaitGroupsDeletionRecord) SizeVT() (n int) {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	if m.DeleteAt != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.DeleteAt))
+		n += 9
 	}
 	n += len(m.unknownFields)
 	return n
@@ -2454,24 +2480,15 @@ func (m *CreateWaitGroupRequest) UnmarshalVT(dAtA []byte) error {
 			m.Description = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
 			}
 			m.Now = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Now |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 5:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Counter", wireType)
@@ -2486,30 +2503,21 @@ func (m *CreateWaitGroupRequest) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Counter |= uint64(b&0x7F) << shift
+				m.Counter |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 6:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ExpiresAt", wireType)
 			}
 			m.ExpiresAt = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.ExpiresAt |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.ExpiresAt = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 7:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
@@ -2914,43 +2922,25 @@ func (m *UpdateWaitGroupRequest) UnmarshalVT(dAtA []byte) error {
 			m.Description = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
 			}
 			m.Now = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Now |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 5:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ExpiresAt", wireType)
 			}
 			m.ExpiresAt = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.ExpiresAt |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.ExpiresAt = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 6:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Counter", wireType)
@@ -2965,7 +2955,7 @@ func (m *UpdateWaitGroupRequest) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Counter |= uint64(b&0x7F) << shift
+				m.Counter |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -3111,7 +3101,7 @@ func (m *UpdateWaitGroupRequest) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ExpectedVersion |= uint64(b&0x7F) << shift
+				m.ExpectedVersion |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4021,24 +4011,15 @@ func (m *DeleteWaitGroupRequest) UnmarshalVT(dAtA []byte) error {
 			m.WaitGroupName = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field RecordId", wireType)
 			}
 			m.RecordId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.RecordId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.RecordId = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -4244,24 +4225,15 @@ func (m *CompleteJobsFromWaitGroupRequest) UnmarshalVT(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 4:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
 			}
 			m.Now = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Now |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -4581,7 +4553,7 @@ func (m *CompleteJobsFromWaitGroupResponse) UnmarshalVT(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *ListWaitGroupJobsRequest) UnmarshalVT(dAtA []byte) error {
+func (m *ListWaitGroupCompletedJobsRequest) UnmarshalVT(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4604,10 +4576,10 @@ func (m *ListWaitGroupJobsRequest) UnmarshalVT(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: ListWaitGroupJobsRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: ListWaitGroupCompletedJobsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ListWaitGroupJobsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ListWaitGroupCompletedJobsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4755,7 +4727,7 @@ func (m *ListWaitGroupJobsRequest) UnmarshalVT(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *ListWaitGroupJobsResponse) UnmarshalVT(dAtA []byte) error {
+func (m *ListWaitGroupCompletedJobsResponse) UnmarshalVT(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4778,10 +4750,10 @@ func (m *ListWaitGroupJobsResponse) UnmarshalVT(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: ListWaitGroupJobsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: ListWaitGroupCompletedJobsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ListWaitGroupJobsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ListWaitGroupCompletedJobsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4942,24 +4914,15 @@ func (m *RunWaitGroupsGarbageCollectionRequest) UnmarshalVT(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
 			}
 			m.Now = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Now |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field GcRecordsPageSize", wireType)
@@ -5120,24 +5083,15 @@ func (m *WaitGroupsDeleteNamespaceRequest) UnmarshalVT(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field RecordId", wireType)
 			}
 			m.RecordId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.RecordId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.RecordId = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NamespaceId", wireType)
@@ -5175,24 +5129,15 @@ func (m *WaitGroupsDeleteNamespaceRequest) UnmarshalVT(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 3:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
 			}
 			m.Now = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Now |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -5396,43 +5341,25 @@ func (m *WaitGroup) UnmarshalVT(dAtA []byte) error {
 			m.Description = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CreatedAt", wireType)
 			}
 			m.CreatedAt = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.CreatedAt |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.CreatedAt = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 5:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field UpdatedAt", wireType)
 			}
 			m.UpdatedAt = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.UpdatedAt |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.UpdatedAt = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 6:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Version", wireType)
@@ -5447,30 +5374,21 @@ func (m *WaitGroup) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Version |= uint64(b&0x7F) << shift
+				m.Version |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 7:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ExpiresAt", wireType)
 			}
 			m.ExpiresAt = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.ExpiresAt |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.ExpiresAt = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 8:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Counter", wireType)
@@ -5485,7 +5403,7 @@ func (m *WaitGroup) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Counter |= uint64(b&0x7F) << shift
+				m.Counter |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5504,7 +5422,7 @@ func (m *WaitGroup) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.CompletedJobs |= uint64(b&0x7F) << shift
+				m.CompletedJobs |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5675,43 +5593,25 @@ func (m *WaitGroup) UnmarshalVT(dAtA []byte) error {
 				}
 			}
 		case 13:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field FinishedAt", wireType)
 			}
 			m.FinishedAt = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.FinishedAt |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.FinishedAt = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 14:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field LastActivityAt", wireType)
 			}
 			m.LastActivityAt = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.LastActivityAt |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.LastActivityAt = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -5800,24 +5700,15 @@ func (m *WaitGroupJob) UnmarshalVT(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 2:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CompletedAt", wireType)
 			}
 			m.CompletedAt = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.CompletedAt |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.CompletedAt = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
@@ -5997,62 +5888,35 @@ func (m *WaitGroupJobId) UnmarshalVT(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AccountId", wireType)
 			}
 			m.AccountId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.AccountId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.AccountId = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 2:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NamespaceId", wireType)
 			}
 			m.NamespaceId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.NamespaceId |= uint32(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.NamespaceId = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 3:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field WaitGroupId", wireType)
 			}
 			m.WaitGroupId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.WaitGroupId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.WaitGroupId = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field JobId", wireType)
@@ -6137,62 +6001,35 @@ func (m *WaitGroupId) UnmarshalVT(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AccountId", wireType)
 			}
 			m.AccountId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.AccountId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.AccountId = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 2:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NamespaceId", wireType)
 			}
 			m.NamespaceId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.NamespaceId |= uint32(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.NamespaceId = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 3:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field WaitGroupId", wireType)
 			}
 			m.WaitGroupId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.WaitGroupId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.WaitGroupId = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -6315,24 +6152,15 @@ func (m *WaitGroupsGarbageCollectionRecord) UnmarshalVT(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
 			}
 			m.Id = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Id |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.Id = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NamespaceId", wireType)
@@ -6503,24 +6331,15 @@ func (m *WaitGroupsExpirationRecord) UnmarshalVT(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 2:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ExpiresAt", wireType)
 			}
 			m.ExpiresAt = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.ExpiresAt |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.ExpiresAt = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -6609,24 +6428,15 @@ func (m *WaitGroupsDeletionRecord) UnmarshalVT(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 2:
-			if wireType != 0 {
+			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DeleteAt", wireType)
 			}
 			m.DeleteAt = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.DeleteAt |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
 			}
+			m.DeleteAt = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])

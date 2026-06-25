@@ -18,7 +18,7 @@ func TestExpirationRecordsTable_Add(t *testing.T) {
 		table := newExpirationRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		semaphoreId := rand.Uint64()
 		expiresAt := int64(1000)
 
@@ -58,7 +58,7 @@ func TestExpirationRecordsTable_Add(t *testing.T) {
 		table := newExpirationRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Add 5 records with different timestamps and semaphore IDs
 		txn := badgerStore.Update()
@@ -97,7 +97,7 @@ func TestExpirationRecordsTable_Add(t *testing.T) {
 		table := newExpirationRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		semaphoreId := rand.Uint64()
 		expiresAt := int64(1000)
 
@@ -141,7 +141,7 @@ func TestExpirationRecordsTable_Delete(t *testing.T) {
 		table := newExpirationRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		semaphoreId := rand.Uint64()
 		expiresAt := int64(1000)
 
@@ -183,7 +183,7 @@ func TestExpirationRecordsTable_Delete(t *testing.T) {
 		table := newExpirationRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		semaphoreId := rand.Uint64()
 		expiresAt := int64(1000)
 
@@ -219,7 +219,7 @@ func TestExpirationRecordsTable_Delete(t *testing.T) {
 		table := newExpirationRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Add 3 records
 		txn := badgerStore.Update()
@@ -284,7 +284,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		table := newExpirationRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		semaphoreId := rand.Uint64()
 		expiresAt := int64(1000)
 
@@ -324,7 +324,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		table := newExpirationRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Add 5 records
 		txn := badgerStore.Update()
@@ -352,7 +352,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		require.Len(t, records, 5)
 		// Verify they are in order by timestamp
 		for i := range 5 {
-			require.Equal(t, int64((i+1)*1000), records[i].ExpiresAt)
+			require.EqualValues(t, (i+1)*1000, records[i].ExpiresAt)
 		}
 	})
 
@@ -363,7 +363,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		table := newExpirationRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Add 10 records with timestamps 1000, 2000, ..., 10000
 		txn := badgerStore.Update()
@@ -389,8 +389,8 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 
 		require.NoError(t, err)
 		require.Len(t, records, 5)
-		require.Equal(t, int64(3000), records[0].ExpiresAt)
-		require.Equal(t, int64(7000), records[4].ExpiresAt)
+		require.EqualValues(t, 3000, records[0].ExpiresAt)
+		require.EqualValues(t, 7000, records[4].ExpiresAt)
 	})
 
 	t.Run("lists expiration records with early stop", func(t *testing.T) {
@@ -400,7 +400,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		table := newExpirationRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Add 5 records
 		txn := badgerStore.Update()
@@ -426,8 +426,8 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 
 		require.NoError(t, err)
 		require.Len(t, records, 2)
-		require.Equal(t, int64(1000), records[0].ExpiresAt)
-		require.Equal(t, int64(2000), records[1].ExpiresAt)
+		require.EqualValues(t, 1000, records[0].ExpiresAt)
+		require.EqualValues(t, 2000, records[1].ExpiresAt)
 	})
 
 	t.Run("lists expiration records from different semaphores", func(t *testing.T) {
@@ -437,7 +437,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		table := newExpirationRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Add records for different semaphores with the same timestamp
 		txn := badgerStore.Update()
@@ -465,7 +465,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		require.Len(t, records, 3)
 		// All should have the same timestamp
 		for i := range 3 {
-			require.Equal(t, int64(1000), records[i].ExpiresAt)
+			require.EqualValues(t, 1000, records[i].ExpiresAt)
 		}
 	})
 
@@ -475,7 +475,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 
 		table := newExpirationRecordsTable([]byte{0x01})
 
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		semaphoreId := rand.Uint64()
 
 		// Add records for different accounts
@@ -517,7 +517,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		table := newExpirationRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		semaphoreId := rand.Uint64()
 
 		// Add a record at timestamp 1000

@@ -20,7 +20,7 @@ func TestDeletionRecordsTable_Add(t *testing.T) {
 		deleteAt := int64(1000)
 		barrierId := &corepb.BarrierId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			BarrierId:   rand.Uint64(),
 		}
 
@@ -52,7 +52,7 @@ func TestDeletionRecordsTable_Add(t *testing.T) {
 		table := newDeletionRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Add 5 records with different timestamps and barrier IDs
 		txn := badgerStore.Update()
@@ -80,7 +80,7 @@ func TestDeletionRecordsTable_Add(t *testing.T) {
 		require.Len(t, records, 5)
 		// Verify they are sorted by timestamp
 		for i := range 5 {
-			require.Equal(t, int64((i+1)*1000), records[i].DeleteAt)
+			require.EqualValues(t, (i+1)*1000, records[i].DeleteAt)
 		}
 	})
 
@@ -91,7 +91,7 @@ func TestDeletionRecordsTable_Add(t *testing.T) {
 		table := newDeletionRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		deleteAt := int64(1000)
 		barrierId := &corepb.BarrierId{
 			AccountId:   accountId,
@@ -134,7 +134,7 @@ func TestDeletionRecordsTable_Delete(t *testing.T) {
 
 		barrierId := &corepb.BarrierId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			BarrierId:   rand.Uint64(),
 		}
 		deleteAt := int64(1000)
@@ -172,7 +172,7 @@ func TestDeletionRecordsTable_Delete(t *testing.T) {
 
 		barrierId := &corepb.BarrierId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			BarrierId:   rand.Uint64(),
 		}
 
@@ -202,7 +202,7 @@ func TestDeletionRecordsTable_Delete(t *testing.T) {
 		table := newDeletionRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Add 3 records
 		txn := badgerStore.Update()
@@ -235,8 +235,8 @@ func TestDeletionRecordsTable_Delete(t *testing.T) {
 
 		require.NoError(t, err)
 		require.Len(t, records, 2)
-		require.Equal(t, int64(1000), records[0].DeleteAt)
-		require.Equal(t, int64(3000), records[1].DeleteAt)
+		require.EqualValues(t, 1000, records[0].DeleteAt)
+		require.EqualValues(t, 3000, records[1].DeleteAt)
 	})
 }
 
@@ -266,7 +266,7 @@ func TestDeletionRecordsTable_List(t *testing.T) {
 		table := newDeletionRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		deleteAt := int64(1000)
 		barrierId := &corepb.BarrierId{
 			AccountId:   accountId,
@@ -300,7 +300,7 @@ func TestDeletionRecordsTable_List(t *testing.T) {
 		table := newDeletionRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		txn := badgerStore.Update()
 		for i := range 5 {
@@ -325,7 +325,7 @@ func TestDeletionRecordsTable_List(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, records, 5)
 		for i := range 5 {
-			require.Equal(t, int64((i+1)*1000), records[i].DeleteAt)
+			require.EqualValues(t, (i+1)*1000, records[i].DeleteAt)
 		}
 	})
 
@@ -336,7 +336,7 @@ func TestDeletionRecordsTable_List(t *testing.T) {
 		table := newDeletionRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Add 10 records with timestamps 1000, 2000, ..., 10000
 		txn := badgerStore.Update()
@@ -362,8 +362,8 @@ func TestDeletionRecordsTable_List(t *testing.T) {
 
 		require.NoError(t, err)
 		require.Len(t, records, 5)
-		require.Equal(t, int64(3000), records[0].DeleteAt)
-		require.Equal(t, int64(7000), records[4].DeleteAt)
+		require.EqualValues(t, 3000, records[0].DeleteAt)
+		require.EqualValues(t, 7000, records[4].DeleteAt)
 	})
 
 	t.Run("lists deletion records with early stop", func(t *testing.T) {
@@ -373,7 +373,7 @@ func TestDeletionRecordsTable_List(t *testing.T) {
 		table := newDeletionRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		txn := badgerStore.Update()
 		for i := range 5 {
@@ -398,8 +398,8 @@ func TestDeletionRecordsTable_List(t *testing.T) {
 
 		require.NoError(t, err)
 		require.Len(t, records, 2)
-		require.Equal(t, int64(1000), records[0].DeleteAt)
-		require.Equal(t, int64(2000), records[1].DeleteAt)
+		require.EqualValues(t, 1000, records[0].DeleteAt)
+		require.EqualValues(t, 2000, records[1].DeleteAt)
 	})
 
 	t.Run("lists deletion records from different barriers", func(t *testing.T) {
@@ -409,7 +409,7 @@ func TestDeletionRecordsTable_List(t *testing.T) {
 		table := newDeletionRecordsTable([]byte{0x01})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Add records for different barriers with the same timestamp
 		txn := badgerStore.Update()
@@ -435,7 +435,7 @@ func TestDeletionRecordsTable_List(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, records, 3)
 		for i := range 3 {
-			require.Equal(t, int64(1000), records[i].DeleteAt)
+			require.EqualValues(t, 1000, records[i].DeleteAt)
 		}
 	})
 
@@ -445,7 +445,7 @@ func TestDeletionRecordsTable_List(t *testing.T) {
 
 		table := newDeletionRecordsTable([]byte{0x01})
 
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		barrierId := rand.Uint64()
 
 		// Add records for different accounts at the same timestamp
@@ -486,7 +486,7 @@ func TestDeletionRecordsTable_List(t *testing.T) {
 
 		barrierId := &corepb.BarrierId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			BarrierId:   rand.Uint64(),
 		}
 

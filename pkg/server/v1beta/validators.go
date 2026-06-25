@@ -11,19 +11,21 @@ import (
 )
 
 const (
-	maxNamespaceNameLength   = 128
-	maxWaitGroupNameLength   = 128
-	maxLockNameLength        = 256
-	maxSemaphoreNameLength   = 128
-	maxBarrierNameLength     = 128
-	maxProcessIdLength       = 128
-	maxJobIdLength           = 128
-	maxDescriptionLength     = 1024
-	maxCompleteJobBatchSize  = 50
-	maxPaginationTokenLength = 1024
-	maxTimeoutSeconds        = 300 // 5 minutes
-	maxLeaseIdLength         = 64
-	maxLeaseTtlSeconds       = 300 // 5 minutes
+	maxNamespaceNameLength       = 128
+	maxWaitGroupNameLength       = 128
+	maxLockNameLength            = 256
+	maxSemaphoreNameLength       = 128
+	maxBarrierNameLength         = 128
+	maxProcessIdLength           = 128
+	maxJobIdLength               = 128
+	maxDescriptionLength         = 1024
+	maxCompleteJobBatchSize      = 50
+	maxPaginationTokenLength     = 1024
+	maxTimeoutSeconds            = 300 // 5 minutes
+	maxLeaseIdLength             = 64
+	maxLeaseTtlSeconds           = 300 // 5 minutes
+	minWaitGroupAutoDeletionTime = 60  // 1 minute
+	minBarrierAutoDeletionTime   = 60  // 1 minute
 
 	maxMetadataEntries     = 32
 	maxMetadataKeyLength   = 128
@@ -70,6 +72,10 @@ func ValidateUpdateNamespaceRequest(req *gracklepb.UpdateNamespaceRequest) error
 		return err
 	}
 
+	if req.ExpectedVersion <= 0 {
+		return invalid("UpdateNamespaceRequest.ExpectedVersion", "must be greater than 0")
+	}
+
 	return nil
 }
 
@@ -110,8 +116,8 @@ func ValidateCreateWaitGroupRequest(req *gracklepb.CreateWaitGroupRequest) error
 		return invalid("CreateWaitGroupRequest.Counter", "must be greater than 0")
 	}
 
-	if req.DeleteAfterFinishedSeconds < 0 {
-		return invalid("CreateWaitGroupRequest.DeleteAfterFinishedSeconds", "must not be negative")
+	if req.DeleteAfterFinishedSeconds < minWaitGroupAutoDeletionTime {
+		return invalid("CreateWaitGroupRequest.DeleteAfterFinishedSeconds", fmt.Sprintf("must be greater than or equal to %d", minWaitGroupAutoDeletionTime))
 	}
 
 	if err := validateMetadata(req.Metadata, "CreateWaitGroupRequest.Metadata"); err != nil {
@@ -138,12 +144,16 @@ func ValidateUpdateWaitGroupRequest(req *gracklepb.UpdateWaitGroupRequest) error
 		return invalid("UpdateWaitGroupRequest.Counter", "must be greater than 0")
 	}
 
-	if req.DeleteAfterFinishedSeconds < 0 {
-		return invalid("UpdateWaitGroupRequest.DeleteAfterFinishedSeconds", "must not be negative")
+	if req.DeleteAfterFinishedSeconds < minWaitGroupAutoDeletionTime {
+		return invalid("UpdateWaitGroupRequest.DeleteAfterFinishedSeconds", fmt.Sprintf("must be greater than or equal to %d", minWaitGroupAutoDeletionTime))
 	}
 
 	if err := validateMetadata(req.Metadata, "UpdateWaitGroupRequest.Metadata"); err != nil {
 		return err
+	}
+
+	if req.ExpectedVersion <= 0 {
+		return invalid("UpdateWaitGroupRequest.ExpectedVersion", "must be greater than 0")
 	}
 
 	return nil
@@ -401,6 +411,10 @@ func ValidateUpdateSemaphoreRequest(req *gracklepb.UpdateSemaphoreRequest) error
 		return err
 	}
 
+	if req.ExpectedVersion <= 0 {
+		return invalid("UpdateSemaphoreRequest.ExpectedVersion", "must be greater than 0")
+	}
+
 	return nil
 }
 
@@ -497,8 +511,8 @@ func ValidateCreateBarrierRequest(req *gracklepb.CreateBarrierRequest) error {
 		return invalid("CreateBarrierRequest.ExpectedProcesses", "must be greater than 0")
 	}
 
-	if req.DeleteInactiveAfterSeconds <= 0 {
-		return invalid("CreateBarrierRequest.DeleteInactiveAfterSeconds", "must be greater than 0")
+	if req.DeleteInactiveAfterSeconds < minBarrierAutoDeletionTime {
+		return invalid("CreateBarrierRequest.DeleteInactiveAfterSeconds", fmt.Sprintf("must be greater than or equal to %d", minBarrierAutoDeletionTime))
 	}
 
 	if err := validateMetadata(req.Metadata, "CreateBarrierRequest.Metadata"); err != nil {
@@ -565,12 +579,16 @@ func ValidateUpdateBarrierRequest(req *gracklepb.UpdateBarrierRequest) error {
 		return invalid("UpdateBarrierRequest.ExpectedProcesses", "must be greater than 0")
 	}
 
-	if req.DeleteInactiveAfterSeconds <= 0 {
-		return invalid("UpdateBarrierRequest.DeleteInactiveAfterSeconds", "must be greater than 0")
+	if req.DeleteInactiveAfterSeconds < minBarrierAutoDeletionTime {
+		return invalid("UpdateBarrierRequest.DeleteInactiveAfterSeconds", fmt.Sprintf("must be greater than or equal to %d", minBarrierAutoDeletionTime))
 	}
 
 	if err := validateMetadata(req.Metadata, "UpdateBarrierRequest.Metadata"); err != nil {
 		return err
+	}
+
+	if req.ExpectedVersion <= 0 {
+		return invalid("UpdateBarrierRequest.ExpectedVersion", "must be greater than 0")
 	}
 
 	return nil
@@ -653,6 +671,10 @@ func ValidateCreateSemaphoreLeaseRequest(req *gracklepb.CreateSemaphoreLeaseRequ
 		return err
 	}
 
+	if err := validateMetadata(req.Metadata, "CreateSemaphoreLeaseRequest.Metadata"); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -722,6 +744,10 @@ func ValidateCreateLockLeaseRequest(req *gracklepb.CreateLockLeaseRequest) error
 	}
 
 	if err := validateLeaseTtlSeconds(req.TtlSeconds, "CreateLockLeaseRequest.TtlSeconds"); err != nil {
+		return err
+	}
+
+	if err := validateMetadata(req.Metadata, "CreateLockLeaseRequest.Metadata"); err != nil {
 		return err
 	}
 
@@ -866,7 +892,7 @@ func validatePaginationToken(value string, fieldName string) error {
 	return nil
 }
 
-func validateLeaseTtlSeconds(value uint64, fieldName string) error {
+func validateLeaseTtlSeconds(value int64, fieldName string) error {
 	if value <= 0 || value > maxLeaseTtlSeconds {
 		return invalid(fieldName, fmt.Sprintf("must be between 1 and %d", maxLeaseTtlSeconds))
 	}
@@ -875,8 +901,8 @@ func validateLeaseTtlSeconds(value uint64, fieldName string) error {
 }
 
 func validateTimeOutSeconds(value int32, fieldName string) error {
-	if value <= 0 || value > maxTimeoutSeconds {
-		return invalid(fieldName, fmt.Sprintf("must be between 1 and %d", maxTimeoutSeconds))
+	if value < 0 || value > maxTimeoutSeconds {
+		return invalid(fieldName, fmt.Sprintf("must be between 0 and %d", maxTimeoutSeconds))
 	}
 
 	return nil

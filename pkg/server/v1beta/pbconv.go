@@ -138,7 +138,7 @@ func lockToFront(lock *corepb.Lock) *gracklepb.Lock {
 	}
 }
 
-func lockHolderToFront(lockHolder *corepb.LockHolder, accountId uint64, namespaceId uint32) *gracklepb.LockHolder {
+func lockHolderToFront(lockHolder *corepb.LockHolder, accountId uint64, namespaceId uint64) *gracklepb.LockHolder {
 	if lockHolder == nil {
 		return nil
 	}
@@ -154,7 +154,7 @@ func lockHolderToFront(lockHolder *corepb.LockHolder, accountId uint64, namespac
 	}
 }
 
-func lockHoldersToFront(lockHolders []*corepb.LockHolder, accountId uint64, namespaceId uint32) []*gracklepb.LockHolder {
+func lockHoldersToFront(lockHolders []*corepb.LockHolder, accountId uint64, namespaceId uint64) []*gracklepb.LockHolder {
 	frontLockHolders := make([]*gracklepb.LockHolder, len(lockHolders))
 	for i, lockHolder := range lockHolders {
 		frontLockHolders[i] = lockHolderToFront(lockHolder, accountId, namespaceId)

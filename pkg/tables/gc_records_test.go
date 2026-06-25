@@ -171,8 +171,8 @@ func TestGCRecordsTable_Delete(t *testing.T) {
 
 		require.NoError(t, err)
 		require.Len(t, remaining, 2)
-		require.Equal(t, uint64(1), remaining[0].Id)
-		require.Equal(t, uint64(3), remaining[1].Id)
+		require.EqualValues(t, 1, remaining[0].Id)
+		require.EqualValues(t, 3, remaining[1].Id)
 	})
 }
 
@@ -218,7 +218,7 @@ func TestGCRecordsTable_List(t *testing.T) {
 		require.Len(t, records, 5)
 		// Verify they are in order by ID
 		for i := range 5 {
-			require.Equal(t, uint64(i+1), records[i].Id)
+			require.EqualValues(t, i+1, records[i].Id)
 		}
 	})
 
@@ -248,7 +248,7 @@ func TestGCRecordsTable_List(t *testing.T) {
 		require.Len(t, records, 5)
 		// Verify we get the first 5 records
 		for i := range 5 {
-			require.Equal(t, uint64(i+1), records[i].Id)
+			require.EqualValues(t, i+1, records[i].Id)
 		}
 	})
 

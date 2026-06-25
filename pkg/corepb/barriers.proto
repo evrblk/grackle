@@ -11,9 +11,9 @@ message CreateBarrierRequest {
   BarrierId barrier_id = 1;
   string name = 2;
   string description = 3;
-  uint64 expected_processes = 4;
+  int64 expected_processes = 4;
   map<string, string> metadata = 5;
-  int64 now = 6;
+  sfixed64 now = 6;
   int64 max_number_of_barriers_per_namespace = 7;
   int64 delete_inactive_after_seconds = 8;
 }
@@ -25,10 +25,10 @@ message CreateBarrierResponse {
 message UpdateBarrierRequest {
   BarrierId barrier_id = 1;
   string description = 2;
-  uint64 expected_processes = 3;
+  int64 expected_processes = 3;
   map<string, string> metadata = 4;
-  uint64 expected_version = 5;
-  int64 now = 6;
+  int64 expected_version = 5;
+  sfixed64 now = 6;
   int64 delete_inactive_after_seconds = 7;
 }
 
@@ -41,9 +41,9 @@ message ArriveAtBarrierRequest {
   NamespaceId namespace_id = 1;
   string barrier_name = 2;
   string process_id = 3;
-  uint64 generation = 4;
+  int64 generation = 4;
   map<string, string> metadata = 5;
-  int64 now = 6;
+  sfixed64 now = 6;
 }
 
 message ArriveAtBarrierResponse {
@@ -71,15 +71,15 @@ message GetBarrierByNameResponse {
 message DeleteBarrierRequest {
   NamespaceId namespace_id = 1;
   string barrier_name = 2;
-  int64 now = 3;
-  uint64 record_id = 4;
+  sfixed64 now = 3;
+  fixed64 record_id = 4;
 }
 
 message DeleteBarrierResponse {}
 
 message ListBarriersRequest {
   NamespaceId namespace_id = 1;
-  int64 now = 2;
+  sfixed64 now = 2;
   PaginationToken pagination_token = 3;
   int32 limit = 4;
 }
@@ -93,7 +93,7 @@ message ListBarriersResponse {
 message ListBarrierParticipantsRequest {
   NamespaceId namespace_id = 1;
   string barrier_name = 2;
-  uint64 generation = 3;
+  int64 generation = 3;
   PaginationToken pagination_token = 4;
   int32 limit = 5;
 }
@@ -105,7 +105,7 @@ message ListBarrierParticipantsResponse {
 }
 
 message RunBarriersGarbageCollectionRequest {
-  int64 now = 1;
+  sfixed64 now = 1;
   int64 gc_records_page_size = 2;
   int64 gc_record_barriers_page_size = 3;
   int64 gc_record_participants_page_size = 4;
@@ -116,8 +116,8 @@ message RunBarriersGarbageCollectionResponse {}
 
 message BarriersDeleteNamespaceRequest {
   NamespaceId namespace_id = 1;
-  uint64 record_id = 2;
-  int64 now = 3;
+  fixed64 record_id = 2;
+  sfixed64 now = 3;
 }
 
 message BarriersDeleteNamespaceResponse {}
@@ -126,16 +126,16 @@ message Barrier {
   BarrierId id = 1;
   string name = 2;
   string description = 3;
-  int64 created_at = 4;
-  int64 updated_at = 5;
-  uint64 expected_processes = 6;
-  uint64 arrived_processes = 7;
-  uint64 generation = 8;
-  uint64 version = 9;
+  sfixed64 created_at = 4;
+  sfixed64 updated_at = 5;
+  int64 expected_processes = 6;
+  int64 arrived_processes = 7;
+  int64 generation = 8;
+  int64 version = 9;
   map<string, string> metadata = 10;
   // last_activity_at is the timestamp (ns) of the most recent activity on this
   // barrier (creation or a process arriving). Not affected by reads.
-  int64 last_activity_at = 11;
+  sfixed64 last_activity_at = 11;
   // delete_inactive_after_seconds is the inactivity window after which the
   // barrier is auto-deleted: garbage collection removes it once
   // last_activity_at + delete_inactive_after_seconds has passed. Every activity
@@ -144,9 +144,9 @@ message Barrier {
 }
 
 message BarrierId {
-  uint64 account_id = 1;
-  uint32 namespace_id = 2;
-  uint64 barrier_id = 4;
+  fixed64 account_id = 1;
+  fixed64 namespace_id = 2;
+  fixed64 barrier_id = 4;
 }
 
 message BarriersCounter {
@@ -154,7 +154,7 @@ message BarriersCounter {
 }
 
 message BarriersGarbageCollectionRecord {
-  uint64 id = 1;
+  fixed64 id = 1;
   oneof record {
     NamespaceId namespace_id = 2;
     BarrierId barrier_id = 3;
@@ -166,12 +166,12 @@ message BarriersGarbageCollectionRecord {
 // barrier, computed as last_activity_at + delete_inactive_after_seconds.
 message BarriersDeletionRecord {
   BarrierId barrier_id = 1;
-  int64 delete_at = 2;
+  sfixed64 delete_at = 2;
 }
 
 message BarrierParticipant {
   string process_id = 1;
-  int64 arrived_at = 2;
-  uint64 generation = 3;
+  sfixed64 arrived_at = 2;
+  int64 generation = 3;
   map<string, string> metadata = 4;
 }

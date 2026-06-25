@@ -21,7 +21,7 @@ func TestJobsTable_Create(t *testing.T) {
 		waitGroupJob := &corepb.WaitGroupJob{
 			Id: &corepb.WaitGroupJobId{
 				AccountId:   rand.Uint64(),
-				NamespaceId: rand.Uint32(),
+				NamespaceId: rand.Uint64(),
 				WaitGroupId: rand.Uint64(),
 				JobId:       "job_123",
 			},
@@ -53,7 +53,7 @@ func TestJobsTable_Create(t *testing.T) {
 		table := newJobsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		waitGroupId := rand.Uint64()
 
 		// Create multiple jobs
@@ -106,7 +106,7 @@ func TestJobsTable_Get(t *testing.T) {
 		waitGroupJob := &corepb.WaitGroupJob{
 			Id: &corepb.WaitGroupJobId{
 				AccountId:   rand.Uint64(),
-				NamespaceId: rand.Uint32(),
+				NamespaceId: rand.Uint64(),
 				WaitGroupId: rand.Uint64(),
 				JobId:       "job_123",
 			},
@@ -144,7 +144,7 @@ func TestJobsTable_Get(t *testing.T) {
 
 		jobId := &corepb.WaitGroupJobId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			WaitGroupId: rand.Uint64(),
 			JobId:       "nonexistent_job",
 		}
@@ -166,7 +166,7 @@ func TestJobsTable_Delete(t *testing.T) {
 		waitGroupJob := &corepb.WaitGroupJob{
 			Id: &corepb.WaitGroupJobId{
 				AccountId:   rand.Uint64(),
-				NamespaceId: rand.Uint32(),
+				NamespaceId: rand.Uint64(),
 				WaitGroupId: rand.Uint64(),
 				JobId:       "job_123",
 			},
@@ -204,7 +204,7 @@ func TestJobsTable_Delete(t *testing.T) {
 
 		jobId := &corepb.WaitGroupJobId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			WaitGroupId: rand.Uint64(),
 			JobId:       "nonexistent_job",
 		}
@@ -223,7 +223,7 @@ func TestJobsTable_Delete(t *testing.T) {
 		table := newJobsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		waitGroupId := rand.Uint64()
 
 		// Create multiple jobs
@@ -286,7 +286,7 @@ func TestJobsTable_List(t *testing.T) {
 		table := newJobsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		waitGroupId := rand.Uint64()
 
 		// Create multiple jobs
@@ -328,7 +328,7 @@ func TestJobsTable_List(t *testing.T) {
 		table := newJobsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		waitGroupId := rand.Uint64()
 
 		// Create multiple jobs
@@ -383,7 +383,7 @@ func TestJobsTable_List(t *testing.T) {
 		txn := badgerStore.View()
 		defer txn.Discard()
 
-		result, err := table.List(txn, rand.Uint64(), rand.Uint32(), rand.Uint64(), nil, 100)
+		result, err := table.List(txn, rand.Uint64(), rand.Uint64(), rand.Uint64(), nil, 100)
 		require.NoError(t, err)
 		require.NotNil(t, result)
 		require.Len(t, result.jobs, 0)
@@ -398,7 +398,7 @@ func TestJobsTable_List(t *testing.T) {
 		table := newJobsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		waitGroupId1 := rand.Uint64()
 		waitGroupId2 := rand.Uint64()
 

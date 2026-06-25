@@ -1,8 +1,8 @@
 # ListSemaphoreHolders
 
 Lists current holders of a semaphore. Each holder carries the `lease_id` that grabbed the permits,
-its `weight`, and when it acquired. Useful for diagnostics when an `AcquireSemaphore` returns
-`success: false`. Paginated.
+its `weight`, and when it acquired. Useful for diagnostics when an `AcquireSemaphore` returns a
+non-`ACQUIRE_OUTCOME_ACQUIRED` outcome. Paginated.
 
 Read-only and safe to retry.
 

@@ -64,7 +64,7 @@ func (t *expirationRecordsTable) Add(txn *store.Txn, expiresAt int64, semaphoreI
 	)
 }
 
-func (t *expirationRecordsTable) tablePK(time int64, accountId uint64, namespaceId uint32, semaphoreId uint64) []byte {
+func (t *expirationRecordsTable) tablePK(time int64, accountId uint64, namespaceId uint64, semaphoreId uint64) []byte {
 	return utils.ConcatBytes(
 		t.shardGlobalIndexPrefix,
 		time,

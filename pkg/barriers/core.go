@@ -479,8 +479,8 @@ func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest) (*coreapis.Upda
 // auto-trips: ArrivedProcesses is reset to 0 and Generation is incremented,
 // releasing anyone polling WaitAtBarrier at the old generation. A process
 // arriving twice for the same generation is a no-op. Returns NotFound if the
-// barrier does not exist, or InvalidArgument if req.Generation is older than
-// the barrier's current generation; in the InvalidArgument case the
+// barrier does not exist, or InvalidArgument if req.Generation is different
+// from the barrier's current generation; in the InvalidArgument case the
 // transaction is discarded and no participant rows are persisted.
 func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest) (*coreapis.ArriveAtBarrierResponse, error) {
 	txn := c.badgerStore.Update()
@@ -502,13 +502,12 @@ func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest) (*coreapis.
 		return nil, err
 	}
 
-	// Reject arrivals for a generation older than the barrier's current one:
-	// the caller is referring to an already-tripped (and reused) barrier generation.
-	if req.Payload.Generation < barrier.Generation {
+	// Reject arrivals for a generation other than the barrier's current one.
+	if req.Payload.Generation != barrier.Generation {
 		return &coreapis.ArriveAtBarrierResponse{
 			ApplicationError: monsterax.NewErrorWithContext(
 				monsterax.InvalidArgument,
-				"generation is older than the current barrier generation",
+				"request generation is different from the current barrier generation",
 				map[string]string{
 					"barrier_name":       req.Payload.BarrierName,
 					"current_generation": fmt.Sprintf("%d", barrier.Generation),

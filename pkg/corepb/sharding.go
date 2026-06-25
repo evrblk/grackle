@@ -220,9 +220,9 @@ func (r *ListWaitGroupsRequest) ShardKey() []byte {
 	return sharding.ByAccountAndNamespace(r.NamespaceId.AccountId, r.NamespaceId.NamespaceId)
 }
 
-// ListWaitGroupJobsRequest
+// ListWaitGroupCompletedJobsRequest
 
-func (r *ListWaitGroupJobsRequest) ShardKey() []byte {
+func (r *ListWaitGroupCompletedJobsRequest) ShardKey() []byte {
 	return sharding.ByAccountAndNamespace(r.NamespaceId.AccountId, r.NamespaceId.NamespaceId)
 }
 

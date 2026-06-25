@@ -19,7 +19,7 @@ func TestBarriersTable_Get(t *testing.T) {
 		barriersTable := newBarriersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		barrierId := rand.Uint64()
 
 		barrier := &corepb.Barrier{
@@ -75,7 +75,7 @@ func TestBarriersTable_Get(t *testing.T) {
 		defer txn.Discard()
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		barrierId := rand.Uint64()
 
 		// Try to get nonexistent barrier
@@ -97,7 +97,7 @@ func TestBarriersTable_GetByName(t *testing.T) {
 		barriersTable := newBarriersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		barrierId := rand.Uint64()
 		barrierName := "named_barrier"
 
@@ -146,7 +146,7 @@ func TestBarriersTable_GetByName(t *testing.T) {
 		defer txn.Discard()
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Try to get nonexistent barrier by name
 		_, err = barriersTable.GetByName(txn, accountId, namespaceId, "nonexistent")
@@ -163,7 +163,7 @@ func TestBarriersTable_Create(t *testing.T) {
 		barriersTable := newBarriersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		barrierId := rand.Uint64()
 
 		barrier := &corepb.Barrier{
@@ -205,7 +205,7 @@ func TestBarriersTable_Create(t *testing.T) {
 		barriersTable := newBarriersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		barrierName := "duplicate_barrier"
 
 		barrier1 := &corepb.Barrier{
@@ -262,8 +262,8 @@ func TestBarriersTable_Create(t *testing.T) {
 		barriersTable := newBarriersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId1 := rand.Uint32()
-		namespaceId2 := rand.Uint32()
+		namespaceId1 := rand.Uint64()
+		namespaceId2 := rand.Uint64()
 		barrierName := "same_name"
 
 		// Create barrier in namespace 1
@@ -322,7 +322,7 @@ func TestBarriersTable_Update(t *testing.T) {
 		barriersTable := newBarriersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		barrierId := rand.Uint64()
 
 		barrier := &corepb.Barrier{
@@ -377,7 +377,7 @@ func TestBarriersTable_Delete(t *testing.T) {
 		barriersTable := newBarriersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		barrierId := rand.Uint64()
 
 		barrier := &corepb.Barrier{
@@ -431,7 +431,7 @@ func TestBarriersTable_Delete(t *testing.T) {
 		barriersTable := newBarriersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		barrierId := rand.Uint64()
 
 		// Delete nonexistent barrier - should not error
@@ -458,7 +458,7 @@ func TestBarriersTable_List(t *testing.T) {
 		defer txn.Discard()
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		result, err := barriersTable.List(txn, accountId, namespaceId, nil, 10)
 
@@ -474,7 +474,7 @@ func TestBarriersTable_List(t *testing.T) {
 		barriersTable := newBarriersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Create multiple barriers
 		txn := badgerStore.Update()
@@ -487,7 +487,7 @@ func TestBarriersTable_List(t *testing.T) {
 				},
 				Name:              fmt.Sprintf("barrier_%d", i),
 				Description:       fmt.Sprintf("Barrier %d", i),
-				ExpectedProcesses: uint64(i + 1),
+				ExpectedProcesses: int64(i + 1),
 				ArrivedProcesses:  0,
 				Generation:        1,
 				CreatedAt:         12345,
@@ -518,8 +518,8 @@ func TestBarriersTable_List(t *testing.T) {
 		barriersTable := newBarriersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId1 := rand.Uint32()
-		namespaceId2 := rand.Uint32()
+		namespaceId1 := rand.Uint64()
+		namespaceId2 := rand.Uint64()
 
 		// Create barriers in namespace 1
 		txn := badgerStore.Update()
@@ -587,7 +587,7 @@ func TestBarriersTable_List(t *testing.T) {
 		barriersTable := newBarriersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Create 10 barriers
 		txn := badgerStore.Update()

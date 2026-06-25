@@ -56,7 +56,7 @@ func TestCreateSemaphore(t *testing.T) {
 		resp, err := server.CreateSemaphore(ctx, &gracklepb.CreateSemaphoreRequest{
 			NamespaceName: "namespace1",
 			SemaphoreName: "semaphore1",
-			Permits:       uint64(grackle.DefaultServiceLimits.MaxNumberOfSemaphoreHolders), // Max allowed by account limits
+			Permits:       grackle.DefaultServiceLimits.MaxNumberOfSemaphoreHolders, // Max allowed by account limits
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp.Semaphore)
@@ -66,7 +66,7 @@ func TestCreateSemaphore(t *testing.T) {
 		_, err = server.CreateSemaphore(ctx, &gracklepb.CreateSemaphoreRequest{
 			NamespaceName: "namespace1",
 			SemaphoreName: "semaphore2",
-			Permits:       uint64(grackle.DefaultServiceLimits.MaxNumberOfSemaphoreHolders + 1), // Exceeds MaxNumberOfSemaphoreHolders
+			Permits:       grackle.DefaultServiceLimits.MaxNumberOfSemaphoreHolders + 1, // Exceeds MaxNumberOfSemaphoreHolders
 		})
 		require.Error(t, err)
 		require.Contains(t, err.Error(), fmt.Sprintf("semaphore size is too big, max: %d", grackle.DefaultServiceLimits.MaxNumberOfSemaphoreHolders))
@@ -155,6 +155,18 @@ func TestAcquireSemaphore(t *testing.T) {
 			TimeoutSeconds: 60,
 		})
 		require.Error(t, err)
+
+		// Invalid request - weight exceeds the semaphore's total permits. This can
+		// never be satisfied, so it is rejected immediately instead of blocking
+		// until timeout.
+		_, err = server.AcquireSemaphore(ctx, &gracklepb.AcquireSemaphoreRequest{
+			NamespaceName:  "namespace1",
+			SemaphoreName:  "semaphore1",
+			LeaseId:        resp1.Lease.LeaseId,
+			Weight:         6,
+			TimeoutSeconds: 60,
+		})
+		require.Error(t, err)
 	})
 
 	t.Run("blocking", func(t *testing.T) {
@@ -193,7 +205,7 @@ func TestAcquireSemaphore(t *testing.T) {
 				TimeoutSeconds: 5,
 			})
 			require.NoError(t, err)
-			require.True(t, acqResp.Success)
+			require.Equal(t, gracklepb.AcquireOutcome_ACQUIRE_OUTCOME_ACQUIRED, acqResp.Outcome)
 
 			// Create second lease for the waiter
 			waiterLease, err := server.CreateSemaphoreLease(ctx, &gracklepb.CreateSemaphoreLeaseRequest{
@@ -223,7 +235,7 @@ func TestAcquireSemaphore(t *testing.T) {
 			})
 			require.NoError(t, err)
 			require.NotNil(t, resp)
-			require.True(t, resp.Success)
+			require.Equal(t, gracklepb.AcquireOutcome_ACQUIRE_OUTCOME_ACQUIRED, resp.Outcome)
 		})
 	})
 
@@ -261,7 +273,7 @@ func TestAcquireSemaphore(t *testing.T) {
 			TimeoutSeconds: 5,
 		})
 		require.NoError(t, err)
-		require.True(t, acqResp.Success)
+		require.Equal(t, gracklepb.AcquireOutcome_ACQUIRE_OUTCOME_ACQUIRED, acqResp.Outcome)
 
 		// Create second lease for the waiter
 		waiterLease, err := server.CreateSemaphoreLease(ctx, &gracklepb.CreateSemaphoreLeaseRequest{
@@ -271,7 +283,7 @@ func TestAcquireSemaphore(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// AcquireSemaphore should block until timeout and return Success=false since the holder never releases
+		// AcquireSemaphore should block until timeout and return TIMED_OUT since the holder never releases
 		resp, err := server.AcquireSemaphore(ctx, &gracklepb.AcquireSemaphoreRequest{
 			NamespaceName:  "test-namespace",
 			SemaphoreName:  "test-semaphore",
@@ -281,7 +293,7 @@ func TestAcquireSemaphore(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp)
-		require.False(t, resp.Success)
+		require.Equal(t, gracklepb.AcquireOutcome_ACQUIRE_OUTCOME_TIMED_OUT, resp.Outcome)
 	})
 }
 
@@ -391,7 +403,7 @@ func TestUpdateSemaphore(t *testing.T) {
 		resp, err := server.UpdateSemaphore(ctx, &gracklepb.UpdateSemaphoreRequest{
 			NamespaceName:   "namespace1",
 			SemaphoreName:   "semaphore1",
-			Permits:         uint64(grackle.DefaultServiceLimits.MaxNumberOfSemaphoreHolders), // Max allowed by account limits
+			Permits:         grackle.DefaultServiceLimits.MaxNumberOfSemaphoreHolders, // Max allowed by account limits
 			ExpectedVersion: 1,
 		})
 		require.NoError(t, err)
@@ -402,7 +414,7 @@ func TestUpdateSemaphore(t *testing.T) {
 		_, err = server.UpdateSemaphore(ctx, &gracklepb.UpdateSemaphoreRequest{
 			NamespaceName:   "namespace1",
 			SemaphoreName:   "semaphore1",
-			Permits:         uint64(grackle.DefaultServiceLimits.MaxNumberOfSemaphoreHolders + 1), // Exceeds MaxNumberOfSemaphoreHolders
+			Permits:         grackle.DefaultServiceLimits.MaxNumberOfSemaphoreHolders + 1, // Exceeds MaxNumberOfSemaphoreHolders
 			ExpectedVersion: 1,
 		})
 		require.Error(t, err)
@@ -620,7 +632,7 @@ func TestListSemaphoreHolders(t *testing.T) {
 				TimeoutSeconds: 60,
 			})
 			require.NoError(t, err)
-			require.True(t, resp2.Success)
+			require.Equal(t, gracklepb.AcquireOutcome_ACQUIRE_OUTCOME_ACQUIRED, resp2.Outcome)
 		}
 
 		// Test forward pagination through 3 pages
@@ -948,7 +960,7 @@ func TestGetSemaphoreLease(t *testing.T) {
 		// Invalid request - lease not found
 		_, err = server.GetSemaphoreLease(ctx, &gracklepb.GetSemaphoreLeaseRequest{
 			NamespaceName: "namespace1",
-			LeaseId:       "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+			LeaseId:       "ls_1fM5oldgzaB3TfUzFNzQfMP8ek3XbnFQE",
 		})
 		require.Error(t, err)
 	})

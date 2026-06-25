@@ -1414,7 +1414,7 @@ func (s *GrackleMonsteraStub) ListWaitGroups(ctx context.Context, request *corep
 	return response, nilifyIfEmpty(appResponse.Error)
 }
 
-func (s *GrackleMonsteraStub) ListWaitGroupJobs(ctx context.Context, request *corepb.ListWaitGroupJobsRequest) (*corepb.ListWaitGroupJobsResponse, error) {
+func (s *GrackleMonsteraStub) ListWaitGroupCompletedJobs(ctx context.Context, request *corepb.ListWaitGroupCompletedJobsRequest) (*corepb.ListWaitGroupCompletedJobsResponse, error) {
 	data, err := request.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1439,7 +1439,7 @@ func (s *GrackleMonsteraStub) ListWaitGroupJobs(ctx context.Context, request *co
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.ListWaitGroupJobsResponse{}
+	response := &corepb.ListWaitGroupCompletedJobsResponse{}
 	err = response.UnmarshalVT(appResponse.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
@@ -2973,14 +2973,14 @@ func (s *GrackleNonclusteredStub) ListWaitGroups(ctx context.Context, request *c
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) ListWaitGroupJobs(ctx context.Context, request *corepb.ListWaitGroupJobsRequest) (*corepb.ListWaitGroupJobsResponse, error) {
+func (s *GrackleNonclusteredStub) ListWaitGroupCompletedJobs(ctx context.Context, request *corepb.ListWaitGroupCompletedJobsRequest) (*corepb.ListWaitGroupCompletedJobsResponse, error) {
 	shardKey := request.ShardKey()
 	for _, adapter := range s.grackleWaitGroupsCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListWaitGroupJobs(&monsterax.ReadRequest[*corepb.ListWaitGroupJobsRequest]{Payload: request})
+			response, err := adapter.core.ListWaitGroupCompletedJobs(&monsterax.ReadRequest[*corepb.ListWaitGroupCompletedJobsRequest]{Payload: request})
 			if err != nil {
 				return nil, err
 			}

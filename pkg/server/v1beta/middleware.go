@@ -21,7 +21,11 @@ import (
 )
 
 var (
-	errUnauthenticated = status.Error(codes.Unauthenticated, "unauthenticated")
+	errUnauthenticated       = status.Error(codes.Unauthenticated, "unauthenticated")
+	errUnsupportedApiKeyType = errors.New("unsupported api key type")
+	errVTProtoError          = errors.New("request does not implement VTProtoMessage")
+
+	serviceAndMethodRegex = regexp.MustCompile(`([\w\d_]+)\/([\w\d_]+)`)
 )
 
 const (
@@ -94,7 +98,7 @@ func (m *AuthenticationMiddleware) Unary(
 func (m *AuthenticationMiddleware) verifySignature(req any, key *apiKey, signature string, timestamp int64, method string) error {
 	requestProto, ok := req.(authn.VTProtoMessage)
 	if !ok {
-		return errors.New("request does not implement VTProtoMessage")
+		return errVTProtoError
 	}
 
 	now := time.Now()
@@ -110,7 +114,7 @@ func (m *AuthenticationMiddleware) verifySignature(req any, key *apiKey, signatu
 
 		return authn.VerifyBravoSignature(signature, timestamp, now, hashedSecret, requestProto, "Grackle", method)
 	} else {
-		return errors.New("unsupported api key type")
+		return errUnsupportedApiKeyType
 	}
 }
 
@@ -146,8 +150,7 @@ func NewAuthenticationMiddleware(authKeysPath string) *AuthenticationMiddleware 
 }
 
 func extractServiceAndMethod(grpcPath string) (string, string) {
-	re, _ := regexp.Compile(`([\w\d_]+)\/([\w\d_]+)`)
-	matches := re.FindStringSubmatch(grpcPath)
+	matches := serviceAndMethodRegex.FindStringSubmatch(grpcPath)
 	var service string
 	var method string
 	if len(matches) == 3 {

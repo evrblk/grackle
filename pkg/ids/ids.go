@@ -32,20 +32,20 @@ func DecodeNamespaceId(s string) (*corepb.NamespaceId, error) {
 		return nil, ErrInvalidId
 	}
 
-	if len(b) != 8+4 {
+	if len(b) != 8+8 {
 		return nil, ErrInvalidId
 	}
 
 	return &corepb.NamespaceId{
 		AccountId:   binary.BigEndian.Uint64(b[0:8]),
-		NamespaceId: binary.BigEndian.Uint32(b[8 : 8+4]),
+		NamespaceId: binary.BigEndian.Uint64(b[8 : 8+8]),
 	}, nil
 }
 
 func EncodeNamespaceId(id *corepb.NamespaceId) string {
-	src := make([]byte, 8+4)
+	src := make([]byte, 8+8)
 	binary.BigEndian.PutUint64(src[0:8], id.AccountId)
-	binary.BigEndian.PutUint32(src[8:8+4], id.NamespaceId)
+	binary.BigEndian.PutUint64(src[8:8+8], id.NamespaceId)
 	return fmt.Sprintf("ns_%s", base62.Encode(src))
 }
 
@@ -59,22 +59,22 @@ func DecodeWaitGroupId(s string) (*corepb.WaitGroupId, error) {
 		return nil, ErrInvalidId
 	}
 
-	if len(b) != 8+4+8 {
+	if len(b) != 8+8+8 {
 		return nil, ErrInvalidId
 	}
 
 	return &corepb.WaitGroupId{
 		AccountId:   binary.BigEndian.Uint64(b[0:8]),
-		NamespaceId: binary.BigEndian.Uint32(b[8 : 8+4]),
-		WaitGroupId: binary.BigEndian.Uint64(b[8+4 : 8+4+8]),
+		NamespaceId: binary.BigEndian.Uint64(b[8 : 8+8]),
+		WaitGroupId: binary.BigEndian.Uint64(b[8+8 : 8+8+8]),
 	}, nil
 }
 
 func EncodeWaitGroupId(id *corepb.WaitGroupId) string {
-	src := make([]byte, 8+4+8)
+	src := make([]byte, 8+8+8)
 	binary.BigEndian.PutUint64(src[0:8], id.AccountId)
-	binary.BigEndian.PutUint32(src[8:8+4], id.NamespaceId)
-	binary.BigEndian.PutUint64(src[8+4:8+4+8], id.WaitGroupId)
+	binary.BigEndian.PutUint64(src[8:8+8], id.NamespaceId)
+	binary.BigEndian.PutUint64(src[8+8:8+8+8], id.WaitGroupId)
 	return fmt.Sprintf("wg_%s", base62.Encode(src))
 }
 
@@ -88,22 +88,22 @@ func DecodeSemaphoreId(s string) (*corepb.SemaphoreId, error) {
 		return nil, ErrInvalidId
 	}
 
-	if len(b) != 8+4+8 {
+	if len(b) != 8+8+8 {
 		return nil, ErrInvalidId
 	}
 
 	return &corepb.SemaphoreId{
 		AccountId:   binary.BigEndian.Uint64(b[0:8]),
-		NamespaceId: binary.BigEndian.Uint32(b[8 : 8+4]),
-		SemaphoreId: binary.BigEndian.Uint64(b[8+4 : 8+4+8]),
+		NamespaceId: binary.BigEndian.Uint64(b[8 : 8+8]),
+		SemaphoreId: binary.BigEndian.Uint64(b[8+8 : 8+8+8]),
 	}, nil
 }
 
 func EncodeSemaphoreId(id *corepb.SemaphoreId) string {
-	src := make([]byte, 8+4+8)
+	src := make([]byte, 8+8+8)
 	binary.BigEndian.PutUint64(src[0:8], id.AccountId)
-	binary.BigEndian.PutUint32(src[8:8+4], id.NamespaceId)
-	binary.BigEndian.PutUint64(src[8+4:8+4+8], id.SemaphoreId)
+	binary.BigEndian.PutUint64(src[8:8+8], id.NamespaceId)
+	binary.BigEndian.PutUint64(src[8+8:8+8+8], id.SemaphoreId)
 	return fmt.Sprintf("sem_%s", base62.Encode(src))
 }
 
@@ -117,22 +117,22 @@ func DecodeBarrierId(s string) (*corepb.BarrierId, error) {
 		return nil, ErrInvalidId
 	}
 
-	if len(b) != 8+4+8 {
+	if len(b) != 8+8+8 {
 		return nil, ErrInvalidId
 	}
 
 	return &corepb.BarrierId{
 		AccountId:   binary.BigEndian.Uint64(b[0:8]),
-		NamespaceId: binary.BigEndian.Uint32(b[8 : 8+4]),
-		BarrierId:   binary.BigEndian.Uint64(b[8+4 : 8+4+8]),
+		NamespaceId: binary.BigEndian.Uint64(b[8 : 8+8]),
+		BarrierId:   binary.BigEndian.Uint64(b[8+8 : 8+8+8]),
 	}, nil
 }
 
 func EncodeBarrierId(id *corepb.BarrierId) string {
-	src := make([]byte, 8+4+8)
+	src := make([]byte, 8+8+8)
 	binary.BigEndian.PutUint64(src[0:8], id.AccountId)
-	binary.BigEndian.PutUint32(src[8:8+4], id.NamespaceId)
-	binary.BigEndian.PutUint64(src[8+4:8+4+8], id.BarrierId)
+	binary.BigEndian.PutUint64(src[8:8+8], id.NamespaceId)
+	binary.BigEndian.PutUint64(src[8+8:8+8+8], id.BarrierId)
 	return fmt.Sprintf("bar_%s", base62.Encode(src))
 }
 
@@ -146,21 +146,21 @@ func DecodeLeaseId(s string) (*corepb.LeaseId, error) {
 		return nil, ErrInvalidId
 	}
 
-	if len(b) != 8+4+8 {
+	if len(b) != 8+8+8 {
 		return nil, ErrInvalidId
 	}
 
 	return &corepb.LeaseId{
 		AccountId:   binary.BigEndian.Uint64(b[0:8]),
-		NamespaceId: binary.BigEndian.Uint32(b[8 : 8+4]),
-		LeaseId:     binary.BigEndian.Uint64(b[8+4 : 8+4+8]),
+		NamespaceId: binary.BigEndian.Uint64(b[8 : 8+8]),
+		LeaseId:     binary.BigEndian.Uint64(b[8+8 : 8+8+8]),
 	}, nil
 }
 
 func EncodeLeaseId(id *corepb.LeaseId) string {
-	src := make([]byte, 8+4+8)
+	src := make([]byte, 8+8+8)
 	binary.BigEndian.PutUint64(src[0:8], id.AccountId)
-	binary.BigEndian.PutUint32(src[8:8+4], id.NamespaceId)
-	binary.BigEndian.PutUint64(src[8+4:8+4+8], id.LeaseId)
+	binary.BigEndian.PutUint64(src[8:8+8], id.NamespaceId)
+	binary.BigEndian.PutUint64(src[8+8:8+8+8], id.LeaseId)
 	return fmt.Sprintf("ls_%s", base62.Encode(src))
 }

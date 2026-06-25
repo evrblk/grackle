@@ -112,9 +112,19 @@ CreateSemaphoreLeaseResponse:
 ```
 
 Then the process tries to acquire `weight` permits under the lease. The acquire succeeds only if
-`active_holds + weight <= permits`; otherwise `success: false` is returned with no error and the
-current state of the semaphore. `timeout_seconds` parameter tells how long should the call wait
-if all necessary permits are not readily available.
+`active_holds + weight <= permits`. The response carries an `outcome` enum:
+`ACQUIRE_OUTCOME_ACQUIRED` when the lease now holds the permits, `ACQUIRE_OUTCOME_UNAVAILABLE` when
+a non-blocking attempt (`timeout_seconds: 0`) found the permits held by others and returned without
+waiting, or `ACQUIRE_OUTCOME_TIMED_OUT` when the call blocked until `timeout_seconds` elapsed
+without ever acquiring. In the non-acquired cases the current state of the semaphore is returned
+with no error. `timeout_seconds` parameter tells how long should the call wait if all necessary
+permits are not readily available.
+
+If `weight` exceeds the semaphore's total `permits`, the request can never be satisfied; the call
+rejects it immediately with an `InvalidArgument` error ("weight exceeds semaphore permits") rather
+than blocking. A `weight` that merely exceeds the currently available permits (i.e.
+`weight <= permits` but `active_holds + weight > permits`) still blocks/waits and is reported via
+`outcome`.
 
 AcquireSemaphoreRequest:
 ```json
@@ -127,7 +137,7 @@ AcquireSemaphoreRequest:
 }
 ```
 
-AcquireSemaphoreResponse (success):
+AcquireSemaphoreResponse (acquired):
 ```json
 {
   "semaphore": {
@@ -141,7 +151,7 @@ AcquireSemaphoreResponse (success):
     "updated_at": 1695826239671432000,
     "last_activity_at": 1695826239671432000
   },
-  "success": true
+  "outcome": "ACQUIRE_OUTCOME_ACQUIRED"
 }
 ```
 
@@ -159,7 +169,7 @@ AcquireSemaphoreResponse (no permits left — not an error):
     "updated_at": 1695826239671432000,
     "last_activity_at": 1695826239671432000
   },
-  "success": false
+  "outcome": "ACQUIRE_OUTCOME_TIMED_OUT"
 }
 ```
 

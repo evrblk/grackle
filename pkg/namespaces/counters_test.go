@@ -37,7 +37,7 @@ func TestCountersTable_Get(t *testing.T) {
 		retrieved, err := table.Get(txn, accountId)
 		require.NoError(t, err)
 		require.NotNil(t, retrieved)
-		require.Equal(t, int64(42), retrieved.NumberOfNamespaces)
+		require.EqualValues(t, 42, retrieved.NumberOfNamespaces)
 	})
 
 	t.Run("get nonexistent counter returns default", func(t *testing.T) {
@@ -54,7 +54,7 @@ func TestCountersTable_Get(t *testing.T) {
 		retrieved, err := table.Get(txn, accountId)
 		require.NoError(t, err)
 		require.NotNil(t, retrieved)
-		require.Equal(t, int64(0), retrieved.NumberOfNamespaces)
+		require.EqualValues(t, 0, retrieved.NumberOfNamespaces)
 	})
 }
 
@@ -84,7 +84,7 @@ func TestCountersTable_Set(t *testing.T) {
 		retrieved, err := table.Get(txn, accountId)
 		require.NoError(t, err)
 		require.NotNil(t, retrieved)
-		require.Equal(t, int64(10), retrieved.NumberOfNamespaces)
+		require.EqualValues(t, 10, retrieved.NumberOfNamespaces)
 	})
 
 	t.Run("set overwrites existing counter", func(t *testing.T) {
@@ -123,7 +123,7 @@ func TestCountersTable_Set(t *testing.T) {
 		retrieved, err := table.Get(txn, accountId)
 		require.NoError(t, err)
 		require.NotNil(t, retrieved)
-		require.Equal(t, int64(25), retrieved.NumberOfNamespaces)
+		require.EqualValues(t, 25, retrieved.NumberOfNamespaces)
 	})
 
 	t.Run("set counters for different accounts are isolated", func(t *testing.T) {
@@ -157,11 +157,11 @@ func TestCountersTable_Set(t *testing.T) {
 
 		retrieved1, err := table.Get(txn, accountId1)
 		require.NoError(t, err)
-		require.Equal(t, int64(10), retrieved1.NumberOfNamespaces)
+		require.EqualValues(t, 10, retrieved1.NumberOfNamespaces)
 
 		retrieved2, err := table.Get(txn, accountId2)
 		require.NoError(t, err)
-		require.Equal(t, int64(20), retrieved2.NumberOfNamespaces)
+		require.EqualValues(t, 20, retrieved2.NumberOfNamespaces)
 	})
 }
 

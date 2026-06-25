@@ -62,7 +62,7 @@ func (t *waitGroupsTable) Get(txn *store.Txn, waitGroupId *corepb.WaitGroupId) (
 			t.tableSK(waitGroupId.WaitGroupId)))
 }
 
-func (t *waitGroupsTable) GetByName(txn *store.Txn, accountId uint64, namespaceId uint32, waitGroupName string) (*corepb.WaitGroup, error) {
+func (t *waitGroupsTable) GetByName(txn *store.Txn, accountId uint64, namespaceId uint64, waitGroupName string) (*corepb.WaitGroup, error) {
 	waitGroupId, err := t.namesIndex.Get(txn, t.namesIndexPK(accountId, namespaceId, waitGroupName))
 	if err != nil {
 		return nil, err
@@ -81,7 +81,7 @@ type listWaitGroupsResult struct {
 	previousPaginationToken *corepb.PaginationToken
 }
 
-func (t *waitGroupsTable) List(txn *store.Txn, accountId uint64, namespaceId uint32, paginationToken *corepb.PaginationToken, limit int) (*listWaitGroupsResult, error) {
+func (t *waitGroupsTable) List(txn *store.Txn, accountId uint64, namespaceId uint64, paginationToken *corepb.PaginationToken, limit int) (*listWaitGroupsResult, error) {
 	result, err := t.table.ListPaginated(txn, t.tablePK(accountId, namespaceId), pagination.CoreToMonstera(paginationToken), limit)
 	if err != nil {
 		return nil, err
@@ -136,7 +136,7 @@ func (t *waitGroupsTable) Delete(txn *store.Txn, waitGroupId *corepb.WaitGroupId
 			t.tableSK(waitGroupId.WaitGroupId)))
 }
 
-func (t *waitGroupsTable) tablePK(accountId uint64, namespaceId uint32) []byte {
+func (t *waitGroupsTable) tablePK(accountId uint64, namespaceId uint64) []byte {
 	return utils.ConcatBytes(
 		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,
@@ -150,7 +150,7 @@ func (t *waitGroupsTable) tableSK(waitGroupId uint64) []byte {
 	)
 }
 
-func (t *waitGroupsTable) namesIndexPK(accountId uint64, namespaceId uint32, waitGroupName string) []byte {
+func (t *waitGroupsTable) namesIndexPK(accountId uint64, namespaceId uint64, waitGroupName string) []byte {
 	return utils.ConcatBytes(
 		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,

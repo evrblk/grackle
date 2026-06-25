@@ -11,8 +11,8 @@ message CreateSemaphoreRequest {
   SemaphoreId semaphore_id = 1;
   string name = 2;
   string description = 3;
-  int64 now = 4;
-  uint64 permits = 5;
+  sfixed64 now = 4;
+  int64 permits = 5;
   map<string, string> metadata = 6;
   int64 max_number_of_semaphores_per_namespace = 7;
 }
@@ -25,7 +25,7 @@ message ListSemaphoresRequest {
   NamespaceId namespace_id = 1;
   PaginationToken pagination_token = 2;
   int32 limit = 3;
-  int64 now = 4;
+  sfixed64 now = 4;
 }
 
 message ListSemaphoresResponse {
@@ -38,7 +38,7 @@ message ListSemaphoresByLeaseIdRequest {
   LeaseId lease_id = 1;
   PaginationToken pagination_token = 2;
   int32 limit = 3;
-  int64 now = 4;
+  sfixed64 now = 4;
 }
 
 message ListSemaphoresByLeaseIdResponse {
@@ -49,7 +49,7 @@ message ListSemaphoresByLeaseIdResponse {
 
 message GetSemaphoreRequest {
   SemaphoreId semaphore_id = 1;
-  int64 now = 2;
+  sfixed64 now = 2;
 }
 
 message GetSemaphoreResponse {
@@ -59,7 +59,7 @@ message GetSemaphoreResponse {
 message GetSemaphoreByNameRequest {
   NamespaceId namespace_id = 1;
   string semaphore_name = 2;
-  int64 now = 3;
+  sfixed64 now = 3;
 }
 
 message GetSemaphoreByNameResponse {
@@ -69,9 +69,9 @@ message GetSemaphoreByNameResponse {
 message AcquireSemaphoreRequest {
   NamespaceId namespace_id = 1;
   string semaphore_name = 2;
-  uint64 lease_id = 3;
-  uint64 weight = 4;
-  int64 now = 5;
+  fixed64 lease_id = 3;
+  int64 weight = 4;
+  sfixed64 now = 5;
   map<string, string> metadata = 6;
 }
 
@@ -83,8 +83,8 @@ message AcquireSemaphoreResponse {
 message ReleaseSemaphoreRequest {
   NamespaceId namespace_id = 1;
   string semaphore_name = 2;
-  uint64 lease_id = 3;
-  int64 now = 4;
+  fixed64 lease_id = 3;
+  sfixed64 now = 4;
 }
 
 message ReleaseSemaphoreResponse {
@@ -95,10 +95,10 @@ message UpdateSemaphoreRequest {
   NamespaceId namespace_id = 1;
   string semaphore_name = 2;
   string description = 3;
-  uint64 permits = 4;
-  int64 now = 5;
+  int64 permits = 4;
+  sfixed64 now = 5;
   map<string, string> metadata = 6;
-  uint64 expected_version = 7;
+  int64 expected_version = 7;
 }
 
 message UpdateSemaphoreResponse {
@@ -108,7 +108,7 @@ message UpdateSemaphoreResponse {
 message DeleteSemaphoreRequest {
   NamespaceId namespace_id = 1;
   string semaphore_name = 2;
-  uint64 record_id = 3;
+  fixed64 record_id = 3;
 }
 
 message DeleteSemaphoreResponse {}
@@ -118,7 +118,7 @@ message ListSemaphoreHoldersRequest {
   string semaphore_name = 2;
   PaginationToken pagination_token = 3;
   int32 limit = 4;
-  int64 now = 5;
+  sfixed64 now = 5;
 }
 
 message ListSemaphoreHoldersResponse {
@@ -131,7 +131,7 @@ message ListSemaphoreLeasesRequest {
   NamespaceId namespace_id = 1;
   PaginationToken pagination_token = 2;
   int32 limit = 3;
-  int64 now = 4;
+  sfixed64 now = 4;
 }
 
 message ListSemaphoreLeasesResponse {
@@ -145,7 +145,7 @@ message ListSemaphoreLeasesByProcessIdRequest {
   string process_id = 2;
   PaginationToken pagination_token = 3;
   int32 limit = 4;
-  int64 now = 5;
+  sfixed64 now = 5;
 }
 
 message ListSemaphoreLeasesByProcessIdResponse {
@@ -156,7 +156,7 @@ message ListSemaphoreLeasesByProcessIdResponse {
 
 message GetSemaphoreLeaseRequest {
   LeaseId lease_id = 1;
-  int64 now = 2;
+  sfixed64 now = 2;
 }
 
 message GetSemaphoreLeaseResponse {
@@ -166,8 +166,8 @@ message GetSemaphoreLeaseResponse {
 message CreateSemaphoreLeaseRequest {
   LeaseId lease_id = 1;
   string process_id = 2;
-  uint64 ttl_seconds = 3;
-  int64 now = 4;
+  int64 ttl_seconds = 3;
+  sfixed64 now = 4;
   map<string, string> metadata = 5;
   int64 max_number_of_semaphore_leases = 6;
 }
@@ -178,15 +178,15 @@ message CreateSemaphoreLeaseResponse {
 
 message RevokeSemaphoreLeaseRequest {
   LeaseId lease_id = 1;
-  int64 now = 2;
+  sfixed64 now = 2;
 }
 
 message RevokeSemaphoreLeaseResponse {}
 
 message RefreshSemaphoreLeaseRequest {
   LeaseId lease_id = 1;
-  uint64 ttl_seconds = 2;
-  int64 now = 3;
+  int64 ttl_seconds = 2;
+  sfixed64 now = 3;
 }
 
 message RefreshSemaphoreLeaseResponse {
@@ -194,15 +194,15 @@ message RefreshSemaphoreLeaseResponse {
 }
 
 message SemaphoresDeleteNamespaceRequest {
-  uint64 record_id = 1;
+  fixed64 record_id = 1;
   NamespaceId namespace_id = 2;
-  int64 now = 3;
+  sfixed64 now = 3;
 }
 
 message SemaphoresDeleteNamespaceResponse {}
 
 message RunSemaphoresGarbageCollectionRequest {
-  int64 now = 1;
+  sfixed64 now = 1;
   int64 gc_records_page_size = 2;
   int64 gc_record_semaphores_page_size = 3;
   // Maximum number of records (holders + semaphores + leases) deleted by one GC pass.
@@ -217,42 +217,42 @@ message Semaphore {
   SemaphoreId id = 1;
   string name = 2;
   string description = 3;
-  int64 created_at = 4;
-  int64 updated_at = 5;
-  uint64 version = 6;
-  uint64 permits = 7;
+  sfixed64 created_at = 4;
+  sfixed64 updated_at = 5;
+  int64 version = 6;
+  int64 permits = 7;
   map<string, string> metadata = 8;
-  uint64 active_holds = 9;
-  uint64 active_holders_count = 10;
-  int64 earliest_holder_expires_at = 11;
+  int64 active_holds = 9;
+  int64 active_holders_count = 10;
+  sfixed64 earliest_holder_expires_at = 11;
   // last_activity_at is the timestamp (ns) of the most recent activity on this
   // semaphore (an acquire attempt or a release). Not affected by reads.
-  int64 last_activity_at = 12;
+  sfixed64 last_activity_at = 12;
 }
 
 message SemaphoreHolder {
   SemaphoreHolderId id = 1;
-  int64 locked_at = 2;
-  int64 expires_at = 3;
-  uint64 weight = 4;
+  sfixed64 locked_at = 2;
+  sfixed64 expires_at = 3;
+  int64 weight = 4;
   map<string, string> metadata = 5;
 }
 
 message SemaphoreHolderId {
-  uint64 account_id = 1;
-  uint32 namespace_id = 2;
-  uint64 semaphore_id = 3;
-  uint64 lease_id = 4;
+  fixed64 account_id = 1;
+  fixed64 namespace_id = 2;
+  fixed64 semaphore_id = 3;
+  fixed64 lease_id = 4;
 }
 
 message SemaphoreId {
-  uint64 account_id = 1;
-  uint32 namespace_id = 2;
-  uint64 semaphore_id = 3;
+  fixed64 account_id = 1;
+  fixed64 namespace_id = 2;
+  fixed64 semaphore_id = 3;
 }
 
 message SemaphoresGarbageCollectionRecord {
-  uint64 id = 1;
+  fixed64 id = 1;
   oneof record {
     NamespaceId namespace_id = 2;
     SemaphoreId semaphore_id = 3;
@@ -266,5 +266,5 @@ message SemaphoresCounter {
 
 message SemaphoresExpirationRecord {
   SemaphoreId semaphore_id = 1;
-  int64 expires_at = 2;
+  sfixed64 expires_at = 2;
 }

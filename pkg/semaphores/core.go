@@ -559,7 +559,8 @@ func (c *Core) ListSemaphores(req *coreapis.ListSemaphoresRequest) (*coreapis.Li
 // check so an expired holder's permits become available immediately.
 // Returns Payload.Success=false (without an application error) when the request is valid but
 // permits are unavailable. Returns NotFound application errors for missing/expired leases or a
-// missing semaphore, and InvalidArgument when Weight == 0.
+// missing semaphore, and InvalidArgument when Weight == 0 or Weight exceeds the semaphore's
+// permits (a request that could never be satisfied no matter how long the caller waits).
 func (c *Core) AcquireSemaphore(req *coreapis.AcquireSemaphoreRequest) (*coreapis.AcquireSemaphoreResponse, error) {
 	if req.Payload.Weight == 0 {
 		return &coreapis.AcquireSemaphoreResponse{
@@ -627,6 +628,22 @@ func (c *Core) AcquireSemaphore(req *coreapis.AcquireSemaphoreRequest) (*coreapi
 		}
 
 		return nil, err
+	}
+
+	// A weight larger than the semaphore's total permits can never be satisfied,
+	// no matter how many holders release. Reject it as an invalid request rather
+	// than blocking the caller until timeout on an impossible condition.
+	if req.Payload.Weight > semaphore.Permits {
+		return &coreapis.AcquireSemaphoreResponse{
+			ApplicationError: monsterax.NewErrorWithContext(
+				monsterax.InvalidArgument,
+				"weight exceeds semaphore permits",
+				map[string]string{
+					"weight":  fmt.Sprintf("%d", req.Payload.Weight),
+					"permits": fmt.Sprintf("%d", semaphore.Permits),
+				},
+			),
+		}, nil
 	}
 
 	// Check expired holders

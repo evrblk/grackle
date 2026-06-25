@@ -19,7 +19,7 @@ func TestLocksTable_Get(t *testing.T) {
 		table := newLocksTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		lockName := "test_lock"
 
 		lock := &corepb.Lock{
@@ -64,7 +64,7 @@ func TestLocksTable_Get(t *testing.T) {
 		table := newLocksTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		lockId := &corepb.LockId{
 			AccountId:   accountId,
@@ -89,7 +89,7 @@ func TestLocksTable_Update(t *testing.T) {
 		table := newLocksTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		leaseId := rand.Uint64()
 
 		lock := &corepb.Lock{
@@ -137,7 +137,7 @@ func TestLocksTable_Update(t *testing.T) {
 		table := newLocksTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		leaseId1 := rand.Uint64()
 		leaseId2 := rand.Uint64()
 
@@ -197,7 +197,7 @@ func TestLocksTable_Update(t *testing.T) {
 		table := newLocksTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		leaseId1 := rand.Uint64()
 		leaseId2 := rand.Uint64()
 
@@ -261,7 +261,7 @@ func TestLocksTable_Update(t *testing.T) {
 		table := newLocksTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		leaseId1 := rand.Uint64()
 		leaseId2 := rand.Uint64()
 
@@ -325,7 +325,7 @@ func TestLocksTable_Delete(t *testing.T) {
 		table := newLocksTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		leaseId := rand.Uint64()
 
 		lock := &corepb.Lock{
@@ -378,7 +378,7 @@ func TestLocksTable_Delete(t *testing.T) {
 		table := newLocksTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		lockId := &corepb.LockId{
 			AccountId:   accountId,
@@ -401,7 +401,7 @@ func TestLocksTable_Delete(t *testing.T) {
 		table := newLocksTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		leaseId1 := rand.Uint64()
 		leaseId2 := rand.Uint64()
 
@@ -462,7 +462,7 @@ func TestLocksTable_List(t *testing.T) {
 		table := newLocksTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Create multiple locks
 		for i := range 5 {
@@ -505,7 +505,7 @@ func TestLocksTable_List(t *testing.T) {
 		table := newLocksTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Create 10 locks
 		for i := range 10 {
@@ -568,7 +568,7 @@ func TestLocksTable_ListByLeaseId(t *testing.T) {
 		table := newLocksTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		leaseId := rand.Uint64()
 
 		txn := badgerStore.View()
@@ -591,7 +591,7 @@ func TestLocksTable_ListByLeaseId(t *testing.T) {
 		table := newLocksTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		leaseId := rand.Uint64()
 
 		// Create 5 locks with the same lease
@@ -636,7 +636,7 @@ func TestLocksTable_ListByLeaseId(t *testing.T) {
 		table := newLocksTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		leaseId := rand.Uint64()
 
 		// Create 10 locks with the same lease
@@ -734,7 +734,7 @@ func TestLocksTable_ListByLeaseId(t *testing.T) {
 		table := newLocksTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		leaseId := rand.Uint64()
 
 		// Create 50 locks to test multi-page iteration
@@ -800,7 +800,7 @@ func TestLocksTable_ListByLeaseId(t *testing.T) {
 		table := newLocksTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		leaseId1 := rand.Uint64()
 		leaseId2 := rand.Uint64()
 

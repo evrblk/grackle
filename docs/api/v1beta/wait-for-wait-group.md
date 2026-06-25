@@ -1,6 +1,6 @@
 # WaitForWaitGroup
 
-Blocks until the wait group is complete (`completed_jobs >= counter`) or until `timeout_seconds`
+Blocks until the wait group is complete (`completed_jobs == counter`) or until `timeout_seconds`
 elapses. Many callers can wait on the same group at once; all of them are released together.
 
 Safe to retry — a timed-out caller can simply call again; the group continues to make progress
@@ -22,9 +22,11 @@ in the background.
 
 * Returns `NotFound` if the namespace does not exist.
 * Returns `NotFound` if the wait group does not exist.
-* `completed` and `timed_out` are mutually exclusive flags on the response — `timed_out: true`
-  means the deadline fired first; `completed: true` means the group reached the threshold (its
-  `status` is then `completed`).
+* The `outcome` enum reports why the call returned: `WAIT_GROUP_WAIT_OUTCOME_COMPLETED` means all
+  jobs completed (its `status` is then `COMPLETED`), `WAIT_GROUP_WAIT_OUTCOME_EXPIRED` means the
+  group's `expires_at` passed while still active (its `status` is then `EXPIRED`), and
+  `WAIT_GROUP_WAIT_OUTCOME_TIMED_OUT` means `timeout_seconds` elapsed while the group was still
+  active.
 
 __Completed before timeout:__
 
@@ -39,8 +41,7 @@ __Completed before timeout:__
     "finished_at": 1718150700000000000,
     "last_activity_at": 1718150700000000000
   },
-  "completed": true,
-  "timed_out": false
+  "outcome": "WAIT_GROUP_WAIT_OUTCOME_COMPLETED"
 }
 ```
 
@@ -56,7 +57,6 @@ __Timeout fired first:__
     "expires_at": 1718236800000000000,
     "last_activity_at": 1718150480000000000
   },
-  "completed": false,
-  "timed_out": true
+  "outcome": "WAIT_GROUP_WAIT_OUTCOME_TIMED_OUT"
 }
 ```

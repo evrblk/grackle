@@ -27,7 +27,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		lockId := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -77,7 +77,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		lockId := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -108,7 +108,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		lockId := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -133,7 +133,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		lockId := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -158,7 +158,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		lockId := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -190,7 +190,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		lockId := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -224,7 +224,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		now := time.Now()
 		accountId1 := rand.Uint64()
 		accountId2 := rand.Uint64()
-		namespaceId1 := rand.Uint32()
+		namespaceId1 := rand.Uint64()
 		maxLocksPerNamespace := int64(3)
 
 		// Create lease with 60 minute TTL
@@ -331,7 +331,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, response.Payload.Lock.State)
 
 		// Test that creating a lock in a different namespace doesn't affect the limit
-		differentNamespaceId := rand.Uint32()
+		differentNamespaceId := rand.Uint64()
 		differentNamespaceLockId := &corepb.LockId{
 			AccountId:   accountId1,
 			NamespaceId: differentNamespaceId,
@@ -356,7 +356,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, response.Payload.Lock.State)
 
 		// Test that creating a lock with a different account doesn't affect the limit
-		differentAccountNamespaceId := rand.Uint32()
+		differentAccountNamespaceId := rand.Uint64()
 		differentAccountLockId := &corepb.LockId{
 			AccountId:   accountId2,
 			NamespaceId: differentAccountNamespaceId,
@@ -385,7 +385,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		parentLock := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -421,7 +421,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		parentLock := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -450,7 +450,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		parentLock := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -478,7 +478,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		parentLock := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -507,7 +507,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		parentLock := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -536,7 +536,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		parentLock := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -565,7 +565,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		parentLock := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -593,7 +593,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		parentLock := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -622,7 +622,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		lock1 := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -650,7 +650,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		lock1 := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -699,7 +699,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		lock1 := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -741,7 +741,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		lock1 := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -769,7 +769,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		usersLock := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -813,7 +813,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		user123Lock := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -858,7 +858,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		lockId := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -884,7 +884,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		lockId := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -907,7 +907,7 @@ func TestCore_LockHolderMetadata(t *testing.T) {
 	core := newLocksCore(t)
 	now := time.Now()
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	lockId := &corepb.LockId{
 		AccountId:   accountId,
 		NamespaceId: namespaceId,
@@ -954,7 +954,7 @@ func TestCore_CreateLockLease(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		lease := createLeaseWithMax(t, core, accountId, namespaceId, "process-1", now, 30*time.Minute, 10)
 		require.Equal(t, "process-1", lease.ProcessId)
@@ -971,7 +971,7 @@ func TestCore_CreateLockLease(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		const maxLeases = int64(3)
 
 		// Create leases up to the limit using the same MaxNumberOfLockLeases throughout —
@@ -991,7 +991,7 @@ func TestCore_CreateLockLease(t *testing.T) {
 		require.EqualValues(t, maxLeases, counters.NumberOfLeases)
 
 		// The limit is per-namespace: a different namespace under the same account still accepts new leases.
-		_ = createLeaseWithMax(t, core, accountId, rand.Uint32(), "process_other_ns", now, 60*time.Second, maxLeases)
+		_ = createLeaseWithMax(t, core, accountId, rand.Uint64(), "process_other_ns", now, 60*time.Second, maxLeases)
 
 		// And per-account: a different account is also unaffected.
 		_ = createLeaseWithMax(t, core, rand.Uint64(), namespaceId, "process_other_account", now, 60*time.Second, maxLeases)
@@ -1003,7 +1003,7 @@ func TestCore_GetLockLease(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
 
@@ -1018,7 +1018,7 @@ func TestCore_GetLockLease(t *testing.T) {
 
 		appErr := getLockLeaseWithError(t, core, &corepb.LeaseId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			LeaseId:     rand.Uint64(),
 		}, now)
 		require.Equal(t, monsterax.NotFound, appErr.Code)
@@ -1029,7 +1029,7 @@ func TestCore_GetLockLease(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// 1-minute TTL lease, read at T+2m.
 		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 1*time.Minute)
@@ -1045,7 +1045,7 @@ func TestCore_GetLock(t *testing.T) {
 		now := time.Now()
 		lockId := &corepb.LockId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			LockName:    "test_lock",
 		}
 
@@ -1058,7 +1058,7 @@ func TestCore_GetLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		lockId := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -1108,7 +1108,7 @@ func TestCore_DeleteLock(t *testing.T) {
 		now := time.Now()
 		lockId := &corepb.LockId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			LockName:    "test_lock",
 		}
 
@@ -1127,7 +1127,7 @@ func TestCore_DeleteLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		lockId := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -1165,7 +1165,7 @@ func TestCore_ReleaseLock(t *testing.T) {
 		now := time.Now()
 		lockId := &corepb.LockId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			LockName:    "test_lock",
 		}
 		leaseId := &corepb.LeaseId{
@@ -1183,7 +1183,7 @@ func TestCore_ReleaseLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		lockId := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -1212,7 +1212,7 @@ func TestCore_ReleaseLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		lockId := &corepb.LockId{
 			AccountId:   accountId,
@@ -1248,7 +1248,7 @@ func TestCore_ReleaseLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		lockId := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -1272,7 +1272,7 @@ func TestCore_ReleaseLock(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		lockId := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -1325,7 +1325,7 @@ func TestCore_ReleaseLock(t *testing.T) {
 func TestCore_SnapshotAndRestore(t *testing.T) {
 	now := time.Now()
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	lockId := &corepb.LockId{
 		AccountId:   accountId,
 		NamespaceId: namespaceId,
@@ -1416,7 +1416,7 @@ func TestCore_ListLocks(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// List locks in empty namespace
@@ -1439,7 +1439,7 @@ func TestCore_ListLocks(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create multiple locks in the same namespace
@@ -1510,7 +1510,7 @@ func TestCore_ListLocks(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create locks with different expiration times
@@ -1563,12 +1563,12 @@ func TestCore_ListLocks(t *testing.T) {
 		// Create locks in different namespaces
 		lockId1 := &corepb.LockId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			LockName:    "lock_1",
 		}
 		lockId2 := &corepb.LockId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			LockName:    "lock_2",
 		}
 
@@ -1627,7 +1627,7 @@ func TestCore_ListLocks(t *testing.T) {
 			Payload: &corepb.ListLocksRequest{
 				NamespaceId: &corepb.NamespaceId{
 					AccountId:   accountId,
-					NamespaceId: rand.Uint32(),
+					NamespaceId: rand.Uint64(),
 				},
 				Now: now.Add(4 * time.Minute).UnixNano(),
 			},
@@ -1643,7 +1643,7 @@ func TestCore_ListLocks(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create locks with different states
@@ -1724,7 +1724,7 @@ func TestCore_ListLocks(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create locks that will expire
@@ -1770,7 +1770,7 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create more locks than MaxVisitedLocks to test the limit
@@ -1918,7 +1918,7 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create some locks in the namespace
@@ -1946,7 +1946,7 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 		// Verify that locks in a different namespace are accessible after GC
 		differentNamespaceLockId := &corepb.LockId{
 			AccountId:   namespaceId.AccountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			LockName:    "different_lock",
 		}
 
@@ -2013,7 +2013,7 @@ func TestCore_RevokeLockLease(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Create a lease
 		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
@@ -2081,7 +2081,7 @@ func TestCore_RevokeLockLease(t *testing.T) {
 		// Revoking a lease that was never created is a no-op (idempotent success).
 		revokeLockLease(t, core, &corepb.LeaseId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			LeaseId:     rand.Uint64(),
 		}, now)
 	})
@@ -2090,7 +2090,7 @@ func TestCore_RevokeLockLease(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		lockId := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -2129,7 +2129,7 @@ func TestCore_RevokeLockLease_ReleasesSharedLocks(t *testing.T) {
 	core := newLocksCore(t)
 	now := time.Now()
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 	lockId := &corepb.LockId{
 		AccountId:   accountId,
 		NamespaceId: namespaceId,
@@ -2185,7 +2185,7 @@ func TestCore_RefreshLockLease(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 1*time.Minute)
 
@@ -2194,7 +2194,7 @@ func TestCore_RefreshLockLease(t *testing.T) {
 		resp, err := core.RefreshLockLease(&coreapis.RefreshLockLeaseRequest{
 			Payload: &corepb.RefreshLockLeaseRequest{
 				LeaseId:    lease.Id,
-				TtlSeconds: uint64((5 * time.Minute).Seconds()),
+				TtlSeconds: int64((5 * time.Minute).Seconds()),
 				Now:        refreshAt.UnixNano(),
 			},
 		})
@@ -2224,7 +2224,7 @@ func TestCore_RefreshLockLease(t *testing.T) {
 			Payload: &corepb.RefreshLockLeaseRequest{
 				LeaseId: &corepb.LeaseId{
 					AccountId:   rand.Uint64(),
-					NamespaceId: rand.Uint32(),
+					NamespaceId: rand.Uint64(),
 					LeaseId:     rand.Uint64(),
 				},
 				TtlSeconds: 60,
@@ -2241,7 +2241,7 @@ func TestCore_RefreshLockLease(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Lease with 1 minute TTL
 		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 1*time.Minute)
@@ -2309,7 +2309,7 @@ func TestCore_RefreshLockLease(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		lockId := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -2358,7 +2358,7 @@ func TestCore_ListLockLeases(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
 		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
@@ -2380,7 +2380,7 @@ func TestCore_ListLockLeases(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		expiringLease := createLease(t, core, accountId, namespaceId, "process-1", now, 1*time.Minute)
 		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 5*time.Minute)
@@ -2404,8 +2404,8 @@ func TestCore_ListLockLeases(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		nsA := rand.Uint32()
-		nsB := rand.Uint32()
+		nsA := rand.Uint64()
+		nsB := rand.Uint64()
 
 		ownLease := createLease(t, core, accountId, nsA, "process-1", now, 60*time.Minute)
 		otherLease := createLease(t, core, accountId, nsB, "process-2", now, 60*time.Minute)
@@ -2422,7 +2422,7 @@ func TestCore_ListLockLeases(t *testing.T) {
 
 		resp := listLockLeases(t, core, &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}, now)
 		require.Empty(t, resp.Leases)
 	})
@@ -2433,7 +2433,7 @@ func TestCore_ListLockLeasesByProcessId(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Two leases for process-1, one lease for process-2.
 		lease1a := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
@@ -2457,7 +2457,7 @@ func TestCore_ListLockLeasesByProcessId(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		_ = createLease(t, core, accountId, namespaceId, "process-1", now, 1*time.Minute) // expires by T+2m
 		stillAlive := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
@@ -2472,7 +2472,7 @@ func TestCore_ListLockLeasesByProcessId(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// A lease exists for a different process.
 		_ = createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
@@ -2487,7 +2487,7 @@ func TestCore_ListLocksByLeaseId(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
 		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
@@ -2528,7 +2528,7 @@ func TestCore_ListLocksByLeaseId(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		lockId := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -2563,7 +2563,7 @@ func TestCore_ListLocksByLeaseId(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		lockId := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -2584,7 +2584,7 @@ func TestCore_ListLocksByLeaseId(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Lease exists but never acquired any locks.
 		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
@@ -2599,7 +2599,7 @@ func TestCore_LastActivityAt(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		lockId := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -2618,7 +2618,7 @@ func TestCore_LastActivityAt(t *testing.T) {
 		core := newLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		lockId := &corepb.LockId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -2647,7 +2647,7 @@ func newLocksCore(t *testing.T) *Core {
 	return NewCore(badgerStore, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 }
 
-func createLease(t *testing.T, core *Core, accountId uint64, namespaceId uint32, processId string, now time.Time, ttl time.Duration) *corepb.Lease {
+func createLease(t *testing.T, core *Core, accountId uint64, namespaceId uint64, processId string, now time.Time, ttl time.Duration) *corepb.Lease {
 	t.Helper()
 
 	leaseId := rand.Uint64()
@@ -2659,7 +2659,7 @@ func createLease(t *testing.T, core *Core, accountId uint64, namespaceId uint32,
 				LeaseId:     leaseId,
 			},
 			ProcessId:             processId,
-			TtlSeconds:            uint64(ttl.Seconds()),
+			TtlSeconds:            int64(ttl.Seconds()),
 			Now:                   now.UnixNano(),
 			MaxNumberOfLockLeases: 100,
 		},
@@ -2754,7 +2754,7 @@ func acquireLockWithError(t *testing.T, core *Core, lockId *corepb.LockId, lease
 	return resp.ApplicationError
 }
 
-func createLeaseWithMax(t *testing.T, core *Core, accountId uint64, namespaceId uint32, processId string, now time.Time, ttl time.Duration, maxNumberOfLockLeases int64) *corepb.Lease {
+func createLeaseWithMax(t *testing.T, core *Core, accountId uint64, namespaceId uint64, processId string, now time.Time, ttl time.Duration, maxNumberOfLockLeases int64) *corepb.Lease {
 	t.Helper()
 
 	resp, err := core.CreateLockLease(&coreapis.CreateLockLeaseRequest{
@@ -2765,7 +2765,7 @@ func createLeaseWithMax(t *testing.T, core *Core, accountId uint64, namespaceId 
 				LeaseId:     rand.Uint64(),
 			},
 			ProcessId:             processId,
-			TtlSeconds:            uint64(ttl.Seconds()),
+			TtlSeconds:            int64(ttl.Seconds()),
 			Now:                   now.UnixNano(),
 			MaxNumberOfLockLeases: maxNumberOfLockLeases,
 		},
@@ -2778,7 +2778,7 @@ func createLeaseWithMax(t *testing.T, core *Core, accountId uint64, namespaceId 
 	return resp.Payload.Lease
 }
 
-func createLeaseWithError(t *testing.T, core *Core, accountId uint64, namespaceId uint32, processId string, now time.Time, ttl time.Duration, maxNumberOfLockLeases int64) *monsterax.Error {
+func createLeaseWithError(t *testing.T, core *Core, accountId uint64, namespaceId uint64, processId string, now time.Time, ttl time.Duration, maxNumberOfLockLeases int64) *monsterax.Error {
 	t.Helper()
 
 	resp, err := core.CreateLockLease(&coreapis.CreateLockLeaseRequest{
@@ -2789,7 +2789,7 @@ func createLeaseWithError(t *testing.T, core *Core, accountId uint64, namespaceI
 				LeaseId:     rand.Uint64(),
 			},
 			ProcessId:             processId,
-			TtlSeconds:            uint64(ttl.Seconds()),
+			TtlSeconds:            int64(ttl.Seconds()),
 			Now:                   now.UnixNano(),
 			MaxNumberOfLockLeases: maxNumberOfLockLeases,
 		},

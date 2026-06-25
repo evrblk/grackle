@@ -33,7 +33,7 @@ type SemaphoreHandle struct {
 	Namespace     string
 	SemaphoreName string
 	LeaseID       string
-	Weight        uint64
+	Weight        int64
 }
 
 // ResourcePool manages all pre-created resources and tracks acquisitions
@@ -103,7 +103,7 @@ func SetupResources(ctx context.Context, client grackle.GrackleApi, config *Conf
 				_, err := client.CreateSemaphore(ctx, &grackle.CreateSemaphoreRequest{
 					NamespaceName: ns,
 					SemaphoreName: semName,
-					Permits:       uint64(config.SemaphorePermits),
+					Permits:       int64(config.SemaphorePermits),
 				})
 				if err != nil {
 					return nil, fmt.Errorf("failed to create semaphore %s in namespace %s: %w", semName, ns, err)
@@ -122,7 +122,7 @@ func SetupResources(ctx context.Context, client grackle.GrackleApi, config *Conf
 			states := make([]*WaitGroupState, 0, config.WaitGroupsPerNS)
 			for i := 0; i < config.WaitGroupsPerNS; i++ {
 				wgName := fmt.Sprintf("wg-%d", i)
-				state := NewWaitGroupState(ns, wgName, uint64(config.WaitGroupInitialCounter), config)
+				state := NewWaitGroupState(ns, wgName, int64(config.WaitGroupInitialCounter), config)
 				if err := state.Create(ctx, client); err != nil {
 					return nil, fmt.Errorf("failed to create wait group %s in namespace %s: %w", wgName, ns, err)
 				}
@@ -141,7 +141,7 @@ func SetupResources(ctx context.Context, client grackle.GrackleApi, config *Conf
 			states := make([]*BarrierState, 0, config.BarriersPerNS)
 			for i := 0; i < config.BarriersPerNS; i++ {
 				barrierName := fmt.Sprintf("barrier-%d", i)
-				state := NewBarrierState(ns, barrierName, uint64(config.BarrierExpectedProcesses), config)
+				state := NewBarrierState(ns, barrierName, int64(config.BarrierExpectedProcesses), config)
 				if err := state.Create(ctx, client); err != nil {
 					return nil, fmt.Errorf("failed to create barrier %s in namespace %s: %w", barrierName, ns, err)
 				}

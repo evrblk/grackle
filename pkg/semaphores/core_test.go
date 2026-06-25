@@ -31,7 +31,7 @@ func TestCore_AcquireSemaphore(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -69,7 +69,7 @@ func TestCore_AcquireSemaphore(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -97,7 +97,7 @@ func TestCore_AcquireSemaphore(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -133,7 +133,7 @@ func TestCore_AcquireSemaphore(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Try to acquire a nonexistent semaphore
@@ -142,13 +142,41 @@ func TestCore_AcquireSemaphore(t *testing.T) {
 		require.Equal(t, monsterax.NotFound, appErr.Code)
 	})
 
+	t.Run("acquire with weight exceeding permits", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: rand.Uint64(),
+		}
+		semaphoreId := &corepb.SemaphoreId{
+			AccountId:   namespaceId.AccountId,
+			NamespaceId: namespaceId.NamespaceId,
+			SemaphoreId: rand.Uint64(),
+		}
+
+		// Semaphore with 3 permits; a weight of 4 can never be satisfied, so the
+		// request is rejected as invalid rather than blocking the caller forever.
+		_ = createSemaphore(t, core, semaphoreId, "test_semaphore", 3, now)
+		lease := createLease(t, core, accountId, namespaceId.NamespaceId, "process_1", now, 60*time.Minute)
+
+		appErr := acquireSemaphoreWithError(t, core, namespaceId, lease.Id, "test_semaphore", 4, now)
+		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Contains(t, appErr.Message, "weight exceeds semaphore permits")
+
+		// No holder should have been recorded.
+		sem := getSemaphoreByName(t, core, namespaceId, "test_semaphore", now)
+		require.EqualValues(t, 0, sem.ActiveHoldersCount)
+	})
+
 	t.Run("acquire with nonexistent lease", func(t *testing.T) {
 		core := newSemaphoresCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -180,7 +208,7 @@ func TestCore_AcquireSemaphore(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -208,7 +236,7 @@ func TestCore_AcquireSemaphore(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   accountId,
@@ -244,7 +272,7 @@ func TestCore_AcquireSemaphore(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   accountId,
@@ -285,7 +313,7 @@ func TestCore_AcquireSemaphore(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   accountId,
@@ -325,7 +353,7 @@ func TestCore_AcquireSemaphore(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   accountId,
@@ -362,7 +390,7 @@ func TestCore_ReleaseSemaphore(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -389,7 +417,7 @@ func TestCore_ReleaseSemaphore(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Try to release a nonexistent semaphore
@@ -404,7 +432,7 @@ func TestCore_ReleaseSemaphore(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -434,7 +462,7 @@ func TestCore_ReleaseSemaphore(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -470,7 +498,7 @@ func TestCore_ReleaseSemaphore(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -497,7 +525,7 @@ func TestCore_UpdateSemaphore(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -523,7 +551,7 @@ func TestCore_UpdateSemaphore(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -570,7 +598,7 @@ func TestCore_UpdateSemaphore(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Try to update a nonexistent semaphore
@@ -587,7 +615,7 @@ func TestCore_UpdateSemaphore(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   accountId,
@@ -617,7 +645,7 @@ func TestCore_UpdateSemaphore(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   accountId,
@@ -653,7 +681,7 @@ func TestCore_UpdateSemaphore(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -679,7 +707,7 @@ func TestCore_UpdateSemaphore(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -709,7 +737,7 @@ func TestCore_UpdateSemaphore(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -732,7 +760,7 @@ func TestCore_GetSemaphore(t *testing.T) {
 		now := time.Now()
 		nonExistingSemaphoreId := &corepb.SemaphoreId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			SemaphoreId: rand.Uint64(),
 		}
 
@@ -747,7 +775,7 @@ func TestCore_GetSemaphoreByName(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -772,7 +800,7 @@ func TestCore_GetSemaphoreByName(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -814,7 +842,7 @@ func TestCore_GetSemaphoreByName(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Try to get a nonexistent semaphore by name
@@ -830,7 +858,7 @@ func TestCore_GetSemaphoreByName(t *testing.T) {
 		// Create semaphore in namespace 1
 		namespace1Id := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphore1Id := &corepb.SemaphoreId{
 			AccountId:   namespace1Id.AccountId,
@@ -843,7 +871,7 @@ func TestCore_GetSemaphoreByName(t *testing.T) {
 		// Create semaphore with same name in namespace 2
 		namespace2Id := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphore2Id := &corepb.SemaphoreId{
 			AccountId:   namespace2Id.AccountId,
@@ -870,7 +898,7 @@ func TestCore_CreateSemaphore(t *testing.T) {
 		core := newSemaphoresCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		maxSemaphores := int64(3)
 
 		// Create semaphores up to the limit
@@ -897,7 +925,7 @@ func TestCore_CreateSemaphore(t *testing.T) {
 		core := newSemaphoresCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		const maxSemaphores = int64(3)
 
 		// Create semaphores up to the limit using the same MaxNumberOfSemaphoresPerNamespace
@@ -930,7 +958,7 @@ func TestCore_CreateSemaphore(t *testing.T) {
 		// accepts new semaphores.
 		_ = createSemaphoreWithMax(t, core, &corepb.SemaphoreId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			SemaphoreId: rand.Uint64(),
 		}, "other_ns_sem", 5, maxSemaphores, now)
 
@@ -946,7 +974,7 @@ func TestCore_CreateSemaphore(t *testing.T) {
 		core := newSemaphoresCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		semaphore1Id := &corepb.SemaphoreId{
 			AccountId:   accountId,
 			NamespaceId: namespaceId,
@@ -973,7 +1001,7 @@ func TestCore_SemaphoreMetadata(t *testing.T) {
 	accountId := rand.Uint64()
 	namespaceId := &corepb.NamespaceId{
 		AccountId:   accountId,
-		NamespaceId: rand.Uint32(),
+		NamespaceId: rand.Uint64(),
 	}
 	semaphoreId := &corepb.SemaphoreId{
 		AccountId:   namespaceId.AccountId,
@@ -1062,7 +1090,7 @@ func TestCore_DeleteSemaphore(t *testing.T) {
 		now := time.Now()
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			SemaphoreId: rand.Uint64(),
 		}
 
@@ -1101,7 +1129,7 @@ func TestCore_DeleteSemaphore(t *testing.T) {
 			Payload: &corepb.DeleteSemaphoreRequest{
 				NamespaceId: &corepb.NamespaceId{
 					AccountId:   rand.Uint64(),
-					NamespaceId: rand.Uint32(),
+					NamespaceId: rand.Uint64(),
 				},
 				SemaphoreName: "nonexistent_semaphore",
 				RecordId:      rand.Uint64(),
@@ -1120,7 +1148,7 @@ func TestCore_DeleteSemaphore(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -1175,7 +1203,7 @@ func TestCore_DeleteSemaphore(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   accountId,
@@ -1227,7 +1255,7 @@ func TestCore_ListSemaphoreHolders(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -1264,7 +1292,7 @@ func TestCore_ListSemaphoreHolders(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -1333,7 +1361,7 @@ func TestCore_ListSemaphoreHolders(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -1355,7 +1383,7 @@ func TestCore_ListSemaphoreHolders(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Try to list holders for a nonexistent semaphore
@@ -1381,7 +1409,7 @@ func TestCore_ListSemaphoreHolders(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -1395,7 +1423,7 @@ func TestCore_ListSemaphoreHolders(t *testing.T) {
 		// Acquire semaphore with different weights
 		type processWeight struct {
 			processId string
-			weight    uint64
+			weight    int64
 			leaseId   uint64
 		}
 		processes := []processWeight{
@@ -1428,7 +1456,7 @@ func TestCore_ListSemaphoreHolders(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -1465,7 +1493,7 @@ func TestCore_ListSemaphoreHolders(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -1511,7 +1539,7 @@ func TestCore_ListSemaphores(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create first semaphore
@@ -1551,7 +1579,7 @@ func TestCore_ListSemaphores(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -1601,7 +1629,7 @@ func TestCore_ListSemaphores(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -1637,7 +1665,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 	accountId := rand.Uint64()
 	namespaceId := &corepb.NamespaceId{
 		AccountId:   accountId,
-		NamespaceId: rand.Uint32(),
+		NamespaceId: rand.Uint64(),
 	}
 	semaphoreId := &corepb.SemaphoreId{
 		AccountId:   namespaceId.AccountId,
@@ -1715,7 +1743,7 @@ func TestCore_SemaphoresDeleteNamespace(t *testing.T) {
 	now := time.Now()
 	namespaceId := &corepb.NamespaceId{
 		AccountId:   rand.Uint64(),
-		NamespaceId: rand.Uint32(),
+		NamespaceId: rand.Uint64(),
 	}
 	semaphoreId := &corepb.SemaphoreId{
 		AccountId:   namespaceId.AccountId,
@@ -1758,7 +1786,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create some semaphores in the namespace
@@ -1784,7 +1812,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		// Verify that semaphores in a different namespace are accessible after GC
 		differentNamespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		differentNamespaceSemaphoreId := &corepb.SemaphoreId{
 			AccountId:   accountId,
@@ -1852,7 +1880,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create more semaphores than MaxVisited to test the limit
@@ -2001,7 +2029,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -2077,7 +2105,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   accountId,
@@ -2137,7 +2165,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   accountId,
@@ -2198,7 +2226,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		const numSemaphores = 4
@@ -2221,7 +2249,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		// A second namespace whose state must NOT be touched by the GC.
 		survivorNamespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		survivorSemaphoreId := &corepb.SemaphoreId{
 			AccountId:   accountId,
@@ -2311,7 +2339,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// One semaphore with a generous permit budget so every acquire below succeeds.
@@ -2400,7 +2428,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		const numSemaphores = 5
@@ -2481,7 +2509,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		accountId := rand.Uint64()
 		ghostSemaphoreId := &corepb.SemaphoreId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			SemaphoreId: rand.Uint64(),
 		}
 		staleAt := now.Add(-1 * time.Minute).UnixNano()
@@ -2496,7 +2524,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		// still processes valid work after stepping over the poison record.
 		liveSemaphoreId := &corepb.SemaphoreId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			SemaphoreId: rand.Uint64(),
 		}
 		liveNamespaceId := &corepb.NamespaceId{
@@ -2542,7 +2570,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   accountId,
@@ -2591,7 +2619,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		now := time.Now()
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			SemaphoreId: rand.Uint64(),
 		}
 		_ = createSemaphore(t, core, semaphoreId, "sema", 1, now)
@@ -2644,7 +2672,7 @@ func TestCore_CreateSemaphoreLease(t *testing.T) {
 		core := newSemaphoresCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		lease := createLeaseWithMax(t, core, accountId, namespaceId, "process-1", now, 30*time.Minute, 10)
 		require.Equal(t, "process-1", lease.ProcessId)
@@ -2659,7 +2687,7 @@ func TestCore_CreateSemaphoreLease(t *testing.T) {
 		core := newSemaphoresCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		const maxLeases = int64(3)
 
 		// Create leases up to the limit using the same MaxNumberOfSemaphoreLeases throughout —
@@ -2679,7 +2707,7 @@ func TestCore_CreateSemaphoreLease(t *testing.T) {
 		require.EqualValues(t, maxLeases, counters.NumberOfLeases)
 
 		// The limit is per-namespace: a different namespace under the same account still accepts new leases.
-		_ = createLeaseWithMax(t, core, accountId, rand.Uint32(), "process_other_ns", now, 60*time.Second, maxLeases)
+		_ = createLeaseWithMax(t, core, accountId, rand.Uint64(), "process_other_ns", now, 60*time.Second, maxLeases)
 
 		// And per-account: a different account is also unaffected.
 		_ = createLeaseWithMax(t, core, rand.Uint64(), namespaceId, "process_other_account", now, 60*time.Second, maxLeases)
@@ -2691,7 +2719,7 @@ func TestCore_GetSemaphoreLease(t *testing.T) {
 		core := newSemaphoresCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 1*time.Minute)
 
@@ -2712,7 +2740,7 @@ func TestCore_GetSemaphoreLease(t *testing.T) {
 		core := newSemaphoresCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 1*time.Minute)
 
@@ -2742,7 +2770,7 @@ func TestCore_GetSemaphoreLease(t *testing.T) {
 			Payload: &corepb.GetSemaphoreLeaseRequest{
 				LeaseId: &corepb.LeaseId{
 					AccountId:   rand.Uint64(),
-					NamespaceId: rand.Uint32(),
+					NamespaceId: rand.Uint64(),
 					LeaseId:     rand.Uint64(),
 				},
 				Now: now.UnixNano(),
@@ -2762,7 +2790,7 @@ func TestCore_RevokeSemaphoreLease(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create a lease
@@ -2838,7 +2866,7 @@ func TestCore_RevokeSemaphoreLease(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create two leases
@@ -2907,7 +2935,7 @@ func TestCore_RevokeSemaphoreLease(t *testing.T) {
 			Payload: &corepb.RevokeSemaphoreLeaseRequest{
 				LeaseId: &corepb.LeaseId{
 					AccountId:   rand.Uint64(),
-					NamespaceId: rand.Uint32(),
+					NamespaceId: rand.Uint64(),
 					LeaseId:     rand.Uint64(),
 				},
 				Now: now.UnixNano(),
@@ -2925,7 +2953,7 @@ func TestCore_RevokeSemaphoreLease(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   accountId,
@@ -2974,7 +3002,7 @@ func TestCore_RevokeSemaphoreLease(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   accountId,
@@ -3017,7 +3045,7 @@ func TestCore_RevokeSemaphoreLease(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   accountId,
@@ -3057,7 +3085,7 @@ func TestCore_RefreshSemaphoreLease(t *testing.T) {
 		// Use a lease id that was never created.
 		fakeLease := &corepb.LeaseId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			LeaseId:     rand.Uint64(),
 		}
 
@@ -3072,7 +3100,7 @@ func TestCore_RefreshSemaphoreLease(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create a lease with 1 minute TTL
@@ -3148,7 +3176,7 @@ func TestCore_RefreshSemaphoreLease(t *testing.T) {
 		core := newSemaphoresCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Create a lease with 1 minute TTL
 		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 1*time.Minute)
@@ -3194,7 +3222,7 @@ func TestCore_RefreshSemaphoreLease(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Lease that will be refreshed
@@ -3278,7 +3306,7 @@ func TestCore_ListSemaphoreLeases(t *testing.T) {
 		core := newSemaphoresCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Create multiple leases
 		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
@@ -3315,7 +3343,7 @@ func TestCore_ListSemaphoreLeases(t *testing.T) {
 		core := newSemaphoresCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Create leases with different TTLs
 		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 1*time.Minute)
@@ -3353,7 +3381,7 @@ func TestCore_ListSemaphoreLeases(t *testing.T) {
 		core := newSemaphoresCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		resp1, err := core.ListSemaphoreLeases(&coreapis.ListSemaphoreLeasesRequest{
 			Payload: &corepb.ListSemaphoreLeasesRequest{
@@ -3377,7 +3405,7 @@ func TestCore_ListSemaphoreLeasesByProcessId(t *testing.T) {
 		core := newSemaphoresCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Create leases for different processes
 		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
@@ -3416,7 +3444,7 @@ func TestCore_ListSemaphoreLeasesByProcessId(t *testing.T) {
 		core := newSemaphoresCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Create leases for the same process with different TTLs
 		_ = createLease(t, core, accountId, namespaceId, "process-1", now, 1*time.Minute) // Will expire
@@ -3446,7 +3474,7 @@ func TestCore_ListSemaphoreLeasesByProcessId(t *testing.T) {
 		core := newSemaphoresCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Create lease for a different process
 		createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
@@ -3476,7 +3504,7 @@ func TestCore_ListSemaphoresByLeaseId(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create leases
@@ -3537,7 +3565,7 @@ func TestCore_ListSemaphoresByLeaseId(t *testing.T) {
 		core := newSemaphoresCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Create lease without acquiring any semaphores
 		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
@@ -3561,7 +3589,7 @@ func TestCore_ListSemaphoresByLeaseId(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create leases
@@ -3621,7 +3649,7 @@ func TestCore_ListSemaphoresByLeaseId(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   accountId,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   accountId,
@@ -3672,7 +3700,7 @@ func TestCore_LastActivityAt(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		semaphoreId := &corepb.SemaphoreId{
 			AccountId:   namespaceId.AccountId,
@@ -3733,7 +3761,7 @@ func listExpirationRecords(t *testing.T, core *Core, semaphoreId *corepb.Semapho
 	return times
 }
 
-func createLease(t *testing.T, core *Core, accountId uint64, namespaceId uint32, processId string, now time.Time, ttl time.Duration) *corepb.Lease {
+func createLease(t *testing.T, core *Core, accountId uint64, namespaceId uint64, processId string, now time.Time, ttl time.Duration) *corepb.Lease {
 	t.Helper()
 
 	leaseId := rand.Uint64()
@@ -3745,7 +3773,7 @@ func createLease(t *testing.T, core *Core, accountId uint64, namespaceId uint32,
 				LeaseId:     leaseId,
 			},
 			ProcessId:                  processId,
-			TtlSeconds:                 uint64(ttl.Seconds()),
+			TtlSeconds:                 int64(ttl.Seconds()),
 			Now:                        now.UnixNano(),
 			MaxNumberOfSemaphoreLeases: 100,
 		},
@@ -3760,7 +3788,7 @@ func createLease(t *testing.T, core *Core, accountId uint64, namespaceId uint32,
 	return resp.Payload.Lease
 }
 
-func acquireSemaphore(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, leaseId *corepb.LeaseId, semaphoreName string, weight uint64, now time.Time) (bool, *corepb.Semaphore) {
+func acquireSemaphore(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, leaseId *corepb.LeaseId, semaphoreName string, weight int64, now time.Time) (bool, *corepb.Semaphore) {
 	t.Helper()
 
 	resp, err := core.AcquireSemaphore(&coreapis.AcquireSemaphoreRequest{
@@ -3822,7 +3850,7 @@ func releaseSemaphoreWithError(t *testing.T, core *Core, namespaceId *corepb.Nam
 	return resp.ApplicationError
 }
 
-func createSemaphore(t *testing.T, core *Core, semaphoreId *corepb.SemaphoreId, semaphoreName string, permits uint64, now time.Time) *corepb.Semaphore {
+func createSemaphore(t *testing.T, core *Core, semaphoreId *corepb.SemaphoreId, semaphoreName string, permits int64, now time.Time) *corepb.Semaphore {
 	t.Helper()
 
 	resp, err := core.CreateSemaphore(&coreapis.CreateSemaphoreRequest{
@@ -3851,7 +3879,7 @@ func createSemaphore(t *testing.T, core *Core, semaphoreId *corepb.SemaphoreId, 
 	return resp.Payload.Semaphore
 }
 
-func createSemaphoreWithError(t *testing.T, core *Core, semaphoreId *corepb.SemaphoreId, semaphoreName string, permits uint64, maxNumberOfSemaphoresPerNamespace int64, now time.Time) *monsterax.Error {
+func createSemaphoreWithError(t *testing.T, core *Core, semaphoreId *corepb.SemaphoreId, semaphoreName string, permits int64, maxNumberOfSemaphoresPerNamespace int64, now time.Time) *monsterax.Error {
 	t.Helper()
 
 	resp, err := core.CreateSemaphore(&coreapis.CreateSemaphoreRequest{
@@ -3949,7 +3977,7 @@ func getSemaphoreByNameWithError(t *testing.T, core *Core, namespaceId *corepb.N
 	return resp.ApplicationError
 }
 
-func acquireSemaphoreWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, leaseId *corepb.LeaseId, semaphoreName string, weight uint64, now time.Time) *monsterax.Error {
+func acquireSemaphoreWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, leaseId *corepb.LeaseId, semaphoreName string, weight int64, now time.Time) *monsterax.Error {
 	t.Helper()
 
 	resp, err := core.AcquireSemaphore(&coreapis.AcquireSemaphoreRequest{
@@ -3990,7 +4018,7 @@ func listSemaphoreHolders(t *testing.T, core *Core, namespaceId *corepb.Namespac
 	return resp.Payload
 }
 
-func updateSemaphore(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, semaphoreName string, description string, permits uint64, version uint64, now time.Time) *corepb.Semaphore {
+func updateSemaphore(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, semaphoreName string, description string, permits int64, version int64, now time.Time) *corepb.Semaphore {
 	t.Helper()
 
 	resp, err := core.UpdateSemaphore(&coreapis.UpdateSemaphoreRequest{
@@ -4013,7 +4041,7 @@ func updateSemaphore(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, 
 	return resp.Payload.Semaphore
 }
 
-func updateSemaphoreWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, semaphoreName string, description string, permits uint64, version uint64, now time.Time) *monsterax.Error {
+func updateSemaphoreWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, semaphoreName string, description string, permits int64, version int64, now time.Time) *monsterax.Error {
 	t.Helper()
 
 	resp, err := core.UpdateSemaphore(&coreapis.UpdateSemaphoreRequest{
@@ -4035,7 +4063,7 @@ func updateSemaphoreWithError(t *testing.T, core *Core, namespaceId *corepb.Name
 	return resp.ApplicationError
 }
 
-func createSemaphoreWithMax(t *testing.T, core *Core, semaphoreId *corepb.SemaphoreId, semaphoreName string, permits uint64, maxNumberOfSemaphoresPerNamespace int64, now time.Time) *corepb.Semaphore {
+func createSemaphoreWithMax(t *testing.T, core *Core, semaphoreId *corepb.SemaphoreId, semaphoreName string, permits int64, maxNumberOfSemaphoresPerNamespace int64, now time.Time) *corepb.Semaphore {
 	t.Helper()
 
 	resp, err := core.CreateSemaphore(&coreapis.CreateSemaphoreRequest{
@@ -4056,7 +4084,7 @@ func createSemaphoreWithMax(t *testing.T, core *Core, semaphoreId *corepb.Semaph
 	return resp.Payload.Semaphore
 }
 
-func createLeaseWithMax(t *testing.T, core *Core, accountId uint64, namespaceId uint32, processId string, now time.Time, ttl time.Duration, maxNumberOfSemaphoreLeases int64) *corepb.Lease {
+func createLeaseWithMax(t *testing.T, core *Core, accountId uint64, namespaceId uint64, processId string, now time.Time, ttl time.Duration, maxNumberOfSemaphoreLeases int64) *corepb.Lease {
 	t.Helper()
 
 	resp, err := core.CreateSemaphoreLease(&coreapis.CreateSemaphoreLeaseRequest{
@@ -4067,7 +4095,7 @@ func createLeaseWithMax(t *testing.T, core *Core, accountId uint64, namespaceId 
 				LeaseId:     rand.Uint64(),
 			},
 			ProcessId:                  processId,
-			TtlSeconds:                 uint64(ttl.Seconds()),
+			TtlSeconds:                 int64(ttl.Seconds()),
 			Now:                        now.UnixNano(),
 			MaxNumberOfSemaphoreLeases: maxNumberOfSemaphoreLeases,
 		},
@@ -4082,7 +4110,7 @@ func createLeaseWithMax(t *testing.T, core *Core, accountId uint64, namespaceId 
 	return resp.Payload.Lease
 }
 
-func createLeaseWithError(t *testing.T, core *Core, accountId uint64, namespaceId uint32, processId string, now time.Time, ttl time.Duration, maxNumberOfSemaphoreLeases int64) *monsterax.Error {
+func createLeaseWithError(t *testing.T, core *Core, accountId uint64, namespaceId uint64, processId string, now time.Time, ttl time.Duration, maxNumberOfSemaphoreLeases int64) *monsterax.Error {
 	t.Helper()
 
 	resp, err := core.CreateSemaphoreLease(&coreapis.CreateSemaphoreLeaseRequest{
@@ -4093,7 +4121,7 @@ func createLeaseWithError(t *testing.T, core *Core, accountId uint64, namespaceI
 				LeaseId:     rand.Uint64(),
 			},
 			ProcessId:                  processId,
-			TtlSeconds:                 uint64(ttl.Seconds()),
+			TtlSeconds:                 int64(ttl.Seconds()),
 			Now:                        now.UnixNano(),
 			MaxNumberOfSemaphoreLeases: maxNumberOfSemaphoreLeases,
 		},
@@ -4105,7 +4133,7 @@ func createLeaseWithError(t *testing.T, core *Core, accountId uint64, namespaceI
 	return resp.ApplicationError
 }
 
-func refreshSemaphoreLeaseWithError(t *testing.T, core *Core, leaseId *corepb.LeaseId, ttlSeconds uint64, now time.Time) *monsterax.Error {
+func refreshSemaphoreLeaseWithError(t *testing.T, core *Core, leaseId *corepb.LeaseId, ttlSeconds int64, now time.Time) *monsterax.Error {
 	t.Helper()
 
 	resp, err := core.RefreshSemaphoreLease(&coreapis.RefreshSemaphoreLeaseRequest{

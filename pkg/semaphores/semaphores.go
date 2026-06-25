@@ -79,7 +79,7 @@ func (t *semaphoresTable) Get(txn *store.Txn, semaphoreId *corepb.SemaphoreId) (
 			t.tableSK(semaphoreId.SemaphoreId)))
 }
 
-func (t *semaphoresTable) GetByName(txn *store.Txn, accountId uint64, namespaceId uint32, semaphoreName string) (*corepb.Semaphore, error) {
+func (t *semaphoresTable) GetByName(txn *store.Txn, accountId uint64, namespaceId uint64, semaphoreName string) (*corepb.Semaphore, error) {
 	semaphoreId, err := t.namesIndex.Get(txn, t.namesIndexPK(accountId, namespaceId, semaphoreName))
 	if err != nil {
 		return nil, err
@@ -153,7 +153,7 @@ type listSemaphoresResult struct {
 	previousPaginationToken *corepb.PaginationToken
 }
 
-func (t *semaphoresTable) List(txn *store.Txn, accountId uint64, namespaceId uint32, paginationToken *corepb.PaginationToken, limit int) (*listSemaphoresResult, error) {
+func (t *semaphoresTable) List(txn *store.Txn, accountId uint64, namespaceId uint64, paginationToken *corepb.PaginationToken, limit int) (*listSemaphoresResult, error) {
 	result, err := t.table.ListPaginated(txn, t.tablePK(accountId, namespaceId), pagination.CoreToMonstera(paginationToken), limit)
 	if err != nil {
 		return nil, err
@@ -166,7 +166,7 @@ func (t *semaphoresTable) List(txn *store.Txn, accountId uint64, namespaceId uin
 	}, nil
 }
 
-func (t *semaphoresTable) tablePK(accountId uint64, namespaceId uint32) []byte {
+func (t *semaphoresTable) tablePK(accountId uint64, namespaceId uint64) []byte {
 	return utils.ConcatBytes(
 		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,
@@ -180,7 +180,7 @@ func (t *semaphoresTable) tableSK(semaphoreId uint64) []byte {
 	)
 }
 
-func (t *semaphoresTable) namesIndexPK(accountId uint64, namespaceId uint32, semaphoreName string) []byte {
+func (t *semaphoresTable) namesIndexPK(accountId uint64, namespaceId uint64, semaphoreName string) []byte {
 	return utils.ConcatBytes(
 		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,
@@ -189,7 +189,7 @@ func (t *semaphoresTable) namesIndexPK(accountId uint64, namespaceId uint32, sem
 	)
 }
 
-func (t *semaphoresTable) leaseIdIndexPK(accountId uint64, namespaceId uint32, leaseId uint64) []byte {
+func (t *semaphoresTable) leaseIdIndexPK(accountId uint64, namespaceId uint64, leaseId uint64) []byte {
 	return utils.ConcatBytes(
 		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,

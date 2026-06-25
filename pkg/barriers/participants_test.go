@@ -19,7 +19,7 @@ func TestParticipantsTable_Create(t *testing.T) {
 		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		barrierId := rand.Uint64()
 		participant := &corepb.BarrierParticipant{
 			ProcessId:  "process_1",
@@ -51,7 +51,7 @@ func TestParticipantsTable_Create(t *testing.T) {
 		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		barrierId := rand.Uint64()
 
 		numParticipants := 5
@@ -87,11 +87,11 @@ func TestParticipantsTable_Create(t *testing.T) {
 		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		barrierId := rand.Uint64()
 
 		// Same process_id can participate in multiple generations independently.
-		for gen := uint64(1); gen <= 3; gen++ {
+		for gen := int64(1); gen <= 3; gen++ {
 			participant := &corepb.BarrierParticipant{
 				ProcessId:  "process_1",
 				Generation: gen,
@@ -106,7 +106,7 @@ func TestParticipantsTable_Create(t *testing.T) {
 		// Each generation row is independently readable.
 		txn := badgerStore.View()
 		defer txn.Discard()
-		for gen := uint64(1); gen <= 3; gen++ {
+		for gen := int64(1); gen <= 3; gen++ {
 			actual, err := table.Get(txn, accountId, namespaceId, barrierId, gen, "process_1")
 			require.NoError(t, err)
 			require.Equal(t, gen, actual.Generation)
@@ -120,7 +120,7 @@ func TestParticipantsTable_Create(t *testing.T) {
 		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		barrierId := rand.Uint64()
 
 		// First write.
@@ -160,7 +160,7 @@ func TestParticipantsTable_Get(t *testing.T) {
 		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		barrierId := rand.Uint64()
 		participant := &corepb.BarrierParticipant{
 			ProcessId:  "process_1",
@@ -191,7 +191,7 @@ func TestParticipantsTable_Get(t *testing.T) {
 		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		txn := badgerStore.View()
-		_, err = table.Get(txn, rand.Uint64(), rand.Uint32(), rand.Uint64(), 1, "missing")
+		_, err = table.Get(txn, rand.Uint64(), rand.Uint64(), rand.Uint64(), 1, "missing")
 		txn.Discard()
 
 		require.Error(t, err)
@@ -207,7 +207,7 @@ func TestParticipantsTable_Delete(t *testing.T) {
 		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		barrierId := rand.Uint64()
 		participant := &corepb.BarrierParticipant{
 			ProcessId:  "process_1",
@@ -242,7 +242,7 @@ func TestParticipantsTable_Delete(t *testing.T) {
 
 		// Delete on a never-created row is idempotent.
 		txn := badgerStore.Update()
-		err = table.Delete(txn, rand.Uint64(), rand.Uint32(), rand.Uint64(), 1, "missing")
+		err = table.Delete(txn, rand.Uint64(), rand.Uint64(), rand.Uint64(), 1, "missing")
 		require.NoError(t, err)
 		require.NoError(t, txn.Commit())
 	})
@@ -254,7 +254,7 @@ func TestParticipantsTable_Delete(t *testing.T) {
 		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		barrierId := rand.Uint64()
 
 		// Three participants under the same barrier.
@@ -295,7 +295,7 @@ func TestParticipantsTable_List(t *testing.T) {
 		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		barrierId := rand.Uint64()
 
 		numParticipants := 5
@@ -329,7 +329,7 @@ func TestParticipantsTable_List(t *testing.T) {
 		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		barrierId := rand.Uint64()
 
 		numParticipants := 10
@@ -375,7 +375,7 @@ func TestParticipantsTable_List(t *testing.T) {
 		txn := badgerStore.View()
 		defer txn.Discard()
 
-		result, err := table.List(txn, rand.Uint64(), rand.Uint32(), rand.Uint64(), nil, 100)
+		result, err := table.List(txn, rand.Uint64(), rand.Uint64(), rand.Uint64(), nil, 100)
 		require.NoError(t, err)
 		require.NotNil(t, result)
 		require.Empty(t, result.participants)
@@ -390,7 +390,7 @@ func TestParticipantsTable_List(t *testing.T) {
 		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		barrierId1 := rand.Uint64()
 		barrierId2 := rand.Uint64()
 
@@ -437,7 +437,7 @@ func TestParticipantsTable_List(t *testing.T) {
 		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 		barrierId := rand.Uint64()
 
 		// 2 participants in gen 1, 3 in gen 2.
@@ -468,7 +468,7 @@ func TestParticipantsTable_List(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, result.participants, 5)
 
-		gens := make(map[uint64]int)
+		gens := make(map[int64]int)
 		for _, p := range result.participants {
 			gens[p.Generation]++
 		}

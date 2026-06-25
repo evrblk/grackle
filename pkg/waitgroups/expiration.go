@@ -64,7 +64,7 @@ func (t *expirationRecordsTable) ListByExpiration(txn *store.Txn, from int64, to
 	})
 }
 
-func (t *expirationRecordsTable) tablePK(time int64, accountId uint64, namespaceId uint32, waitGroupId uint64) []byte {
+func (t *expirationRecordsTable) tablePK(time int64, accountId uint64, namespaceId uint64, waitGroupId uint64) []byte {
 	return utils.ConcatBytes(
 		t.shardGlobalIndexPrefix,
 		time,

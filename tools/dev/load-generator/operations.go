@@ -142,9 +142,9 @@ func executeAcquireLock(ctx context.Context, client grackle.GrackleApi, pool *Re
 		return err
 	}
 
-	// success: false (lost the race for the timeout window) is a normal
-	// outcome, not an error — only track holders we actually acquired.
-	if resp.Success {
+	// A non-ACQUIRED outcome (lost the race for the timeout window) is a normal
+	// result, not an error — only track holders we actually acquired.
+	if resp.Outcome == grackle.AcquireOutcome_ACQUIRE_OUTCOME_ACQUIRED {
 		pool.TrackAcquiredLock(workerID, LockHandle{
 			Namespace: lease.Namespace,
 			LockName:  lockName,
@@ -209,7 +209,7 @@ func executeCreateLockLease(ctx context.Context, client grackle.GrackleApi, pool
 	resp, err := client.CreateLockLease(ctx, &grackle.CreateLockLeaseRequest{
 		NamespaceName: ns,
 		ProcessId:     processID,
-		TtlSeconds:    uint64(ttl.Seconds()),
+		TtlSeconds:    int64(ttl.Seconds()),
 	})
 	if err != nil {
 		return err
@@ -244,7 +244,7 @@ func executeAcquireSemaphore(ctx context.Context, client grackle.GrackleApi, poo
 	semName := semaphores[rng.Intn(len(semaphores))]
 
 	// Random weight (1 to max). Max is validated to be <= permits.
-	weight := uint64(rng.Intn(config.SemaphoreWeightMax) + 1)
+	weight := int64(rng.Intn(config.SemaphoreWeightMax) + 1)
 
 	ctx, cancel := context.WithTimeout(ctx, config.acquireCtxTimeout())
 	defer cancel()
@@ -260,7 +260,7 @@ func executeAcquireSemaphore(ctx context.Context, client grackle.GrackleApi, poo
 		return err
 	}
 
-	if resp.Success {
+	if resp.Outcome == grackle.AcquireOutcome_ACQUIRE_OUTCOME_ACQUIRED {
 		pool.TrackAcquiredSemaphore(workerID, SemaphoreHandle{
 			Namespace:     lease.Namespace,
 			SemaphoreName: semName,
@@ -322,7 +322,7 @@ func executeCreateSemaphoreLease(ctx context.Context, client grackle.GrackleApi,
 	resp, err := client.CreateSemaphoreLease(ctx, &grackle.CreateSemaphoreLeaseRequest{
 		NamespaceName: ns,
 		ProcessId:     processID,
-		TtlSeconds:    uint64(ttl.Seconds()),
+		TtlSeconds:    int64(ttl.Seconds()),
 	})
 	if err != nil {
 		return err
@@ -361,7 +361,7 @@ func executeUpdateWaitGroup(ctx context.Context, client grackle.GrackleApi, pool
 	if wg == nil {
 		return fmt.Errorf("no wait groups available")
 	}
-	return wg.RaiseCounter(ctx, client, uint64(config.WaitGroupJobBatchSize), config)
+	return wg.RaiseCounter(ctx, client, int64(config.WaitGroupJobBatchSize), config)
 }
 
 // executeWaitForWaitGroup blocks until a random wait group completes or the

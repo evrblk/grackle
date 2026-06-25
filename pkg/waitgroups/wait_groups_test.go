@@ -20,7 +20,7 @@ func TestWaitGroupsTable_Create(t *testing.T) {
 		waitGroup := &corepb.WaitGroup{
 			Id: &corepb.WaitGroupId{
 				AccountId:   rand.Uint64(),
-				NamespaceId: rand.Uint32(),
+				NamespaceId: rand.Uint64(),
 				WaitGroupId: rand.Uint64(),
 			},
 			Name:          "test_wait_group",
@@ -61,7 +61,7 @@ func TestWaitGroupsTable_Create(t *testing.T) {
 		waitGroup := &corepb.WaitGroup{
 			Id: &corepb.WaitGroupId{
 				AccountId:   rand.Uint64(),
-				NamespaceId: rand.Uint32(),
+				NamespaceId: rand.Uint64(),
 				WaitGroupId: rand.Uint64(),
 			},
 			Name:          "test_wait_group",
@@ -102,7 +102,7 @@ func TestWaitGroupsTable_Get(t *testing.T) {
 		waitGroup := &corepb.WaitGroup{
 			Id: &corepb.WaitGroupId{
 				AccountId:   rand.Uint64(),
-				NamespaceId: rand.Uint32(),
+				NamespaceId: rand.Uint64(),
 				WaitGroupId: rand.Uint64(),
 			},
 			Name:          "test_wait_group",
@@ -148,7 +148,7 @@ func TestWaitGroupsTable_Get(t *testing.T) {
 
 		waitGroupId := &corepb.WaitGroupId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			WaitGroupId: rand.Uint64(),
 		}
 
@@ -169,7 +169,7 @@ func TestWaitGroupsTable_GetByName(t *testing.T) {
 		waitGroup := &corepb.WaitGroup{
 			Id: &corepb.WaitGroupId{
 				AccountId:   rand.Uint64(),
-				NamespaceId: rand.Uint32(),
+				NamespaceId: rand.Uint64(),
 				WaitGroupId: rand.Uint64(),
 			},
 			Name:          "test_wait_group",
@@ -208,7 +208,7 @@ func TestWaitGroupsTable_GetByName(t *testing.T) {
 		txn := badgerStore.View()
 		defer txn.Discard()
 
-		actual, err := table.GetByName(txn, rand.Uint64(), rand.Uint32(), "nonexistent_wait_group")
+		actual, err := table.GetByName(txn, rand.Uint64(), rand.Uint64(), "nonexistent_wait_group")
 		require.Error(t, err)
 		require.Nil(t, actual)
 		require.ErrorIs(t, err, store.ErrNotFound)
@@ -221,8 +221,8 @@ func TestWaitGroupsTable_GetByName(t *testing.T) {
 		table := newWaitGroupsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId1 := rand.Uint32()
-		namespaceId2 := rand.Uint32()
+		namespaceId1 := rand.Uint64()
+		namespaceId2 := rand.Uint64()
 
 		waitGroup := &corepb.WaitGroup{
 			Id: &corepb.WaitGroupId{
@@ -266,7 +266,7 @@ func TestWaitGroupsTable_Update(t *testing.T) {
 		waitGroup := &corepb.WaitGroup{
 			Id: &corepb.WaitGroupId{
 				AccountId:   rand.Uint64(),
-				NamespaceId: rand.Uint32(),
+				NamespaceId: rand.Uint64(),
 				WaitGroupId: rand.Uint64(),
 			},
 			Name:          "test_wait_group",
@@ -303,8 +303,8 @@ func TestWaitGroupsTable_Update(t *testing.T) {
 		actual, err := table.Get(txn, waitGroup.Id)
 		require.NoError(t, err)
 		require.NotNil(t, actual)
-		require.Equal(t, uint64(20), actual.Counter)
-		require.Equal(t, uint64(5), actual.CompletedJobs)
+		require.EqualValues(t, 20, actual.Counter)
+		require.EqualValues(t, 5, actual.CompletedJobs)
 		require.Equal(t, newUpdateTime, actual.UpdatedAt)
 		require.Equal(t, waitGroup.Name, actual.Name)
 		require.Equal(t, waitGroup.Description, actual.Description)
@@ -319,7 +319,7 @@ func TestWaitGroupsTable_Update(t *testing.T) {
 		waitGroup := &corepb.WaitGroup{
 			Id: &corepb.WaitGroupId{
 				AccountId:   rand.Uint64(),
-				NamespaceId: rand.Uint32(),
+				NamespaceId: rand.Uint64(),
 				WaitGroupId: rand.Uint64(),
 			},
 			Name:          "test_wait_group",
@@ -359,7 +359,7 @@ func TestWaitGroupsTable_Delete(t *testing.T) {
 		waitGroup := &corepb.WaitGroup{
 			Id: &corepb.WaitGroupId{
 				AccountId:   rand.Uint64(),
-				NamespaceId: rand.Uint32(),
+				NamespaceId: rand.Uint64(),
 				WaitGroupId: rand.Uint64(),
 			},
 			Name:          "test_wait_group",
@@ -412,7 +412,7 @@ func TestWaitGroupsTable_Delete(t *testing.T) {
 
 		waitGroupId := &corepb.WaitGroupId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			WaitGroupId: rand.Uint64(),
 		}
 
@@ -432,7 +432,7 @@ func TestWaitGroupsTable_List(t *testing.T) {
 		table := newWaitGroupsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Create multiple wait groups
 		numWaitGroups := 5
@@ -478,7 +478,7 @@ func TestWaitGroupsTable_List(t *testing.T) {
 		table := newWaitGroupsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Create multiple wait groups
 		numWaitGroups := 10
@@ -537,7 +537,7 @@ func TestWaitGroupsTable_List(t *testing.T) {
 		txn := badgerStore.View()
 		defer txn.Discard()
 
-		result, err := table.List(txn, rand.Uint64(), rand.Uint32(), nil, 100)
+		result, err := table.List(txn, rand.Uint64(), rand.Uint64(), nil, 100)
 		require.NoError(t, err)
 		require.NotNil(t, result)
 		require.Len(t, result.waitGroups, 0)
@@ -552,8 +552,8 @@ func TestWaitGroupsTable_List(t *testing.T) {
 		table := newWaitGroupsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId1 := rand.Uint32()
-		namespaceId2 := rand.Uint32()
+		namespaceId1 := rand.Uint64()
+		namespaceId2 := rand.Uint64()
 
 		// Create wait groups in namespace 1
 		for i := range 3 {

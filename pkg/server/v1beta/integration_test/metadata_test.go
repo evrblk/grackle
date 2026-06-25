@@ -58,10 +58,11 @@ func TestMetadataRoundTrip(t *testing.T) {
 
 		md := map[string]string{"pipeline": "etl", "owner": "data"}
 		createResp, err := server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
-			NamespaceName: "namespace1",
-			WaitGroupName: "waitgroup1",
-			Counter:       3,
-			Metadata:      md,
+			NamespaceName:              "namespace1",
+			WaitGroupName:              "waitgroup1",
+			Counter:                    3,
+			Metadata:                   md,
+			DeleteAfterFinishedSeconds: 60,
 		})
 		require.NoError(t, err)
 		require.Equal(t, md, createResp.WaitGroup.Metadata)
@@ -82,9 +83,10 @@ func TestMetadataRoundTrip(t *testing.T) {
 		require.NoError(t, err)
 
 		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
-			NamespaceName: "namespace1",
-			WaitGroupName: "waitgroup1",
-			Counter:       2,
+			NamespaceName:              "namespace1",
+			WaitGroupName:              "waitgroup1",
+			Counter:                    2,
+			DeleteAfterFinishedSeconds: 60,
 		})
 		require.NoError(t, err)
 
@@ -136,7 +138,7 @@ func TestMetadataRoundTrip(t *testing.T) {
 			Metadata:      md,
 		})
 		require.NoError(t, err)
-		require.True(t, acqResp.Success)
+		require.Equal(t, gracklepb.AcquireOutcome_ACQUIRE_OUTCOME_ACQUIRED, acqResp.Outcome)
 		require.Len(t, acqResp.Lock.LockHolders, 1)
 		require.Equal(t, md, acqResp.Lock.LockHolders[0].Metadata)
 
@@ -203,7 +205,7 @@ func TestMetadataRoundTrip(t *testing.T) {
 			Metadata:       holderMd,
 		})
 		require.NoError(t, err)
-		require.True(t, acqResp.Success)
+		require.Equal(t, gracklepb.AcquireOutcome_ACQUIRE_OUTCOME_ACQUIRED, acqResp.Outcome)
 
 		holdersResp, err := server.ListSemaphoreHolders(ctx, &gracklepb.ListSemaphoreHoldersRequest{
 			NamespaceName: "namespace1",

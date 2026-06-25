@@ -1,7 +1,9 @@
 # WaitAtBarrier
 
-Blocks until the barrier releases for the requested generation (`all_arrived: true`) or until
-`timeout_seconds` elapses (`timed_out: true`). Many peers can wait on the same generation at
+Blocks until the barrier releases for the requested generation or until `timeout_seconds` elapses.
+The `outcome` enum reports which happened: `BARRIER_WAIT_OUTCOME_TRIPPED` when all expected
+processes arrived and the barrier advanced a generation, or `BARRIER_WAIT_OUTCOME_TIMED_OUT` when
+`timeout_seconds` elapsed before the barrier tripped. Many peers can wait on the same generation at
 once; they are all released together when the last expected peer arrives.
 
 `WaitAtBarrier` does **not** register an arrival — a peer that needs to both contribute and wait
@@ -31,24 +33,27 @@ giving up.
 
 * Returns `NotFound` if the namespace does not exist.
 * Returns `NotFound` if the barrier does not exist.
+* On `TRIPPED`, the next cycle's generation is simply `expected_generation + 1` — generations
+  advance by exactly one per trip, so the caller computes it without a dedicated field.
+  `barrier.generation` reports where the barrier actually is now (possibly further ahead if a
+  later cohort has already tripped it again).
 
-__Released before timeout:__
+__Released before timeout__ (the barrier has advanced to generation 2 and `arrived_processes`
+reset to 0):
 
 ```json
 {
   "barrier": {
     "name": "phase_1_complete",
     "expected_processes": 4,
-    "arrived_processes": 4,
-    "generation": 1
+    "arrived_processes": 0,
+    "generation": 2
   },
-  "all_arrived": true,
-  "next_generation": 2,
-  "timed_out": false
+  "outcome": "BARRIER_WAIT_OUTCOME_TRIPPED"
 }
 ```
 
-__Timeout fired first:__
+__Timeout fired first__ (no trip, so the barrier is unchanged):
 
 ```json
 {
@@ -58,8 +63,6 @@ __Timeout fired first:__
     "arrived_processes": 3,
     "generation": 1
   },
-  "all_arrived": false,
-  "next_generation": 2,
-  "timed_out": true
+  "outcome": "BARRIER_WAIT_OUTCOME_TIMED_OUT"
 }
 ```

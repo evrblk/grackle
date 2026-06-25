@@ -11,9 +11,9 @@ message CreateWaitGroupRequest {
   WaitGroupId wait_group_id = 1;
   string name = 2;
   string description = 3;
-  int64 now = 4;
-  uint64 counter = 5;
-  int64 expires_at = 6;
+  sfixed64 now = 4;
+  int64 counter = 5;
+  sfixed64 expires_at = 6;
   map<string, string> metadata = 7;
   int64 max_number_of_wait_groups_per_namespace = 8;
   int64 delete_after_finished_seconds = 9;
@@ -27,11 +27,11 @@ message UpdateWaitGroupRequest {
   NamespaceId namespace_id = 1;
   string wait_group_name = 2;
   string description = 3;
-  int64 now = 4;
-  int64 expires_at = 5;
-  uint64 counter = 6;
+  sfixed64 now = 4;
+  sfixed64 expires_at = 5;
+  int64 counter = 6;
   map<string, string> metadata = 7;
-  uint64 expected_version = 8;
+  int64 expected_version = 8;
   int64 delete_after_finished_seconds = 9;
 }
 
@@ -71,7 +71,7 @@ message GetWaitGroupByNameResponse {
 message DeleteWaitGroupRequest {
   NamespaceId namespace_id = 1;
   string wait_group_name = 2;
-  uint64 record_id = 3;
+  fixed64 record_id = 3;
 }
 
 message DeleteWaitGroupResponse {}
@@ -80,7 +80,7 @@ message CompleteJobsFromWaitGroupRequest {
   NamespaceId namespace_id = 1;
   string wait_group_name = 2;
   repeated CompleteJobRequest jobs = 3;
-  int64 now = 4;
+  sfixed64 now = 4;
 }
 
 message CompleteJobRequest {
@@ -92,21 +92,21 @@ message CompleteJobsFromWaitGroupResponse {
   WaitGroup wait_group = 1;
 }
 
-message ListWaitGroupJobsRequest {
+message ListWaitGroupCompletedJobsRequest {
   NamespaceId namespace_id = 1;
   string wait_group_name = 2;
   PaginationToken pagination_token = 3;
   int32 limit = 4;
 }
 
-message ListWaitGroupJobsResponse {
+message ListWaitGroupCompletedJobsResponse {
   repeated WaitGroupJob jobs = 1;
   PaginationToken next_pagination_token = 2;
   PaginationToken previous_pagination_token = 3;
 }
 
 message RunWaitGroupsGarbageCollectionRequest {
-  int64 now = 1;
+  sfixed64 now = 1;
   int64 gc_records_page_size = 2;
   int64 gc_record_wait_groups_page_size = 3;
   int64 max_deleted_objects = 4;
@@ -115,9 +115,9 @@ message RunWaitGroupsGarbageCollectionRequest {
 message RunWaitGroupsGarbageCollectionResponse {}
 
 message WaitGroupsDeleteNamespaceRequest {
-  uint64 record_id = 1;
+  fixed64 record_id = 1;
   NamespaceId namespace_id = 2;
-  int64 now = 3;
+  sfixed64 now = 3;
 }
 
 message WaitGroupsDeleteNamespaceResponse {}
@@ -126,21 +126,21 @@ message WaitGroup {
   WaitGroupId id = 1;
   string name = 2;
   string description = 3;
-  int64 created_at = 4;
-  int64 updated_at = 5;
-  uint64 version = 6;
-  int64 expires_at = 7;
-  uint64 counter = 8;
-  uint64 completed_jobs = 9;
+  sfixed64 created_at = 4;
+  sfixed64 updated_at = 5;
+  int64 version = 6;
+  sfixed64 expires_at = 7;
+  int64 counter = 8;
+  int64 completed_jobs = 9;
   map<string, string> metadata = 10;
   WaitGroupStatus status = 11;
   int64 delete_after_finished_seconds = 12;
   // finished_at is the timestamp (ns) at which the wait group became finished
   // (either completed or expired). Zero while the wait group is still active.
-  int64 finished_at = 13;
+  sfixed64 finished_at = 13;
   // last_activity_at is the timestamp (ns) of the most recent activity on this
   // wait group (a job being reported completed). Not affected by reads.
-  int64 last_activity_at = 14;
+  sfixed64 last_activity_at = 14;
 }
 
 // WaitGroupStatus is the lifecycle state of a wait group. A wait group starts
@@ -158,21 +158,21 @@ enum WaitGroupStatus {
 
 message WaitGroupJob {
   WaitGroupJobId id = 1;
-  int64 completed_at = 2;
+  sfixed64 completed_at = 2;
   map<string, string> metadata = 3;
 }
 
 message WaitGroupJobId {
-  uint64 account_id = 1;
-  uint32 namespace_id = 2;
-  uint64 wait_group_id = 3;
+  fixed64 account_id = 1;
+  fixed64 namespace_id = 2;
+  fixed64 wait_group_id = 3;
   string job_id = 4;
 }
 
 message WaitGroupId {
-  uint64 account_id = 1;
-  uint32 namespace_id = 2;
-  uint64 wait_group_id = 3;
+  fixed64 account_id = 1;
+  fixed64 namespace_id = 2;
+  fixed64 wait_group_id = 3;
 }
 
 message WaitGroupsCounter {
@@ -180,7 +180,7 @@ message WaitGroupsCounter {
 }
 
 message WaitGroupsGarbageCollectionRecord {
-  uint64 id = 1;
+  fixed64 id = 1;
   oneof record {
     NamespaceId namespace_id = 2;
     WaitGroupId wait_group_id = 3;
@@ -189,7 +189,7 @@ message WaitGroupsGarbageCollectionRecord {
 
 message WaitGroupsExpirationRecord {
   WaitGroupId wait_group_id = 1;
-  int64 expires_at = 2;
+  sfixed64 expires_at = 2;
 }
 
 // WaitGroupsDeletionRecord schedules the deletion of a finished wait group.
@@ -197,5 +197,5 @@ message WaitGroupsExpirationRecord {
 // the wait group, computed as finished_at + delete_after_finished_seconds.
 message WaitGroupsDeletionRecord {
   WaitGroupId wait_group_id = 1;
-  int64 delete_at = 2;
+  sfixed64 delete_at = 2;
 }

@@ -96,8 +96,12 @@ Then the process tries to acquire a lock under that lease. `exclusive: true` req
 lock; `exclusive: false` requests a read (shared) lock. `timeout_seconds` tells how long the call
 should wait if the lock is not immediately compatible. The acquire succeeds if the lock is
 currently unlocked, already held in a compatible mode, or held by the **same lease** (re-acquiring
-your own lock is always allowed and just refreshes `locked_at`). Otherwise `success: false` is
-returned with no error and the current state of the lock.
+your own lock is always allowed and just refreshes `locked_at`). The response carries an `outcome`
+enum: `ACQUIRE_OUTCOME_ACQUIRED` when the lease now holds the lock, `ACQUIRE_OUTCOME_UNAVAILABLE`
+when a non-blocking attempt (`timeout_seconds: 0`) found it held by someone else and returned
+without waiting, or `ACQUIRE_OUTCOME_TIMED_OUT` when the call blocked until `timeout_seconds`
+elapsed without ever acquiring. In the non-acquired cases the current state of the lock is returned
+with no error.
 
 AcquireLockRequest:
 ```json
@@ -110,7 +114,7 @@ AcquireLockRequest:
 }
 ```
 
-AcquireLockResponse (success):
+AcquireLockResponse (acquired):
 ```json
 {
   "lock": {
@@ -125,7 +129,7 @@ AcquireLockResponse (success):
       }
     ]
   },
-  "success": true
+  "outcome": "ACQUIRE_OUTCOME_ACQUIRED"
 }
 ```
 
@@ -144,7 +148,7 @@ AcquireLockResponse (already locked by someone else — not an error):
       }
     ]
   },
-  "success": false
+  "outcome": "ACQUIRE_OUTCOME_TIMED_OUT"
 }
 ```
 
@@ -194,7 +198,7 @@ AcquireLockResponse:
       }
     ]
   },
-  "success": true
+  "outcome": "ACQUIRE_OUTCOME_ACQUIRED"
 }
 ```
 

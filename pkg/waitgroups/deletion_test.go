@@ -24,7 +24,7 @@ func TestDeletionRecordsTable_Add(t *testing.T) {
 
 		waitGroupId := &corepb.WaitGroupId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			WaitGroupId: rand.Uint64(),
 		}
 
@@ -59,7 +59,7 @@ func TestDeletionRecordsTable_Delete(t *testing.T) {
 
 		waitGroupId := &corepb.WaitGroupId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			WaitGroupId: rand.Uint64(),
 		}
 
@@ -96,7 +96,7 @@ func TestDeletionRecordsTable_Delete(t *testing.T) {
 
 		waitGroupId := &corepb.WaitGroupId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			WaitGroupId: rand.Uint64(),
 		}
 
@@ -122,7 +122,7 @@ func TestDeletionRecordsTable_List(t *testing.T) {
 			deleteAt := now.Add(time.Duration(i) * time.Hour).UnixNano()
 			waitGroupId := &corepb.WaitGroupId{
 				AccountId:   uint64(i),
-				NamespaceId: uint32(i),
+				NamespaceId: uint64(i),
 				WaitGroupId: uint64(i),
 			}
 
@@ -166,7 +166,7 @@ func TestDeletionRecordsTable_List(t *testing.T) {
 			deleteAt := now.Add(time.Duration(i) * time.Hour).UnixNano()
 			waitGroupId := &corepb.WaitGroupId{
 				AccountId:   uint64(i),
-				NamespaceId: uint32(i),
+				NamespaceId: uint64(i),
 				WaitGroupId: uint64(i),
 			}
 

@@ -25,18 +25,18 @@ import (
 type BarrierState struct {
 	namespace string
 	name      string
-	expected  uint64
+	expected  int64
 
 	config *Config
 
 	mu         sync.Mutex
-	generation uint64
+	generation int64
 	nextIdx    uint64 // next participant index for the current generation
-	version    uint64
+	version    int64
 }
 
 // NewBarrierState builds an (uncreated) barrier state.
-func NewBarrierState(namespace, name string, expected uint64, config *Config) *BarrierState {
+func NewBarrierState(namespace, name string, expected int64, config *Config) *BarrierState {
 	return &BarrierState{
 		namespace:  namespace,
 		name:       name,
@@ -76,7 +76,7 @@ func (s *BarrierState) Create(ctx context.Context, client grackle.GrackleApi) er
 
 // reconcile advances the local view to match an observed barrier generation,
 // resetting the participant cursor when a new generation begins. Caller holds mu.
-func (s *BarrierState) reconcile(generation uint64) {
+func (s *BarrierState) reconcile(generation int64) {
 	if generation > s.generation {
 		s.generation = generation
 		s.nextIdx = 0
@@ -88,7 +88,7 @@ func (s *BarrierState) reconcile(generation uint64) {
 func (s *BarrierState) Arrive(ctx context.Context, client grackle.GrackleApi) error {
 	s.mu.Lock()
 	generation := s.generation
-	idx := s.nextIdx % s.expected
+	idx := s.nextIdx % uint64(s.expected)
 	s.nextIdx++
 	s.mu.Unlock()
 

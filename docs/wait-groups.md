@@ -36,36 +36,39 @@ You can list completed jobs with `ListWaitGroupCompletedJobs` to see which jobs 
 ### Status
 Every wait group has a `status`:
 
-- `active` — the normal working state. The group is accepting completions and has neither
+- `ACTIVE` — the normal working state. The group is accepting completions and has neither
   completed nor expired yet. Only active wait groups can be updated with `UpdateWaitGroup`.
-- `completed` — `completed_jobs` reached `counter`. The group is **finished**.
-- `expired` — `expires_at` passed before the group completed. The group is **finished**.
+- `COMPLETED` — `completed_jobs` reached `counter`. The group is **finished**.
+- `EXPIRED` — `expires_at` passed before the group completed. The group is **finished**.
 
-`completed` and `expired` are terminal: a finished wait group never goes back to `active`, and it
+`COMPLETED` and `EXPIRED` are terminal: a finished wait group never goes back to `ACTIVE`, and it
 can no longer be updated.
 
 ### Expiration, finishing, and cleanup
 A wait group has an absolute `expires_at` set at creation. When that timestamp passes while the
-group is still `active`, the group is marked `expired` — it is **not** deleted at that moment.
-This is the backstop for crashed producers: a stalled group eventually leaves the `active` state
+group is still `ACTIVE`, the group is marked `EXPIRED` — it is **not** deleted at that moment.
+This is the backstop for crashed producers: a stalled group eventually leaves the `ACTIVE` state
 instead of lingering forever.
 
-A wait group becomes **finished** in one of two ways: it `completed` (`completed_jobs == counter`)
-or it `expired`. The moment it finishes is recorded as `finished_at`.
+A wait group becomes **finished** in one of two ways: it `COMPLETED` (`completed_jobs == counter`)
+or it `EXPIRED`. The moment it finishes is recorded as `finished_at`.
 
 `delete_after_finished_seconds` controls automatic cleanup: a finished wait group (and all of its
 job records) is deleted by GC once this many seconds have elapsed since `finished_at`. A value of
 `0` means the group becomes eligible for deletion as soon as it finishes. This retention window
-lets observers read the final state (for example, that the group `completed`) before it disappears.
+lets observers read the final state (for example, that the group `COMPLETED`) before it disappears.
 
 `expires_at` is the wait group's own deadline; it is not tied to any lease. Wait groups do not use
 leases.
 
 ### Waiting
 `WaitForWaitGroup` is a blocking call. The server holds the request open until either
-`completed >= counter` (returns `completed: true`) or `timeout_seconds` elapses (returns
-`timed_out: true`). Many callers can wait on the same group at the same time; all of them are
-released together when it completes.
+`completed_jobs == counter` (returns `status: COMPLETED`) or `timeout_seconds` elapses. The
+response carries an `outcome` enum: `WAIT_GROUP_WAIT_OUTCOME_COMPLETED` when all jobs completed,
+`WAIT_GROUP_WAIT_OUTCOME_EXPIRED` when the group's `expires_at` passed while still active, or
+`WAIT_GROUP_WAIT_OUTCOME_TIMED_OUT` when `timeout_seconds` elapsed while the group was still
+active. Many callers can wait on the same group at the same time; all of them are released together
+when it completes.
 
 ### Metadata
 A wait group carries an optional `metadata` map (string → string) set on `CreateWaitGroup` and
@@ -176,7 +179,7 @@ CompleteJobsFromWaitGroupResponse:
 }
 ```
 
-Meanwhile, an observer blocks on the group. The call returns as soon as `completed_jobs >= counter`
+Meanwhile, an observer blocks on the group. The call returns as soon as `completed_jobs == counter`
 or the timeout elapses.
 
 WaitForWaitGroupRequest:
@@ -199,8 +202,7 @@ WaitForWaitGroupResponse (group completed before timeout):
     "expires_at": 1718236800000000000,
     "finished_at": 1718150700000000000
   },
-  "completed": true,
-  "timed_out": false
+  "outcome": "WAIT_GROUP_WAIT_OUTCOME_COMPLETED"
 }
 ```
 
@@ -214,8 +216,7 @@ WaitForWaitGroupResponse (timeout fired first):
     "completed_jobs": 73,
     "expires_at": 1718236800000000000
   },
-  "completed": false,
-  "timed_out": true
+  "outcome": "WAIT_GROUP_WAIT_OUTCOME_TIMED_OUT"
 }
 ```
 
@@ -226,7 +227,7 @@ jobs have checked in with `ListWaitGroupCompletedJobs`.
 `UpdateWaitGroup` revises a group's mutable attributes — its `description`, its `counter`, its
 `expires_at` deadline, its `delete_after_finished_seconds` retention, and its `metadata`. The name
 and `completed_jobs` count are immutable. Only `active` wait groups can be updated — a group
-that has already `completed` or `expired` is finished and rejects updates with `InvalidArgument`.
+that has already `COMPLETED` or `EXPIRED` is finished and rejects updates with `InvalidArgument`.
 Pushing `expires_at` further out is the way to give a slow batch more time before it expires; the
 expiration schedule is reconciled atomically. The update is a full replacement, so send every
 mutable field you want to keep — an update that omits `metadata` clears it, and one that omits
@@ -266,13 +267,14 @@ UpdateWaitGroupResponse:
 ```
 
 `DeleteWaitGroup` removes the group immediately (and its jobs are cleaned up asynchronously by GC).
-You normally do not need it: a finished wait group — one that has `completed` or `expired` — is
+You normally do not need it: a finished wait group — one that has `COMPLETED` or `EXPIRED` — is
 deleted automatically once `delete_after_finished_seconds` have elapsed since it finished.
 
 ## When to use what
 
 - **Wait group** — one or more producers fan out N jobs, one or more observers want to know when
-  the fan-in is done. The counter is adjustable via `UpdateWaitGroup`; completion is idempotent per `job_id`.
+  the fan-in is done. The counter is adjustable via `UpdateWaitGroup`; completion is idempotent 
+  per `job_id`.
 - **Barrier** — N peers all need to meet at a synchronization point with no producer/observer
   asymmetry. Each participant calls `WaitAtBarrier` and is released when the configured number of
   participants have arrived.

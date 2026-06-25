@@ -37,7 +37,7 @@ func (t *CountersTable[T, U]) GetTableKeyRange() monsterax.KeyRange {
 	return t.table.GetTableKeyRange()
 }
 
-func (t *CountersTable[T, U]) Get(txn *store.Txn, accountId uint64, namespaceId uint32) (T, error) {
+func (t *CountersTable[T, U]) Get(txn *store.Txn, accountId uint64, namespaceId uint64) (T, error) {
 	counters, err := t.table.Get(txn, t.tablePK(accountId, namespaceId))
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
@@ -49,15 +49,15 @@ func (t *CountersTable[T, U]) Get(txn *store.Txn, accountId uint64, namespaceId 
 	return counters, nil
 }
 
-func (t *CountersTable[T, U]) Set(txn *store.Txn, accountId uint64, namespaceId uint32, counters T) error {
+func (t *CountersTable[T, U]) Set(txn *store.Txn, accountId uint64, namespaceId uint64, counters T) error {
 	return t.table.Set(txn, t.tablePK(accountId, namespaceId), counters)
 }
 
-func (t *CountersTable[T, U]) Delete(txn *store.Txn, accountId uint64, namespaceId uint32) error {
+func (t *CountersTable[T, U]) Delete(txn *store.Txn, accountId uint64, namespaceId uint64) error {
 	return t.table.Delete(txn, t.tablePK(accountId, namespaceId))
 }
 
-func (t *CountersTable[T, U]) tablePK(accountId uint64, namespaceId uint32) []byte {
+func (t *CountersTable[T, U]) tablePK(accountId uint64, namespaceId uint64) []byte {
 	return utils.ConcatBytes(
 		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,

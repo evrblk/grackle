@@ -95,8 +95,8 @@ func (t *LeasesTable) ListByExpiration(txn *store.Txn, from int64, to int64, fn 
 	return t.expirationIndex.ListInRange(txn, t.expirationIndexPrefix(from), t.expirationIndexPrefix(to), func(key []byte) (bool, error) {
 		// time := utils.BytesToUint64(key[len(t.shardGlobalIndexPrefix) : len(t.shardGlobalIndexPrefix)+8])
 		accountId := utils.BytesToUint64(key[len(t.shardGlobalIndexPrefix)+8 : len(t.shardGlobalIndexPrefix)+8+8])
-		namespaceId := utils.BytesToUint32(key[len(t.shardGlobalIndexPrefix)+8+8 : len(t.shardGlobalIndexPrefix)+8+8+4])
-		leaseId := utils.BytesToUint64(key[len(t.shardGlobalIndexPrefix)+8+8+4 : len(t.shardGlobalIndexPrefix)+8+8+4+8])
+		namespaceId := utils.BytesToUint64(key[len(t.shardGlobalIndexPrefix)+8+8 : len(t.shardGlobalIndexPrefix)+8+8+8])
+		leaseId := utils.BytesToUint64(key[len(t.shardGlobalIndexPrefix)+8+8+8 : len(t.shardGlobalIndexPrefix)+8+8+8+8])
 
 		lease, err := t.table.Get(txn,
 			utils.ConcatBytes(
@@ -212,7 +212,7 @@ func (t *LeasesTable) Delete(txn *store.Txn, lease *corepb.Lease) error {
 			t.tableSK(lease.Id.LeaseId)))
 }
 
-func (t *LeasesTable) tablePK(accountId uint64, namespaceId uint32) []byte {
+func (t *LeasesTable) tablePK(accountId uint64, namespaceId uint64) []byte {
 	return utils.ConcatBytes(
 		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,
@@ -226,7 +226,7 @@ func (t *LeasesTable) tableSK(leaseId uint64) []byte {
 	)
 }
 
-func (t *LeasesTable) processIdIndexPK(accountId uint64, namespaceId uint32, processId string) []byte {
+func (t *LeasesTable) processIdIndexPK(accountId uint64, namespaceId uint64, processId string) []byte {
 	return utils.ConcatBytes(
 		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,
@@ -235,7 +235,7 @@ func (t *LeasesTable) processIdIndexPK(accountId uint64, namespaceId uint32, pro
 	)
 }
 
-func (t *LeasesTable) expirationIndexPK(time int64, accountId uint64, namespaceId uint32, leaseId uint64) []byte {
+func (t *LeasesTable) expirationIndexPK(time int64, accountId uint64, namespaceId uint64, leaseId uint64) []byte {
 	return utils.ConcatBytes(
 		t.shardGlobalIndexPrefix,
 		time,

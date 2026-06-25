@@ -136,7 +136,7 @@ func (w *Worker) runLeaseRefresh(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			ttlSeconds := uint64(w.config.LeaseTTL.Seconds())
+			ttlSeconds := int64(w.config.LeaseTTL.Seconds())
 
 			for _, lease := range w.resourcePool.GetAllLeases(w.id, "lock") {
 				_, _ = w.client.RefreshLockLease(ctx, &grackle.RefreshLockLeaseRequest{

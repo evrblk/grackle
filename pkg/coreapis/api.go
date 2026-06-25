@@ -92,8 +92,8 @@ type GetWaitGroupByNameRequest = monsterax.ReadRequest[*corepb.GetWaitGroupByNam
 type GetWaitGroupByNameResponse = monsterax.ReadResponse[*corepb.GetWaitGroupByNameResponse]
 type ListWaitGroupsRequest = monsterax.ReadRequest[*corepb.ListWaitGroupsRequest]
 type ListWaitGroupsResponse = monsterax.ReadResponse[*corepb.ListWaitGroupsResponse]
-type ListWaitGroupJobsRequest = monsterax.ReadRequest[*corepb.ListWaitGroupJobsRequest]
-type ListWaitGroupJobsResponse = monsterax.ReadResponse[*corepb.ListWaitGroupJobsResponse]
+type ListWaitGroupCompletedJobsRequest = monsterax.ReadRequest[*corepb.ListWaitGroupCompletedJobsRequest]
+type ListWaitGroupCompletedJobsResponse = monsterax.ReadResponse[*corepb.ListWaitGroupCompletedJobsResponse]
 type UpdateWaitGroupRequest = monsterax.UpdateRequest[*corepb.UpdateWaitGroupRequest]
 type UpdateWaitGroupResponse = monsterax.UpdateResponse[*corepb.UpdateWaitGroupResponse]
 type CompleteJobsFromWaitGroupRequest = monsterax.UpdateRequest[*corepb.CompleteJobsFromWaitGroupRequest]
@@ -172,7 +172,7 @@ type GrackleClientApi interface {
 	GetWaitGroup(ctx context.Context, req *corepb.GetWaitGroupRequest) (*corepb.GetWaitGroupResponse, error)
 	GetWaitGroupByName(ctx context.Context, req *corepb.GetWaitGroupByNameRequest) (*corepb.GetWaitGroupByNameResponse, error)
 	ListWaitGroups(ctx context.Context, req *corepb.ListWaitGroupsRequest) (*corepb.ListWaitGroupsResponse, error)
-	ListWaitGroupJobs(ctx context.Context, req *corepb.ListWaitGroupJobsRequest) (*corepb.ListWaitGroupJobsResponse, error)
+	ListWaitGroupCompletedJobs(ctx context.Context, req *corepb.ListWaitGroupCompletedJobsRequest) (*corepb.ListWaitGroupCompletedJobsResponse, error)
 	UpdateWaitGroup(ctx context.Context, req *corepb.UpdateWaitGroupRequest) (*corepb.UpdateWaitGroupResponse, error)
 	CompleteJobsFromWaitGroup(ctx context.Context, req *corepb.CompleteJobsFromWaitGroupRequest) (*corepb.CompleteJobsFromWaitGroupResponse, error)
 	CreateWaitGroup(ctx context.Context, req *corepb.CreateWaitGroupRequest) (*corepb.CreateWaitGroupResponse, error)
@@ -256,7 +256,7 @@ type GrackleWaitGroupsCoreApi interface {
 	GetWaitGroup(req *GetWaitGroupRequest) (*GetWaitGroupResponse, error)
 	GetWaitGroupByName(req *GetWaitGroupByNameRequest) (*GetWaitGroupByNameResponse, error)
 	ListWaitGroups(req *ListWaitGroupsRequest) (*ListWaitGroupsResponse, error)
-	ListWaitGroupJobs(req *ListWaitGroupJobsRequest) (*ListWaitGroupJobsResponse, error)
+	ListWaitGroupCompletedJobs(req *ListWaitGroupCompletedJobsRequest) (*ListWaitGroupCompletedJobsResponse, error)
 	UpdateWaitGroup(req *UpdateWaitGroupRequest) (*UpdateWaitGroupResponse, error)
 	CompleteJobsFromWaitGroup(req *CompleteJobsFromWaitGroupRequest) (*CompleteJobsFromWaitGroupResponse, error)
 	CreateWaitGroup(req *CreateWaitGroupRequest) (*CreateWaitGroupResponse, error)

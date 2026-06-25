@@ -67,7 +67,7 @@ func (t *deletionRecordsTable) ListByDeletion(txn *store.Txn, from int64, to int
 	})
 }
 
-func (t *deletionRecordsTable) tablePK(time int64, accountId uint64, namespaceId uint32, waitGroupId uint64) []byte {
+func (t *deletionRecordsTable) tablePK(time int64, accountId uint64, namespaceId uint64, waitGroupId uint64) []byte {
 	return utils.ConcatBytes(
 		t.shardGlobalIndexPrefix,
 		time,

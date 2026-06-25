@@ -32,7 +32,7 @@ func TestCountersTable_Get(t *testing.T) {
 		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		counter := &testCounters{
 			X: 5,
@@ -60,7 +60,7 @@ func TestCountersTable_Get(t *testing.T) {
 		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Get non-existent counter
 		txn := badgerStore.View()
@@ -78,8 +78,8 @@ func TestCountersTable_Get(t *testing.T) {
 		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId1 := rand.Uint32()
-		namespaceId2 := rand.Uint32()
+		namespaceId1 := rand.Uint64()
+		namespaceId2 := rand.Uint64()
 
 		counter1 := &testCounters{
 			X: 3,
@@ -119,7 +119,7 @@ func TestCountersTable_Get(t *testing.T) {
 
 		accountId1 := rand.Uint64()
 		accountId2 := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		counter1 := &testCounters{
 			X: 2,
@@ -160,7 +160,7 @@ func TestCountersTable_Set(t *testing.T) {
 		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		counter := &testCounters{
 			X: 42,
@@ -188,7 +188,7 @@ func TestCountersTable_Set(t *testing.T) {
 		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Set initial counter
 		txn := badgerStore.Update()
@@ -224,7 +224,7 @@ func TestCountersTable_Set(t *testing.T) {
 		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		counter := &testCounters{
 			X: 0,
@@ -252,7 +252,7 @@ func TestCountersTable_Set(t *testing.T) {
 		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		counter := &testCounters{
 			X: 9223372036854775807, // Max int64
@@ -282,7 +282,7 @@ func TestCountersTable_Delete(t *testing.T) {
 		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		counter := &testCounters{
 			X: 7,
@@ -316,7 +316,7 @@ func TestCountersTable_Delete(t *testing.T) {
 		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Delete non-existent counter - should succeed (idempotent)
 		txn := badgerStore.Update()
@@ -340,7 +340,7 @@ func TestCountersTable_Delete(t *testing.T) {
 		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Start with 0,0
 		txn := badgerStore.View()
@@ -389,7 +389,7 @@ func TestCountersTable_Delete(t *testing.T) {
 		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Create counter
 		txn := badgerStore.Update()

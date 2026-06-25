@@ -29,7 +29,7 @@ func TestCore_Create(t *testing.T) {
 		expiresAt := now.Add(time.Hour).UnixNano()
 		waitGroupId := &corepb.WaitGroupId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			WaitGroupId: rand.Uint64(),
 		}
 
@@ -107,7 +107,7 @@ func TestCore_Create(t *testing.T) {
 		now := time.Now()
 		expiresAt := now.Add(time.Hour).UnixNano()
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Create first wait group
 		resp1, err := core.CreateWaitGroup(&coreapis.CreateWaitGroupRequest{
@@ -160,7 +160,7 @@ func TestCore_Create(t *testing.T) {
 		expiresAt := now.Add(time.Hour).UnixNano()
 		maxWaitGroups := int64(3) // Use a small number for testing
 		accountId := rand.Uint64()
-		namespaceId := rand.Uint32()
+		namespaceId := rand.Uint64()
 
 		// Create wait groups up to the limit
 		for i := range maxWaitGroups {
@@ -217,7 +217,7 @@ func TestCore_CompleteJobsFromWaitGroup(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// T+0: Create wait group
@@ -285,7 +285,7 @@ func TestCore_CompleteJobsFromWaitGroup(t *testing.T) {
 			Payload: &corepb.CompleteJobsFromWaitGroupRequest{
 				NamespaceId: &corepb.NamespaceId{
 					AccountId:   rand.Uint64(),
-					NamespaceId: rand.Uint32(),
+					NamespaceId: rand.Uint64(),
 				},
 				WaitGroupName: "nonexistent_wait_group",
 				Jobs:          completeJobRequests([]string{"job_1", "job_2", "job_3"}),
@@ -305,7 +305,7 @@ func TestCore_CompleteJobsFromWaitGroup(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		waitGroupId := &corepb.WaitGroupId{
 			AccountId:   namespaceId.AccountId,
@@ -326,7 +326,7 @@ func TestCore_CompleteJobsFromWaitGroup(t *testing.T) {
 		require.EqualValues(t, 2, wg.Counter)
 		require.EqualValues(t, 0, wg.CompletedJobs)
 
-		jobsList := listWaitGroupJobs(t, core, namespaceId, "test_wait_group")
+		jobsList := ListWaitGroupCompletedJobs(t, core, namespaceId, "test_wait_group")
 		require.Empty(t, jobsList.Jobs)
 
 		// Completing exactly Counter jobs succeeds
@@ -343,7 +343,7 @@ func TestCore_ListWaitGroups(t *testing.T) {
 	core := newWaitGroupsCore(t)
 	now := time.Now()
 	accountId := rand.Uint64()
-	namespaceId := rand.Uint32()
+	namespaceId := rand.Uint64()
 
 	// T+0: Create first wait group
 	resp1, err := core.CreateWaitGroup(&coreapis.CreateWaitGroupRequest{
@@ -404,13 +404,13 @@ func TestCore_ListWaitGroups(t *testing.T) {
 	require.Len(t, resp3.Payload.WaitGroups, 2)
 }
 
-func TestCore_ListWaitGroupJobs(t *testing.T) {
+func TestCore_ListWaitGroupCompletedJobs(t *testing.T) {
 	t.Run("list jobs from wait group with multiple jobs", func(t *testing.T) {
 		core := newWaitGroupsCore(t)
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create wait group
@@ -449,8 +449,8 @@ func TestCore_ListWaitGroupJobs(t *testing.T) {
 		require.NotNil(t, resp2.Payload)
 
 		// List wait group jobs
-		resp3, err := core.ListWaitGroupJobs(&coreapis.ListWaitGroupJobsRequest{
-			Payload: &corepb.ListWaitGroupJobsRequest{
+		resp3, err := core.ListWaitGroupCompletedJobs(&coreapis.ListWaitGroupCompletedJobsRequest{
+			Payload: &corepb.ListWaitGroupCompletedJobsRequest{
 				NamespaceId:   namespaceId,
 				WaitGroupName: "test_wait_group",
 			},
@@ -470,7 +470,7 @@ func TestCore_ListWaitGroupJobs(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create wait group
@@ -513,8 +513,8 @@ func TestCore_ListWaitGroupJobs(t *testing.T) {
 		require.NotNil(t, resp2.Payload)
 
 		// List first page with limit
-		resp3, err := core.ListWaitGroupJobs(&coreapis.ListWaitGroupJobsRequest{
-			Payload: &corepb.ListWaitGroupJobsRequest{
+		resp3, err := core.ListWaitGroupCompletedJobs(&coreapis.ListWaitGroupCompletedJobsRequest{
+			Payload: &corepb.ListWaitGroupCompletedJobsRequest{
 				NamespaceId:   namespaceId,
 				WaitGroupName: "test_wait_group",
 				Limit:         20,
@@ -529,8 +529,8 @@ func TestCore_ListWaitGroupJobs(t *testing.T) {
 		require.Nil(t, resp3.Payload.PreviousPaginationToken)
 
 		// List second page
-		resp4, err := core.ListWaitGroupJobs(&coreapis.ListWaitGroupJobsRequest{
-			Payload: &corepb.ListWaitGroupJobsRequest{
+		resp4, err := core.ListWaitGroupCompletedJobs(&coreapis.ListWaitGroupCompletedJobsRequest{
+			Payload: &corepb.ListWaitGroupCompletedJobsRequest{
 				NamespaceId:     namespaceId,
 				WaitGroupName:   "test_wait_group",
 				Limit:           20,
@@ -546,8 +546,8 @@ func TestCore_ListWaitGroupJobs(t *testing.T) {
 		require.NotNil(t, resp4.Payload.PreviousPaginationToken)
 
 		// List third page
-		resp5, err := core.ListWaitGroupJobs(&coreapis.ListWaitGroupJobsRequest{
-			Payload: &corepb.ListWaitGroupJobsRequest{
+		resp5, err := core.ListWaitGroupCompletedJobs(&coreapis.ListWaitGroupCompletedJobsRequest{
+			Payload: &corepb.ListWaitGroupCompletedJobsRequest{
 				NamespaceId:     namespaceId,
 				WaitGroupName:   "test_wait_group",
 				Limit:           20,
@@ -568,7 +568,7 @@ func TestCore_ListWaitGroupJobs(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create wait group
@@ -592,8 +592,8 @@ func TestCore_ListWaitGroupJobs(t *testing.T) {
 		require.NotNil(t, resp1.Payload)
 
 		// List wait group jobs (no jobs completed yet)
-		resp2, err := core.ListWaitGroupJobs(&coreapis.ListWaitGroupJobsRequest{
-			Payload: &corepb.ListWaitGroupJobsRequest{
+		resp2, err := core.ListWaitGroupCompletedJobs(&coreapis.ListWaitGroupCompletedJobsRequest{
+			Payload: &corepb.ListWaitGroupCompletedJobsRequest{
 				NamespaceId:   namespaceId,
 				WaitGroupName: "test_wait_group",
 			},
@@ -609,11 +609,11 @@ func TestCore_ListWaitGroupJobs(t *testing.T) {
 		core := newWaitGroupsCore(t)
 
 		// Try to list jobs from a nonexistent wait group
-		resp1, err := core.ListWaitGroupJobs(&coreapis.ListWaitGroupJobsRequest{
-			Payload: &corepb.ListWaitGroupJobsRequest{
+		resp1, err := core.ListWaitGroupCompletedJobs(&coreapis.ListWaitGroupCompletedJobsRequest{
+			Payload: &corepb.ListWaitGroupCompletedJobsRequest{
 				NamespaceId: &corepb.NamespaceId{
 					AccountId:   rand.Uint64(),
-					NamespaceId: rand.Uint32(),
+					NamespaceId: rand.Uint64(),
 				},
 				WaitGroupName: "nonexistent_wait_group",
 			},
@@ -634,7 +634,7 @@ func TestCore_DeleteWaitGroup(t *testing.T) {
 		expiresAt := now.Add(time.Hour).UnixNano()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create wait group
@@ -690,7 +690,7 @@ func TestCore_DeleteWaitGroup(t *testing.T) {
 			Payload: &corepb.DeleteWaitGroupRequest{
 				NamespaceId: &corepb.NamespaceId{
 					AccountId:   rand.Uint64(),
-					NamespaceId: rand.Uint32(),
+					NamespaceId: rand.Uint64(),
 				},
 				WaitGroupName: "nonexistent_wait_group",
 			},
@@ -706,10 +706,10 @@ func TestCore_DeleteWaitGroup(t *testing.T) {
 	t.Run("large wait group", func(t *testing.T) {
 		core := newWaitGroupsCore(t)
 		now := time.Now()
-		groupSize := uint64(1_000_000)
+		groupSize := int64(1_000_000)
 		waitGroupId := &corepb.WaitGroupId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 			WaitGroupId: rand.Uint64(),
 		}
 
@@ -736,11 +736,11 @@ func TestCore_DeleteWaitGroup(t *testing.T) {
 		// Complete all jobs in batches
 		batchSize := 10
 		jobIds := make([]string, batchSize)
-		completedJobs := uint64(0)
+		completedJobs := int64(0)
 
 		for completedJobs < groupSize {
 			for i := range batchSize {
-				jobIds[i] = fmt.Sprintf("job_%d", completedJobs+uint64(i))
+				jobIds[i] = fmt.Sprintf("job_%d", completedJobs+int64(i))
 			}
 
 			resp2, err := core.CompleteJobsFromWaitGroup(&coreapis.CompleteJobsFromWaitGroupRequest{
@@ -760,7 +760,7 @@ func TestCore_DeleteWaitGroup(t *testing.T) {
 			require.Nil(t, resp2.ApplicationError)
 			require.NotNil(t, resp2.Payload)
 			require.NotNil(t, resp2.Payload.WaitGroup)
-			completedJobs += uint64(batchSize)
+			completedJobs += int64(batchSize)
 		}
 
 		// Verify final state
@@ -803,7 +803,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 		expiresAt := now.Add(time.Hour).UnixNano()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		waitGroupId := &corepb.WaitGroupId{
 			AccountId:   namespaceId.AccountId,
@@ -868,7 +868,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		waitGroupId := &corepb.WaitGroupId{
 			AccountId:   namespaceId.AccountId,
@@ -914,7 +914,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 			Payload: &corepb.UpdateWaitGroupRequest{
 				NamespaceId: &corepb.NamespaceId{
 					AccountId:   rand.Uint64(),
-					NamespaceId: rand.Uint32(),
+					NamespaceId: rand.Uint64(),
 				},
 				WaitGroupName: "nonexistent_wait_group",
 				Description:   "updated description",
@@ -936,7 +936,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 		newExpiresAt := now.Add(48 * time.Hour).UnixNano()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		waitGroupId := &corepb.WaitGroupId{
 			AccountId:   namespaceId.AccountId,
@@ -994,7 +994,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		waitGroupId := &corepb.WaitGroupId{
 			AccountId:   namespaceId.AccountId,
@@ -1056,7 +1056,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		waitGroupId := &corepb.WaitGroupId{
 			AccountId:   namespaceId.AccountId,
@@ -1121,7 +1121,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		waitGroupId := &corepb.WaitGroupId{
 			AccountId:   namespaceId.AccountId,
@@ -1166,7 +1166,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		waitGroupId := &corepb.WaitGroupId{
 			AccountId:   namespaceId.AccountId,
@@ -1216,7 +1216,7 @@ func TestCore_CompleteJobsWithMetadata(t *testing.T) {
 	now := time.Now()
 	namespaceId := &corepb.NamespaceId{
 		AccountId:   rand.Uint64(),
-		NamespaceId: rand.Uint32(),
+		NamespaceId: rand.Uint64(),
 	}
 
 	_, err := core.CreateWaitGroup(&coreapis.CreateWaitGroupRequest{
@@ -1253,7 +1253,7 @@ func TestCore_CompleteJobsWithMetadata(t *testing.T) {
 	require.EqualValues(t, 2, resp.Payload.WaitGroup.CompletedJobs)
 
 	// Metadata is persisted on the completed job records
-	jobsList := listWaitGroupJobs(t, core, namespaceId, "test_wait_group")
+	jobsList := ListWaitGroupCompletedJobs(t, core, namespaceId, "test_wait_group")
 	require.Len(t, jobsList.Jobs, 2)
 	byId := make(map[string]map[string]string)
 	for _, job := range jobsList.Jobs {
@@ -1267,7 +1267,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 	now := time.Now()
 	waitGroupId := &corepb.WaitGroupId{
 		AccountId:   rand.Uint64(),
-		NamespaceId: rand.Uint32(),
+		NamespaceId: rand.Uint64(),
 		WaitGroupId: rand.Uint64(),
 	}
 
@@ -1440,7 +1440,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 	accountId1 := rand.Uint64()
 	namespaceId1 := &corepb.NamespaceId{
 		AccountId:   accountId1,
-		NamespaceId: rand.Uint32(),
+		NamespaceId: rand.Uint64(),
 	}
 
 	// Create multiple wait groups for account 1 with many jobs each
@@ -1462,7 +1462,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 				WaitGroupId:                       waitGroupIds[i],
 				Name:                              waitGroupName,
 				Description:                       fmt.Sprintf("test description %d", i),
-				Counter:                           uint64(jobsPerGroup),
+				Counter:                           int64(jobsPerGroup),
 				Now:                               now.UnixNano(),
 				ExpiresAt:                         now.Add(time.Hour).UnixNano(),
 				MaxNumberOfWaitGroupsPerNamespace: 100,
@@ -1506,7 +1506,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 	for ns := range numNamespaces {
 		namespaceIds[ns] = &corepb.NamespaceId{
 			AccountId:   accountId2,
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 
 		// Create multiple wait groups for this namespace
@@ -1524,7 +1524,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 					WaitGroupId:                       waitGroupId,
 					Name:                              waitGroupName,
 					Description:                       fmt.Sprintf("test description namespace %d wg %d", ns, wg),
-					Counter:                           uint64(jobsPerWaitGroup),
+					Counter:                           int64(jobsPerWaitGroup),
 					Now:                               now.UnixNano(),
 					ExpiresAt:                         now.Add(time.Hour).UnixNano(),
 					MaxNumberOfWaitGroupsPerNamespace: 100,
@@ -1722,7 +1722,7 @@ func TestCore_DeleteAfterFinished(t *testing.T) {
 		deleteAfterSeconds := int64(600) // 10 minutes
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		waitGroupId := &corepb.WaitGroupId{
 			AccountId:   namespaceId.AccountId,
@@ -1768,7 +1768,7 @@ func TestCore_DeleteAfterFinished(t *testing.T) {
 		expiresAt := now.Add(time.Hour)
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		waitGroupId := &corepb.WaitGroupId{
 			AccountId:   namespaceId.AccountId,
@@ -1811,7 +1811,7 @@ func TestCore_DeleteAfterFinished(t *testing.T) {
 		expiresAt := now.Add(time.Hour)
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		waitGroupId := &corepb.WaitGroupId{
 			AccountId:   namespaceId.AccountId,
@@ -1881,7 +1881,7 @@ func TestCore_LastActivityAt(t *testing.T) {
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
-			NamespaceId: rand.Uint32(),
+			NamespaceId: rand.Uint64(),
 		}
 		waitGroupId := &corepb.WaitGroupId{
 			AccountId:   namespaceId.AccountId,
@@ -1932,7 +1932,7 @@ func newWaitGroupsCore(t *testing.T) *Core {
 	return NewCore(store, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 }
 
-func createWaitGroup(t *testing.T, core *Core, waitGroupId *corepb.WaitGroupId, name string, counter uint64, now time.Time) *corepb.WaitGroup {
+func createWaitGroup(t *testing.T, core *Core, waitGroupId *corepb.WaitGroupId, name string, counter int64, now time.Time) *corepb.WaitGroup {
 	t.Helper()
 
 	resp, err := core.CreateWaitGroup(&coreapis.CreateWaitGroupRequest{
@@ -2007,11 +2007,11 @@ func getWaitGroup(t *testing.T, core *Core, waitGroupId *corepb.WaitGroupId) *co
 	return resp.Payload.WaitGroup
 }
 
-func listWaitGroupJobs(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, waitGroupName string) *corepb.ListWaitGroupJobsResponse {
+func ListWaitGroupCompletedJobs(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, waitGroupName string) *corepb.ListWaitGroupCompletedJobsResponse {
 	t.Helper()
 
-	resp, err := core.ListWaitGroupJobs(&coreapis.ListWaitGroupJobsRequest{
-		Payload: &corepb.ListWaitGroupJobsRequest{
+	resp, err := core.ListWaitGroupCompletedJobs(&coreapis.ListWaitGroupCompletedJobsRequest{
+		Payload: &corepb.ListWaitGroupCompletedJobsRequest{
 			NamespaceId:   namespaceId,
 			WaitGroupName: waitGroupName,
 		},

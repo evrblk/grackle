@@ -1208,17 +1208,17 @@ func (a *GrackleWaitGroupsCoreAdapter) Read(appRequestBytes []byte) (*monstera.R
 		}
 		appResponse.Data = methodResponseBytes
 	case 4:
-		payload := corepb.ListWaitGroupJobsRequest{}
+		payload := corepb.ListWaitGroupCompletedJobsRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleWaitGroupsCore.ListWaitGroupJobs(&ListWaitGroupJobsRequest{Payload: &payload})
+		methodResponse, err := a.grackleWaitGroupsCore.ListWaitGroupCompletedJobs(&ListWaitGroupCompletedJobsRequest{Payload: &payload})
 		if err != nil {
 			return nil, err
 		}
-		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "ListWaitGroupJobs", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "ListWaitGroupJobs", a.shardId, a.replicaId).Inc()
+		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "ListWaitGroupCompletedJobs", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "ListWaitGroupCompletedJobs", a.shardId, a.replicaId).Inc()
 		appResponse.Error = methodResponse.ApplicationError
 		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
 		if err != nil {
