@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/dave/jennifer v1.7.1
-	github.com/evrblk/evrblk-go v0.0.0-20260623183820-226b74b14e41
+	github.com/evrblk/evrblk-go v0.0.0-20260625184104-5777f28c421b
 	github.com/evrblk/monstera v0.0.0-20260610153412-ffd2127186cd
 	github.com/evrblk/yellowstone-common v0.0.0-20260317193758-e5d4f0d6d632
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10
@@ -63,5 +63,3 @@ require (
 )
 
 tool github.com/evrblk/monstera/cmd/monstera
-
-replace github.com/evrblk/evrblk-go v0.0.0-20260623183820-226b74b14e41 => ../evrblk-go
