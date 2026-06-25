@@ -129,24 +129,6 @@ func (a *GrackleLocksCoreAdapter) Update(appRequestBytes []byte) (*monstera.Upda
 		}
 		appResponse.Data = methodResponseBytes
 	case 4:
-		payload := corepb.GetLockRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
-		if err != nil {
-			return nil, err
-		}
-		methodResponse, err := a.grackleLocksCore.GetLock(&GetLockRequest{Payload: &payload})
-		if err != nil {
-			return nil, err
-		}
-		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "GetLock", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "GetLock", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
-		if err != nil {
-			return nil, err
-		}
-		appResponse.Data = methodResponseBytes
-	case 5:
 		payload := corepb.RunLocksGarbageCollectionRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
 		if err != nil {
@@ -164,7 +146,7 @@ func (a *GrackleLocksCoreAdapter) Update(appRequestBytes []byte) (*monstera.Upda
 			return nil, err
 		}
 		appResponse.Data = methodResponseBytes
-	case 6:
+	case 5:
 		payload := corepb.LocksDeleteNamespaceRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
 		if err != nil {
@@ -182,7 +164,7 @@ func (a *GrackleLocksCoreAdapter) Update(appRequestBytes []byte) (*monstera.Upda
 			return nil, err
 		}
 		appResponse.Data = methodResponseBytes
-	case 7:
+	case 6:
 		payload := corepb.CreateLockLeaseRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
 		if err != nil {
@@ -200,7 +182,7 @@ func (a *GrackleLocksCoreAdapter) Update(appRequestBytes []byte) (*monstera.Upda
 			return nil, err
 		}
 		appResponse.Data = methodResponseBytes
-	case 8:
+	case 7:
 		payload := corepb.RefreshLockLeaseRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
 		if err != nil {
@@ -218,7 +200,7 @@ func (a *GrackleLocksCoreAdapter) Update(appRequestBytes []byte) (*monstera.Upda
 			return nil, err
 		}
 		appResponse.Data = methodResponseBytes
-	case 9:
+	case 8:
 		payload := corepb.RevokeLockLeaseRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
 		if err != nil {
@@ -263,6 +245,24 @@ func (a *GrackleLocksCoreAdapter) Read(appRequestBytes []byte) (*monstera.ReadRe
 
 	switch appRequest.MethodNumber {
 	case 1:
+		payload := corepb.GetLockRequest{}
+		err := payload.UnmarshalBinary(appRequest.Data)
+		if err != nil {
+			return nil, err
+		}
+		methodResponse, err := a.grackleLocksCore.GetLock(&GetLockRequest{Payload: &payload})
+		if err != nil {
+			return nil, err
+		}
+		monsterax.MeasureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "GetLock", a.shardId, a.replicaId), t1)
+		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "GetLock", a.shardId, a.replicaId).Inc()
+		appResponse.Error = methodResponse.ApplicationError
+		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		if err != nil {
+			return nil, err
+		}
+		appResponse.Data = methodResponseBytes
+	case 2:
 		payload := corepb.ListLocksRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
 		if err != nil {
@@ -280,7 +280,7 @@ func (a *GrackleLocksCoreAdapter) Read(appRequestBytes []byte) (*monstera.ReadRe
 			return nil, err
 		}
 		appResponse.Data = methodResponseBytes
-	case 2:
+	case 3:
 		payload := corepb.ListLocksByLeaseIdRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
 		if err != nil {
@@ -298,7 +298,7 @@ func (a *GrackleLocksCoreAdapter) Read(appRequestBytes []byte) (*monstera.ReadRe
 			return nil, err
 		}
 		appResponse.Data = methodResponseBytes
-	case 3:
+	case 4:
 		payload := corepb.ListLockLeasesRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
 		if err != nil {
@@ -316,7 +316,7 @@ func (a *GrackleLocksCoreAdapter) Read(appRequestBytes []byte) (*monstera.ReadRe
 			return nil, err
 		}
 		appResponse.Data = methodResponseBytes
-	case 4:
+	case 5:
 		payload := corepb.ListLockLeasesByProcessIdRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
 		if err != nil {
@@ -334,7 +334,7 @@ func (a *GrackleLocksCoreAdapter) Read(appRequestBytes []byte) (*monstera.ReadRe
 			return nil, err
 		}
 		appResponse.Data = methodResponseBytes
-	case 5:
+	case 6:
 		payload := corepb.GetLockLeaseRequest{}
 		err := payload.UnmarshalBinary(appRequest.Data)
 		if err != nil {

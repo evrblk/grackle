@@ -198,8 +198,26 @@ func TestAncestors_ExpirationCleansUpAncestors(t *testing.T) {
 	anc_a := getAncestor(t, core, ancestorId(lockId, "a"))
 	require.EqualValues(t, 1, anc_a.ExclusiveCount)
 
-	// GetLock after expiry — should lazy-delete the lock and clean up ancestors
-	_ = getLock(t, core, lockId, now.Add(2*time.Minute))
+	// GetLock after expiry reports the lock as unlocked (expired holders are filtered out)...
+	lock := getLock(t, core, lockId, now.Add(2*time.Minute))
+	require.Equal(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State)
+
+	// ...but GetLock is read-only, so the ancestor counters are not cleaned up by it.
+	// That cleanup is the GC's responsibility (see TestAncestors_GarbageCollectionCleansUpAncestors).
+	anc_a = getAncestor(t, core, ancestorId(lockId, "a"))
+	require.EqualValues(t, 1, anc_a.ExclusiveCount)
+
+	// Run garbage collection to clean up the expired lock and its ancestors.
+	gcResponse, err := core.RunLocksGarbageCollection(&coreapis.RunLocksGarbageCollectionRequest{
+		Payload: &corepb.RunLocksGarbageCollectionRequest{
+			Now:                   now.Add(2 * time.Minute).UnixNano(),
+			GcRecordsPageSize:     100,
+			GcRecordLocksPageSize: 100,
+			MaxVisitedLocks:       100,
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, gcResponse)
 
 	anc_a = getAncestor(t, core, ancestorId(lockId, "a"))
 	require.EqualValues(t, 0, anc_a.ExclusiveCount)

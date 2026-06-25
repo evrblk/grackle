@@ -347,11 +347,13 @@ func (c *Core) DeleteSemaphore(req *coreapis.DeleteSemaphoreRequest) (*coreapis.
 	}, nil
 }
 
-// GetSemaphore looks up a semaphore by SemaphoreId. As a side effect it deletes holders that have
-// expired by `now`, updates the semaphore's earliest-expiration entry, and persists the resulting
-// counters. Returns NotFound if the semaphore does not exist.
+// GetSemaphore looks up a semaphore by SemaphoreId. Because it runs on a read-only transaction it
+// cannot remove expired holders; instead it returns a copy of the semaphore with `ActiveHolds`,
+// `ActiveHoldersCount`, and `EarliestHolderExpiresAt` adjusted as if holders that expired by `now`
+// had been removed. Expired rows are cleaned up by GC. Returns NotFound if the semaphore does not
+// exist.
 func (c *Core) GetSemaphore(req *coreapis.GetSemaphoreRequest) (*coreapis.GetSemaphoreResponse, error) {
-	txn := c.badgerStore.Update()
+	txn := c.badgerStore.View()
 	defer txn.Discard()
 
 	semaphore, err := c.semaphores.Get(txn, req.Payload.SemaphoreId)
@@ -371,37 +373,8 @@ func (c *Core) GetSemaphore(req *coreapis.GetSemaphoreRequest) (*coreapis.GetSem
 		return nil, err
 	}
 
-	// Check expired holders
-	updatedSemaphore, _, err := c.deleteExpiredSemaphoreHolders(txn, semaphore, req.Payload.Now)
-	if err != nil {
-		return nil, err
-	}
-
-	// Update expiration records if earliest expiration changed
-	if semaphore.EarliestHolderExpiresAt != updatedSemaphore.EarliestHolderExpiresAt {
-		// Remove semaphore from expirationRecords at old position
-		if semaphore.EarliestHolderExpiresAt != 0 {
-			err = c.expirationRecords.Delete(txn, semaphore.EarliestHolderExpiresAt, semaphore.Id)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		// Add semaphore to expirationRecords at new position
-		if updatedSemaphore.EarliestHolderExpiresAt != 0 {
-			err = c.expirationRecords.Add(txn, updatedSemaphore.EarliestHolderExpiresAt, semaphore.Id)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	err = c.semaphores.Update(txn, updatedSemaphore)
-	if err != nil {
-		return nil, err
-	}
-
-	err = txn.Commit()
+	// Filter out expired holders
+	updatedSemaphore, _, err := c.computeExpiredSemaphoreHolders(txn, semaphore, req.Payload.Now)
 	if err != nil {
 		return nil, err
 	}
@@ -413,11 +386,13 @@ func (c *Core) GetSemaphore(req *coreapis.GetSemaphoreRequest) (*coreapis.GetSem
 	}, nil
 }
 
-// GetSemaphoreByName is the by-name counterpart of GetSemaphore. It prunes expired holders and
-// updates expiration-index entries as a side effect, and returns NotFound when no semaphore with
-// that name exists in the namespace.
+// GetSemaphoreByName is the by-name counterpart of GetSemaphore. Because it runs on a read-only
+// transaction it cannot remove expired holders; instead it returns a copy of the semaphore with
+// `ActiveHolds`, `ActiveHoldersCount`, and `EarliestHolderExpiresAt` adjusted as if holders that
+// expired by `now` had been removed. Returns NotFound when no semaphore with that name exists in
+// the namespace.
 func (c *Core) GetSemaphoreByName(req *coreapis.GetSemaphoreByNameRequest) (*coreapis.GetSemaphoreByNameResponse, error) {
-	txn := c.badgerStore.Update()
+	txn := c.badgerStore.View()
 	defer txn.Discard()
 
 	semaphore, err := c.semaphores.GetByName(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, req.Payload.SemaphoreName)
@@ -437,37 +412,8 @@ func (c *Core) GetSemaphoreByName(req *coreapis.GetSemaphoreByNameRequest) (*cor
 		return nil, err
 	}
 
-	// Check expired holders
-	updatedSemaphore, _, err := c.deleteExpiredSemaphoreHolders(txn, semaphore, req.Payload.Now)
-	if err != nil {
-		return nil, err
-	}
-
-	// Update expiration records if earliest expiration changed
-	if semaphore.EarliestHolderExpiresAt != updatedSemaphore.EarliestHolderExpiresAt {
-		// Remove semaphore from expirationRecords at old position
-		if semaphore.EarliestHolderExpiresAt != 0 {
-			err = c.expirationRecords.Delete(txn, semaphore.EarliestHolderExpiresAt, semaphore.Id)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		// Add semaphore to expirationRecords at new position
-		if updatedSemaphore.EarliestHolderExpiresAt != 0 {
-			err = c.expirationRecords.Add(txn, updatedSemaphore.EarliestHolderExpiresAt, semaphore.Id)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	err = c.semaphores.Update(txn, updatedSemaphore)
-	if err != nil {
-		return nil, err
-	}
-
-	err = txn.Commit()
+	// Filter out expired holders
+	updatedSemaphore, _, err := c.computeExpiredSemaphoreHolders(txn, semaphore, req.Payload.Now)
 	if err != nil {
 		return nil, err
 	}

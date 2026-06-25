@@ -8,20 +8,23 @@ cores:
       - name: LockReleased
       - name: LockDeleted
     read_methods:
-      - name: ListLocks
+      - name: GetLock
         method_number: 1
         sharded: true
-      - name: ListLocksByLeaseId
+      - name: ListLocks
         method_number: 2
         sharded: true
-      - name: ListLockLeases
+      - name: ListLocksByLeaseId
         method_number: 3
         sharded: true
-      - name: ListLockLeasesByProcessId
+      - name: ListLockLeases
         method_number: 4
         sharded: true
-      - name: GetLockLease
+      - name: ListLockLeasesByProcessId
         method_number: 5
+        sharded: true
+      - name: GetLockLease
+        method_number: 6
         sharded: true
     update_methods:
       - name: AcquireLock
@@ -33,23 +36,20 @@ cores:
       - name: DeleteLock
         method_number: 3
         sharded: true
-      - name: GetLock
-        method_number: 4
-        sharded: true
       - name: RunLocksGarbageCollection
-        method_number: 5
+        method_number: 4
         sharded: false
       - name: LocksDeleteNamespace
-        method_number: 6
+        method_number: 5
         sharded: true
       - name: CreateLockLease
-        method_number: 7
+        method_number: 6
         sharded: true
       - name: RefreshLockLease
-        method_number: 8
+        method_number: 7
         sharded: true
       - name: RevokeLockLease
-        method_number: 9
+        method_number: 8
         sharded: true
 
   - name: GrackleSemaphores

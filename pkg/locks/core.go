@@ -95,11 +95,12 @@ func (c *Core) Close() {
 
 // GetLock returns the current state of the named lock. If no record exists,
 // a synthetic UNLOCKED lock is returned (this is not an error). Expired
-// holders are evicted as a side effect: if eviction leaves the lock with no
-// holders, the lock row is deleted and the per-namespace lock counter is
-// decremented; otherwise the surviving-holders set is written back.
+// holders are filtered out of the returned lock before it is returned to the
+// caller. This runs on a read-only transaction: expired rows are not deleted
+// here — that is left to the GC. If every holder has expired the returned lock
+// has state UNLOCKED.
 func (c *Core) GetLock(req *coreapis.GetLockRequest) (*coreapis.GetLockResponse, error) {
-	txn := c.badgerStore.Update()
+	txn := c.badgerStore.View()
 	defer txn.Discard()
 
 	lock, err := c.locks.Get(txn, req.Payload.LockId)
@@ -120,46 +121,8 @@ func (c *Core) GetLock(req *coreapis.GetLockRequest) (*coreapis.GetLockResponse,
 		return nil, err
 	}
 
-	// Check expiration
+	// Filter out expired holders
 	updatedLock, err := c.checkLockExpiration(txn, lock, req.Payload.Now)
-	if err != nil {
-		return nil, err
-	}
-
-	if updatedLock.State == corepb.LockState_LOCK_STATE_UNLOCKED {
-		// Get counters for that namespace
-		counters, err := c.counters.Get(txn, req.Payload.LockId.AccountId, req.Payload.LockId.NamespaceId)
-		if err != nil {
-			return nil, err
-		}
-
-		// Lock is expired, delete it
-		err = c.locks.Delete(txn, lock.Id)
-		if err != nil {
-			return nil, err
-		}
-
-		// Update ancestor entries
-		err = c.decrementAncestors(txn, lock.Id, lock.State == corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED)
-		if err != nil {
-			return nil, err
-		}
-
-		// Update counters
-		counters.NumberOfLocks -= 1
-		err = c.counters.Set(txn, req.Payload.LockId.AccountId, req.Payload.LockId.NamespaceId, counters)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		// Lock is still held, update unexpired holders
-		err = c.locks.Update(txn, updatedLock)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	err = txn.Commit()
 	if err != nil {
 		return nil, err
 	}

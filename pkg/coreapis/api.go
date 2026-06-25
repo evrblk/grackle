@@ -10,6 +10,8 @@ import (
 	"io"
 )
 
+type GetLockRequest = monsterax.ReadRequest[*corepb.GetLockRequest]
+type GetLockResponse = monsterax.ReadResponse[*corepb.GetLockResponse]
 type ListLocksRequest = monsterax.ReadRequest[*corepb.ListLocksRequest]
 type ListLocksResponse = monsterax.ReadResponse[*corepb.ListLocksResponse]
 type ListLocksByLeaseIdRequest = monsterax.ReadRequest[*corepb.ListLocksByLeaseIdRequest]
@@ -26,8 +28,6 @@ type ReleaseLockRequest = monsterax.UpdateRequest[*corepb.ReleaseLockRequest]
 type ReleaseLockResponse = monsterax.UpdateResponse[*corepb.ReleaseLockResponse]
 type DeleteLockRequest = monsterax.UpdateRequest[*corepb.DeleteLockRequest]
 type DeleteLockResponse = monsterax.UpdateResponse[*corepb.DeleteLockResponse]
-type GetLockRequest = monsterax.UpdateRequest[*corepb.GetLockRequest]
-type GetLockResponse = monsterax.UpdateResponse[*corepb.GetLockResponse]
 type RunLocksGarbageCollectionRequest = monsterax.UpdateUnshardedRequest[*corepb.RunLocksGarbageCollectionRequest]
 type RunLocksGarbageCollectionResponse = monsterax.UpdateResponse[*corepb.RunLocksGarbageCollectionResponse]
 type LocksDeleteNamespaceRequest = monsterax.UpdateRequest[*corepb.LocksDeleteNamespaceRequest]
@@ -128,6 +128,7 @@ type BarriersDeleteNamespaceRequest = monsterax.UpdateRequest[*corepb.BarriersDe
 type BarriersDeleteNamespaceResponse = monsterax.UpdateResponse[*corepb.BarriersDeleteNamespaceResponse]
 
 type GrackleClientApi interface {
+	GetLock(ctx context.Context, req *corepb.GetLockRequest) (*corepb.GetLockResponse, error)
 	ListLocks(ctx context.Context, req *corepb.ListLocksRequest) (*corepb.ListLocksResponse, error)
 	ListLocksByLeaseId(ctx context.Context, req *corepb.ListLocksByLeaseIdRequest) (*corepb.ListLocksByLeaseIdResponse, error)
 	ListLockLeases(ctx context.Context, req *corepb.ListLockLeasesRequest) (*corepb.ListLockLeasesResponse, error)
@@ -136,7 +137,6 @@ type GrackleClientApi interface {
 	AcquireLock(ctx context.Context, req *corepb.AcquireLockRequest) (*corepb.AcquireLockResponse, error)
 	ReleaseLock(ctx context.Context, req *corepb.ReleaseLockRequest) (*corepb.ReleaseLockResponse, error)
 	DeleteLock(ctx context.Context, req *corepb.DeleteLockRequest) (*corepb.DeleteLockResponse, error)
-	GetLock(ctx context.Context, req *corepb.GetLockRequest) (*corepb.GetLockResponse, error)
 	RunLocksGarbageCollection(ctx context.Context, req *corepb.RunLocksGarbageCollectionRequest, shardId string) (*corepb.RunLocksGarbageCollectionResponse, error)
 	LocksDeleteNamespace(ctx context.Context, req *corepb.LocksDeleteNamespaceRequest) (*corepb.LocksDeleteNamespaceResponse, error)
 	CreateLockLease(ctx context.Context, req *corepb.CreateLockLeaseRequest) (*corepb.CreateLockLeaseResponse, error)
@@ -197,6 +197,7 @@ type GrackleLocksCoreApi interface {
 	Snapshot() monstera.ApplicationCoreSnapshot
 	Restore(reader io.ReadCloser) error
 	Close()
+	GetLock(req *GetLockRequest) (*GetLockResponse, error)
 	ListLocks(req *ListLocksRequest) (*ListLocksResponse, error)
 	ListLocksByLeaseId(req *ListLocksByLeaseIdRequest) (*ListLocksByLeaseIdResponse, error)
 	ListLockLeases(req *ListLockLeasesRequest) (*ListLockLeasesResponse, error)
@@ -205,7 +206,6 @@ type GrackleLocksCoreApi interface {
 	AcquireLock(req *AcquireLockRequest) (*AcquireLockResponse, error)
 	ReleaseLock(req *ReleaseLockRequest) (*ReleaseLockResponse, error)
 	DeleteLock(req *DeleteLockRequest) (*DeleteLockResponse, error)
-	GetLock(req *GetLockRequest) (*GetLockResponse, error)
 	RunLocksGarbageCollection(req *RunLocksGarbageCollectionRequest) (*RunLocksGarbageCollectionResponse, error)
 	LocksDeleteNamespace(req *LocksDeleteNamespaceRequest) (*LocksDeleteNamespaceResponse, error)
 	CreateLockLease(req *CreateLockLeaseRequest) (*CreateLockLeaseResponse, error)

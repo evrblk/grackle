@@ -20,7 +20,7 @@ type GrackleMonsteraStub struct {
 
 var _ GrackleClientApi = &GrackleMonsteraStub{}
 
-func (s *GrackleMonsteraStub) ListLocks(ctx context.Context, request *corepb.ListLocksRequest) (*corepb.ListLocksResponse, error) {
+func (s *GrackleMonsteraStub) GetLock(ctx context.Context, request *corepb.GetLockRequest) (*corepb.GetLockResponse, error) {
 	data, err := request.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -29,6 +29,40 @@ func (s *GrackleMonsteraStub) ListLocks(ctx context.Context, request *corepb.Lis
 	appRequest := &monsterax.Request{
 		Data:         data,
 		MethodNumber: 1,
+	}
+	requestBytes, err := appRequest.MarshalVT()
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleLocks", request.ShardKey(), false, requestBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	appResponse := &monsterax.Response{}
+	err = appResponse.UnmarshalVT(responseBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+	response := &corepb.GetLockResponse{}
+	err = response.UnmarshalVT(appResponse.Data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return response, nilifyIfEmpty(appResponse.Error)
+}
+
+func (s *GrackleMonsteraStub) ListLocks(ctx context.Context, request *corepb.ListLocksRequest) (*corepb.ListLocksResponse, error) {
+	data, err := request.MarshalBinary()
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	appRequest := &monsterax.Request{
+		Data:         data,
+		MethodNumber: 2,
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -62,7 +96,7 @@ func (s *GrackleMonsteraStub) ListLocksByLeaseId(ctx context.Context, request *c
 
 	appRequest := &monsterax.Request{
 		Data:         data,
-		MethodNumber: 2,
+		MethodNumber: 3,
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -96,7 +130,7 @@ func (s *GrackleMonsteraStub) ListLockLeases(ctx context.Context, request *corep
 
 	appRequest := &monsterax.Request{
 		Data:         data,
-		MethodNumber: 3,
+		MethodNumber: 4,
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -130,7 +164,7 @@ func (s *GrackleMonsteraStub) ListLockLeasesByProcessId(ctx context.Context, req
 
 	appRequest := &monsterax.Request{
 		Data:         data,
-		MethodNumber: 4,
+		MethodNumber: 5,
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -164,7 +198,7 @@ func (s *GrackleMonsteraStub) GetLockLease(ctx context.Context, request *corepb.
 
 	appRequest := &monsterax.Request{
 		Data:         data,
-		MethodNumber: 5,
+		MethodNumber: 6,
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -292,40 +326,6 @@ func (s *GrackleMonsteraStub) DeleteLock(ctx context.Context, request *corepb.De
 	return response, nilifyIfEmpty(appResponse.Error)
 }
 
-func (s *GrackleMonsteraStub) GetLock(ctx context.Context, request *corepb.GetLockRequest) (*corepb.GetLockResponse, error) {
-	data, err := request.MarshalBinary()
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal request: %w", err)
-	}
-
-	appRequest := &monsterax.Request{
-		Data:         data,
-		MethodNumber: 4,
-	}
-	requestBytes, err := appRequest.MarshalVT()
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal request: %w", err)
-	}
-
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", request.ShardKey(), requestBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	appResponse := &monsterax.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
-	}
-	response := &corepb.GetLockResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
-	}
-
-	return response, nilifyIfEmpty(appResponse.Error)
-}
-
 func (s *GrackleMonsteraStub) RunLocksGarbageCollection(ctx context.Context, request *corepb.RunLocksGarbageCollectionRequest, shardId string) (*corepb.RunLocksGarbageCollectionResponse, error) {
 	data, err := request.MarshalBinary()
 	if err != nil {
@@ -334,7 +334,7 @@ func (s *GrackleMonsteraStub) RunLocksGarbageCollection(ctx context.Context, req
 
 	appRequest := &monsterax.Request{
 		Data:         data,
-		MethodNumber: 5,
+		MethodNumber: 4,
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -368,7 +368,7 @@ func (s *GrackleMonsteraStub) LocksDeleteNamespace(ctx context.Context, request 
 
 	appRequest := &monsterax.Request{
 		Data:         data,
-		MethodNumber: 6,
+		MethodNumber: 5,
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -402,7 +402,7 @@ func (s *GrackleMonsteraStub) CreateLockLease(ctx context.Context, request *core
 
 	appRequest := &monsterax.Request{
 		Data:         data,
-		MethodNumber: 7,
+		MethodNumber: 6,
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -436,7 +436,7 @@ func (s *GrackleMonsteraStub) RefreshLockLease(ctx context.Context, request *cor
 
 	appRequest := &monsterax.Request{
 		Data:         data,
-		MethodNumber: 8,
+		MethodNumber: 7,
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -470,7 +470,7 @@ func (s *GrackleMonsteraStub) RevokeLockLease(ctx context.Context, request *core
 
 	appRequest := &monsterax.Request{
 		Data:         data,
-		MethodNumber: 9,
+		MethodNumber: 8,
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -2073,6 +2073,28 @@ type GrackleNonclusteredStub struct {
 
 var _ GrackleClientApi = &GrackleNonclusteredStub{}
 
+func (s *GrackleNonclusteredStub) GetLock(ctx context.Context, request *corepb.GetLockRequest) (*corepb.GetLockResponse, error) {
+	shardKey := request.ShardKey()
+	for _, adapter := range s.grackleLocksCores {
+		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+			adapter.mu.RLock()
+			defer adapter.mu.RUnlock()
+
+			response, err := adapter.core.GetLock(&monsterax.ReadRequest[*corepb.GetLockRequest]{Payload: request})
+			if err != nil {
+				return nil, err
+			}
+			err = nilifyIfEmpty(response.ApplicationError)
+			if err != nil {
+				return nil, err
+			}
+			return response.Payload, nil
+		}
+	}
+
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+}
+
 func (s *GrackleNonclusteredStub) ListLocks(ctx context.Context, request *corepb.ListLocksRequest) (*corepb.ListLocksResponse, error) {
 	shardKey := request.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
@@ -2235,28 +2257,6 @@ func (s *GrackleNonclusteredStub) DeleteLock(ctx context.Context, request *corep
 			defer adapter.mu.Unlock()
 
 			response, err := adapter.core.DeleteLock(&monsterax.UpdateRequest[*corepb.DeleteLockRequest]{Payload: request})
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(response.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			return response.Payload, nil
-		}
-	}
-
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
-}
-
-func (s *GrackleNonclusteredStub) GetLock(ctx context.Context, request *corepb.GetLockRequest) (*corepb.GetLockResponse, error) {
-	shardKey := request.ShardKey()
-	for _, adapter := range s.grackleLocksCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			response, err := adapter.core.GetLock(&monsterax.UpdateRequest[*corepb.GetLockRequest]{Payload: request})
 			if err != nil {
 				return nil, err
 			}
