@@ -11,10 +11,18 @@ message CreateBarrierRequest {
   BarrierId barrier_id = 1;
   string name = 2;
   string description = 3;
+  // Number of arrivals required to trip the barrier each generation.
   int64 expected_processes = 4;
   map<string, string> metadata = 5;
+  // Caller-supplied current time, Unix nanoseconds. The core is a deterministic
+  // replicated state machine, so the clock is passed in rather than read from the
+  // host. Recurs on most requests with the same meaning.
   sfixed64 now = 6;
+  // Per-namespace quota enforced by the core; the create is rejected if it would
+  // be exceeded.
   int64 max_number_of_barriers_per_namespace = 7;
+  // Inactivity window: the barrier is auto-deleted this many seconds after its
+  // last activity (each arrival pushes the deadline out).
   int64 delete_inactive_after_seconds = 8;
 }
 
@@ -27,6 +35,8 @@ message UpdateBarrierRequest {
   string description = 2;
   int64 expected_processes = 3;
   map<string, string> metadata = 4;
+  // Optimistic concurrency check: must equal the barrier's current version or the
+  // update is rejected.
   int64 expected_version = 5;
   sfixed64 now = 6;
   int64 delete_inactive_after_seconds = 7;
@@ -40,7 +50,10 @@ message UpdateBarrierResponse {
 message ArriveAtBarrierRequest {
   NamespaceId namespace_id = 1;
   string barrier_name = 2;
+  // Caller-supplied identifier of the arriving process (free-form).
   string process_id = 3;
+  // The generation (cycle) the caller intends to arrive at, so a process never
+  // accidentally contributes to a later cycle than the one it observed.
   int64 generation = 4;
   map<string, string> metadata = 5;
   sfixed64 now = 6;
@@ -72,6 +85,8 @@ message DeleteBarrierRequest {
   NamespaceId namespace_id = 1;
   string barrier_name = 2;
   sfixed64 now = 3;
+  // Idempotency / bookkeeping id the core uses to track the asynchronous deletion
+  // of this object's data. Recurs on delete and namespace-teardown requests.
   fixed64 record_id = 4;
 }
 
@@ -122,15 +137,29 @@ message BarriersDeleteNamespaceRequest {
 
 message BarriersDeleteNamespaceResponse {}
 
+// Barrier is a reusable, generational rendezvous point for a fixed number of
+// processes (a cyclic barrier). Processes call ArriveAtBarrier; once
+// expected_processes of them have arrived, the barrier "trips": all waiters are
+// released, generation advances by one, and arrived_processes resets to 0 for the
+// next cycle. The generation lets a fast process wait for exactly the cycle it
+// cares about and a slow one avoid contributing to the wrong cycle.
 message Barrier {
   BarrierId id = 1;
   string name = 2;
   string description = 3;
+  // Creation / last-modification time, Unix nanoseconds.
   sfixed64 created_at = 4;
   sfixed64 updated_at = 5;
+  // Number of arrivals required to trip the barrier.
   int64 expected_processes = 6;
+  // Arrivals recorded in the current generation so far (0 <= arrived_processes <
+  // expected_processes; reaching it trips the barrier and resets this to 0).
   int64 arrived_processes = 7;
+  // Current cycle number, starting at 1 and incremented by exactly one on each
+  // trip.
   int64 generation = 8;
+  // Monotonic version, bumped on every successful update. Passed back as
+  // expected_version for optimistic concurrency control.
   int64 version = 9;
   map<string, string> metadata = 10;
   // last_activity_at is the timestamp (ns) of the most recent activity on this
@@ -143,16 +172,22 @@ message Barrier {
   int64 delete_inactive_after_seconds = 12;
 }
 
+// BarrierId uniquely identifies a barrier within an account and namespace.
 message BarrierId {
   fixed64 account_id = 1;
   fixed64 namespace_id = 2;
   fixed64 barrier_id = 4;
 }
 
+// BarriersCounter holds the per-namespace aggregate counts the core maintains to
+// enforce quotas.
 message BarriersCounter {
   int64 number_of_barriers = 1;
 }
 
+// BarriersGarbageCollectionRecord is an internal bookkeeping entry queuing
+// asynchronous deletion of either a whole namespace's barriers or a single
+// barrier's data.
 message BarriersGarbageCollectionRecord {
   fixed64 id = 1;
   oneof record {
@@ -169,9 +204,15 @@ message BarriersDeletionRecord {
   sfixed64 delete_at = 2;
 }
 
+// BarrierParticipant is one process's arrival in a given generation. Participants
+// are listed per generation, so callers can see who has and has not arrived in a
+// cycle.
 message BarrierParticipant {
+  // Caller-supplied identifier of the arrived process (free-form).
   string process_id = 1;
+  // When the process arrived, Unix nanoseconds.
   sfixed64 arrived_at = 2;
+  // The generation (cycle) this arrival belongs to.
   int64 generation = 3;
   map<string, string> metadata = 4;
 }

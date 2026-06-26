@@ -1999,6 +1999,116 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 	})
 }
 
+func TestCore_AcquireLock_ContentionReason(t *testing.T) {
+	t.Run("peer conflict reports PEER", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint64()
+		lockId := &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a"}
+
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+
+		// Hold it exclusively, then another lease tries to acquire it.
+		success, reason, _ := acquireLockReason(t, core, lockId, lease1.Id, true, now)
+		require.True(t, success)
+		require.Equal(t, corepb.ContentionReason_CONTENTION_REASON_UNSPECIFIED, reason)
+
+		success, reason, blocking := acquireLockReason(t, core, lockId, lease2.Id, false, now.Add(time.Minute))
+		require.False(t, success)
+		require.Equal(t, corepb.ContentionReason_CONTENTION_REASON_PEER, reason)
+		// For PEER the conflicting lock is already in the response's Lock field, so
+		// it is not duplicated into blocking_locks.
+		require.Empty(t, blocking)
+	})
+
+	t.Run("ancestor conflict reports ANCESTOR", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint64()
+		parentLock := &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a/b"}
+		childLock := &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a/b/c"}
+
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+
+		success, _, _ := acquireLockReason(t, core, parentLock, lease1.Id, true, now)
+		require.True(t, success)
+
+		success, reason, blocking := acquireLockReason(t, core, childLock, lease2.Id, false, now)
+		require.False(t, success)
+		require.Equal(t, corepb.ContentionReason_CONTENTION_REASON_ANCESTOR, reason)
+		// The blocking ancestor lock is surfaced.
+		require.Equal(t, []string{"a/b"}, lockNames(blocking))
+	})
+
+	t.Run("descendant conflict reports DESCENDANT", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint64()
+		parentLock := &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a/b"}
+		childLock := &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a/b/c"}
+
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+
+		// Child held exclusively blocks acquiring the parent.
+		success, _, _ := acquireLockReason(t, core, childLock, lease1.Id, true, now)
+		require.True(t, success)
+
+		success, reason, blocking := acquireLockReason(t, core, parentLock, lease2.Id, true, now)
+		require.False(t, success)
+		require.Equal(t, corepb.ContentionReason_CONTENTION_REASON_DESCENDANT, reason)
+		// The blocking descendant lock is surfaced.
+		require.Equal(t, []string{"a/b/c"}, lockNames(blocking))
+	})
+
+	t.Run("descendant blocking locks are capped at maxBlockingLocks", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint64()
+		parentLock := &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a"}
+
+		// Acquire more exclusive descendants than the cap, each under its own lease.
+		for i := 0; i < maxBlockingLocks+10; i++ {
+			childLock := &corepb.LockId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId,
+				LockName:    fmt.Sprintf("a/child-%03d", i),
+			}
+			lease := createLease(t, core, accountId, namespaceId, fmt.Sprintf("p-%d", i), now, 60*time.Minute)
+			success, _, _ := acquireLockReason(t, core, childLock, lease.Id, true, now)
+			require.True(t, success)
+		}
+
+		// Acquiring the parent is blocked, and the reported blockers are capped.
+		waiter := createLease(t, core, accountId, namespaceId, "waiter", now, 60*time.Minute)
+		success, reason, blocking := acquireLockReason(t, core, parentLock, waiter.Id, true, now)
+		require.False(t, success)
+		require.Equal(t, corepb.ContentionReason_CONTENTION_REASON_DESCENDANT, reason)
+		require.Len(t, blocking, maxBlockingLocks)
+	})
+
+	t.Run("successful acquire reports UNSPECIFIED with no blocking locks", func(t *testing.T) {
+		core := newLocksCore(t)
+		now := time.Now()
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint64()
+		lockId := &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a"}
+
+		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+
+		success, reason, blocking := acquireLockReason(t, core, lockId, lease.Id, true, now)
+		require.True(t, success)
+		require.Equal(t, corepb.ContentionReason_CONTENTION_REASON_UNSPECIFIED, reason)
+		require.Empty(t, blocking)
+	})
+}
+
 func TestCore_LockAncestorNames(t *testing.T) {
 	core := newLocksCore(t)
 	require.Nil(t, core.lockAncestorNames("flat"))
@@ -2692,6 +2802,37 @@ func acquireLock(t *testing.T, core *Core, lockId *corepb.LockId, leaseId *corep
 	require.NotNil(t, resp.Payload.Lock)
 
 	return resp.Payload.Success, resp.Payload.Lock
+}
+
+// acquireLockReason is like acquireLock but also returns the contention reason
+// and blocking locks the core reported for the attempt.
+func acquireLockReason(t *testing.T, core *Core, lockId *corepb.LockId, leaseId *corepb.LeaseId, exclusive bool, now time.Time) (bool, corepb.ContentionReason, []*corepb.Lock) {
+	t.Helper()
+
+	resp, err := core.AcquireLock(&coreapis.AcquireLockRequest{
+		Payload: &corepb.AcquireLockRequest{
+			LockId:                       lockId,
+			LeaseId:                      leaseId.LeaseId,
+			Now:                          now.UnixNano(),
+			Exclusive:                    exclusive,
+			MaxNumberOfLocksPerNamespace: 2_000,
+		},
+	})
+
+	require.NoError(t, err)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+
+	return resp.Payload.Success, resp.Payload.Reason, resp.Payload.BlockingLocks
+}
+
+// lockNames returns the names of the given locks, for convenient assertions.
+func lockNames(locks []*corepb.Lock) []string {
+	names := make([]string, len(locks))
+	for i, l := range locks {
+		names[i] = l.Id.LockName
+	}
+	return names
 }
 
 func releaseLock(t *testing.T, core *Core, lockId *corepb.LockId, leaseId *corepb.LeaseId, now time.Time) *corepb.Lock {

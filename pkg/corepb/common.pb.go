@@ -21,6 +21,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Direction the token pages in, relative to where it was issued.
 type PaginationToken_Type int32
 
 const (
@@ -70,10 +71,14 @@ func (PaginationToken_Type) EnumDescriptor() ([]byte, []int) {
 	return file_pkg_corepb_common_proto_rawDescGZIP(), []int{0, 0}
 }
 
+// PaginationToken is an opaque cursor into a paginated list. Callers receive it
+// in a list response and pass it back verbatim to fetch the adjacent page; the
+// encoded value is an internal store key and must not be parsed by clients.
 type PaginationToken struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Type          PaginationToken_Type   `protobuf:"varint,1,opt,name=type,proto3,enum=com.evrblk.grackle.corepb.PaginationToken_Type" json:"type,omitempty"`
-	Value         []byte                 `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Type  PaginationToken_Type   `protobuf:"varint,1,opt,name=type,proto3,enum=com.evrblk.grackle.corepb.PaginationToken_Type" json:"type,omitempty"`
+	// Opaque encoded position (an internal store key); do not interpret.
+	Value         []byte `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -122,6 +127,9 @@ func (x *PaginationToken) GetValue() []byte {
 	return nil
 }
 
+// LeaseId uniquely identifies a lease within an account and namespace. Lock and
+// semaphore leases share this type but live in separate keyspaces, so the same
+// numeric id can refer to a different lease for each primitive.
 type LeaseId struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AccountId     uint64                 `protobuf:"fixed64,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
@@ -182,13 +190,26 @@ func (x *LeaseId) GetLeaseId() uint64 {
 	return 0
 }
 
+// Lease is a time-bounded ownership token: the unit that holds locks or
+// semaphore permits. A client creates a lease, acquires primitives under it, and
+// keeps it alive by refreshing before it expires (a heartbeat). When the lease
+// expires or is revoked, the core automatically releases everything held under
+// it, so a crashed client never leaves dangling holds. Lock and semaphore leases
+// are independent, and a lease is scoped to a single namespace.
 type Lease struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            *LeaseId               `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	ProcessId     string                 `protobuf:"bytes,2,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
-	CreatedAt     int64                  `protobuf:"fixed64,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	ExpiresAt     int64                  `protobuf:"fixed64,4,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	Metadata      map[string]string      `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Id    *LeaseId               `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// Caller-supplied identifier of the owning process (free-form, e.g.
+	// "host-1/pid-42"). Opaque to the core; stored for diagnostics and for listing
+	// leases by process.
+	ProcessId string `protobuf:"bytes,2,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
+	// Creation time, Unix nanoseconds.
+	CreatedAt int64 `protobuf:"fixed64,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	// Absolute expiration time, Unix nanoseconds. Once the core's clock passes it,
+	// the lease and every hold under it are released. Pushed forward by the
+	// Refresh{Lock,Semaphore}Lease calls.
+	ExpiresAt     int64             `protobuf:"fixed64,4,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	Metadata      map[string]string `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }

@@ -22,17 +22,25 @@ const (
 )
 
 type CreateBarrierRequest struct {
-	state                           protoimpl.MessageState `protogen:"open.v1"`
-	BarrierId                       *BarrierId             `protobuf:"bytes,1,opt,name=barrier_id,json=barrierId,proto3" json:"barrier_id,omitempty"`
-	Name                            string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Description                     string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	ExpectedProcesses               int64                  `protobuf:"varint,4,opt,name=expected_processes,json=expectedProcesses,proto3" json:"expected_processes,omitempty"`
-	Metadata                        map[string]string      `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	Now                             int64                  `protobuf:"fixed64,6,opt,name=now,proto3" json:"now,omitempty"`
-	MaxNumberOfBarriersPerNamespace int64                  `protobuf:"varint,7,opt,name=max_number_of_barriers_per_namespace,json=maxNumberOfBarriersPerNamespace,proto3" json:"max_number_of_barriers_per_namespace,omitempty"`
-	DeleteInactiveAfterSeconds      int64                  `protobuf:"varint,8,opt,name=delete_inactive_after_seconds,json=deleteInactiveAfterSeconds,proto3" json:"delete_inactive_after_seconds,omitempty"`
-	unknownFields                   protoimpl.UnknownFields
-	sizeCache                       protoimpl.SizeCache
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	BarrierId   *BarrierId             `protobuf:"bytes,1,opt,name=barrier_id,json=barrierId,proto3" json:"barrier_id,omitempty"`
+	Name        string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Description string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	// Number of arrivals required to trip the barrier each generation.
+	ExpectedProcesses int64             `protobuf:"varint,4,opt,name=expected_processes,json=expectedProcesses,proto3" json:"expected_processes,omitempty"`
+	Metadata          map[string]string `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Caller-supplied current time, Unix nanoseconds. The core is a deterministic
+	// replicated state machine, so the clock is passed in rather than read from the
+	// host. Recurs on most requests with the same meaning.
+	Now int64 `protobuf:"fixed64,6,opt,name=now,proto3" json:"now,omitempty"`
+	// Per-namespace quota enforced by the core; the create is rejected if it would
+	// be exceeded.
+	MaxNumberOfBarriersPerNamespace int64 `protobuf:"varint,7,opt,name=max_number_of_barriers_per_namespace,json=maxNumberOfBarriersPerNamespace,proto3" json:"max_number_of_barriers_per_namespace,omitempty"`
+	// Inactivity window: the barrier is auto-deleted this many seconds after its
+	// last activity (each arrival pushes the deadline out).
+	DeleteInactiveAfterSeconds int64 `protobuf:"varint,8,opt,name=delete_inactive_after_seconds,json=deleteInactiveAfterSeconds,proto3" json:"delete_inactive_after_seconds,omitempty"`
+	unknownFields              protoimpl.UnknownFields
+	sizeCache                  protoimpl.SizeCache
 }
 
 func (x *CreateBarrierRequest) Reset() {
@@ -166,14 +174,16 @@ func (x *CreateBarrierResponse) GetBarrier() *Barrier {
 }
 
 type UpdateBarrierRequest struct {
-	state                      protoimpl.MessageState `protogen:"open.v1"`
-	BarrierId                  *BarrierId             `protobuf:"bytes,1,opt,name=barrier_id,json=barrierId,proto3" json:"barrier_id,omitempty"`
-	Description                string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	ExpectedProcesses          int64                  `protobuf:"varint,3,opt,name=expected_processes,json=expectedProcesses,proto3" json:"expected_processes,omitempty"`
-	Metadata                   map[string]string      `protobuf:"bytes,4,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	ExpectedVersion            int64                  `protobuf:"varint,5,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
-	Now                        int64                  `protobuf:"fixed64,6,opt,name=now,proto3" json:"now,omitempty"`
-	DeleteInactiveAfterSeconds int64                  `protobuf:"varint,7,opt,name=delete_inactive_after_seconds,json=deleteInactiveAfterSeconds,proto3" json:"delete_inactive_after_seconds,omitempty"`
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	BarrierId         *BarrierId             `protobuf:"bytes,1,opt,name=barrier_id,json=barrierId,proto3" json:"barrier_id,omitempty"`
+	Description       string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	ExpectedProcesses int64                  `protobuf:"varint,3,opt,name=expected_processes,json=expectedProcesses,proto3" json:"expected_processes,omitempty"`
+	Metadata          map[string]string      `protobuf:"bytes,4,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Optimistic concurrency check: must equal the barrier's current version or the
+	// update is rejected.
+	ExpectedVersion            int64 `protobuf:"varint,5,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
+	Now                        int64 `protobuf:"fixed64,6,opt,name=now,proto3" json:"now,omitempty"`
+	DeleteInactiveAfterSeconds int64 `protobuf:"varint,7,opt,name=delete_inactive_after_seconds,json=deleteInactiveAfterSeconds,proto3" json:"delete_inactive_after_seconds,omitempty"`
 	unknownFields              protoimpl.UnknownFields
 	sizeCache                  protoimpl.SizeCache
 }
@@ -310,13 +320,16 @@ func (x *UpdateBarrierResponse) GetAllArrived() bool {
 }
 
 type ArriveAtBarrierRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	BarrierName   string                 `protobuf:"bytes,2,opt,name=barrier_name,json=barrierName,proto3" json:"barrier_name,omitempty"`
-	ProcessId     string                 `protobuf:"bytes,3,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
-	Generation    int64                  `protobuf:"varint,4,opt,name=generation,proto3" json:"generation,omitempty"`
-	Metadata      map[string]string      `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	Now           int64                  `protobuf:"fixed64,6,opt,name=now,proto3" json:"now,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	NamespaceId *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
+	BarrierName string                 `protobuf:"bytes,2,opt,name=barrier_name,json=barrierName,proto3" json:"barrier_name,omitempty"`
+	// Caller-supplied identifier of the arriving process (free-form).
+	ProcessId string `protobuf:"bytes,3,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
+	// The generation (cycle) the caller intends to arrive at, so a process never
+	// accidentally contributes to a later cycle than the one it observed.
+	Generation    int64             `protobuf:"varint,4,opt,name=generation,proto3" json:"generation,omitempty"`
+	Metadata      map[string]string `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Now           int64             `protobuf:"fixed64,6,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -630,11 +643,13 @@ func (x *GetBarrierByNameResponse) GetBarrier() *Barrier {
 }
 
 type DeleteBarrierRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	BarrierName   string                 `protobuf:"bytes,2,opt,name=barrier_name,json=barrierName,proto3" json:"barrier_name,omitempty"`
-	Now           int64                  `protobuf:"fixed64,3,opt,name=now,proto3" json:"now,omitempty"`
-	RecordId      uint64                 `protobuf:"fixed64,4,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	NamespaceId *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
+	BarrierName string                 `protobuf:"bytes,2,opt,name=barrier_name,json=barrierName,proto3" json:"barrier_name,omitempty"`
+	Now         int64                  `protobuf:"fixed64,3,opt,name=now,proto3" json:"now,omitempty"`
+	// Idempotency / bookkeeping id the core uses to track the asynchronous deletion
+	// of this object's data. Recurs on delete and namespace-teardown requests.
+	RecordId      uint64 `protobuf:"fixed64,4,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1205,18 +1220,32 @@ func (*BarriersDeleteNamespaceResponse) Descriptor() ([]byte, []int) {
 	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{19}
 }
 
+// Barrier is a reusable, generational rendezvous point for a fixed number of
+// processes (a cyclic barrier). Processes call ArriveAtBarrier; once
+// expected_processes of them have arrived, the barrier "trips": all waiters are
+// released, generation advances by one, and arrived_processes resets to 0 for the
+// next cycle. The generation lets a fast process wait for exactly the cycle it
+// cares about and a slow one avoid contributing to the wrong cycle.
 type Barrier struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	Id                *BarrierId             `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Name              string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Description       string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	CreatedAt         int64                  `protobuf:"fixed64,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt         int64                  `protobuf:"fixed64,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	ExpectedProcesses int64                  `protobuf:"varint,6,opt,name=expected_processes,json=expectedProcesses,proto3" json:"expected_processes,omitempty"`
-	ArrivedProcesses  int64                  `protobuf:"varint,7,opt,name=arrived_processes,json=arrivedProcesses,proto3" json:"arrived_processes,omitempty"`
-	Generation        int64                  `protobuf:"varint,8,opt,name=generation,proto3" json:"generation,omitempty"`
-	Version           int64                  `protobuf:"varint,9,opt,name=version,proto3" json:"version,omitempty"`
-	Metadata          map[string]string      `protobuf:"bytes,10,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	Id          *BarrierId             `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name        string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Description string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	// Creation / last-modification time, Unix nanoseconds.
+	CreatedAt int64 `protobuf:"fixed64,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt int64 `protobuf:"fixed64,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	// Number of arrivals required to trip the barrier.
+	ExpectedProcesses int64 `protobuf:"varint,6,opt,name=expected_processes,json=expectedProcesses,proto3" json:"expected_processes,omitempty"`
+	// Arrivals recorded in the current generation so far (0 <= arrived_processes <
+	// expected_processes; reaching it trips the barrier and resets this to 0).
+	ArrivedProcesses int64 `protobuf:"varint,7,opt,name=arrived_processes,json=arrivedProcesses,proto3" json:"arrived_processes,omitempty"`
+	// Current cycle number, starting at 1 and incremented by exactly one on each
+	// trip.
+	Generation int64 `protobuf:"varint,8,opt,name=generation,proto3" json:"generation,omitempty"`
+	// Monotonic version, bumped on every successful update. Passed back as
+	// expected_version for optimistic concurrency control.
+	Version  int64             `protobuf:"varint,9,opt,name=version,proto3" json:"version,omitempty"`
+	Metadata map[string]string `protobuf:"bytes,10,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// last_activity_at is the timestamp (ns) of the most recent activity on this
 	// barrier (creation or a process arriving). Not affected by reads.
 	LastActivityAt int64 `protobuf:"fixed64,11,opt,name=last_activity_at,json=lastActivityAt,proto3" json:"last_activity_at,omitempty"`
@@ -1343,6 +1372,7 @@ func (x *Barrier) GetDeleteInactiveAfterSeconds() int64 {
 	return 0
 }
 
+// BarrierId uniquely identifies a barrier within an account and namespace.
 type BarrierId struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AccountId     uint64                 `protobuf:"fixed64,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
@@ -1403,6 +1433,8 @@ func (x *BarrierId) GetBarrierId() uint64 {
 	return 0
 }
 
+// BarriersCounter holds the per-namespace aggregate counts the core maintains to
+// enforce quotas.
 type BarriersCounter struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	NumberOfBarriers int64                  `protobuf:"varint,1,opt,name=number_of_barriers,json=numberOfBarriers,proto3" json:"number_of_barriers,omitempty"`
@@ -1447,6 +1479,9 @@ func (x *BarriersCounter) GetNumberOfBarriers() int64 {
 	return 0
 }
 
+// BarriersGarbageCollectionRecord is an internal bookkeeping entry queuing
+// asynchronous deletion of either a whole namespace's barriers or a single
+// barrier's data.
 type BarriersGarbageCollectionRecord struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Id    uint64                 `protobuf:"fixed64,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -1592,12 +1627,18 @@ func (x *BarriersDeletionRecord) GetDeleteAt() int64 {
 	return 0
 }
 
+// BarrierParticipant is one process's arrival in a given generation. Participants
+// are listed per generation, so callers can see who has and has not arrived in a
+// cycle.
 type BarrierParticipant struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ProcessId     string                 `protobuf:"bytes,1,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
-	ArrivedAt     int64                  `protobuf:"fixed64,2,opt,name=arrived_at,json=arrivedAt,proto3" json:"arrived_at,omitempty"`
-	Generation    int64                  `protobuf:"varint,3,opt,name=generation,proto3" json:"generation,omitempty"`
-	Metadata      map[string]string      `protobuf:"bytes,4,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Caller-supplied identifier of the arrived process (free-form).
+	ProcessId string `protobuf:"bytes,1,opt,name=process_id,json=processId,proto3" json:"process_id,omitempty"`
+	// When the process arrived, Unix nanoseconds.
+	ArrivedAt int64 `protobuf:"fixed64,2,opt,name=arrived_at,json=arrivedAt,proto3" json:"arrived_at,omitempty"`
+	// The generation (cycle) this arrival belongs to.
+	Generation    int64             `protobuf:"varint,3,opt,name=generation,proto3" json:"generation,omitempty"`
+	Metadata      map[string]string `protobuf:"bytes,4,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }

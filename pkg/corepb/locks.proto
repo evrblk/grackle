@@ -10,15 +10,43 @@ option go_package = "github.com/evrblk/grackle/pkg/corepb";
 message AcquireLockRequest {
   LockId lock_id = 1;
   fixed64 lease_id = 2;
+  // true acquires the lock exclusively (single holder); false acquires it shared
+  // (multiple shared holders coexist but block exclusive acquirers).
   bool exclusive = 3;
   map<string, string> metadata = 4;
+  // Caller-supplied current time, Unix nanoseconds. The core is a deterministic
+  // replicated state machine, so the clock is passed in rather than read from the
+  // host. Recurs on most requests with the same meaning.
   sfixed64 now = 5;
+  // Per-namespace quota enforced by the core; acquiring a brand-new lock is
+  // rejected if it would exceed this.
   int64 max_number_of_locks_per_namespace = 6;
 }
 
 message AcquireLockResponse {
   Lock lock = 1;
   bool success = 2;
+  // Why the acquire did not succeed. UNSPECIFIED when success is true. Best
+  // effort and point-in-time: it reflects the conflict seen on this attempt.
+  ContentionReason reason = 3;
+  // The locks blocking this acquire (blocking ancestors or blocking descendants
+  // depending on reason). Empty for PEER, where the conflicting lock is the lock
+  // being acquired and is already returned in the lock field. Best effort and
+  // capped at 50.
+  repeated Lock blocking_locks = 4;
+}
+
+// ContentionReason explains why an AcquireLock attempt found the lock
+// unavailable. It is a diagnostic hint, not part of the acquire control flow.
+enum ContentionReason {
+  CONTENTION_REASON_UNSPECIFIED = 0;
+  // PEER: the lock itself is held in an incompatible mode by another lease
+  // (e.g. held shared while exclusive was requested, or held exclusively).
+  CONTENTION_REASON_PEER = 1;
+  // ANCESTOR: a lock on an ancestor path blocks this acquire.
+  CONTENTION_REASON_ANCESTOR = 2;
+  // DESCENDANT: one or more locks on descendant paths block this acquire.
+  CONTENTION_REASON_DESCENDANT = 3;
 }
 
 message ReleaseLockRequest {
@@ -156,47 +184,81 @@ message ListLockLeasesByProcessIdResponse {
   PaginationToken previous_pagination_token = 3;
 }
 
+// Lock is a distributed read/write (shared/exclusive) lock held under a lease.
+// Locks are not created explicitly: the first successful AcquireLock creates the
+// record, and it disappears once the last holder leaves. A lock has either many
+// shared holders or a single exclusive holder, never both. Lock names are
+// '/'-separated paths that form a hierarchy — a held lock conflicts with acquires
+// on its ancestor and descendant paths (see LockAncestor).
 message Lock {
   LockId id = 1;
   LockState state = 2;
+  // When the lock first became held by its current set of holders, Unix
+  // nanoseconds. Reset on each transition out of UNLOCKED.
   sfixed64 locked_at = 3;
+  // Current holders: exactly one when EXCLUSIVE_LOCKED, one or more when
+  // SHARED_LOCKED, empty when UNLOCKED.
   repeated LockHolder lock_holders = 4;
   // last_activity_at is the timestamp (ns) of the most recent activity on this
   // lock (an acquire attempt or a release). Not affected by reads.
   sfixed64 last_activity_at = 5;
 }
 
+// LockHolder is one lease's hold on a lock.
 message LockHolder {
+  // The lease holding the lock.
   fixed64 lease_id = 1;
+  // When this holder acquired (or last refreshed) the lock, Unix nanoseconds.
   sfixed64 locked_at = 2;
   map<string, string> metadata = 3;
 }
 
+// LockState is the current hold state of a lock.
 enum LockState {
   LOCK_STATE_INVALID = 0;
+  // No holders; the lock effectively does not exist.
   LOCK_STATE_UNLOCKED = 1;
+  // Held shared (read) by one or more leases. Further shared acquires succeed;
+  // exclusive acquires are blocked.
   LOCK_STATE_SHARED_LOCKED = 2;
+  // Held exclusively (write) by a single lease. All other acquires are blocked.
   LOCK_STATE_EXCLUSIVE_LOCKED = 3;
 }
 
+// LockId uniquely identifies a lock. lock_name is the '/'-separated hierarchical
+// path.
 message LockId {
   fixed64 account_id = 1;
   fixed64 namespace_id = 2;
   string lock_name = 3;
 }
 
+// LocksCounter holds the per-namespace aggregate counts the core maintains to
+// enforce quotas.
 message LocksCounter {
   int64 number_of_locks = 1;
   int64 number_of_leases = 2;
 }
 
+// LocksGarbageCollectionRecord is an internal bookkeeping entry queuing a
+// namespace's locks for asynchronous deletion (e.g. after the namespace itself
+// is deleted).
 message LocksGarbageCollectionRecord {
   fixed64 id = 1;
   NamespaceId namespace_id = 2;
 }
 
+// LockAncestor is the per-path rollup that makes hierarchical descendant-conflict
+// checks O(1) instead of a subtree scan. For a path it counts how many descendant
+// locks are currently held in each mode, so an acquire can detect a conflicting
+// descendant without walking the subtree. (Ancestor conflicts, conversely, are
+// found by direct lock lookups walking up the path.)
 message LockAncestor {
+  // The path this rollup is keyed on (an ancestor path); its counts cover all
+  // locks strictly beneath it.
   LockId id = 1;
+  // Number of descendant locks currently held exclusively.
   int64 exclusive_count = 2;
+  // Number of descendant locks currently held shared.
   int64 shared_count = 3;
 }

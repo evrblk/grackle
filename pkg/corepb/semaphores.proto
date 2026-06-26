@@ -11,9 +11,15 @@ message CreateSemaphoreRequest {
   SemaphoreId semaphore_id = 1;
   string name = 2;
   string description = 3;
+  // Caller-supplied current time, Unix nanoseconds. The core is a deterministic
+  // replicated state machine, so the clock is passed in rather than read from the
+  // host. Recurs on most requests with the same meaning.
   sfixed64 now = 4;
+  // Total capacity: the maximum sum of holder weights admitted at once.
   int64 permits = 5;
   map<string, string> metadata = 6;
+  // Per-namespace quota enforced by the core; the create is rejected if it would
+  // be exceeded.
   int64 max_number_of_semaphores_per_namespace = 7;
 }
 
@@ -70,6 +76,9 @@ message AcquireSemaphoreRequest {
   NamespaceId namespace_id = 1;
   string semaphore_name = 2;
   fixed64 lease_id = 3;
+  // Number of permits to acquire. All-or-nothing: the acquire succeeds only when
+  // weight permits are free. Re-acquiring under the same lease adjusts that
+  // lease's existing hold rather than adding a second one.
   int64 weight = 4;
   sfixed64 now = 5;
   map<string, string> metadata = 6;
@@ -95,9 +104,13 @@ message UpdateSemaphoreRequest {
   NamespaceId namespace_id = 1;
   string semaphore_name = 2;
   string description = 3;
+  // New total capacity. Cannot be lowered below the permits currently held
+  // (active_holds).
   int64 permits = 4;
   sfixed64 now = 5;
   map<string, string> metadata = 6;
+  // Optimistic concurrency check: must equal the semaphore's current version or
+  // the update is rejected.
   int64 expected_version = 7;
 }
 
@@ -108,6 +121,8 @@ message UpdateSemaphoreResponse {
 message DeleteSemaphoreRequest {
   NamespaceId namespace_id = 1;
   string semaphore_name = 2;
+  // Idempotency / bookkeeping id the core uses to track the asynchronous deletion
+  // of this object's data. Recurs on delete and namespace-teardown requests.
   fixed64 record_id = 3;
 }
 
@@ -213,31 +228,51 @@ message RunSemaphoresGarbageCollectionRequest {
 
 message RunSemaphoresGarbageCollectionResponse {}
 
+// Semaphore is a weighted counting semaphore: it admits concurrent holders as
+// long as the sum of their weights stays within permits. Holders are leases, and
+// expired holders are pruned, so the active_* fields always reflect only holders
+// whose leases are still valid.
 message Semaphore {
   SemaphoreId id = 1;
   string name = 2;
   string description = 3;
+  // Creation / last-modification time, Unix nanoseconds.
   sfixed64 created_at = 4;
   sfixed64 updated_at = 5;
+  // Monotonic version, bumped on every successful update. Passed back as
+  // expected_version for optimistic concurrency control.
   int64 version = 6;
+  // Total capacity: the maximum sum of holder weights admitted at once.
   int64 permits = 7;
   map<string, string> metadata = 8;
+  // Currently consumed capacity: the sum of all active holders' weights
+  // (0 <= active_holds <= permits).
   int64 active_holds = 9;
+  // Number of distinct leases currently holding permits.
   int64 active_holders_count = 10;
+  // Soonest expiration time across current holders, Unix nanoseconds. Lets the
+  // core schedule the next pruning of expired holders without scanning them all.
   sfixed64 earliest_holder_expires_at = 11;
   // last_activity_at is the timestamp (ns) of the most recent activity on this
   // semaphore (an acquire attempt or a release). Not affected by reads.
   sfixed64 last_activity_at = 12;
 }
 
+// SemaphoreHolder is one lease's hold on a semaphore.
 message SemaphoreHolder {
   SemaphoreHolderId id = 1;
+  // When the hold was acquired (or last refreshed), Unix nanoseconds.
   sfixed64 locked_at = 2;
+  // When this hold lapses if its lease is not refreshed, Unix nanoseconds; mirrors
+  // the owning lease's expiration.
   sfixed64 expires_at = 3;
+  // Number of permits this holder consumes.
   int64 weight = 4;
   map<string, string> metadata = 5;
 }
 
+// SemaphoreHolderId uniquely identifies a single lease's hold on a semaphore: at
+// most one holder exists per (semaphore, lease) pair.
 message SemaphoreHolderId {
   fixed64 account_id = 1;
   fixed64 namespace_id = 2;
@@ -245,12 +280,16 @@ message SemaphoreHolderId {
   fixed64 lease_id = 4;
 }
 
+// SemaphoreId uniquely identifies a semaphore within an account and namespace.
 message SemaphoreId {
   fixed64 account_id = 1;
   fixed64 namespace_id = 2;
   fixed64 semaphore_id = 3;
 }
 
+// SemaphoresGarbageCollectionRecord is an internal bookkeeping entry queuing
+// asynchronous deletion of either a whole namespace's semaphores or a single
+// semaphore's data.
 message SemaphoresGarbageCollectionRecord {
   fixed64 id = 1;
   oneof record {
@@ -259,12 +298,18 @@ message SemaphoresGarbageCollectionRecord {
   }
 }
 
+// SemaphoresCounter holds the per-namespace aggregate counts the core maintains
+// to enforce quotas.
 message SemaphoresCounter {
   int64 number_of_semaphores = 1;
   int64 number_of_leases = 2;
 }
 
+// SemaphoresExpirationRecord is an index entry the core uses to find semaphores
+// with holders due to expire, so lapsed holds can be reclaimed in time order.
 message SemaphoresExpirationRecord {
   SemaphoreId semaphore_id = 1;
+  // The semaphore's earliest_holder_expires_at this entry was filed under, Unix
+  // nanoseconds.
   sfixed64 expires_at = 2;
 }

@@ -4,7 +4,11 @@ package com.evrblk.grackle.corepb;
 
 option go_package = "github.com/evrblk/grackle/pkg/corepb";
 
+// PaginationToken is an opaque cursor into a paginated list. Callers receive it
+// in a list response and pass it back verbatim to fetch the adjacent page; the
+// encoded value is an internal store key and must not be parsed by clients.
 message PaginationToken {
+  // Direction the token pages in, relative to where it was issued.
   enum Type {
     INVALID = 0;
     NEXT = 1;
@@ -12,19 +16,36 @@ message PaginationToken {
   }
 
   Type type = 1;
+  // Opaque encoded position (an internal store key); do not interpret.
   bytes value = 2;
 }
 
+// LeaseId uniquely identifies a lease within an account and namespace. Lock and
+// semaphore leases share this type but live in separate keyspaces, so the same
+// numeric id can refer to a different lease for each primitive.
 message LeaseId {
   fixed64 account_id = 1;
   fixed64 namespace_id = 2;
   fixed64 lease_id = 3;
 }
 
+// Lease is a time-bounded ownership token: the unit that holds locks or
+// semaphore permits. A client creates a lease, acquires primitives under it, and
+// keeps it alive by refreshing before it expires (a heartbeat). When the lease
+// expires or is revoked, the core automatically releases everything held under
+// it, so a crashed client never leaves dangling holds. Lock and semaphore leases
+// are independent, and a lease is scoped to a single namespace.
 message Lease {
   LeaseId id = 1;
+  // Caller-supplied identifier of the owning process (free-form, e.g.
+  // "host-1/pid-42"). Opaque to the core; stored for diagnostics and for listing
+  // leases by process.
   string process_id = 2;
+  // Creation time, Unix nanoseconds.
   sfixed64 created_at = 3;
+  // Absolute expiration time, Unix nanoseconds. Once the core's clock passes it,
+  // the lease and every hold under it are released. Pushed forward by the
+  // Refresh{Lock,Semaphore}Lease calls.
   sfixed64 expires_at = 4;
   map<string, string> metadata = 5;
 }

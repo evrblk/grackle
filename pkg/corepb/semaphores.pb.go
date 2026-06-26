@@ -22,14 +22,20 @@ const (
 )
 
 type CreateSemaphoreRequest struct {
-	state                             protoimpl.MessageState `protogen:"open.v1"`
-	SemaphoreId                       *SemaphoreId           `protobuf:"bytes,1,opt,name=semaphore_id,json=semaphoreId,proto3" json:"semaphore_id,omitempty"`
-	Name                              string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Description                       string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	Now                               int64                  `protobuf:"fixed64,4,opt,name=now,proto3" json:"now,omitempty"`
-	Permits                           int64                  `protobuf:"varint,5,opt,name=permits,proto3" json:"permits,omitempty"`
-	Metadata                          map[string]string      `protobuf:"bytes,6,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	MaxNumberOfSemaphoresPerNamespace int64                  `protobuf:"varint,7,opt,name=max_number_of_semaphores_per_namespace,json=maxNumberOfSemaphoresPerNamespace,proto3" json:"max_number_of_semaphores_per_namespace,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	SemaphoreId *SemaphoreId           `protobuf:"bytes,1,opt,name=semaphore_id,json=semaphoreId,proto3" json:"semaphore_id,omitempty"`
+	Name        string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Description string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	// Caller-supplied current time, Unix nanoseconds. The core is a deterministic
+	// replicated state machine, so the clock is passed in rather than read from the
+	// host. Recurs on most requests with the same meaning.
+	Now int64 `protobuf:"fixed64,4,opt,name=now,proto3" json:"now,omitempty"`
+	// Total capacity: the maximum sum of holder weights admitted at once.
+	Permits  int64             `protobuf:"varint,5,opt,name=permits,proto3" json:"permits,omitempty"`
+	Metadata map[string]string `protobuf:"bytes,6,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Per-namespace quota enforced by the core; the create is rejected if it would
+	// be exceeded.
+	MaxNumberOfSemaphoresPerNamespace int64 `protobuf:"varint,7,opt,name=max_number_of_semaphores_per_namespace,json=maxNumberOfSemaphoresPerNamespace,proto3" json:"max_number_of_semaphores_per_namespace,omitempty"`
 	unknownFields                     protoimpl.UnknownFields
 	sizeCache                         protoimpl.SizeCache
 }
@@ -618,9 +624,12 @@ type AcquireSemaphoreRequest struct {
 	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	SemaphoreName string                 `protobuf:"bytes,2,opt,name=semaphore_name,json=semaphoreName,proto3" json:"semaphore_name,omitempty"`
 	LeaseId       uint64                 `protobuf:"fixed64,3,opt,name=lease_id,json=leaseId,proto3" json:"lease_id,omitempty"`
-	Weight        int64                  `protobuf:"varint,4,opt,name=weight,proto3" json:"weight,omitempty"`
-	Now           int64                  `protobuf:"fixed64,5,opt,name=now,proto3" json:"now,omitempty"`
-	Metadata      map[string]string      `protobuf:"bytes,6,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Number of permits to acquire. All-or-nothing: the acquire succeeds only when
+	// weight permits are free. Re-acquiring under the same lease adjusts that
+	// lease's existing hold rather than adding a second one.
+	Weight        int64             `protobuf:"varint,4,opt,name=weight,proto3" json:"weight,omitempty"`
+	Now           int64             `protobuf:"fixed64,5,opt,name=now,proto3" json:"now,omitempty"`
+	Metadata      map[string]string `protobuf:"bytes,6,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -862,14 +871,18 @@ func (x *ReleaseSemaphoreResponse) GetSemaphore() *Semaphore {
 }
 
 type UpdateSemaphoreRequest struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	NamespaceId     *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	SemaphoreName   string                 `protobuf:"bytes,2,opt,name=semaphore_name,json=semaphoreName,proto3" json:"semaphore_name,omitempty"`
-	Description     string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	Permits         int64                  `protobuf:"varint,4,opt,name=permits,proto3" json:"permits,omitempty"`
-	Now             int64                  `protobuf:"fixed64,5,opt,name=now,proto3" json:"now,omitempty"`
-	Metadata        map[string]string      `protobuf:"bytes,6,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	ExpectedVersion int64                  `protobuf:"varint,7,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
+	SemaphoreName string                 `protobuf:"bytes,2,opt,name=semaphore_name,json=semaphoreName,proto3" json:"semaphore_name,omitempty"`
+	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	// New total capacity. Cannot be lowered below the permits currently held
+	// (active_holds).
+	Permits  int64             `protobuf:"varint,4,opt,name=permits,proto3" json:"permits,omitempty"`
+	Now      int64             `protobuf:"fixed64,5,opt,name=now,proto3" json:"now,omitempty"`
+	Metadata map[string]string `protobuf:"bytes,6,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Optimistic concurrency check: must equal the semaphore's current version or
+	// the update is rejected.
+	ExpectedVersion int64 `protobuf:"varint,7,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -1001,7 +1014,9 @@ type DeleteSemaphoreRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	SemaphoreName string                 `protobuf:"bytes,2,opt,name=semaphore_name,json=semaphoreName,proto3" json:"semaphore_name,omitempty"`
-	RecordId      uint64                 `protobuf:"fixed64,3,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
+	// Idempotency / bookkeeping id the core uses to track the asynchronous deletion
+	// of this object's data. Recurs on delete and namespace-teardown requests.
+	RecordId      uint64 `protobuf:"fixed64,3,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2119,19 +2134,32 @@ func (*RunSemaphoresGarbageCollectionResponse) Descriptor() ([]byte, []int) {
 	return file_pkg_corepb_semaphores_proto_rawDescGZIP(), []int{35}
 }
 
+// Semaphore is a weighted counting semaphore: it admits concurrent holders as
+// long as the sum of their weights stays within permits. Holders are leases, and
+// expired holders are pruned, so the active_* fields always reflect only holders
+// whose leases are still valid.
 type Semaphore struct {
-	state                   protoimpl.MessageState `protogen:"open.v1"`
-	Id                      *SemaphoreId           `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Name                    string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Description             string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	CreatedAt               int64                  `protobuf:"fixed64,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt               int64                  `protobuf:"fixed64,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	Version                 int64                  `protobuf:"varint,6,opt,name=version,proto3" json:"version,omitempty"`
-	Permits                 int64                  `protobuf:"varint,7,opt,name=permits,proto3" json:"permits,omitempty"`
-	Metadata                map[string]string      `protobuf:"bytes,8,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	ActiveHolds             int64                  `protobuf:"varint,9,opt,name=active_holds,json=activeHolds,proto3" json:"active_holds,omitempty"`
-	ActiveHoldersCount      int64                  `protobuf:"varint,10,opt,name=active_holders_count,json=activeHoldersCount,proto3" json:"active_holders_count,omitempty"`
-	EarliestHolderExpiresAt int64                  `protobuf:"fixed64,11,opt,name=earliest_holder_expires_at,json=earliestHolderExpiresAt,proto3" json:"earliest_holder_expires_at,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	Id          *SemaphoreId           `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name        string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Description string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	// Creation / last-modification time, Unix nanoseconds.
+	CreatedAt int64 `protobuf:"fixed64,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt int64 `protobuf:"fixed64,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	// Monotonic version, bumped on every successful update. Passed back as
+	// expected_version for optimistic concurrency control.
+	Version int64 `protobuf:"varint,6,opt,name=version,proto3" json:"version,omitempty"`
+	// Total capacity: the maximum sum of holder weights admitted at once.
+	Permits  int64             `protobuf:"varint,7,opt,name=permits,proto3" json:"permits,omitempty"`
+	Metadata map[string]string `protobuf:"bytes,8,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Currently consumed capacity: the sum of all active holders' weights
+	// (0 <= active_holds <= permits).
+	ActiveHolds int64 `protobuf:"varint,9,opt,name=active_holds,json=activeHolds,proto3" json:"active_holds,omitempty"`
+	// Number of distinct leases currently holding permits.
+	ActiveHoldersCount int64 `protobuf:"varint,10,opt,name=active_holders_count,json=activeHoldersCount,proto3" json:"active_holders_count,omitempty"`
+	// Soonest expiration time across current holders, Unix nanoseconds. Lets the
+	// core schedule the next pruning of expired holders without scanning them all.
+	EarliestHolderExpiresAt int64 `protobuf:"fixed64,11,opt,name=earliest_holder_expires_at,json=earliestHolderExpiresAt,proto3" json:"earliest_holder_expires_at,omitempty"`
 	// last_activity_at is the timestamp (ns) of the most recent activity on this
 	// semaphore (an acquire attempt or a release). Not affected by reads.
 	LastActivityAt int64 `protobuf:"fixed64,12,opt,name=last_activity_at,json=lastActivityAt,proto3" json:"last_activity_at,omitempty"`
@@ -2253,13 +2281,18 @@ func (x *Semaphore) GetLastActivityAt() int64 {
 	return 0
 }
 
+// SemaphoreHolder is one lease's hold on a semaphore.
 type SemaphoreHolder struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            *SemaphoreHolderId     `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	LockedAt      int64                  `protobuf:"fixed64,2,opt,name=locked_at,json=lockedAt,proto3" json:"locked_at,omitempty"`
-	ExpiresAt     int64                  `protobuf:"fixed64,3,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	Weight        int64                  `protobuf:"varint,4,opt,name=weight,proto3" json:"weight,omitempty"`
-	Metadata      map[string]string      `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Id    *SemaphoreHolderId     `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// When the hold was acquired (or last refreshed), Unix nanoseconds.
+	LockedAt int64 `protobuf:"fixed64,2,opt,name=locked_at,json=lockedAt,proto3" json:"locked_at,omitempty"`
+	// When this hold lapses if its lease is not refreshed, Unix nanoseconds; mirrors
+	// the owning lease's expiration.
+	ExpiresAt int64 `protobuf:"fixed64,3,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	// Number of permits this holder consumes.
+	Weight        int64             `protobuf:"varint,4,opt,name=weight,proto3" json:"weight,omitempty"`
+	Metadata      map[string]string `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2329,6 +2362,8 @@ func (x *SemaphoreHolder) GetMetadata() map[string]string {
 	return nil
 }
 
+// SemaphoreHolderId uniquely identifies a single lease's hold on a semaphore: at
+// most one holder exists per (semaphore, lease) pair.
 type SemaphoreHolderId struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AccountId     uint64                 `protobuf:"fixed64,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
@@ -2397,6 +2432,7 @@ func (x *SemaphoreHolderId) GetLeaseId() uint64 {
 	return 0
 }
 
+// SemaphoreId uniquely identifies a semaphore within an account and namespace.
 type SemaphoreId struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AccountId     uint64                 `protobuf:"fixed64,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
@@ -2457,6 +2493,9 @@ func (x *SemaphoreId) GetSemaphoreId() uint64 {
 	return 0
 }
 
+// SemaphoresGarbageCollectionRecord is an internal bookkeeping entry queuing
+// asynchronous deletion of either a whole namespace's semaphores or a single
+// semaphore's data.
 type SemaphoresGarbageCollectionRecord struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Id    uint64                 `protobuf:"fixed64,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -2547,6 +2586,8 @@ func (*SemaphoresGarbageCollectionRecord_NamespaceId) isSemaphoresGarbageCollect
 
 func (*SemaphoresGarbageCollectionRecord_SemaphoreId) isSemaphoresGarbageCollectionRecord_Record() {}
 
+// SemaphoresCounter holds the per-namespace aggregate counts the core maintains
+// to enforce quotas.
 type SemaphoresCounter struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
 	NumberOfSemaphores int64                  `protobuf:"varint,1,opt,name=number_of_semaphores,json=numberOfSemaphores,proto3" json:"number_of_semaphores,omitempty"`
@@ -2599,10 +2640,14 @@ func (x *SemaphoresCounter) GetNumberOfLeases() int64 {
 	return 0
 }
 
+// SemaphoresExpirationRecord is an index entry the core uses to find semaphores
+// with holders due to expire, so lapsed holds can be reclaimed in time order.
 type SemaphoresExpirationRecord struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	SemaphoreId   *SemaphoreId           `protobuf:"bytes,1,opt,name=semaphore_id,json=semaphoreId,proto3" json:"semaphore_id,omitempty"`
-	ExpiresAt     int64                  `protobuf:"fixed64,2,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	SemaphoreId *SemaphoreId           `protobuf:"bytes,1,opt,name=semaphore_id,json=semaphoreId,proto3" json:"semaphore_id,omitempty"`
+	// The semaphore's earliest_holder_expires_at this entry was filed under, Unix
+	// nanoseconds.
+	ExpiresAt     int64 `protobuf:"fixed64,2,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }

@@ -22,13 +22,18 @@ const (
 )
 
 type CreateNamespaceRequest struct {
-	state                 protoimpl.MessageState `protogen:"open.v1"`
-	NamespaceId           *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	Name                  string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Description           string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	Now                   int64                  `protobuf:"fixed64,4,opt,name=now,proto3" json:"now,omitempty"`
-	Metadata              map[string]string      `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	MaxNumberOfNamespaces int64                  `protobuf:"varint,6,opt,name=max_number_of_namespaces,json=maxNumberOfNamespaces,proto3" json:"max_number_of_namespaces,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	NamespaceId *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
+	Name        string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Description string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	// Caller-supplied current time, Unix nanoseconds. The core is a deterministic
+	// replicated state machine, so the clock is passed in rather than read from the
+	// host. Recurs on most mutating requests with the same meaning.
+	Now      int64             `protobuf:"fixed64,4,opt,name=now,proto3" json:"now,omitempty"`
+	Metadata map[string]string `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Per-account quota enforced by the core; the create is rejected if it would be
+	// exceeded.
+	MaxNumberOfNamespaces int64 `protobuf:"varint,6,opt,name=max_number_of_namespaces,json=maxNumberOfNamespaces,proto3" json:"max_number_of_namespaces,omitempty"`
 	unknownFields         protoimpl.UnknownFields
 	sizeCache             protoimpl.SizeCache
 }
@@ -550,13 +555,15 @@ func (*DeleteNamespaceResponse) Descriptor() ([]byte, []int) {
 }
 
 type UpdateNamespaceRequest struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	AccountId       uint64                 `protobuf:"fixed64,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
-	NamespaceName   string                 `protobuf:"bytes,2,opt,name=namespace_name,json=namespaceName,proto3" json:"namespace_name,omitempty"`
-	Description     string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	Metadata        map[string]string      `protobuf:"bytes,4,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	ExpectedVersion int64                  `protobuf:"varint,5,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
-	Now             int64                  `protobuf:"fixed64,6,opt,name=now,proto3" json:"now,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccountId     uint64                 `protobuf:"fixed64,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	NamespaceName string                 `protobuf:"bytes,2,opt,name=namespace_name,json=namespaceName,proto3" json:"namespace_name,omitempty"`
+	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	Metadata      map[string]string      `protobuf:"bytes,4,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Optimistic concurrency check: must equal the namespace's current version or
+	// the update is rejected.
+	ExpectedVersion int64 `protobuf:"varint,5,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
+	Now             int64 `protobuf:"fixed64,6,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -677,15 +684,22 @@ func (x *UpdateNamespaceResponse) GetNamespace() *Namespace {
 	return nil
 }
 
+// Namespace is the container for all primitives (locks, semaphores, wait groups,
+// barriers) and their leases. Names are unique per account, and every other core
+// call is scoped to a namespace. Deleting a namespace asynchronously deletes
+// everything inside it.
 type Namespace struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            *NamespaceId           `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	CreatedAt     int64                  `protobuf:"fixed64,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt     int64                  `protobuf:"fixed64,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	Version       int64                  `protobuf:"varint,6,opt,name=version,proto3" json:"version,omitempty"`
-	Metadata      map[string]string      `protobuf:"bytes,7,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	Id          *NamespaceId           `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name        string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Description string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	// Creation / last-modification time, Unix nanoseconds.
+	CreatedAt int64 `protobuf:"fixed64,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt int64 `protobuf:"fixed64,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	// Monotonic version, bumped on every successful update. Passed back as
+	// expected_version for optimistic concurrency control.
+	Version       int64             `protobuf:"varint,6,opt,name=version,proto3" json:"version,omitempty"`
+	Metadata      map[string]string `protobuf:"bytes,7,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -769,6 +783,7 @@ func (x *Namespace) GetMetadata() map[string]string {
 	return nil
 }
 
+// NamespaceId uniquely identifies a namespace within an account.
 type NamespaceId struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AccountId     uint64                 `protobuf:"fixed64,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
@@ -821,6 +836,8 @@ func (x *NamespaceId) GetNamespaceId() uint64 {
 	return 0
 }
 
+// NamespacesCounter holds the per-account aggregate counts the core maintains to
+// enforce quotas.
 type NamespacesCounter struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
 	NumberOfNamespaces int64                  `protobuf:"varint,1,opt,name=number_of_namespaces,json=numberOfNamespaces,proto3" json:"number_of_namespaces,omitempty"`

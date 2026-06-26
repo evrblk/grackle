@@ -30,8 +30,8 @@ github.com/dgryski/go-farm v0.0.0-20240924180020-3414d57e47da h1:aIftn67I1fkbMa5
 github.com/dgryski/go-farm v0.0.0-20240924180020-3414d57e47da/go.mod h1:SqUrOPUnsFjfmXRMNPybcSiG0BgUW2AuFH8PAnS2iTw=
 github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkpeCY=
 github.com/dustin/go-humanize v1.0.1/go.mod h1:Mu1zIs6XwVuF/gI1OepvI0qD18qycQx+mFykh5fBlto=
-github.com/evrblk/evrblk-go v0.0.0-20260625184104-5777f28c421b h1:XDupylIa64eCYkn0IwVlbhkTR1KH/BmGBDRQM0bl+iE=
-github.com/evrblk/evrblk-go v0.0.0-20260625184104-5777f28c421b/go.mod h1:oo3CFUXBs6nIGp6C2Z2/yAgbBqnicwjt+ErVB50rJKg=
+github.com/evrblk/evrblk-go v0.0.0-20260626162712-8d4590eeb250 h1:9gxfCNaHrzuJaXJ2rU77L06To7P5PRqiAcf+bOFIE5c=
+github.com/evrblk/evrblk-go v0.0.0-20260626162712-8d4590eeb250/go.mod h1:oo3CFUXBs6nIGp6C2Z2/yAgbBqnicwjt+ErVB50rJKg=
 github.com/evrblk/monstera v0.0.0-20260610153412-ffd2127186cd h1:roBIHZNn/w0+gNO8cpN9nGy7DlQ7D+JJr1RWrXLiCVA=
 github.com/evrblk/monstera v0.0.0-20260610153412-ffd2127186cd/go.mod h1:gavOoifj5aK69irpcPqf9GAAFruJOlCGo0NA/n5sP9g=
 github.com/evrblk/yellowstone-common v0.0.0-20260317193758-e5d4f0d6d632 h1:DArM5pRnYF1eYOxlBdKEe06NWdd0imICXwVtE6/pSV4=

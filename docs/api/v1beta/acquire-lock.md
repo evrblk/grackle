@@ -24,7 +24,7 @@ giving up.
   "namespace_name": "UserObjects",
   "lock_name": "users/123/profile",
   "exclusive": true,
-  "lease_id": "ll_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+  "lease_id": "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
   "timeout_seconds": 60,
   "metadata": {
     "host": "node-1"
@@ -34,12 +34,28 @@ giving up.
 
 ## Response
 
-* Returns `NotFound` if the namespace does not exist.
-* The `outcome` enum reports the result: `ACQUIRE_OUTCOME_ACQUIRED` when the lease now holds the
+The `outcome` enum reports the result: `ACQUIRE_OUTCOME_ACQUIRED` when the lease now holds the
 lock, `ACQUIRE_OUTCOME_UNAVAILABLE` when a non-blocking attempt (`timeout_seconds: 0`) found it
 held by someone else and returned without waiting, or `ACQUIRE_OUTCOME_TIMED_OUT` when the call
 blocked until `timeout_seconds` elapsed without ever acquiring. The non-acquired outcomes return
-(without an error) the current lock state so the caller can see who is holding it.
+(without an error) the current lock state so the caller can see who is holding it. 
+
+When the outcome is not `ACQUIRE_OUTCOME_ACQUIRED`, the `reason` enum hints at *what* the acquire
+was blocked on: `CONTENTION_REASON_PEER` (the lock itself is held in an incompatible mode),
+`CONTENTION_REASON_ANCESTOR` (a lock on an ancestor path blocks it), or
+`CONTENTION_REASON_DESCENDANT` (one or more locks on descendant paths block it). It is
+`CONTENTION_REASON_UNSPECIFIED` when the lock was acquired.
+
+`blocking_locks` carries the locks standing in the way — the blocking ancestor lock(s) or
+blocking descendant locks, matching `reason` — so the caller can see who holds them. It is **empty
+for `CONTENTION_REASON_PEER`**: there the conflicting lock is the one you are acquiring, already
+returned in the top-level `lock` field, so it is not duplicated here. Both `reason` and
+`blocking_locks` are **best-effort, point-in-time** diagnostics: they reflect the last acquire
+attempt and may already be stale, so branch on `outcome`, not on these. `blocking_locks` is
+**always capped at 50** (a contended descendant subtree may hold more), which keeps it cheap and
+safe to read. It is empty when the lock was acquired.
+
+* Returns `NotFound` if the namespace does not exist.
 * Returns `NotFound` if the lease does not exist or has already expired.
 * Returns `ResourceExhausted` if creating a new lock would exceed the namespace's lock quota.
 
@@ -54,7 +70,7 @@ __Success:__
     "last_activity_at": 1695826239671432000,
     "lock_holders": [
       {
-        "lease_id": "ll_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
+        "lease_id": "ls_NfKKeiPbP18NFeU3lLGrRWWgDJRB",
         "locked_at": 1695826239671432000,
         "metadata": {
           "host": "node-1"
@@ -68,6 +84,10 @@ __Success:__
 
 __Held by someone else:__
 
+The lock itself is held in an incompatible mode, so `reason` is `CONTENTION_REASON_PEER`. The
+conflicting lock and its holder are already in the top-level `lock` field, so `blocking_locks` is
+empty (omitted below).
+
 ```json
 {
   "lock": {
@@ -77,7 +97,7 @@ __Held by someone else:__
     "last_activity_at": 1695826200000000000,
     "lock_holders": [
       {
-        "lease_id": "ll_qB7XwYzAaaaaaaaaaaaaaaaaaaaa",
+        "lease_id": "ls_qB7XwYzAaaaaaaaaaaaaaaaaaaaa",
         "locked_at": 1695826200000000000,
         "metadata": {
           "host": "node-2"
@@ -85,6 +105,42 @@ __Held by someone else:__
       }
     ]
   },
-  "outcome": "ACQUIRE_OUTCOME_TIMED_OUT"
+  "outcome": "ACQUIRE_OUTCOME_TIMED_OUT",
+  "reason": "CONTENTION_REASON_PEER"
+}
+```
+
+__Blocked by an ancestor:__
+
+A request for `users/123/profile` while an exclusive lock is held on the ancestor `users/123`
+returns `reason` `CONTENTION_REASON_ANCESTOR`, with the blocking ancestor in `blocking_locks`. A
+descendant conflict looks the same with `CONTENTION_REASON_DESCENDANT` and the blocking
+descendant lock(s) instead.
+
+```json
+{
+  "lock": {
+    "name": "users/123/profile",
+    "state": "LOCK_STATE_UNLOCKED",
+    "locked_at": 0,
+    "last_activity_at": 1695826200000000000,
+    "lock_holders": []
+  },
+  "outcome": "ACQUIRE_OUTCOME_TIMED_OUT",
+  "reason": "CONTENTION_REASON_ANCESTOR",
+  "blocking_locks": [
+    {
+      "name": "users/123",
+      "state": "LOCK_STATE_EXCLUSIVE_LOCKED",
+      "locked_at": 1695826200000000000,
+      "last_activity_at": 1695826200000000000,
+      "lock_holders": [
+        {
+          "lease_id": "ls_qB7XwYzAaaaaaaaaaaaaaaaaaaaa",
+          "locked_at": 1695826200000000000
+        }
+      ]
+    }
+  ]
 }
 ```

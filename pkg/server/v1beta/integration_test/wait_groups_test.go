@@ -38,6 +38,7 @@ func TestCreateWaitGroup(t *testing.T) {
 			WaitGroupName:              "waitgroup1",
 			Counter:                    1,
 			DeleteAfterFinishedSeconds: 60,
+			ExpiresAt:                  time.Now().Add(time.Hour).UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp.WaitGroup)
@@ -48,8 +49,52 @@ func TestCreateWaitGroup(t *testing.T) {
 			WaitGroupName:              "waitgroup1",
 			Counter:                    1,
 			DeleteAfterFinishedSeconds: 60,
+			ExpiresAt:                  time.Now().Add(time.Hour).UnixNano(),
 		})
 		require.Error(t, err)
+	})
+
+	t.Run("expires_at_validation", func(t *testing.T) {
+		server := setupGrackleApiServer(t)
+		ctx := context.Background()
+
+		// Create namespace
+		_, err := server.CreateNamespace(ctx, &gracklepb.CreateNamespaceRequest{
+			Name: "namespace1",
+		})
+		require.NoError(t, err)
+
+		// expires_at far enough into the future is accepted
+		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
+			NamespaceName:              "namespace1",
+			WaitGroupName:              "waitgroup1",
+			Counter:                    1,
+			DeleteAfterFinishedSeconds: 60,
+			ExpiresAt:                  time.Now().Add(10 * time.Minute).UnixNano(),
+		})
+		require.NoError(t, err)
+
+		// expires_at less than 5 minutes into the future is rejected
+		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
+			NamespaceName:              "namespace1",
+			WaitGroupName:              "waitgroup2",
+			Counter:                    1,
+			DeleteAfterFinishedSeconds: 60,
+			ExpiresAt:                  time.Now().Add(time.Minute).UnixNano(),
+		})
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "expires_at must be at least")
+
+		// expires_at in the past is rejected
+		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
+			NamespaceName:              "namespace1",
+			WaitGroupName:              "waitgroup3",
+			Counter:                    1,
+			DeleteAfterFinishedSeconds: 60,
+			ExpiresAt:                  time.Now().Add(-time.Minute).UnixNano(),
+		})
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "expires_at must be at least")
 	})
 
 	t.Run("max_size_validation", func(t *testing.T) {
@@ -68,6 +113,7 @@ func TestCreateWaitGroup(t *testing.T) {
 			WaitGroupName:              "waitgroup1",
 			Counter:                    grackle.DefaultServiceLimits.MaxWaitGroupSize, // Max allowed by account limits
 			DeleteAfterFinishedSeconds: 60,
+			ExpiresAt:                  time.Now().Add(time.Hour).UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp.WaitGroup)
@@ -79,6 +125,7 @@ func TestCreateWaitGroup(t *testing.T) {
 			WaitGroupName:              "waitgroup2",
 			Counter:                    grackle.DefaultServiceLimits.MaxWaitGroupSize + 1, // Exceeds MaxWaitGroupSize
 			DeleteAfterFinishedSeconds: 60,
+			ExpiresAt:                  time.Now().Add(time.Hour).UnixNano(),
 		})
 		require.Error(t, err)
 		require.Contains(t, err.Error(), fmt.Sprintf("wait group size is too big, max: %d", uint64(grackle.DefaultServiceLimits.MaxWaitGroupSize)))
@@ -102,6 +149,7 @@ func TestGetWaitGroup(t *testing.T) {
 			WaitGroupName:              "waitgroup1",
 			Counter:                    1,
 			DeleteAfterFinishedSeconds: 60,
+			ExpiresAt:                  time.Now().Add(time.Hour).UnixNano(),
 		})
 		require.NoError(t, err)
 
@@ -139,6 +187,7 @@ func TestCompleteJobsFromWaitGroup(t *testing.T) {
 			WaitGroupName:              "waitgroup1",
 			Counter:                    2,
 			DeleteAfterFinishedSeconds: 60,
+			ExpiresAt:                  time.Now().Add(time.Hour).UnixNano(),
 		})
 		require.NoError(t, err)
 
@@ -176,6 +225,7 @@ func TestCompleteJobsFromWaitGroup(t *testing.T) {
 			WaitGroupName:              "waitgroup1",
 			Counter:                    2,
 			DeleteAfterFinishedSeconds: 60,
+			ExpiresAt:                  time.Now().Add(time.Hour).UnixNano(),
 		})
 		require.NoError(t, err)
 
@@ -230,6 +280,7 @@ func TestDeleteWaitGroup(t *testing.T) {
 			WaitGroupName:              "waitgroup1",
 			Counter:                    1,
 			DeleteAfterFinishedSeconds: 60,
+			ExpiresAt:                  time.Now().Add(time.Hour).UnixNano(),
 		})
 		require.NoError(t, err)
 
@@ -292,6 +343,7 @@ func TestListWaitGroups(t *testing.T) {
 				Description:                fmt.Sprintf("Test wait group %d", i+1),
 				Counter:                    10,
 				DeleteAfterFinishedSeconds: 60,
+				ExpiresAt:                  time.Now().Add(time.Hour).UnixNano(),
 			})
 			require.NoError(t, err)
 		}
@@ -370,6 +422,7 @@ func TestListWaitGroupCompletedJobs(t *testing.T) {
 			WaitGroupName:              "waitgroup1",
 			Counter:                    10,
 			DeleteAfterFinishedSeconds: 60,
+			ExpiresAt:                  time.Now().Add(time.Hour).UnixNano(),
 		})
 		require.NoError(t, err)
 
@@ -405,6 +458,7 @@ func TestListWaitGroupCompletedJobs(t *testing.T) {
 			WaitGroupName:              "test-waitgroup",
 			Counter:                    25,
 			DeleteAfterFinishedSeconds: 60,
+			ExpiresAt:                  time.Now().Add(time.Hour).UnixNano(),
 		})
 		require.NoError(t, err)
 
@@ -474,6 +528,7 @@ func TestWaitForWaitGroup(t *testing.T) {
 			WaitGroupName:              "waitgroup1",
 			Counter:                    10,
 			DeleteAfterFinishedSeconds: 60,
+			ExpiresAt:                  time.Now().Add(time.Hour).UnixNano(),
 		})
 		require.NoError(t, err)
 
@@ -518,6 +573,7 @@ func TestWaitForWaitGroup(t *testing.T) {
 			WaitGroupName:              "test-wg",
 			Counter:                    2,
 			DeleteAfterFinishedSeconds: 60,
+			ExpiresAt:                  time.Now().Add(time.Hour).UnixNano(),
 		})
 		require.NoError(t, err)
 
@@ -569,6 +625,7 @@ func TestWaitForWaitGroup(t *testing.T) {
 			WaitGroupName:              "test-wg-timeout",
 			Counter:                    10,
 			DeleteAfterFinishedSeconds: 60,
+			ExpiresAt:                  time.Now().Add(time.Hour).UnixNano(),
 		})
 		require.NoError(t, err)
 

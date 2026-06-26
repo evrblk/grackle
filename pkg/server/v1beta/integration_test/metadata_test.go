@@ -63,6 +63,7 @@ func TestMetadataRoundTrip(t *testing.T) {
 			Counter:                    3,
 			Metadata:                   md,
 			DeleteAfterFinishedSeconds: 60,
+			ExpiresAt:                  time.Now().Add(time.Hour).UnixNano(),
 		})
 		require.NoError(t, err)
 		require.Equal(t, md, createResp.WaitGroup.Metadata)
@@ -87,6 +88,7 @@ func TestMetadataRoundTrip(t *testing.T) {
 			WaitGroupName:              "waitgroup1",
 			Counter:                    2,
 			DeleteAfterFinishedSeconds: 60,
+			ExpiresAt:                  time.Now().Add(time.Hour).UnixNano(),
 		})
 		require.NoError(t, err)
 

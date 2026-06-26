@@ -38,6 +38,8 @@ This is useful for guarding tree-shaped resources (filesystems, document trees, 
 without enumerating every leaf. Acquire from root to leaf and release from leaf to root to avoid
 deadlocks.
 
+If no hierarchy is needed, just use plain lock names without `/`.
+
 ### Leases
 A lock acquisition is owned by a **lease**, not by the caller directly. A lease is a short-lived,
 server-side TTL token created with `CreateLockLease`. All acquires made with the same `lease_id`
@@ -62,16 +64,42 @@ and returned with the holder on `GetLock` / `ListLocks`. (Metadata lives on the 
 lock itself, since a shared lock can have many holders.) Metadata is opaque to Grackle — see
 [Metadata](/docs/api-overview.md#metadata) for the shared semantics and limits.
 
-### Activity tracking
+## Contention diagnostics
+
+When an `AcquireLock` does not acquire (outcome is `ACQUIRE_OUTCOME_UNAVAILABLE` or
+`ACQUIRE_OUTCOME_TIMED_OUT`), the response explains *why* so a caller does not have to guess which
+part of the hierarchy is in the way:
+
+- `reason` — a `ContentionReason` enum: `CONTENTION_REASON_PEER` (the lock itself is held in an
+  incompatible mode), `CONTENTION_REASON_ANCESTOR` (a lock on an ancestor path blocks it), or
+  `CONTENTION_REASON_DESCENDANT` (one or more locks on descendant paths block it). It is
+  `CONTENTION_REASON_UNSPECIFIED` on a successful acquire.
+- `blocking_locks` — the actual locks standing in the way (the blocking ancestor lock(s) or
+  blocking descendant locks, matching `reason`), each with its current holders. It is **empty for
+  `CONTENTION_REASON_PEER`**, where the conflicting lock is the one being acquired and is already
+  returned in the top-level `lock` field, so it is not duplicated here.
+
+Both are **best-effort, point-in-time** hints: they describe the conflict seen on the last attempt
+and may already be stale by the time you read them, so treat them as diagnostics (logging, error
+messages, dashboards) and branch your logic on `outcome`, not on these. `blocking_locks` is
+**always capped at 50** — a contended descendant subtree may hold more locks than are listed — which
+keeps the lookup cheap and bounded no matter how large the subtree is.
+
+## Lifecycle
+
+Locks do not need to be created upfront. Also, they do not need to be cleaned up. An unlocked lock
+simply does not occupy any space in the storage.
+
 Each lock carries a `last_activity_at` timestamp — the time of the most recent activity on it,
-namely an `AcquireLock` or `ReleaseLock`. Reads (`GetLock`, `ListLocks`) do not change it.
+namely an `AcquireLock` or `ReleaseLock`. Reads (`GetLock`, `ListLocks`) do not change it. This is
+information-only field.
 
 ## Example workflow
 
 Process `host-123/pid-4567` creates a lease. `ttl_seconds` is added to "now" server-side.
 (Assuming that a namespace `documents` already exists.)
 
-CreateLockLeaseRequest:
+__CreateLockLeaseRequest__:
 ```json
 {
   "namespace_name": "documents",
@@ -80,7 +108,7 @@ CreateLockLeaseRequest:
 }
 ```
 
-CreateLockLeaseResponse:
+__CreateLockLeaseResponse__:
 ```json
 {
   "lease": {
@@ -101,9 +129,10 @@ enum: `ACQUIRE_OUTCOME_ACQUIRED` when the lease now holds the lock, `ACQUIRE_OUT
 when a non-blocking attempt (`timeout_seconds: 0`) found it held by someone else and returned
 without waiting, or `ACQUIRE_OUTCOME_TIMED_OUT` when the call blocked until `timeout_seconds`
 elapsed without ever acquiring. In the non-acquired cases the current state of the lock is returned
-with no error.
+with no error, along with contention diagnostics (`reason` and `blocking_locks`, see
+[Contention diagnostics](#contention-diagnostics)) that point at what stood in the way.
 
-AcquireLockRequest:
+__AcquireLockRequest__:
 ```json
 {
   "namespace_name": "documents",
@@ -114,7 +143,7 @@ AcquireLockRequest:
 }
 ```
 
-AcquireLockResponse (acquired):
+__AcquireLockResponse__ (acquired):
 ```json
 {
   "lock": {
@@ -133,7 +162,9 @@ AcquireLockResponse (acquired):
 }
 ```
 
-AcquireLockResponse (already locked by someone else — not an error):
+__AcquireLockResponse__ (already locked by someone else — not an error). The lock itself is the
+blocker, so `reason` is `CONTENTION_REASON_PEER`; the conflicting lock is already in the `lock`
+field, so `blocking_locks` is empty (omitted below):
 ```json
 {
   "lock": {
@@ -148,13 +179,14 @@ AcquireLockResponse (already locked by someone else — not an error):
       }
     ]
   },
-  "outcome": "ACQUIRE_OUTCOME_TIMED_OUT"
+  "outcome": "ACQUIRE_OUTCOME_TIMED_OUT",
+  "reason": "CONTENTION_REASON_PEER"
 }
 ```
 
 When the process is done it should release the lock.
 
-ReleaseLockRequest:
+__ReleaseLockRequest__:
 ```json
 {
   "namespace_name": "documents",
@@ -163,7 +195,7 @@ ReleaseLockRequest:
 }
 ```
 
-ReleaseLockResponse:
+__ReleaseLockResponse__:
 ```json
 {
   "lock": {
@@ -179,7 +211,7 @@ ReleaseLockResponse:
 For a shared lock, the same `AcquireLock` call with `exclusive: false` succeeds for many leases at
 once:
 
-AcquireLockResponse:
+__AcquireLockResponse__:
 ```json
 {
   "lock": {

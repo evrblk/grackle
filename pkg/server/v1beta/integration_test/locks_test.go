@@ -155,6 +155,12 @@ func TestAcquireLock(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, resp)
 		require.Equal(t, gracklepb.AcquireOutcome_ACQUIRE_OUTCOME_TIMED_OUT, resp.Outcome)
+		// The lock is held by another lease, so the contention reason is PEER. The
+		// blocking lock is the lock itself, already returned in resp.Lock, so
+		// blocking_locks is left empty rather than duplicating it.
+		require.Equal(t, gracklepb.ContentionReason_CONTENTION_REASON_PEER, resp.Reason)
+		require.Empty(t, resp.BlockingLocks)
+		require.Equal(t, gracklepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, resp.Lock.State)
 	})
 }
 

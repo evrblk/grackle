@@ -17,6 +17,12 @@ import (
 	"github.com/evrblk/grackle/pkg/ids"
 )
 
+const (
+	// minWaitGroupExpiresInFuture is the minimum lead time required between now and
+	// a wait group's expires_at deadline.
+	minWaitGroupExpiresInFuture = 1 * time.Minute
+)
+
 type GrackleApiServerHandler struct {
 	grackleClient coreapis.GrackleClientApi
 }
@@ -195,6 +201,11 @@ func (s *GrackleApiServerHandler) CreateWaitGroup(ctx context.Context, req *grac
 		return nil, status.Errorf(codes.InvalidArgument, "wait group size is too big, max: %d", limits.MaxWaitGroupSize)
 	}
 
+	// A deadline is mandatory and must be far enough into the future.
+	if req.ExpiresAt < now.Add(minWaitGroupExpiresInFuture).UnixNano() {
+		return nil, status.Errorf(codes.InvalidArgument, "expires_at must be at least %s into the future", minWaitGroupExpiresInFuture)
+	}
+
 	// Resolve namespace by name to get its ID
 	resp1, err := s.grackleClient.GetNamespaceByName(ctx, &corepb.GetNamespaceByNameRequest{
 		AccountId:     accountId,
@@ -236,6 +247,11 @@ func (s *GrackleApiServerHandler) UpdateWaitGroup(ctx context.Context, req *grac
 	// TODO: consistent error format with Validate* methods
 	if req.Counter > limits.MaxWaitGroupSize {
 		return nil, status.Errorf(codes.InvalidArgument, "wait group size is too big, max: %d", limits.MaxWaitGroupSize)
+	}
+
+	// A deadline is mandatory and must be into the future.
+	if req.ExpiresAt < now.UnixNano() {
+		return nil, status.Errorf(codes.InvalidArgument, "expires_at must be into the future")
 	}
 
 	// Resolve namespace by name to get its ID
@@ -559,8 +575,10 @@ func (s *GrackleApiServerHandler) AcquireLock(ctx context.Context, req *gracklep
 		}
 		if time.Now().After(deadline) {
 			return &gracklepb.AcquireLockResponse{
-				Lock:    lockToFront(resp2.Lock),
-				Outcome: acquireFailureOutcome(req.TimeoutSeconds),
+				Lock:          lockToFront(resp2.Lock),
+				Outcome:       acquireFailureOutcome(req.TimeoutSeconds),
+				Reason:        contentionReasonToFront(resp2.Reason),
+				BlockingLocks: locksToFront(resp2.BlockingLocks),
 			}, nil
 		}
 

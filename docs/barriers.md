@@ -46,24 +46,6 @@ Generations advance by exactly one per trip, so peers compute the next round the
 call that waited at `expected_generation: N` releases, the next round is `expected_generation: N+1`.
 The barrier's actual current generation is always available on `barrier.generation`.
 
-### Activity tracking
-Each barrier carries a `last_activity_at` timestamp — the time of the most recent activity on it,
-namely creation or a process arriving via `ArriveAtBarrier`. It is set at creation and is not
-changed by `UpdateBarrier`, `WaitAtBarrier`, or other reads. It is the base from which the
-auto-deletion time (`last_activity_at + delete_inactive_after_seconds`) is computed.
-
-### Auto-deletion
-Barriers do not expire. Instead they are **auto-deleted after a period of inactivity**:
-`delete_inactive_after_seconds` is set at creation, and garbage collection removes the barrier (and
-its participant records) once `last_activity_at + delete_inactive_after_seconds` has passed. Every
-activity — creating the barrier, and each `ArriveAtBarrier` — resets the clock by advancing
-`last_activity_at`, pushing the deletion further out. A barrier that is actively used therefore
-lives indefinitely, while a forgotten one is reclaimed `delete_inactive_after_seconds` after its
-last use. This is the backstop for crashed peers — a half-arrived barrier cannot linger forever.
-
-`delete_inactive_after_seconds` is the barrier's own inactivity window; it is not tied to any
-lease. Barriers do not use leases.
-
 ### Arrive vs. Wait
 There are two ways to interact with a barrier:
 
@@ -83,13 +65,32 @@ by `UpdateBarrier`. Each arriving process can also attach its own `metadata` on 
 which is returned with the participant by `ListBarrierParticipants`. Metadata is opaque to
 Grackle — see [Metadata](/docs/api-overview.md#metadata) for the shared semantics and limits.
 
+## Lifecycle
+
+Each barrier carries a `last_activity_at` timestamp — the time of the most recent activity on it,
+namely creation or a process arriving via `ArriveAtBarrier`. It is set at creation and is not
+changed by `UpdateBarrier`, `WaitAtBarrier`, or other reads. It is the base from which the
+auto-deletion time (`last_activity_at + delete_inactive_after_seconds`) is computed.
+
+Barriers do not expire. Instead they are **auto-deleted after a period of inactivity**:
+`delete_inactive_after_seconds`, and garbage collection removes the barrier (and
+its participant records) once `last_activity_at + delete_inactive_after_seconds` has passed. A 
+barrier that is actively used therefore lives indefinitely, while a forgotten one is reclaimed 
+`delete_inactive_after_seconds` after its last use. This is the backstop for crashed peers — a 
+half-arrived barrier cannot linger forever.
+
+`delete_inactive_after_seconds` is the barrier's own inactivity window; it is not tied to any
+lease. Barriers do not use leases.
+
+If needed, any barrier can be removed manually with `DeleteBarrier`.
+
 ## Example workflow
 
 The coordinator creates a barrier for 4 worker shards that need to meet at end-of-phase, and asks
 Grackle to auto-delete it after an hour (3600 seconds) of inactivity. (Assuming that a namespace
 `pipelines` already exists.)
 
-CreateBarrierRequest:
+__CreateBarrierRequest__:
 ```json
 {
   "namespace_name": "pipelines",
@@ -100,7 +101,7 @@ CreateBarrierRequest:
 }
 ```
 
-CreateBarrierResponse:
+__CreateBarrierResponse__:
 ```json
 {
   "barrier": {
@@ -122,7 +123,7 @@ Each worker reports arrival with its own `process_id` and the current generation
 non-blocking and idempotent — a retry with the same `(process_id, expected_generation)` is a
 no-op.
 
-ArriveAtBarrierRequest:
+__ArriveAtBarrierRequest__:
 ```json
 {
   "namespace_name": "pipelines",
@@ -132,7 +133,7 @@ ArriveAtBarrierRequest:
 }
 ```
 
-ArriveAtBarrierResponse (not yet released):
+__ArriveAtBarrierResponse__ (not yet released):
 ```json
 {
   "barrier": {
@@ -148,7 +149,7 @@ ArriveAtBarrierResponse (not yet released):
 A worker that needs to block until the whole group has caught up calls `WaitAtBarrier`. Many
 peers can wait on the same generation at once; they are all released together.
 
-WaitAtBarrierRequest:
+__WaitAtBarrierRequest__:
 ```json
 {
   "namespace_name": "pipelines",
@@ -158,7 +159,7 @@ WaitAtBarrierRequest:
 }
 ```
 
-WaitAtBarrierResponse (all peers arrived before timeout — the barrier has advanced to generation 2
+__WaitAtBarrierResponse__ (all peers arrived before timeout — the barrier has advanced to generation 2
 and `arrived_processes` reset to 0):
 ```json
 {
@@ -172,7 +173,7 @@ and `arrived_processes` reset to 0):
 }
 ```
 
-WaitAtBarrierResponse (timeout fired first — no trip, so the barrier is unchanged):
+__WaitAtBarrierResponse__ (timeout fired first — no trip, so the barrier is unchanged):
 ```json
 {
   "barrier": {

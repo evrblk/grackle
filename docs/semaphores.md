@@ -51,17 +51,21 @@ replaced by `UpdateSemaphore`. Each holder can also attach its own `metadata` on
 which is returned with the holder by `ListSemaphoreHolders`. Metadata is opaque to Grackle — see
 [Metadata](/docs/api-overview.md#metadata) for the shared semantics and limits.
 
-### Activity tracking
+## Lifecycle
+
+A semaphore must be created explicitly with `CreateSemaphore` and deleted with `DeleteSemaphore`.
+
 Each semaphore carries a `last_activity_at` timestamp — the time of the most recent activity on it,
 namely an `AcquireSemaphore` (held or not) or a `ReleaseSemaphore`. It is set at creation and is
-not changed by `UpdateSemaphore` or by reads.
+not changed by `UpdateSemaphore` or by reads. Unlike for barriers, this is information-only field for
+semaphores.
 
 ## Example workflow
 
 Define a new semaphore. `permits` must be > 0. (Assuming that a namespace `third_parties` already 
 exists):
 
-CreateSemaphoreRequest:
+__CreateSemaphoreRequest__:
 ```json
 {
   "namespace_name": "third_parties",
@@ -71,7 +75,7 @@ CreateSemaphoreRequest:
 }
 ```
 
-CreateSemaphoreResponse:
+__CreateSemaphoreResponse__:
 ```json
 {
   "semaphore": {
@@ -90,7 +94,7 @@ CreateSemaphoreResponse:
 
 Process `host-123/pid-4567` creates a lease. `ttl_seconds` is added to "now" server-side.
 
-CreateSemaphoreLeaseRequest:
+__CreateSemaphoreLeaseRequest__:
 ```json
 {
   "namespace_name": "third_parties",
@@ -99,7 +103,7 @@ CreateSemaphoreLeaseRequest:
 }
 ```
 
-CreateSemaphoreLeaseResponse:
+__CreateSemaphoreLeaseResponse__:
 ```json
 {
   "lease": {
@@ -126,7 +130,7 @@ than blocking. A `weight` that merely exceeds the currently available permits (i
 `weight <= permits` but `active_holds + weight > permits`) still blocks/waits and is reported via
 `outcome`.
 
-AcquireSemaphoreRequest:
+__AcquireSemaphoreRequest__:
 ```json
 {
   "namespace_name": "third_parties",
@@ -137,7 +141,7 @@ AcquireSemaphoreRequest:
 }
 ```
 
-AcquireSemaphoreResponse (acquired):
+__AcquireSemaphoreResponse__ (acquired):
 ```json
 {
   "semaphore": {
@@ -155,7 +159,7 @@ AcquireSemaphoreResponse (acquired):
 }
 ```
 
-AcquireSemaphoreResponse (no permits left — not an error):
+__AcquireSemaphoreResponse__ (no permits left — not an error):
 ```json
 {
   "semaphore": {
@@ -175,7 +179,7 @@ AcquireSemaphoreResponse (no permits left — not an error):
 
 When the process is done with its work it should release the semaphore.
 
-ReleaseSemaphoreRequest:
+__ReleaseSemaphoreRequest__:
 ```json
 {
   "namespace_name": "third_parties",
@@ -184,7 +188,7 @@ ReleaseSemaphoreRequest:
 }
 ```
 
-ReleaseSemaphoreResponse:
+__ReleaseSemaphoreResponse__:
 ```json
 {
   "semaphore": {

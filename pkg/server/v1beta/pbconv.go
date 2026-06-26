@@ -328,3 +328,16 @@ func lockStateToFront(lockState corepb.LockState) gracklepb.LockState {
 		return gracklepb.LockState_LOCK_STATE_INVALID
 	}
 }
+
+func contentionReasonToFront(reason corepb.ContentionReason) gracklepb.ContentionReason {
+	switch reason {
+	case corepb.ContentionReason_CONTENTION_REASON_PEER:
+		return gracklepb.ContentionReason_CONTENTION_REASON_PEER
+	case corepb.ContentionReason_CONTENTION_REASON_ANCESTOR:
+		return gracklepb.ContentionReason_CONTENTION_REASON_ANCESTOR
+	case corepb.ContentionReason_CONTENTION_REASON_DESCENDANT:
+		return gracklepb.ContentionReason_CONTENTION_REASON_DESCENDANT
+	default:
+		return gracklepb.ContentionReason_CONTENTION_REASON_UNSPECIFIED
+	}
+}

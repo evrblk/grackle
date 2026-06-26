@@ -3,19 +3,44 @@
 [![Go](https://github.com/evrblk/grackle/actions/workflows/go.yml/badge.svg)](https://github.com/evrblk/grackle/actions/workflows/go.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/evrblk/grackle)](https://goreportcard.com/report/github.com/evrblk/grackle)
 
-Everblack Grackle is a distributed-synchronization-primitives-as-a-service:
+**Everblack Grackle is the coordination layer for your distributed system** — fundamental
+synchronization primitives, served over a clean API, in a single self-contained binary.
 
-* __hierarchical locks__ (can be exclusively locked by a single process, or shared by multiple processes)
-* __weighted semaphores__ (tracks how many units of a particular resource are available)
-* __wait groups__ (merge or fan-in of millions of tasks, similar to `sync.WaitGroup` in Go)
-* __barriers__ (repeatedly wait for millions of processes to reach a certain point)
+Stop reinventing distributed locks on top of a database, or bending a key-value store into a
+semaphore. Grackle gives you the primitives directly, with the durability and safety guarantees you'd
+otherwise have to build (and debug) yourself.
 
-Grackle state is durable. All holds are lease-based, with a set expiration time. Process crash will not cause dangling locks. 
-Long-running processes can extend their leases. All operations are atomic and safe to retry.
+## The primitives
 
-Grackle can operate in a cluster mode (with replication and sharding), or it can run in a single-node nonclustered 
-mode (full state on disk, no replication, no sharding). It has no external dependencies (no databases, no kafka, no redis, 
-no zookeeper, or whatever) and it stores all its state on disk (on embedded BadgerDB).
+* **[Hierarchical locks](/docs/locks.md)** — shared (read) or exclusive (write) locks whose names are
+  `/`-separated paths. Lock `users/123` and you've guarded its whole subtree — no need to enumerate
+  every leaf. When an acquire is blocked, Grackle tells you *who* holds the lock and *why*.
+* **[Weighted semaphores](/docs/semaphores.md)** — bound concurrent access to a resource pool. Each
+  acquire takes a configurable *weight*, so heavy and light work can share one pool of permits.
+* **[Wait groups](/docs/wait-groups.md)** — fan-in for millions of jobs, the distributed
+  equivalent of Go's `sync.WaitGroup`: workers report jobs done, observers block until the group
+  completes.
+* **[Barriers](/docs/barriers.md)** — generational, reusable rendezvous points where a fleet of
+  processes wait for each other and advance together, cycle after cycle.
+
+Everything lives inside a **namespace** and is reached by name — no IDs to track, no resources to
+provision up front.
+
+## Why Grackle
+
+* **Safe by default.** Lock and semaphore holds sit under a TTL **lease** that the holder heartbeats;
+  wait groups carry an absolute deadline; idle barriers auto-delete. A crashed client never leaves a
+  dangling lock or a wait group that blocks forever. Every operation is atomic and safe to retry.
+* **Durable and replicated.** State is persisted and Raft-replicated for high availability, and
+  sharded so it scales horizontally as your workload grows.
+* **Zero dependencies.** One binary, embedded storage — no database, Kafka, Redis, or ZooKeeper to
+  run alongside it. Start single-node, grow into a replicated, sharded cluster without changing your
+  code.
+* **An API that does the heavy lifting.** Responses are rich enough to act on — a failed lock acquire 
+  returns the current holders and the reason it was blocked, not just "no". Consistent conventions 
+  across every primitive: opaque [metadata](/docs/api-overview.md#metadata) on everything, 
+  [optimistic-concurrency updates](/docs/api-overview.md#updates), cursor 
+  [pagination](/docs/api-overview.md#pagination).
 
 Go to [documentation](/docs/overview.md) to learn more.
 
@@ -43,68 +68,9 @@ $ make grackle
 $ ./grackle run single-node --port=8000 --data-dir=./data
 ```
 
-### Cluster mode
+### Clustered mode
 
-There are 3 components: 
-
-* `gateway` stateless API gateway
-* `node` stateful node with data persisted on disk
-* `worker` stateless async worker
-
-Running in the cluster mode requires Monstera cluster config file. To generate a simple config run:
-
-```shell
-$ go tool github.com/evrblk/monstera/cmd/monstera config init \
-  --node-id=node_01 --node-address=localhost:7001 \
-  --node-id=node_02 --node-address=localhost:7002 \
-  --node-id=node_03 --node-address=localhost:7003 \
-  --output=./cluster_config.json
-
-$ go tool github.com/evrblk/monstera/cmd/monstera config add-application \
-  --config=./cluster_config.json \
-  --name=GrackleLocks \
-  --implementation=GrackleLocks \
-  --shards-count=16
-  
-$ go tool github.com/evrblk/monstera/cmd/monstera config add-application \
-  --config=./cluster_config.json \
-  --name=GrackleSemaphores \
-  --implementation=GrackleSemaphores \
-  --shards-count=16
-  
-$ go tool github.com/evrblk/monstera/cmd/monstera config add-application \
-  --config=./cluster_config.json \
-  --name=GrackleWaitGroups \
-  --implementation=GrackleWaitGroups \
-  --shards-count=16
-
-$ go tool github.com/evrblk/monstera/cmd/monstera config add-application \
-  --config=./cluster_config.json \
-  --name=GrackleBarriers \
-  --implementation=GrackleBarriers \
-  --shards-count=16
-  
-$ go tool github.com/evrblk/monstera/cmd/monstera config add-application \
-  --config=./cluster_config.json \
-  --name=GrackleNamespaces \
-  --implementation=GrackleNamespaces \
-  --shards-count=8
-```
-
-This will create `./cluster_config.json` file with 3 nodes and 5 sharded application cores that are parts of Grackle. 
-Take a look inside to see how actually simple it is.
-
-Then run all components:
-
-```shell
-$ ./grackle run node --node-id=node_01 --data-dir=./data/node_01 --monstera-config=./cluster_config.json
-$ ./grackle run node --node-id=node_02 --data-dir=./data/node_02 --monstera-config=./cluster_config.json
-$ ./grackle run node --node-id=node_03 --data-dir=./data/node_03 --monstera-config=./cluster_config.json
-
-$ ./grackle run worker --monstera-config=./cluster_config.json
-
-$ ./grackle run gateway --port=8000 --monstera-config=./cluster_config.json
-```
+Refer to [Getting Started](/docs/getting-started.md#clustered-mode) doc.
 
 ## Using
 

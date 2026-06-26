@@ -314,16 +314,18 @@ func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest) (*coreapis.AcquireL
 	}
 
 	// Check hierarchical conflicts before attempting acquisition
-	canAcquire, err := c.checkHierarchicalConflicts(txn, req.Payload.LockId, req.Payload.Exclusive)
+	conflictReason, blockingLocks, err := c.checkHierarchicalConflicts(txn, req.Payload.LockId, req.Payload.Exclusive)
 	if err != nil {
 		return nil, err
 	}
-	if !canAcquire {
+	if conflictReason != corepb.ContentionReason_CONTENTION_REASON_UNSPECIFIED {
 		// Hierarchical conflict detected - return failure
 		return &coreapis.AcquireLockResponse{
 			Payload: &corepb.AcquireLockResponse{
-				Lock:    updatedLock,
-				Success: false,
+				Lock:          updatedLock,
+				Success:       false,
+				Reason:        conflictReason,
+				BlockingLocks: blockingLocks,
 			},
 		}, nil
 	}
@@ -351,6 +353,9 @@ func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest) (*coreapis.AcquireL
 				Payload: &corepb.AcquireLockResponse{
 					Lock:    updatedLock,
 					Success: false, // Already locked for reads, cannot be locked for writes.
+					Reason:  corepb.ContentionReason_CONTENTION_REASON_PEER,
+					// BlockingLocks is left empty for PEER: the conflicting lock is
+					// already returned in the Lock field above.
 				},
 			}, nil
 		}
@@ -379,6 +384,9 @@ func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest) (*coreapis.AcquireL
 					Payload: &corepb.AcquireLockResponse{
 						Lock:    updatedLock,
 						Success: false, // The lock is held by another lease
+						Reason:  corepb.ContentionReason_CONTENTION_REASON_PEER,
+						// BlockingLocks is left empty for PEER: the conflicting lock
+						// is already returned in the Lock field above.
 					},
 				}, nil
 			}
@@ -388,6 +396,9 @@ func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest) (*coreapis.AcquireL
 				Payload: &corepb.AcquireLockResponse{
 					Lock:    updatedLock,
 					Success: false, // Already locked for writes, cannot be locked for reads.
+					Reason:  corepb.ContentionReason_CONTENTION_REASON_PEER,
+					// BlockingLocks is left empty for PEER: the conflicting lock is
+					// already returned in the Lock field above.
 				},
 			}, nil
 
@@ -1305,10 +1316,17 @@ func (c *Core) swapAncestorMode(txn *store.Txn, lockId *corepb.LockId, wasExclus
 	return nil
 }
 
-// checkAncestorConflicts verifies that no ancestor locks block the requested lock.
-// Returns (true, nil) if no conflicts, (false, nil) if blocked by ancestor.
-func (c *Core) checkAncestorConflicts(txn *store.Txn, lockId *corepb.LockId, requestExclusive bool) (bool, error) {
+// maxBlockingLocks bounds how many blocking locks AcquireLock reports back. The
+// list is a best-effort diagnostic, so it is always capped to keep the lookup
+// cheap regardless of how large a contended subtree is.
+const maxBlockingLocks = 50
+
+// checkAncestorConflicts verifies that no ancestor locks block the requested
+// lock. Returns UNSPECIFIED if no conflicts, or ANCESTOR plus the blocking
+// ancestor lock(s) (capped at maxBlockingLocks) if blocked.
+func (c *Core) checkAncestorConflicts(txn *store.Txn, lockId *corepb.LockId, requestExclusive bool) (corepb.ContentionReason, []*corepb.Lock, error) {
 	ancestors := c.lockAncestorNames(lockId.LockName)
+	blockingLocks := make([]*corepb.Lock, 0)
 	for _, ancestorName := range ancestors {
 		ancestorId := &corepb.LockId{
 			AccountId:   lockId.AccountId,
@@ -1323,54 +1341,75 @@ func (c *Core) checkAncestorConflicts(txn *store.Txn, lockId *corepb.LockId, req
 				// No lock on this ancestor, continue checking others
 				continue
 			}
-			return false, err
+			return corepb.ContentionReason_CONTENTION_REASON_UNSPECIFIED, nil, err
 		}
 
-		// Any ancestor with exclusive lock blocks everything
-		if ancestorLock.State == corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED {
-			return false, nil
-		}
-
-		// Ancestor shared lock blocks descendant exclusive
-		if requestExclusive && ancestorLock.State == corepb.LockState_LOCK_STATE_SHARED_LOCKED {
-			return false, nil
+		// An ancestor exclusive lock blocks everything; an ancestor shared lock
+		// blocks a descendant exclusive acquire.
+		blocks := ancestorLock.State == corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED ||
+			(requestExclusive && ancestorLock.State == corepb.LockState_LOCK_STATE_SHARED_LOCKED)
+		if blocks && len(blockingLocks) < maxBlockingLocks {
+			blockingLocks = append(blockingLocks, ancestorLock)
 		}
 	}
-	return true, nil
+
+	if len(blockingLocks) > 0 {
+		return corepb.ContentionReason_CONTENTION_REASON_ANCESTOR, blockingLocks, nil
+	}
+	return corepb.ContentionReason_CONTENTION_REASON_UNSPECIFIED, nil, nil
 }
 
-// checkDescendantConflicts verifies that no descendant locks block the requested lock.
-// Returns (true, nil) if no conflicts, (false, nil) if blocked by descendants.
-func (c *Core) checkDescendantConflicts(txn *store.Txn, lockId *corepb.LockId, requestExclusive bool) (bool, error) {
+// checkDescendantConflicts verifies that no descendant locks block the requested
+// lock. Returns UNSPECIFIED if no conflicts, or DESCENDANT plus the blocking
+// descendant locks (best-effort, capped at maxBlockingLocks) if blocked.
+func (c *Core) checkDescendantConflicts(txn *store.Txn, lockId *corepb.LockId, requestExclusive bool) (corepb.ContentionReason, []*corepb.Lock, error) {
 	// Check the ancestors table for this path to see if it has any descendants with locks
 	ancestor, err := c.ancestors.Get(txn, lockId)
 	if err != nil {
-		return false, err
+		return corepb.ContentionReason_CONTENTION_REASON_UNSPECIFIED, nil, err
 	}
 
-	// Any descendant with exclusive lock blocks everything
-	if ancestor.ExclusiveCount > 0 {
-		return false, nil
+	// A descendant exclusive lock blocks everything; a descendant shared lock
+	// blocks an ancestor exclusive acquire.
+	blocked := ancestor.ExclusiveCount > 0 || (requestExclusive && ancestor.SharedCount > 0)
+	if !blocked {
+		return corepb.ContentionReason_CONTENTION_REASON_UNSPECIFIED, nil, nil
 	}
 
-	// Any descendant lock blocks ancestor exclusive
-	if requestExclusive && ancestor.SharedCount > 0 {
-		return false, nil
+	// Bounded scan of the subtree to surface what is holding it. The aggregate
+	// counts above already proved a conflict exists; this is only for reporting,
+	// so the cap keeps it cheap even for large subtrees.
+	descendants, err := c.locks.ListByNamePrefix(txn,
+		&corepb.NamespaceId{AccountId: lockId.AccountId, NamespaceId: lockId.NamespaceId},
+		lockId.LockName+"/", maxBlockingLocks)
+	if err != nil {
+		return corepb.ContentionReason_CONTENTION_REASON_UNSPECIFIED, nil, err
 	}
 
-	return true, nil
+	blockingLocks := make([]*corepb.Lock, 0, len(descendants))
+	for _, d := range descendants {
+		// For a shared acquire only exclusive descendants block; for an exclusive
+		// acquire any held descendant blocks.
+		if d.State == corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED ||
+			(requestExclusive && d.State == corepb.LockState_LOCK_STATE_SHARED_LOCKED) {
+			blockingLocks = append(blockingLocks, d)
+		}
+	}
+
+	return corepb.ContentionReason_CONTENTION_REASON_DESCENDANT, blockingLocks, nil
 }
 
 // checkHierarchicalConflicts checks both ancestor and descendant conflicts.
-// Returns (true, nil) if lock can be acquired, (false, nil) if blocked.
-func (c *Core) checkHierarchicalConflicts(txn *store.Txn, lockId *corepb.LockId, requestExclusive bool) (bool, error) {
+// Returns UNSPECIFIED if the lock can be acquired, or the reason (ANCESTOR /
+// DESCENDANT) plus the blocking locks if blocked. Ancestors are checked first.
+func (c *Core) checkHierarchicalConflicts(txn *store.Txn, lockId *corepb.LockId, requestExclusive bool) (corepb.ContentionReason, []*corepb.Lock, error) {
 	// Check ancestors first (direct lock lookups)
-	ancestorOK, err := c.checkAncestorConflicts(txn, lockId, requestExclusive)
+	reason, blockingLocks, err := c.checkAncestorConflicts(txn, lockId, requestExclusive)
 	if err != nil {
-		return false, err
+		return corepb.ContentionReason_CONTENTION_REASON_UNSPECIFIED, nil, err
 	}
-	if !ancestorOK {
-		return false, nil
+	if reason != corepb.ContentionReason_CONTENTION_REASON_UNSPECIFIED {
+		return reason, blockingLocks, nil
 	}
 
 	// Check descendants (ancestor table lookup for descendant counts)

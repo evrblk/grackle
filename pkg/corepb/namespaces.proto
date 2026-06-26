@@ -10,8 +10,13 @@ message CreateNamespaceRequest {
   NamespaceId namespace_id = 1;
   string name = 2;
   string description = 3;
+  // Caller-supplied current time, Unix nanoseconds. The core is a deterministic
+  // replicated state machine, so the clock is passed in rather than read from the
+  // host. Recurs on most mutating requests with the same meaning.
   sfixed64 now = 4;
   map<string, string> metadata = 5;
+  // Per-account quota enforced by the core; the create is rejected if it would be
+  // exceeded.
   int64 max_number_of_namespaces = 6;
 }
 
@@ -61,6 +66,8 @@ message UpdateNamespaceRequest {
   string namespace_name = 2;
   string description = 3;
   map<string, string> metadata = 4;
+  // Optimistic concurrency check: must equal the namespace's current version or
+  // the update is rejected.
   int64 expected_version = 5;
   sfixed64 now = 6;
 }
@@ -69,21 +76,31 @@ message UpdateNamespaceResponse {
   Namespace namespace = 1;
 }
 
+// Namespace is the container for all primitives (locks, semaphores, wait groups,
+// barriers) and their leases. Names are unique per account, and every other core
+// call is scoped to a namespace. Deleting a namespace asynchronously deletes
+// everything inside it.
 message Namespace {
   NamespaceId id = 1;
   string name = 2;
   string description = 3;
+  // Creation / last-modification time, Unix nanoseconds.
   sfixed64 created_at = 4;
   sfixed64 updated_at = 5;
+  // Monotonic version, bumped on every successful update. Passed back as
+  // expected_version for optimistic concurrency control.
   int64 version = 6;
   map<string, string> metadata = 7;
 }
 
+// NamespaceId uniquely identifies a namespace within an account.
 message NamespaceId {
   fixed64 account_id = 1;
   fixed64 namespace_id = 2;
 }
 
+// NamespacesCounter holds the per-account aggregate counts the core maintains to
+// enforce quotas.
 message NamespacesCounter {
   int64 number_of_namespaces = 1;
 }

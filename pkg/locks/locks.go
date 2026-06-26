@@ -105,6 +105,22 @@ func (t *locksTable) ListByLeaseId(txn *store.Txn, leaseId *corepb.LeaseId, pagi
 	}, nil
 }
 
+// ListByNamePrefix returns up to limit locks within the namespace whose name
+// starts with namePrefix. Locks are sorted by name, so passing "a/b/" yields
+// the descendants of "a/b". The scan is bounded by limit.
+func (t *locksTable) ListByNamePrefix(txn *store.Txn, namespaceId *corepb.NamespaceId, namePrefix string, limit int) ([]*corepb.Lock, error) {
+	result, err := t.table.ListPaginated(txn,
+		utils.ConcatBytes(
+			t.tablePK(namespaceId.AccountId, namespaceId.NamespaceId),
+			t.tableSK(namePrefix)),
+		nil, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.Items, nil
+}
+
 func (t *locksTable) Get(txn *store.Txn, lockId *corepb.LockId) (*corepb.Lock, error) {
 	return t.table.Get(txn,
 		utils.ConcatBytes(

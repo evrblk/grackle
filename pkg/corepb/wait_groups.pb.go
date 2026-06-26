@@ -80,18 +80,28 @@ func (WaitGroupStatus) EnumDescriptor() ([]byte, []int) {
 }
 
 type CreateWaitGroupRequest struct {
-	state                             protoimpl.MessageState `protogen:"open.v1"`
-	WaitGroupId                       *WaitGroupId           `protobuf:"bytes,1,opt,name=wait_group_id,json=waitGroupId,proto3" json:"wait_group_id,omitempty"`
-	Name                              string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Description                       string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	Now                               int64                  `protobuf:"fixed64,4,opt,name=now,proto3" json:"now,omitempty"`
-	Counter                           int64                  `protobuf:"varint,5,opt,name=counter,proto3" json:"counter,omitempty"`
-	ExpiresAt                         int64                  `protobuf:"fixed64,6,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	Metadata                          map[string]string      `protobuf:"bytes,7,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	MaxNumberOfWaitGroupsPerNamespace int64                  `protobuf:"varint,8,opt,name=max_number_of_wait_groups_per_namespace,json=maxNumberOfWaitGroupsPerNamespace,proto3" json:"max_number_of_wait_groups_per_namespace,omitempty"`
-	DeleteAfterFinishedSeconds        int64                  `protobuf:"varint,9,opt,name=delete_after_finished_seconds,json=deleteAfterFinishedSeconds,proto3" json:"delete_after_finished_seconds,omitempty"`
-	unknownFields                     protoimpl.UnknownFields
-	sizeCache                         protoimpl.SizeCache
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	WaitGroupId *WaitGroupId           `protobuf:"bytes,1,opt,name=wait_group_id,json=waitGroupId,proto3" json:"wait_group_id,omitempty"`
+	Name        string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Description string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	// Caller-supplied current time, Unix nanoseconds. The core is a deterministic
+	// replicated state machine, so the clock is passed in rather than read from the
+	// host. Recurs on most requests with the same meaning.
+	Now int64 `protobuf:"fixed64,4,opt,name=now,proto3" json:"now,omitempty"`
+	// Total number of jobs that must complete for the group to finish.
+	Counter int64 `protobuf:"varint,5,opt,name=counter,proto3" json:"counter,omitempty"`
+	// Absolute deadline, Unix nanoseconds; the group becomes EXPIRED if it has not
+	// completed by then.
+	ExpiresAt int64             `protobuf:"fixed64,6,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	Metadata  map[string]string `protobuf:"bytes,7,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Per-namespace quota enforced by the core; the create is rejected if it would
+	// be exceeded.
+	MaxNumberOfWaitGroupsPerNamespace int64 `protobuf:"varint,8,opt,name=max_number_of_wait_groups_per_namespace,json=maxNumberOfWaitGroupsPerNamespace,proto3" json:"max_number_of_wait_groups_per_namespace,omitempty"`
+	// Retention period: once finished, the group is auto-deleted this many seconds
+	// after finished_at.
+	DeleteAfterFinishedSeconds int64 `protobuf:"varint,9,opt,name=delete_after_finished_seconds,json=deleteAfterFinishedSeconds,proto3" json:"delete_after_finished_seconds,omitempty"`
+	unknownFields              protoimpl.UnknownFields
+	sizeCache                  protoimpl.SizeCache
 }
 
 func (x *CreateWaitGroupRequest) Reset() {
@@ -232,16 +242,18 @@ func (x *CreateWaitGroupResponse) GetWaitGroup() *WaitGroup {
 }
 
 type UpdateWaitGroupRequest struct {
-	state                      protoimpl.MessageState `protogen:"open.v1"`
-	NamespaceId                *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	WaitGroupName              string                 `protobuf:"bytes,2,opt,name=wait_group_name,json=waitGroupName,proto3" json:"wait_group_name,omitempty"`
-	Description                string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	Now                        int64                  `protobuf:"fixed64,4,opt,name=now,proto3" json:"now,omitempty"`
-	ExpiresAt                  int64                  `protobuf:"fixed64,5,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	Counter                    int64                  `protobuf:"varint,6,opt,name=counter,proto3" json:"counter,omitempty"`
-	Metadata                   map[string]string      `protobuf:"bytes,7,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	ExpectedVersion            int64                  `protobuf:"varint,8,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
-	DeleteAfterFinishedSeconds int64                  `protobuf:"varint,9,opt,name=delete_after_finished_seconds,json=deleteAfterFinishedSeconds,proto3" json:"delete_after_finished_seconds,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
+	WaitGroupName string                 `protobuf:"bytes,2,opt,name=wait_group_name,json=waitGroupName,proto3" json:"wait_group_name,omitempty"`
+	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	Now           int64                  `protobuf:"fixed64,4,opt,name=now,proto3" json:"now,omitempty"`
+	ExpiresAt     int64                  `protobuf:"fixed64,5,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	Counter       int64                  `protobuf:"varint,6,opt,name=counter,proto3" json:"counter,omitempty"`
+	Metadata      map[string]string      `protobuf:"bytes,7,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Optimistic concurrency check: must equal the wait group's current version or
+	// the update is rejected.
+	ExpectedVersion            int64 `protobuf:"varint,8,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
+	DeleteAfterFinishedSeconds int64 `protobuf:"varint,9,opt,name=delete_after_finished_seconds,json=deleteAfterFinishedSeconds,proto3" json:"delete_after_finished_seconds,omitempty"`
 	unknownFields              protoimpl.UnknownFields
 	sizeCache                  protoimpl.SizeCache
 }
@@ -691,7 +703,9 @@ type DeleteWaitGroupRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	WaitGroupName string                 `protobuf:"bytes,2,opt,name=wait_group_name,json=waitGroupName,proto3" json:"wait_group_name,omitempty"`
-	RecordId      uint64                 `protobuf:"fixed64,3,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
+	// Idempotency / bookkeeping id the core uses to track the asynchronous deletion
+	// of this object's data. Recurs on delete and namespace-teardown requests.
+	RecordId      uint64 `protobuf:"fixed64,3,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1275,20 +1289,34 @@ func (*WaitGroupsDeleteNamespaceResponse) Descriptor() ([]byte, []int) {
 	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{20}
 }
 
+// WaitGroup tracks completion of a fixed set of jobs — a distributed, durable
+// sync.WaitGroup for fan-in of up to millions of jobs. It starts with counter
+// jobs outstanding; each job reported via CompleteJobsFromWaitGroup increments
+// completed_jobs, and the group becomes COMPLETED once completed_jobs reaches
+// counter (or EXPIRED if expires_at passes first).
 type WaitGroup struct {
-	state                      protoimpl.MessageState `protogen:"open.v1"`
-	Id                         *WaitGroupId           `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Name                       string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Description                string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	CreatedAt                  int64                  `protobuf:"fixed64,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt                  int64                  `protobuf:"fixed64,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	Version                    int64                  `protobuf:"varint,6,opt,name=version,proto3" json:"version,omitempty"`
-	ExpiresAt                  int64                  `protobuf:"fixed64,7,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	Counter                    int64                  `protobuf:"varint,8,opt,name=counter,proto3" json:"counter,omitempty"`
-	CompletedJobs              int64                  `protobuf:"varint,9,opt,name=completed_jobs,json=completedJobs,proto3" json:"completed_jobs,omitempty"`
-	Metadata                   map[string]string      `protobuf:"bytes,10,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	Status                     WaitGroupStatus        `protobuf:"varint,11,opt,name=status,proto3,enum=com.evrblk.grackle.corepb.WaitGroupStatus" json:"status,omitempty"`
-	DeleteAfterFinishedSeconds int64                  `protobuf:"varint,12,opt,name=delete_after_finished_seconds,json=deleteAfterFinishedSeconds,proto3" json:"delete_after_finished_seconds,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	Id          *WaitGroupId           `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name        string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Description string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	// Creation / last-modification time, Unix nanoseconds.
+	CreatedAt int64 `protobuf:"fixed64,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt int64 `protobuf:"fixed64,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	// Monotonic version, bumped on every successful update. Passed back as
+	// expected_version for optimistic concurrency control.
+	Version int64 `protobuf:"varint,6,opt,name=version,proto3" json:"version,omitempty"`
+	// Absolute deadline, Unix nanoseconds; the group becomes EXPIRED if it has not
+	// completed by then.
+	ExpiresAt int64 `protobuf:"fixed64,7,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	// Total number of jobs required to complete the group.
+	Counter int64 `protobuf:"varint,8,opt,name=counter,proto3" json:"counter,omitempty"`
+	// Number of distinct jobs completed so far (0 <= completed_jobs <= counter).
+	CompletedJobs int64             `protobuf:"varint,9,opt,name=completed_jobs,json=completedJobs,proto3" json:"completed_jobs,omitempty"`
+	Metadata      map[string]string `protobuf:"bytes,10,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Status        WaitGroupStatus   `protobuf:"varint,11,opt,name=status,proto3,enum=com.evrblk.grackle.corepb.WaitGroupStatus" json:"status,omitempty"`
+	// Retention period: the group is auto-deleted this many seconds after
+	// finished_at.
+	DeleteAfterFinishedSeconds int64 `protobuf:"varint,12,opt,name=delete_after_finished_seconds,json=deleteAfterFinishedSeconds,proto3" json:"delete_after_finished_seconds,omitempty"`
 	// finished_at is the timestamp (ns) at which the wait group became finished
 	// (either completed or expired). Zero while the wait group is still active.
 	FinishedAt int64 `protobuf:"fixed64,13,opt,name=finished_at,json=finishedAt,proto3" json:"finished_at,omitempty"`
@@ -1427,11 +1455,15 @@ func (x *WaitGroup) GetLastActivityAt() int64 {
 	return 0
 }
 
+// WaitGroupJob is one completed job recorded against a wait group. Jobs are
+// identified by a caller-supplied job_id, so reporting the same job twice is
+// idempotent and never double-counts toward the counter.
 type WaitGroupJob struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            *WaitGroupJobId        `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	CompletedAt   int64                  `protobuf:"fixed64,2,opt,name=completed_at,json=completedAt,proto3" json:"completed_at,omitempty"`
-	Metadata      map[string]string      `protobuf:"bytes,3,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Id    *WaitGroupJobId        `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// When the job was reported complete, Unix nanoseconds.
+	CompletedAt   int64             `protobuf:"fixed64,2,opt,name=completed_at,json=completedAt,proto3" json:"completed_at,omitempty"`
+	Metadata      map[string]string `protobuf:"bytes,3,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1487,6 +1519,8 @@ func (x *WaitGroupJob) GetMetadata() map[string]string {
 	return nil
 }
 
+// WaitGroupJobId uniquely identifies a completed job within a wait group.
+// job_id is the caller-supplied (free-form) job identifier.
 type WaitGroupJobId struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AccountId     uint64                 `protobuf:"fixed64,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
@@ -1555,6 +1589,7 @@ func (x *WaitGroupJobId) GetJobId() string {
 	return ""
 }
 
+// WaitGroupId uniquely identifies a wait group within an account and namespace.
 type WaitGroupId struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AccountId     uint64                 `protobuf:"fixed64,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
@@ -1615,6 +1650,8 @@ func (x *WaitGroupId) GetWaitGroupId() uint64 {
 	return 0
 }
 
+// WaitGroupsCounter holds the per-namespace aggregate counts the core maintains
+// to enforce quotas.
 type WaitGroupsCounter struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
 	NumberOfWaitGroups int64                  `protobuf:"varint,1,opt,name=number_of_wait_groups,json=numberOfWaitGroups,proto3" json:"number_of_wait_groups,omitempty"`
@@ -1659,6 +1696,9 @@ func (x *WaitGroupsCounter) GetNumberOfWaitGroups() int64 {
 	return 0
 }
 
+// WaitGroupsGarbageCollectionRecord is an internal bookkeeping entry queuing
+// asynchronous deletion of either a whole namespace's wait groups or a single
+// wait group's data.
 type WaitGroupsGarbageCollectionRecord struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Id    uint64                 `protobuf:"fixed64,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -1749,10 +1789,13 @@ func (*WaitGroupsGarbageCollectionRecord_NamespaceId) isWaitGroupsGarbageCollect
 
 func (*WaitGroupsGarbageCollectionRecord_WaitGroupId) isWaitGroupsGarbageCollectionRecord_Record() {}
 
+// WaitGroupsExpirationRecord is an index entry the core uses to find active wait
+// groups whose deadline has passed, so they can be marked EXPIRED in time order.
 type WaitGroupsExpirationRecord struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	WaitGroupId   *WaitGroupId           `protobuf:"bytes,1,opt,name=wait_group_id,json=waitGroupId,proto3" json:"wait_group_id,omitempty"`
-	ExpiresAt     int64                  `protobuf:"fixed64,2,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	WaitGroupId *WaitGroupId           `protobuf:"bytes,1,opt,name=wait_group_id,json=waitGroupId,proto3" json:"wait_group_id,omitempty"`
+	// The wait group's expires_at this entry was filed under, Unix nanoseconds.
+	ExpiresAt     int64 `protobuf:"fixed64,2,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }

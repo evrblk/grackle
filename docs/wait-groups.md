@@ -44,7 +44,23 @@ Every wait group has a `status`:
 `COMPLETED` and `EXPIRED` are terminal: a finished wait group never goes back to `ACTIVE`, and it
 can no longer be updated.
 
-### Expiration, finishing, and cleanup
+### Waiting
+`WaitForWaitGroup` is a blocking call. The server holds the request open until either
+`completed_jobs == counter` (returns `status: COMPLETED`) or `timeout_seconds` elapses. The
+response carries an `outcome` enum: `WAIT_GROUP_WAIT_OUTCOME_COMPLETED` when all jobs completed,
+`WAIT_GROUP_WAIT_OUTCOME_EXPIRED` when the group's `expires_at` passed while still active, or
+`WAIT_GROUP_WAIT_OUTCOME_TIMED_OUT` when `timeout_seconds` elapsed while the group was still
+active. Many callers can wait on the same group at the same time; all of them are released together
+when it completes.
+
+### Metadata
+A wait group carries an optional `metadata` map (string → string) set on `CreateWaitGroup` and
+replaced by `UpdateWaitGroup`. Each completed job can also carry its own `metadata`, supplied on
+`CompleteJobsFromWaitGroup` and returned by `ListWaitGroupCompletedJobs`. Metadata is opaque to
+Grackle — see [Metadata](/docs/api-overview.md#metadata) for the shared semantics and limits.
+
+## Lifecycle
+
 A wait group has an absolute `expires_at` set at creation. When that timestamp passes while the
 group is still `ACTIVE`, the group is marked `EXPIRED` — it is **not** deleted at that moment.
 This is the backstop for crashed producers: a stalled group eventually leaves the `ACTIVE` state
@@ -61,25 +77,10 @@ lets observers read the final state (for example, that the group `COMPLETED`) be
 `expires_at` is the wait group's own deadline; it is not tied to any lease. Wait groups do not use
 leases.
 
-### Waiting
-`WaitForWaitGroup` is a blocking call. The server holds the request open until either
-`completed_jobs == counter` (returns `status: COMPLETED`) or `timeout_seconds` elapses. The
-response carries an `outcome` enum: `WAIT_GROUP_WAIT_OUTCOME_COMPLETED` when all jobs completed,
-`WAIT_GROUP_WAIT_OUTCOME_EXPIRED` when the group's `expires_at` passed while still active, or
-`WAIT_GROUP_WAIT_OUTCOME_TIMED_OUT` when `timeout_seconds` elapsed while the group was still
-active. Many callers can wait on the same group at the same time; all of them are released together
-when it completes.
-
-### Metadata
-A wait group carries an optional `metadata` map (string → string) set on `CreateWaitGroup` and
-replaced by `UpdateWaitGroup`. Each completed job can also carry its own `metadata`, supplied on
-`CompleteJobsFromWaitGroup` and returned by `ListWaitGroupCompletedJobs`. Metadata is opaque to
-Grackle — see [Metadata](/docs/api-overview.md#metadata) for the shared semantics and limits.
-
-### Activity tracking
 Each wait group carries a `last_activity_at` timestamp — the time of the most recent activity on
 it, namely a job being reported via `CompleteJobsFromWaitGroup`. It is set at creation and is not
-changed by `UpdateWaitGroup` or by reads.
+changed by `UpdateWaitGroup` or by reads. Unlike for barriers, this is information-only field for 
+wait groups.
 
 ## Example workflow
 
@@ -87,7 +88,7 @@ The producer creates a wait group for a batch of 100 jobs, gives it an absolute 
 Grackle to keep it around for an hour (3600 seconds) after it finishes before deleting it.
 (Assuming that a namespace `pipelines` already exists.)
 
-CreateWaitGroupRequest:
+__CreateWaitGroupRequest__:
 ```json
 {
   "namespace_name": "pipelines",
@@ -100,7 +101,7 @@ CreateWaitGroupRequest:
 }
 ```
 
-CreateWaitGroupResponse:
+__CreateWaitGroupResponse__:
 ```json
 {
   "wait_group": {
@@ -125,7 +126,7 @@ If the producer discovers more work after the fact, it revises the total with `U
 `counter` is the new total — not a delta — and `expected_version` must equal the group's current
 `version` for the update to apply (see [Updates](/docs/api-overview.md#updates)):
 
-UpdateWaitGroupRequest:
+__UpdateWaitGroupRequest__:
 ```json
 {
   "namespace_name": "pipelines",
@@ -135,7 +136,7 @@ UpdateWaitGroupRequest:
 }
 ```
 
-UpdateWaitGroupResponse:
+__UpdateWaitGroupResponse__:
 ```json
 {
   "wait_group": {
@@ -153,7 +154,7 @@ Workers report jobs as they finish. The call accepts a batch of `jobs`, each wit
 optional `metadata`, and is idempotent — reporting the same id again is a no-op for
 `completed_jobs` (the first reported metadata for a job id is the one that is kept).
 
-CompleteJobsFromWaitGroupRequest:
+__CompleteJobsFromWaitGroupRequest__:
 ```json
 {
   "namespace_name": "pipelines",
@@ -166,7 +167,7 @@ CompleteJobsFromWaitGroupRequest:
 }
 ```
 
-CompleteJobsFromWaitGroupResponse:
+__CompleteJobsFromWaitGroupResponse__:
 ```json
 {
   "wait_group": {
@@ -182,7 +183,7 @@ CompleteJobsFromWaitGroupResponse:
 Meanwhile, an observer blocks on the group. The call returns as soon as `completed_jobs == counter`
 or the timeout elapses.
 
-WaitForWaitGroupRequest:
+__WaitForWaitGroupRequest__:
 ```json
 {
   "namespace_name": "pipelines",
@@ -191,7 +192,7 @@ WaitForWaitGroupRequest:
 }
 ```
 
-WaitForWaitGroupResponse (group completed before timeout):
+__WaitForWaitGroupResponse__ (group completed before timeout):
 ```json
 {
   "wait_group": {
@@ -206,7 +207,7 @@ WaitForWaitGroupResponse (group completed before timeout):
 }
 ```
 
-WaitForWaitGroupResponse (timeout fired first):
+__WaitForWaitGroupResponse__ (timeout fired first):
 ```json
 {
   "wait_group": {
@@ -234,7 +235,7 @@ mutable field you want to keep — an update that omits `metadata` clears it, an
 `counter` resets it. Each call is guarded by `expected_version` for optimistic concurrency — see
 [Updates](/docs/api-overview.md#updates).
 
-UpdateWaitGroupRequest:
+__UpdateWaitGroupRequest__:
 ```json
 {
   "namespace_name": "pipelines",
@@ -248,7 +249,7 @@ UpdateWaitGroupRequest:
 }
 ```
 
-UpdateWaitGroupResponse:
+__UpdateWaitGroupResponse__:
 ```json
 {
   "wait_group": {
