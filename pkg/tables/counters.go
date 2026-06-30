@@ -6,7 +6,7 @@ import (
 
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 
 	"github.com/evrblk/grackle/pkg/sharding"
 )
@@ -24,16 +24,16 @@ type ptr[T any] interface {
 // 2. account id
 // 3. namespace id
 type CountersTable[T ptr[U], U any] struct {
-	table *monsterax.BinaryTable[T, U]
+	table *honey.BinaryTable[T, U]
 }
 
 func NewCountersTable[T ptr[U], U any](tableId []byte, shardLowerBound []byte, shardUpperBound []byte) *CountersTable[T, U] {
 	return &CountersTable[T, U]{
-		table: monsterax.NewBinaryTable[T, U](tableId, shardLowerBound, shardUpperBound),
+		table: honey.NewBinaryTable[T, U](tableId, shardLowerBound, shardUpperBound),
 	}
 }
 
-func (t *CountersTable[T, U]) GetTableKeyRange() monsterax.KeyRange {
+func (t *CountersTable[T, U]) GetTableKeyRange() honey.KeyRange {
 	return t.table.GetTableKeyRange()
 }
 

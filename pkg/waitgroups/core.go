@@ -7,8 +7,9 @@ import (
 	"time"
 
 	"github.com/evrblk/monstera"
+	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 
 	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/corepb"
@@ -54,8 +55,8 @@ func NewCore(badgerStore *store.BadgerStore, shardGlobalIndexPrefix []byte, shar
 	}
 }
 
-func (c *Core) ranges() []monsterax.KeyRange {
-	ranges := []monsterax.KeyRange{
+func (c *Core) ranges() []honey.KeyRange {
+	ranges := []honey.KeyRange{
 		c.jobs.GetTableKeyRange(),
 		c.counters.GetTableKeyRange(),
 		c.gcRecords.GetTableKeyRange(),
@@ -71,13 +72,13 @@ func (c *Core) ranges() []monsterax.KeyRange {
 // Snapshot returns a consistent snapshot of every key range owned by this
 // shard's wait-groups Core, suitable for Raft snapshot transfer.
 func (c *Core) Snapshot() monstera.ApplicationCoreSnapshot {
-	return monsterax.Snapshot(c.badgerStore, c.ranges())
+	return honey.Snapshot(c.badgerStore, c.ranges())
 }
 
 // Restore replaces the contents of this shard's key ranges with the data read
 // from reader. Any existing keys in those ranges are removed first.
 func (c *Core) Restore(reader io.ReadCloser) error {
-	return monsterax.Restore(c.badgerStore, c.ranges(), reader)
+	return honey.Restore(c.badgerStore, c.ranges(), reader)
 }
 
 // Close releases any Core-owned resources. The underlying Badger store is
@@ -96,8 +97,8 @@ func (c *Core) GetWaitGroup(req *coreapis.GetWaitGroupRequest) (*coreapis.GetWai
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.GetWaitGroupResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"wait group not found",
 					map[string]string{
 						"wait_group_id": ids.EncodeWaitGroupId(req.Payload.WaitGroupId),
@@ -126,8 +127,8 @@ func (c *Core) GetWaitGroupByName(req *coreapis.GetWaitGroupByNameRequest) (*cor
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.GetWaitGroupByNameResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"wait group not found",
 					map[string]string{
 						"wait_group_name": req.Payload.WaitGroupName,
@@ -177,8 +178,8 @@ func (c *Core) ListWaitGroupCompletedJobs(req *coreapis.ListWaitGroupCompletedJo
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.ListWaitGroupCompletedJobsResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"wait group not found",
 					map[string]string{
 						"wait_group_name": req.Payload.WaitGroupName,
@@ -219,8 +220,8 @@ func (c *Core) CreateWaitGroup(req *coreapis.CreateWaitGroupRequest) (*coreapis.
 		}
 	} else {
 		return &coreapis.CreateWaitGroupResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.AlreadyExists,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.AlreadyExists,
 				"wait group with this name already exists",
 				map[string]string{
 					"wait_group_name": req.Payload.Name,
@@ -237,11 +238,29 @@ func (c *Core) CreateWaitGroup(req *coreapis.CreateWaitGroupRequest) (*coreapis.
 	// Checking max number of wait groups
 	if counters.NumberOfWaitGroups >= req.Payload.MaxNumberOfWaitGroupsPerNamespace {
 		return &coreapis.CreateWaitGroupResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.ResourceExhausted,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.ResourceExhausted,
 				"max number of wait groups per namespace reached",
 				map[string]string{"limit": fmt.Sprintf("%d", req.Payload.MaxNumberOfWaitGroupsPerNamespace)},
 			),
+		}, nil
+	}
+
+	// Checking ID uniqueness. The ID is randomly generated and passed to the core,
+	// so a collision is expected to be rare; when it does happen we return IDCollision
+	// so the caller can regenerate the ID and retry. This is not a user-facing error.
+	// Without this check c.waitGroups.Create would silently overwrite the colliding wait group.
+	_, err = c.waitGroups.Get(txn, req.Payload.WaitGroupId)
+	if err != nil {
+		if !errors.Is(err, store.ErrNotFound) {
+			return nil, err
+		}
+	} else {
+		return &coreapis.CreateWaitGroupResponse{
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.IDCollision,
+				"wait group with this id already exists",
+				map[string]string{"wait_group_id": fmt.Sprintf("%d", req.Payload.WaitGroupId.WaitGroupId)}),
 		}, nil
 	}
 
@@ -306,8 +325,8 @@ func (c *Core) UpdateWaitGroup(req *coreapis.UpdateWaitGroupRequest) (*coreapis.
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.UpdateWaitGroupResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"wait group not found",
 					map[string]string{
 						"wait_group_name": req.Payload.WaitGroupName,
@@ -320,8 +339,8 @@ func (c *Core) UpdateWaitGroup(req *coreapis.UpdateWaitGroupRequest) (*coreapis.
 
 	if waitGroup.Version != req.Payload.ExpectedVersion {
 		return &coreapis.UpdateWaitGroupResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.InvalidArgument,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.InvalidRequest,
 				"version mismatch",
 				map[string]string{
 					"wait_group_name":  req.Payload.WaitGroupName,
@@ -334,8 +353,8 @@ func (c *Core) UpdateWaitGroup(req *coreapis.UpdateWaitGroupRequest) (*coreapis.
 
 	if waitGroup.Status != corepb.WaitGroupStatus_WAIT_GROUP_STATUS_ACTIVE {
 		return &coreapis.UpdateWaitGroupResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.InvalidArgument,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.InvalidRequest,
 				"only active wait groups can be updated",
 				map[string]string{
 					"wait_group_name": req.Payload.WaitGroupName,
@@ -347,8 +366,8 @@ func (c *Core) UpdateWaitGroup(req *coreapis.UpdateWaitGroupRequest) (*coreapis.
 
 	if waitGroup.CompletedJobs > req.Payload.Counter {
 		return &coreapis.UpdateWaitGroupResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.InvalidArgument,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.InvalidRequest,
 				"there are currently more completed jobs than the new counter",
 				map[string]string{
 					"wait_group_name": req.Payload.WaitGroupName,
@@ -492,8 +511,8 @@ func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroup
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.CompleteJobsFromWaitGroupResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"wait group not found",
 					map[string]string{
 						"wait_group_name": req.Payload.WaitGroupName,
@@ -506,8 +525,8 @@ func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroup
 
 	if waitGroup.Status != corepb.WaitGroupStatus_WAIT_GROUP_STATUS_ACTIVE {
 		return &coreapis.CompleteJobsFromWaitGroupResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.InvalidArgument,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.InvalidRequest,
 				"only active wait groups can accept jobs",
 				map[string]string{
 					"wait_group_name": req.Payload.WaitGroupName,
@@ -548,8 +567,8 @@ func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroup
 	// Reject if completing these jobs would overflow the wait group counter.
 	if waitGroup.CompletedJobs > waitGroup.Counter {
 		return &coreapis.CompleteJobsFromWaitGroupResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.InvalidArgument,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.InvalidRequest,
 				"too many jobs to be marked completed",
 				map[string]string{
 					"wait_group_name": req.Payload.WaitGroupName,

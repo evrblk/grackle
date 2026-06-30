@@ -5,7 +5,7 @@ import (
 
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/pagination"
@@ -27,18 +27,18 @@ import (
 // 2. account id
 // 3. namespace name
 type namespacesTable struct {
-	table      *monsterax.BinaryTable[*corepb.Namespace, corepb.Namespace]
-	namesIndex *monsterax.Uint64Table
+	table      *honey.BinaryTable[*corepb.Namespace, corepb.Namespace]
+	namesIndex *honey.Uint64Table
 }
 
 func newNamespacesTable(shardLowerBound []byte, shardUpperBound []byte) *namespacesTable {
 	return &namespacesTable{
-		table: monsterax.NewBinaryTable[*corepb.Namespace, corepb.Namespace](
+		table: honey.NewBinaryTable[*corepb.Namespace, corepb.Namespace](
 			tables.Grackle["Grackle.NamespacesCore.Namespaces.Table"].Bytes(),
 			shardLowerBound,
 			shardUpperBound,
 		),
-		namesIndex: monsterax.NewUint64Table(
+		namesIndex: honey.NewUint64Table(
 			tables.Grackle["Grackle.NamespacesCore.Namespaces.NamesIndex"].Bytes(),
 			shardLowerBound,
 			shardUpperBound,
@@ -46,8 +46,8 @@ func newNamespacesTable(shardLowerBound []byte, shardUpperBound []byte) *namespa
 	}
 }
 
-func (t *namespacesTable) GetTableKeyRanges() []monsterax.KeyRange {
-	return []monsterax.KeyRange{
+func (t *namespacesTable) GetTableKeyRanges() []honey.KeyRange {
+	return []honey.KeyRange{
 		t.table.GetTableKeyRange(),
 		t.namesIndex.GetTableKeyRange(),
 	}

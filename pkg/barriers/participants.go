@@ -3,7 +3,7 @@ package barriers
 import (
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/pagination"
@@ -23,12 +23,12 @@ import (
 // 1. generation
 // 2. process id
 type participantsTable struct {
-	table *monsterax.BinaryTable[*corepb.BarrierParticipant, corepb.BarrierParticipant]
+	table *honey.BinaryTable[*corepb.BarrierParticipant, corepb.BarrierParticipant]
 }
 
 func newParticipantsTable(shardLowerBound []byte, shardUpperBound []byte) *participantsTable {
 	return &participantsTable{
-		table: monsterax.NewBinaryTable[*corepb.BarrierParticipant, corepb.BarrierParticipant](
+		table: honey.NewBinaryTable[*corepb.BarrierParticipant, corepb.BarrierParticipant](
 			tables.Grackle["Grackle.BarriersCore.Participants.Table"].Bytes(),
 			shardLowerBound,
 			shardUpperBound,
@@ -36,7 +36,7 @@ func newParticipantsTable(shardLowerBound []byte, shardUpperBound []byte) *parti
 	}
 }
 
-func (t *participantsTable) GetTableKeyRange() monsterax.KeyRange {
+func (t *participantsTable) GetTableKeyRange() honey.KeyRange {
 	return t.table.GetTableKeyRange()
 }
 

@@ -13,7 +13,7 @@ import (
 	gracklepb "github.com/evrblk/evrblk-go/grackle/v1beta"
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 	"github.com/evrblk/yellowstone-common/metrics"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -54,7 +54,7 @@ var singleNodeCmd = &cobra.Command{
 		metricsSrv.Start()
 
 		// Register table prefixes
-		registry := monsterax.NewBaseTableRegistry(1)
+		registry := honey.NewBaseTableRegistry(1)
 		tables.RegisterGracklePrefixes(registry)
 
 		// Create shared Badger store for application cores

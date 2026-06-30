@@ -3,7 +3,7 @@ package tables
 import (
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/pagination"
@@ -36,26 +36,26 @@ import (
 type LeasesTable struct {
 	shardGlobalIndexPrefix []byte
 
-	table           *monsterax.BinaryTable[*corepb.Lease, corepb.Lease]
-	processIdIndex  *monsterax.OneToManyUint64Index
-	expirationIndex *monsterax.SortedIndex
+	table           *honey.BinaryTable[*corepb.Lease, corepb.Lease]
+	processIdIndex  *honey.OneToManyUint64Index
+	expirationIndex *honey.SortedIndex
 }
 
 func NewLeasesTable(shardLowerBound []byte, shardUpperBound []byte, shardGlobalIndexPrefix []byte, tableId []byte, processIdIndexId []byte, expirationIndexId []byte) *LeasesTable {
 	return &LeasesTable{
 		shardGlobalIndexPrefix: shardGlobalIndexPrefix,
 
-		table: monsterax.NewBinaryTable[*corepb.Lease, corepb.Lease](
+		table: honey.NewBinaryTable[*corepb.Lease, corepb.Lease](
 			tableId,
 			shardLowerBound,
 			shardUpperBound,
 		),
-		processIdIndex: monsterax.NewOneToManyUint64Index(
+		processIdIndex: honey.NewOneToManyUint64Index(
 			processIdIndexId,
 			shardLowerBound,
 			shardUpperBound,
 		),
-		expirationIndex: monsterax.NewSortedIndex(
+		expirationIndex: honey.NewSortedIndex(
 			expirationIndexId,
 			shardGlobalIndexPrefix,
 			shardGlobalIndexPrefix,
@@ -63,8 +63,8 @@ func NewLeasesTable(shardLowerBound []byte, shardUpperBound []byte, shardGlobalI
 	}
 }
 
-func (t *LeasesTable) GetTableKeyRanges() []monsterax.KeyRange {
-	return []monsterax.KeyRange{
+func (t *LeasesTable) GetTableKeyRanges() []honey.KeyRange {
+	return []honey.KeyRange{
 		t.table.GetTableKeyRange(),
 		t.processIdIndex.GetTableKeyRange(),
 		t.expirationIndex.GetTableKeyRange(),

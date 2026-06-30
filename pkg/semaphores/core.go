@@ -7,8 +7,9 @@ import (
 	"math"
 
 	"github.com/evrblk/monstera"
+	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
 
@@ -65,8 +66,8 @@ func NewCore(badgerStore *store.BadgerStore, shardGlobalIndexPrefix []byte, shar
 	}
 }
 
-func (c *Core) ranges() []monsterax.KeyRange {
-	ranges := []monsterax.KeyRange{
+func (c *Core) ranges() []honey.KeyRange {
+	ranges := []honey.KeyRange{
 		c.counters.GetTableKeyRange(),
 		c.gcRecords.GetTableKeyRange(),
 		c.expirationRecords.GetTableKeyRange(),
@@ -82,13 +83,13 @@ func (c *Core) ranges() []monsterax.KeyRange {
 // Snapshot returns a Monstera snapshot of all key ranges owned by this core, suitable for
 // Raft log compaction or transfer to a new replica.
 func (c *Core) Snapshot() monstera.ApplicationCoreSnapshot {
-	return monsterax.Snapshot(c.badgerStore, c.ranges())
+	return honey.Snapshot(c.badgerStore, c.ranges())
 }
 
 // Restore replaces the contents of this core's key ranges with the snapshot read from reader.
 // Existing data in those ranges is removed.
 func (c *Core) Restore(reader io.ReadCloser) error {
-	return monsterax.Restore(c.badgerStore, c.ranges(), reader)
+	return honey.Restore(c.badgerStore, c.ranges(), reader)
 }
 
 // Close releases resources held by the core. Currently, a no-op; the underlying BadgerStore is
@@ -103,8 +104,8 @@ func (c *Core) Close() {
 func (c *Core) CreateSemaphore(req *coreapis.CreateSemaphoreRequest) (*coreapis.CreateSemaphoreResponse, error) {
 	if req.Payload.Permits == 0 {
 		return &coreapis.CreateSemaphoreResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.InvalidArgument,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.InvalidRequest,
 				"permits must be greater than 0",
 				map[string]string{
 					"permits": fmt.Sprintf("%d", req.Payload.Permits),
@@ -125,8 +126,8 @@ func (c *Core) CreateSemaphore(req *coreapis.CreateSemaphoreRequest) (*coreapis.
 	// Checking max number of semaphores
 	if counters.NumberOfSemaphores >= req.Payload.MaxNumberOfSemaphoresPerNamespace {
 		return &coreapis.CreateSemaphoreResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.ResourceExhausted,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.ResourceExhausted,
 				"max number of semaphores per namespace reached",
 				map[string]string{
 					"limit": fmt.Sprintf("%d", req.Payload.MaxNumberOfSemaphoresPerNamespace),
@@ -188,8 +189,8 @@ func (c *Core) UpdateSemaphore(req *coreapis.UpdateSemaphoreRequest) (*coreapis.
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.UpdateSemaphoreResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"semaphore not found",
 					map[string]string{
 						"semaphore_name": req.Payload.SemaphoreName,
@@ -203,8 +204,8 @@ func (c *Core) UpdateSemaphore(req *coreapis.UpdateSemaphoreRequest) (*coreapis.
 
 	if semaphore.Version != req.Payload.ExpectedVersion {
 		return &coreapis.UpdateSemaphoreResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.InvalidArgument,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.InvalidRequest,
 				"version mismatch",
 				map[string]string{
 					"semaphore_name":   req.Payload.SemaphoreName,
@@ -224,8 +225,8 @@ func (c *Core) UpdateSemaphore(req *coreapis.UpdateSemaphoreRequest) (*coreapis.
 	// If there are currently more holds than the new amount of permits
 	if updatedSemaphore.ActiveHolds > req.Payload.Permits {
 		return &coreapis.UpdateSemaphoreResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.InvalidArgument,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.InvalidRequest,
 				"there are currently more holds than the new amount of permits",
 				map[string]string{
 					"semaphore_name": req.Payload.SemaphoreName,
@@ -360,8 +361,8 @@ func (c *Core) GetSemaphore(req *coreapis.GetSemaphoreRequest) (*coreapis.GetSem
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.GetSemaphoreResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"semaphore not found",
 					map[string]string{
 						"semaphore_id": ids.EncodeSemaphoreId(req.Payload.SemaphoreId),
@@ -399,8 +400,8 @@ func (c *Core) GetSemaphoreByName(req *coreapis.GetSemaphoreByNameRequest) (*cor
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.GetSemaphoreByNameResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"semaphore not found",
 					map[string]string{
 						"semaphore_name": req.Payload.SemaphoreName,
@@ -437,8 +438,8 @@ func (c *Core) ListSemaphoreHolders(req *coreapis.ListSemaphoreHoldersRequest) (
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.ListSemaphoreHoldersResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"semaphore not found",
 					map[string]string{
 						"semaphore_name": req.Payload.SemaphoreName,
@@ -510,8 +511,8 @@ func (c *Core) ListSemaphores(req *coreapis.ListSemaphoresRequest) (*coreapis.Li
 func (c *Core) AcquireSemaphore(req *coreapis.AcquireSemaphoreRequest) (*coreapis.AcquireSemaphoreResponse, error) {
 	if req.Payload.Weight == 0 {
 		return &coreapis.AcquireSemaphoreResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.InvalidArgument,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.InvalidRequest,
 				"weight must be greater than 0",
 				map[string]string{
 					"weight": fmt.Sprintf("%d", req.Payload.Weight),
@@ -533,8 +534,8 @@ func (c *Core) AcquireSemaphore(req *coreapis.AcquireSemaphoreRequest) (*coreapi
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.AcquireSemaphoreResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"lease not found",
 					map[string]string{
 						"lease_id": fmt.Sprintf("%d", req.Payload.LeaseId),
@@ -549,8 +550,8 @@ func (c *Core) AcquireSemaphore(req *coreapis.AcquireSemaphoreRequest) (*coreapi
 	// Check if lease has expired
 	if lease.ExpiresAt <= req.Payload.Now {
 		return &coreapis.AcquireSemaphoreResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.NotFound,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.NotFound,
 				"lease not found",
 				map[string]string{
 					"lease_id": fmt.Sprintf("%d", req.Payload.LeaseId),
@@ -563,8 +564,8 @@ func (c *Core) AcquireSemaphore(req *coreapis.AcquireSemaphoreRequest) (*coreapi
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.AcquireSemaphoreResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"semaphore not found",
 					map[string]string{
 						"semaphore_name": req.Payload.SemaphoreName,
@@ -581,8 +582,8 @@ func (c *Core) AcquireSemaphore(req *coreapis.AcquireSemaphoreRequest) (*coreapi
 	// than blocking the caller until timeout on an impossible condition.
 	if req.Payload.Weight > semaphore.Permits {
 		return &coreapis.AcquireSemaphoreResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.InvalidArgument,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.InvalidRequest,
 				"weight exceeds semaphore permits",
 				map[string]string{
 					"weight":  fmt.Sprintf("%d", req.Payload.Weight),
@@ -736,8 +737,8 @@ func (c *Core) ReleaseSemaphore(req *coreapis.ReleaseSemaphoreRequest) (*coreapi
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.ReleaseSemaphoreResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"lease not found",
 					map[string]string{
 						"lease_id": fmt.Sprintf("%d", req.Payload.LeaseId),
@@ -753,8 +754,8 @@ func (c *Core) ReleaseSemaphore(req *coreapis.ReleaseSemaphoreRequest) (*coreapi
 	// eviction path, so Release should report the lease as gone instead of mutating state.
 	if lease.ExpiresAt <= req.Payload.Now {
 		return &coreapis.ReleaseSemaphoreResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.NotFound,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.NotFound,
 				"lease not found",
 				map[string]string{
 					"lease_id": fmt.Sprintf("%d", req.Payload.LeaseId),
@@ -767,8 +768,8 @@ func (c *Core) ReleaseSemaphore(req *coreapis.ReleaseSemaphoreRequest) (*coreapi
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.ReleaseSemaphoreResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"semaphore not found",
 					map[string]string{
 						"semaphore_name": req.Payload.SemaphoreName,
@@ -1086,13 +1087,31 @@ func (c *Core) CreateSemaphoreLease(req *coreapis.CreateSemaphoreLeaseRequest) (
 	// Checking max number of semaphore leases
 	if counters.NumberOfLeases >= req.Payload.MaxNumberOfSemaphoreLeases {
 		return &coreapis.CreateSemaphoreLeaseResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.ResourceExhausted,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.ResourceExhausted,
 				"max number of semaphore leases per namespace reached",
 				map[string]string{
 					"limit": fmt.Sprintf("%d", req.Payload.MaxNumberOfSemaphoreLeases),
 				},
 			),
+		}, nil
+	}
+
+	// Checking ID uniqueness. The ID is randomly generated and passed to the core,
+	// so a collision is expected to be rare; when it does happen we return IDCollision
+	// so the caller can regenerate the ID and retry. This is not a user-facing error.
+	// Without this check c.leases.Create would silently overwrite the colliding lease.
+	_, err = c.leases.Get(txn, req.Payload.LeaseId)
+	if err != nil {
+		if !errors.Is(err, store.ErrNotFound) {
+			return nil, err
+		}
+	} else {
+		return &coreapis.CreateSemaphoreLeaseResponse{
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.IDCollision,
+				"lease with this id already exists",
+				map[string]string{"lease_id": fmt.Sprintf("%d", req.Payload.LeaseId.LeaseId)}),
 		}, nil
 	}
 
@@ -1143,8 +1162,8 @@ func (c *Core) GetSemaphoreLease(req *coreapis.GetSemaphoreLeaseRequest) (*corea
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.GetSemaphoreLeaseResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"lease not found",
 					map[string]string{
 						"lease_id": ids.EncodeLeaseId(req.Payload.LeaseId),
@@ -1158,8 +1177,8 @@ func (c *Core) GetSemaphoreLease(req *coreapis.GetSemaphoreLeaseRequest) (*corea
 
 	if lease.ExpiresAt <= req.Payload.Now {
 		return &coreapis.GetSemaphoreLeaseResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.NotFound,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.NotFound,
 				"lease not found",
 				map[string]string{
 					"lease_id": ids.EncodeLeaseId(req.Payload.LeaseId),
@@ -1213,8 +1232,8 @@ func (c *Core) RefreshSemaphoreLease(req *coreapis.RefreshSemaphoreLeaseRequest)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.RefreshSemaphoreLeaseResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"lease not found",
 					map[string]string{
 						"lease_id": ids.EncodeLeaseId(req.Payload.LeaseId),
@@ -1241,8 +1260,8 @@ func (c *Core) RefreshSemaphoreLease(req *coreapis.RefreshSemaphoreLeaseRequest)
 
 		// Return not found error since the lease is now revoked
 		return &coreapis.RefreshSemaphoreLeaseResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.NotFound,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.NotFound,
 				"lease not found",
 				map[string]string{
 					"lease_id": ids.EncodeLeaseId(req.Payload.LeaseId),
@@ -1291,8 +1310,8 @@ func (c *Core) RevokeSemaphoreLease(req *coreapis.RevokeSemaphoreLeaseRequest) (
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.RevokeSemaphoreLeaseResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"lease not found",
 					map[string]string{
 						"lease_id": ids.EncodeLeaseId(req.Payload.LeaseId),

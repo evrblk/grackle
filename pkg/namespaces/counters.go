@@ -5,7 +5,7 @@ import (
 
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/sharding"
@@ -18,12 +18,12 @@ import (
 // 1. shard key (by account id)
 // 2. account id
 type countersTable struct {
-	table *monsterax.BinaryTable[*corepb.NamespacesCounter, corepb.NamespacesCounter]
+	table *honey.BinaryTable[*corepb.NamespacesCounter, corepb.NamespacesCounter]
 }
 
 func newCountersTable(shardLowerBound []byte, shardUpperBound []byte) *countersTable {
 	return &countersTable{
-		table: monsterax.NewBinaryTable[*corepb.NamespacesCounter, corepb.NamespacesCounter](
+		table: honey.NewBinaryTable[*corepb.NamespacesCounter, corepb.NamespacesCounter](
 			tables.Grackle["Grackle.NamespacesCore.Counters.Table"].Bytes(),
 			shardLowerBound,
 			shardUpperBound,
@@ -31,7 +31,7 @@ func newCountersTable(shardLowerBound []byte, shardUpperBound []byte) *countersT
 	}
 }
 
-func (t *countersTable) GetTableKeyRange() monsterax.KeyRange {
+func (t *countersTable) GetTableKeyRange() honey.KeyRange {
 	return t.table.GetTableKeyRange()
 }
 

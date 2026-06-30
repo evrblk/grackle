@@ -105,10 +105,7 @@ func (s *WaitGroupState) CompleteBatch(ctx context.Context, client grackle.Grack
 	}
 
 	start := s.nextJob
-	end := start + int64(batchSize)
-	if end > s.counter {
-		end = s.counter
-	}
+	end := min(start+int64(batchSize), s.counter)
 	s.nextJob = end
 	name := s.name
 	s.mu.Unlock()

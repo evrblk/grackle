@@ -5,7 +5,7 @@ import (
 
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 	"github.com/stretchr/testify/require"
 
 	"github.com/evrblk/grackle/pkg/barriers"
@@ -19,7 +19,7 @@ import (
 )
 
 func init() {
-	registry := monsterax.NewBaseTableRegistry(1)
+	registry := honey.NewBaseTableRegistry(1)
 	tables.RegisterGracklePrefixes(registry)
 }
 

@@ -9,8 +9,9 @@ import (
 	"testing"
 	"time"
 
+	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
 
@@ -20,7 +21,7 @@ import (
 )
 
 func init() {
-	registry := monsterax.NewBaseTableRegistry(1)
+	registry := honey.NewBaseTableRegistry(1)
 	tables.RegisterGracklePrefixes(registry)
 }
 
@@ -139,7 +140,7 @@ func TestCore_AcquireSemaphore(t *testing.T) {
 		// Try to acquire a nonexistent semaphore
 		lease := createLease(t, core, accountId, namespaceId.NamespaceId, "process_1", now, 60*time.Minute)
 		appErr := acquireSemaphoreWithError(t, core, namespaceId, lease.Id, "non_existing_semaphore", 1, now)
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 	})
 
 	t.Run("acquire with weight exceeding permits", func(t *testing.T) {
@@ -162,7 +163,7 @@ func TestCore_AcquireSemaphore(t *testing.T) {
 		lease := createLease(t, core, accountId, namespaceId.NamespaceId, "process_1", now, 60*time.Minute)
 
 		appErr := acquireSemaphoreWithError(t, core, namespaceId, lease.Id, "test_semaphore", 4, now)
-		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Equal(t, mrpc.InvalidRequest, appErr.Code)
 		require.Contains(t, appErr.Message, "weight exceeds semaphore permits")
 
 		// No holder should have been recorded.
@@ -193,7 +194,7 @@ func TestCore_AcquireSemaphore(t *testing.T) {
 		}
 
 		appErr := acquireSemaphoreWithError(t, core, namespaceId, fakeLease, "test_semaphore", 1, now)
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 		require.Contains(t, appErr.Message, "lease not found")
 
 		// No holder should have been recorded.
@@ -221,7 +222,7 @@ func TestCore_AcquireSemaphore(t *testing.T) {
 		// 1-minute TTL — call AcquireSemaphore at T+2m, after the lease has expired.
 		lease := createLease(t, core, accountId, namespaceId.NamespaceId, "process_1", now, 1*time.Minute)
 		appErr := acquireSemaphoreWithError(t, core, namespaceId, lease.Id, "test_semaphore", 1, now.Add(2*time.Minute))
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 		require.Contains(t, appErr.Message, "lease not found")
 
 		// No holder should have been recorded.
@@ -423,7 +424,7 @@ func TestCore_ReleaseSemaphore(t *testing.T) {
 		// Try to release a nonexistent semaphore
 		lease := createLease(t, core, accountId, namespaceId.NamespaceId, "process_1", now, 60*time.Minute)
 		appErr := releaseSemaphoreWithError(t, core, namespaceId, "nonexistent_semaphore", lease.Id, now)
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 	})
 
 	t.Run("release nonexistent lease id", func(t *testing.T) {
@@ -483,7 +484,7 @@ func TestCore_ReleaseSemaphore(t *testing.T) {
 			LeaseId:     rand.Uint64(),
 		}
 		appErr := releaseSemaphoreWithError(t, core, namespaceId, "test_semaphore", fakeLease, now)
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 		require.Contains(t, appErr.Message, "lease not found")
 
 		// Original holder is untouched.
@@ -514,7 +515,7 @@ func TestCore_ReleaseSemaphore(t *testing.T) {
 
 		// T+2m: lease is now expired.
 		appErr := releaseSemaphoreWithError(t, core, namespaceId, "test_semaphore", lease.Id, now.Add(2*time.Minute))
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 		require.Contains(t, appErr.Message, "lease not found")
 	})
 }
@@ -583,7 +584,7 @@ func TestCore_UpdateSemaphore(t *testing.T) {
 
 		// T+5m: Try to update semaphore to reduce permits to 2 (less than current holders)
 		appErr := updateSemaphoreWithError(t, core, namespaceId, "test_semaphore", "updated description", 2, 1, now.Add(5*time.Minute))
-		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Equal(t, mrpc.InvalidRequest, appErr.Code)
 
 		// Verify the semaphore was not updated
 		semaphore = getSemaphore(t, core, semaphoreId, now.Add(6*time.Minute))
@@ -603,7 +604,7 @@ func TestCore_UpdateSemaphore(t *testing.T) {
 
 		// Try to update a nonexistent semaphore
 		appErr := updateSemaphoreWithError(t, core, namespaceId, "nonexistent_semaphore", "updated description", 3, 1, now)
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 	})
 
 	t.Run("clears expirationRecords when the prune removes the last holder", func(t *testing.T) {
@@ -722,7 +723,7 @@ func TestCore_UpdateSemaphore(t *testing.T) {
 
 		// Reusing the stale version 1 is rejected with a version mismatch
 		appErr := updateSemaphoreWithError(t, core, namespaceId, "test_semaphore", "should not apply", 5, 1, now.Add(2*time.Minute))
-		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Equal(t, mrpc.InvalidRequest, appErr.Code)
 		require.Contains(t, appErr.Message, "version mismatch")
 
 		// The rejected update did not change anything
@@ -749,7 +750,7 @@ func TestCore_UpdateSemaphore(t *testing.T) {
 
 		// Passing a version the semaphore has never reached is rejected
 		appErr := updateSemaphoreWithError(t, core, namespaceId, "test_semaphore", "desc", 3, 99, now.Add(time.Minute))
-		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Equal(t, mrpc.InvalidRequest, appErr.Code)
 		require.Contains(t, appErr.Message, "version mismatch")
 	})
 }
@@ -765,7 +766,7 @@ func TestCore_GetSemaphore(t *testing.T) {
 		}
 
 		appErr := getSemaphoreWithError(t, core, nonExistingSemaphoreId, now)
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 	})
 }
 
@@ -847,7 +848,7 @@ func TestCore_GetSemaphoreByName(t *testing.T) {
 
 		// Try to get a nonexistent semaphore by name
 		appErr := getSemaphoreByNameWithError(t, core, namespaceId, "nonexistent_semaphore", now)
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 	})
 
 	t.Run("get semaphore by name from different namespace", func(t *testing.T) {
@@ -918,7 +919,25 @@ func TestCore_CreateSemaphore(t *testing.T) {
 			SemaphoreId: rand.Uint64(),
 		}
 		appErr := createSemaphoreWithError(t, core, semaphoreId, "test_semaphore_limit_exceeded", 2, maxSemaphores, now)
-		require.Equal(t, monsterax.ResourceExhausted, appErr.Code)
+		require.Equal(t, mrpc.ResourceExhausted, appErr.Code)
+	})
+
+	t.Run("duplicate id", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		semaphoreId := &corepb.SemaphoreId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint64(),
+			SemaphoreId: rand.Uint64(),
+		}
+
+		// Create first semaphore
+		_ = createSemaphore(t, core, semaphoreId, "test_semaphore_1", 2, now)
+
+		// Try to create another semaphore reusing the same ID (a different name, so
+		// this is an ID collision and not a name conflict) - should fail
+		appErr := createSemaphoreWithError(t, core, semaphoreId, "test_semaphore_2", 2, 20, now)
+		require.Equal(t, mrpc.IDCollision, appErr.Code)
 	})
 
 	t.Run("max number of semaphores per namespace", func(t *testing.T) {
@@ -930,7 +949,7 @@ func TestCore_CreateSemaphore(t *testing.T) {
 
 		// Create semaphores up to the limit using the same MaxNumberOfSemaphoresPerNamespace
 		// throughout — each call must succeed.
-		for i := 0; i < int(maxSemaphores); i++ {
+		for i := range int(maxSemaphores) {
 			semaphoreId := &corepb.SemaphoreId{
 				AccountId:   accountId,
 				NamespaceId: namespaceId,
@@ -946,7 +965,7 @@ func TestCore_CreateSemaphore(t *testing.T) {
 			SemaphoreId: rand.Uint64(),
 		}
 		appErr := createSemaphoreWithError(t, core, overSemaphoreId, "sem_over", 5, maxSemaphores, now)
-		require.Equal(t, monsterax.ResourceExhausted, appErr.Code)
+		require.Equal(t, mrpc.ResourceExhausted, appErr.Code)
 		require.Contains(t, appErr.Message, "max number of semaphores per namespace reached")
 
 		// Counter stayed at maxSemaphores — the failed call left no state behind.
@@ -991,7 +1010,7 @@ func TestCore_CreateSemaphore(t *testing.T) {
 
 		// Try to create a second semaphore with the same name
 		appErr := createSemaphoreWithError(t, core, semaphore2Id, "test_semaphore", 3, 100, now)
-		require.Equal(t, monsterax.AlreadyExists, appErr.Code)
+		require.Equal(t, mrpc.AlreadyExists, appErr.Code)
 	})
 }
 
@@ -1118,7 +1137,7 @@ func TestCore_DeleteSemaphore(t *testing.T) {
 
 		// T+3m: Verify semaphore no longer exists
 		appErr := getSemaphoreWithError(t, core, semaphoreId, now.Add(3*time.Minute))
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 	})
 
 	t.Run("delete nonexistent semaphore", func(t *testing.T) {
@@ -1194,7 +1213,7 @@ func TestCore_DeleteSemaphore(t *testing.T) {
 
 		// Verify semaphore is gone
 		appErr := getSemaphoreWithError(t, core, semaphoreId, now.Add(30*time.Minute))
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 	})
 
 	t.Run("queues a GC record so leftover holders can be drained later", func(t *testing.T) {
@@ -1214,7 +1233,7 @@ func TestCore_DeleteSemaphore(t *testing.T) {
 		_ = createSemaphore(t, core, semaphoreId, "doomed", 5, now)
 
 		// Acquire with three different leases — three holders for the same semaphore
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			lease := createLease(t, core, accountId, namespaceId.NamespaceId, fmt.Sprintf("process_%d", i), now, 60*time.Minute)
 			success, _ := acquireSemaphore(t, core, namespaceId, lease.Id, "doomed", 1, now)
 			require.True(t, success)
@@ -1400,7 +1419,7 @@ func TestCore_ListSemaphoreHolders(t *testing.T) {
 		require.NotNil(t, resp1)
 		require.Nil(t, resp1.Payload)
 		require.NotNil(t, resp1.ApplicationError)
-		require.Equal(t, monsterax.NotFound, resp1.ApplicationError.Code)
+		require.Equal(t, mrpc.NotFound, resp1.ApplicationError.Code)
 	})
 
 	t.Run("list holders with different weights", func(t *testing.T) {
@@ -1866,7 +1885,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		// Verify that semaphores in the deleted namespace are no longer accessible
 		for _, semaphoreId := range semaphoreIds {
 			appErr := getSemaphoreWithError(t, core, semaphoreId, now)
-			require.Equal(t, monsterax.NotFound, appErr.Code)
+			require.Equal(t, mrpc.NotFound, appErr.Code)
 		}
 
 		// Verify the different namespace semaphore still exists after GC
@@ -2239,7 +2258,7 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 				SemaphoreId: rand.Uint64(),
 			}
 			_ = createSemaphore(t, core, semaphoreIds[i], fmt.Sprintf("sem_%d", i), 100, now)
-			for j := 0; j < holdersPerSemaphore; j++ {
+			for j := range holdersPerSemaphore {
 				lease := createLease(t, core, accountId, namespaceId.NamespaceId, fmt.Sprintf("proc_%d_%d", i, j), now, 60*time.Minute)
 				success, _ := acquireSemaphore(t, core, namespaceId, lease.Id, fmt.Sprintf("sem_%d", i), 1, now)
 				require.True(t, success)
@@ -2683,6 +2702,40 @@ func TestCore_CreateSemaphoreLease(t *testing.T) {
 		require.EqualValues(t, 1, counters.NumberOfLeases)
 	})
 
+	t.Run("duplicate id", func(t *testing.T) {
+		core := newSemaphoresCore(t)
+		now := time.Now()
+		leaseId := &corepb.LeaseId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint64(),
+			LeaseId:     rand.Uint64(),
+		}
+
+		req := func(processId string) *coreapis.CreateSemaphoreLeaseRequest {
+			return &coreapis.CreateSemaphoreLeaseRequest{
+				Payload: &corepb.CreateSemaphoreLeaseRequest{
+					LeaseId:                    leaseId,
+					ProcessId:                  processId,
+					TtlSeconds:                 60,
+					Now:                        now.UnixNano(),
+					MaxNumberOfSemaphoreLeases: 100,
+				},
+			}
+		}
+
+		// Create first lease
+		resp1, err := core.CreateSemaphoreLease(req("process-1"))
+		require.NoError(t, err)
+		require.Nil(t, resp1.ApplicationError)
+
+		// Reusing the same ID is an ID collision
+		resp2, err := core.CreateSemaphoreLease(req("process-2"))
+		require.NoError(t, err)
+		require.Nil(t, resp2.Payload)
+		require.NotNil(t, resp2.ApplicationError)
+		require.Equal(t, mrpc.IDCollision, resp2.ApplicationError.Code)
+	})
+
 	t.Run("max number of semaphore leases per namespace", func(t *testing.T) {
 		core := newSemaphoresCore(t)
 		now := time.Now()
@@ -2692,13 +2745,13 @@ func TestCore_CreateSemaphoreLease(t *testing.T) {
 
 		// Create leases up to the limit using the same MaxNumberOfSemaphoreLeases throughout —
 		// each call must succeed.
-		for i := 0; i < int(maxLeases); i++ {
+		for i := range int(maxLeases) {
 			_ = createLeaseWithMax(t, core, accountId, namespaceId, fmt.Sprintf("process_%d", i), now, 60*time.Second, maxLeases)
 		}
 
 		// The next attempt must be rejected with ResourceExhausted.
 		appErr := createLeaseWithError(t, core, accountId, namespaceId, "process_over", now, 60*time.Second, maxLeases)
-		require.Equal(t, monsterax.ResourceExhausted, appErr.Code)
+		require.Equal(t, mrpc.ResourceExhausted, appErr.Code)
 		require.Contains(t, appErr.Message, "max number of semaphore leases per namespace reached")
 
 		// Counter stayed at maxLeases — the failed call left no state behind.
@@ -2754,7 +2807,7 @@ func TestCore_GetSemaphoreLease(t *testing.T) {
 		require.NoError(t, err)
 		require.Nil(t, resp.Payload)
 		require.NotNil(t, resp.ApplicationError)
-		require.Equal(t, monsterax.NotFound, resp.ApplicationError.Code)
+		require.Equal(t, mrpc.NotFound, resp.ApplicationError.Code)
 
 		// View txn must not mutate state — the expired lease is still in the store
 		storedLease, err := core.leases.Get(core.badgerStore.View(), lease.Id)
@@ -2779,7 +2832,7 @@ func TestCore_GetSemaphoreLease(t *testing.T) {
 		require.NoError(t, err)
 		require.Nil(t, resp.Payload)
 		require.NotNil(t, resp.ApplicationError)
-		require.Equal(t, monsterax.NotFound, resp.ApplicationError.Code)
+		require.Equal(t, mrpc.NotFound, resp.ApplicationError.Code)
 	})
 }
 
@@ -2857,7 +2910,7 @@ func TestCore_RevokeSemaphoreLease(t *testing.T) {
 		require.NotNil(t, resp5)
 		require.Nil(t, resp5.Payload)
 		require.NotNil(t, resp5.ApplicationError)
-		require.Equal(t, monsterax.NotFound, resp5.ApplicationError.Code)
+		require.Equal(t, mrpc.NotFound, resp5.ApplicationError.Code)
 	})
 
 	t.Run("releases multiple holders", func(t *testing.T) {
@@ -2944,7 +2997,7 @@ func TestCore_RevokeSemaphoreLease(t *testing.T) {
 		require.NoError(t, err)
 		require.Nil(t, resp.Payload)
 		require.NotNil(t, resp.ApplicationError)
-		require.Equal(t, monsterax.NotFound, resp.ApplicationError.Code)
+		require.Equal(t, mrpc.NotFound, resp.ApplicationError.Code)
 	})
 
 	t.Run("expirationRecords advances when the revoked lease held the earliest position", func(t *testing.T) {
@@ -3090,7 +3143,7 @@ func TestCore_RefreshSemaphoreLease(t *testing.T) {
 		}
 
 		appErr := refreshSemaphoreLeaseWithError(t, core, fakeLease, 60, now)
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 		require.Contains(t, appErr.Message, "lease not found")
 	})
 
@@ -3143,7 +3196,7 @@ func TestCore_RefreshSemaphoreLease(t *testing.T) {
 		require.NotNil(t, resp3)
 		require.Nil(t, resp3.Payload)
 		require.NotNil(t, resp3.ApplicationError)
-		require.Equal(t, monsterax.NotFound, resp3.ApplicationError.Code)
+		require.Equal(t, mrpc.NotFound, resp3.ApplicationError.Code)
 
 		// Verify that all semaphores are released
 		for i := range numSemaphores {
@@ -3169,7 +3222,7 @@ func TestCore_RefreshSemaphoreLease(t *testing.T) {
 		require.NotNil(t, resp5)
 		require.Nil(t, resp5.Payload)
 		require.NotNil(t, resp5.ApplicationError)
-		require.Equal(t, monsterax.NotFound, resp5.ApplicationError.Code)
+		require.Equal(t, mrpc.NotFound, resp5.ApplicationError.Code)
 	})
 
 	t.Run("valid lease", func(t *testing.T) {
@@ -3513,7 +3566,7 @@ func TestCore_ListSemaphoresByLeaseId(t *testing.T) {
 
 		// Create semaphores
 		var semaphoreIds []*corepb.SemaphoreId
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			semaphoreId := &corepb.SemaphoreId{
 				AccountId:   accountId,
 				NamespaceId: namespaceId.NamespaceId,
@@ -3525,7 +3578,7 @@ func TestCore_ListSemaphoresByLeaseId(t *testing.T) {
 		}
 
 		// Acquire first 3 semaphores with lease1
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			success, _ := acquireSemaphore(t, core, namespaceId, lease1.Id, fmt.Sprintf("test_semaphore_%d", i), 1, now)
 			require.True(t, success)
 		}
@@ -3830,7 +3883,7 @@ func releaseSemaphore(t *testing.T, core *Core, namespaceId *corepb.NamespaceId,
 	return resp.Payload.Semaphore
 }
 
-func releaseSemaphoreWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, semaphoreName string, leaseId *corepb.LeaseId, now time.Time) *monsterax.Error {
+func releaseSemaphoreWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, semaphoreName string, leaseId *corepb.LeaseId, now time.Time) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.ReleaseSemaphore(&coreapis.ReleaseSemaphoreRequest{
@@ -3879,7 +3932,7 @@ func createSemaphore(t *testing.T, core *Core, semaphoreId *corepb.SemaphoreId, 
 	return resp.Payload.Semaphore
 }
 
-func createSemaphoreWithError(t *testing.T, core *Core, semaphoreId *corepb.SemaphoreId, semaphoreName string, permits int64, maxNumberOfSemaphoresPerNamespace int64, now time.Time) *monsterax.Error {
+func createSemaphoreWithError(t *testing.T, core *Core, semaphoreId *corepb.SemaphoreId, semaphoreName string, permits int64, maxNumberOfSemaphoresPerNamespace int64, now time.Time) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.CreateSemaphore(&coreapis.CreateSemaphoreRequest{
@@ -3920,7 +3973,7 @@ func getSemaphore(t *testing.T, core *Core, semaphoreId *corepb.SemaphoreId, now
 	return resp.Payload.Semaphore
 }
 
-func getSemaphoreWithError(t *testing.T, core *Core, semaphoreId *corepb.SemaphoreId, now time.Time) *monsterax.Error {
+func getSemaphoreWithError(t *testing.T, core *Core, semaphoreId *corepb.SemaphoreId, now time.Time) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.GetSemaphore(&coreapis.GetSemaphoreRequest{
@@ -3958,7 +4011,7 @@ func getSemaphoreByName(t *testing.T, core *Core, namespaceId *corepb.NamespaceI
 	return resp.Payload.Semaphore
 }
 
-func getSemaphoreByNameWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, semaphoreName string, now time.Time) *monsterax.Error {
+func getSemaphoreByNameWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, semaphoreName string, now time.Time) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.GetSemaphoreByName(&coreapis.GetSemaphoreByNameRequest{
@@ -3977,7 +4030,7 @@ func getSemaphoreByNameWithError(t *testing.T, core *Core, namespaceId *corepb.N
 	return resp.ApplicationError
 }
 
-func acquireSemaphoreWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, leaseId *corepb.LeaseId, semaphoreName string, weight int64, now time.Time) *monsterax.Error {
+func acquireSemaphoreWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, leaseId *corepb.LeaseId, semaphoreName string, weight int64, now time.Time) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.AcquireSemaphore(&coreapis.AcquireSemaphoreRequest{
@@ -4041,7 +4094,7 @@ func updateSemaphore(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, 
 	return resp.Payload.Semaphore
 }
 
-func updateSemaphoreWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, semaphoreName string, description string, permits int64, version int64, now time.Time) *monsterax.Error {
+func updateSemaphoreWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, semaphoreName string, description string, permits int64, version int64, now time.Time) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.UpdateSemaphore(&coreapis.UpdateSemaphoreRequest{
@@ -4110,7 +4163,7 @@ func createLeaseWithMax(t *testing.T, core *Core, accountId uint64, namespaceId 
 	return resp.Payload.Lease
 }
 
-func createLeaseWithError(t *testing.T, core *Core, accountId uint64, namespaceId uint64, processId string, now time.Time, ttl time.Duration, maxNumberOfSemaphoreLeases int64) *monsterax.Error {
+func createLeaseWithError(t *testing.T, core *Core, accountId uint64, namespaceId uint64, processId string, now time.Time, ttl time.Duration, maxNumberOfSemaphoreLeases int64) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.CreateSemaphoreLease(&coreapis.CreateSemaphoreLeaseRequest{
@@ -4133,7 +4186,7 @@ func createLeaseWithError(t *testing.T, core *Core, accountId uint64, namespaceI
 	return resp.ApplicationError
 }
 
-func refreshSemaphoreLeaseWithError(t *testing.T, core *Core, leaseId *corepb.LeaseId, ttlSeconds int64, now time.Time) *monsterax.Error {
+func refreshSemaphoreLeaseWithError(t *testing.T, core *Core, leaseId *corepb.LeaseId, ttlSeconds int64, now time.Time) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.RefreshSemaphoreLease(&coreapis.RefreshSemaphoreLeaseRequest{

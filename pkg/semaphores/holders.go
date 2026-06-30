@@ -3,7 +3,7 @@ package semaphores
 import (
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/pagination"
@@ -32,25 +32,25 @@ import (
 // 1. expiration time
 // 2. lease id
 type holdersTable struct {
-	table           *monsterax.BinaryTable[*corepb.SemaphoreHolder, corepb.SemaphoreHolder]
-	expirationIndex *monsterax.SortedIndex
+	table           *honey.BinaryTable[*corepb.SemaphoreHolder, corepb.SemaphoreHolder]
+	expirationIndex *honey.SortedIndex
 }
 
 func newHoldersTable(shardLowerBound []byte, shardUpperBound []byte) *holdersTable {
 	return &holdersTable{
-		table: monsterax.NewBinaryTable[*corepb.SemaphoreHolder, corepb.SemaphoreHolder](
+		table: honey.NewBinaryTable[*corepb.SemaphoreHolder, corepb.SemaphoreHolder](
 			tables.Grackle["Grackle.SemaphoresCore.Holders.Table"].Bytes(),
 			shardLowerBound,
 			shardUpperBound),
-		expirationIndex: monsterax.NewSortedIndex(
+		expirationIndex: honey.NewSortedIndex(
 			tables.Grackle["Grackle.SemaphoresCore.Holders.ExpirationIndex"].Bytes(),
 			shardLowerBound,
 			shardUpperBound),
 	}
 }
 
-func (t *holdersTable) GetTableKeyRanges() []monsterax.KeyRange {
-	return []monsterax.KeyRange{
+func (t *holdersTable) GetTableKeyRanges() []honey.KeyRange {
+	return []honey.KeyRange{
 		t.table.GetTableKeyRange(),
 		t.expirationIndex.GetTableKeyRange(),
 	}

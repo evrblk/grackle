@@ -5,7 +5,7 @@ import (
 
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 )
 
 type gcptr[T any] interface {
@@ -23,18 +23,18 @@ type gcptr[T any] interface {
 type GCRecordsTable[T gcptr[U], U any] struct {
 	shardGlobalIndexPrefix []byte
 
-	table *monsterax.BinaryTable[T, U]
+	table *honey.BinaryTable[T, U]
 }
 
 func NewGCRecordsTable[T gcptr[U], U any](tableId []byte, shardGlobalIndexPrefix []byte) *GCRecordsTable[T, U] {
 	return &GCRecordsTable[T, U]{
 		shardGlobalIndexPrefix: shardGlobalIndexPrefix,
 
-		table: monsterax.NewBinaryTable[T, U](tableId, shardGlobalIndexPrefix, shardGlobalIndexPrefix),
+		table: honey.NewBinaryTable[T, U](tableId, shardGlobalIndexPrefix, shardGlobalIndexPrefix),
 	}
 }
 
-func (t *GCRecordsTable[T, U]) GetTableKeyRange() monsterax.KeyRange {
+func (t *GCRecordsTable[T, U]) GetTableKeyRange() honey.KeyRange {
 	return t.table.GetTableKeyRange()
 }
 

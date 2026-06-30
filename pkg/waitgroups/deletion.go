@@ -3,7 +3,7 @@ package waitgroups
 import (
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/tables"
@@ -27,14 +27,14 @@ import (
 type deletionRecordsTable struct {
 	shardGlobalIndexPrefix []byte
 
-	table *monsterax.BinaryTable[*corepb.WaitGroupsDeletionRecord, corepb.WaitGroupsDeletionRecord]
+	table *honey.BinaryTable[*corepb.WaitGroupsDeletionRecord, corepb.WaitGroupsDeletionRecord]
 }
 
 func newDeletionRecordsTable(shardGlobalIndexPrefix []byte) *deletionRecordsTable {
 	return &deletionRecordsTable{
 		shardGlobalIndexPrefix: shardGlobalIndexPrefix,
 
-		table: monsterax.NewBinaryTable[*corepb.WaitGroupsDeletionRecord, corepb.WaitGroupsDeletionRecord](
+		table: honey.NewBinaryTable[*corepb.WaitGroupsDeletionRecord, corepb.WaitGroupsDeletionRecord](
 			tables.Grackle["Grackle.WaitGroupsCore.DeletionRecords.Table"].Bytes(),
 			shardGlobalIndexPrefix,
 			shardGlobalIndexPrefix,
@@ -42,7 +42,7 @@ func newDeletionRecordsTable(shardGlobalIndexPrefix []byte) *deletionRecordsTabl
 	}
 }
 
-func (t *deletionRecordsTable) GetTableKeyRange() monsterax.KeyRange {
+func (t *deletionRecordsTable) GetTableKeyRange() honey.KeyRange {
 	return t.table.GetTableKeyRange()
 }
 

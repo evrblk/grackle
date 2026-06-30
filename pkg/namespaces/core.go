@@ -6,8 +6,9 @@ import (
 	"io"
 
 	"github.com/evrblk/monstera"
+	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 
 	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/corepb"
@@ -33,8 +34,8 @@ func NewCore(badgerStore *store.BadgerStore, shardLowerBound []byte, shardUpperB
 	}
 }
 
-func (c *Core) ranges() []monsterax.KeyRange {
-	ranges := []monsterax.KeyRange{
+func (c *Core) ranges() []honey.KeyRange {
+	ranges := []honey.KeyRange{
 		c.counters.GetTableKeyRange(),
 	}
 	ranges = append(ranges, c.namespaces.GetTableKeyRanges()...)
@@ -42,11 +43,11 @@ func (c *Core) ranges() []monsterax.KeyRange {
 }
 
 func (c *Core) Snapshot() monstera.ApplicationCoreSnapshot {
-	return monsterax.Snapshot(c.badgerStore, c.ranges())
+	return honey.Snapshot(c.badgerStore, c.ranges())
 }
 
 func (c *Core) Restore(reader io.ReadCloser) error {
-	return monsterax.Restore(c.badgerStore, c.ranges(), reader)
+	return honey.Restore(c.badgerStore, c.ranges(), reader)
 }
 
 func (c *Core) Close() {
@@ -54,11 +55,10 @@ func (c *Core) Close() {
 }
 
 func (c *Core) CreateNamespace(req *coreapis.CreateNamespaceRequest) (*coreapis.CreateNamespaceResponse, error) {
-	// Validations
 	if req.Payload.Name == "" {
 		return &coreapis.CreateNamespaceResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.InvalidArgument,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.InvalidRequest,
 				"Name should not be empty",
 				map[string]string{}),
 		}, nil
@@ -81,8 +81,8 @@ func (c *Core) CreateNamespace(req *coreapis.CreateNamespaceRequest) (*coreapis.
 		}
 	} else {
 		return &coreapis.CreateNamespaceResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.AlreadyExists,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.AlreadyExists,
 				"namespace with this name already exists",
 				map[string]string{"namespace_name": req.Payload.Name}),
 		}, nil
@@ -91,11 +91,29 @@ func (c *Core) CreateNamespace(req *coreapis.CreateNamespaceRequest) (*coreapis.
 	// Checking max number of namespaces
 	if counters.NumberOfNamespaces >= req.Payload.MaxNumberOfNamespaces {
 		return &coreapis.CreateNamespaceResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.ResourceExhausted,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.ResourceExhausted,
 				"max number of namespaces reached",
 				map[string]string{"limit": fmt.Sprintf("%d", req.Payload.MaxNumberOfNamespaces)},
 			),
+		}, nil
+	}
+
+	// Checking ID uniqueness. The ID is randomly generated and passed to the core,
+	// so a collision is expected to be rare; when it does happen we return IDCollision so
+	// the caller can regenerate the ID and retry. This is not a user-facing error.
+	// Without this check c.namespaces.Create would silently overwrite the colliding namespace.
+	_, err = c.namespaces.Get(txn, req.Payload.NamespaceId)
+	if err != nil {
+		if !errors.Is(err, store.ErrNotFound) {
+			return nil, err
+		}
+	} else {
+		return &coreapis.CreateNamespaceResponse{
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.IDCollision,
+				"namespace with this id already exists",
+				map[string]string{"namespace_id": fmt.Sprintf("%d", req.Payload.NamespaceId.NamespaceId)}),
 		}, nil
 	}
 
@@ -141,8 +159,8 @@ func (c *Core) UpdateNamespace(req *coreapis.UpdateNamespaceRequest) (*coreapis.
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.UpdateNamespaceResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"namespace not found",
 					map[string]string{"namespace_name": req.Payload.NamespaceName},
 				),
@@ -154,8 +172,8 @@ func (c *Core) UpdateNamespace(req *coreapis.UpdateNamespaceRequest) (*coreapis.
 
 	if namespace.Version != req.Payload.ExpectedVersion {
 		return &coreapis.UpdateNamespaceResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.InvalidArgument,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.InvalidRequest,
 				"version mismatch",
 				map[string]string{
 					"namespace_name":   req.Payload.NamespaceName,
@@ -239,8 +257,8 @@ func (c *Core) GetNamespace(req *coreapis.GetNamespaceRequest) (*coreapis.GetNam
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.GetNamespaceResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"namespace not found",
 					map[string]string{"namespace_id": ids.EncodeNamespaceId(req.Payload.NamespaceId)},
 				),
@@ -265,8 +283,8 @@ func (c *Core) GetNamespaceByName(req *coreapis.GetNamespaceByNameRequest) (*cor
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.GetNamespaceByNameResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"namespace not found",
 					map[string]string{"namespace_name": req.Payload.NamespaceName},
 				),

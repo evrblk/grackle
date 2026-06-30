@@ -8,8 +8,9 @@ import (
 	"testing"
 	"time"
 
+	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 	"github.com/stretchr/testify/require"
 
 	"github.com/evrblk/grackle/pkg/coreapis"
@@ -18,7 +19,7 @@ import (
 )
 
 func init() {
-	registry := monsterax.NewBaseTableRegistry(1)
+	registry := honey.NewBaseTableRegistry(1)
 	tables.RegisterGracklePrefixes(registry)
 }
 
@@ -69,13 +70,32 @@ func TestCore_CreateBarrier(t *testing.T) {
 
 		appErr := createBarrierWithError(t, core, barrierId2, barrierName, 5, 10, now.Add(time.Minute))
 		require.NotNil(t, appErr)
-		require.Equal(t, monsterax.AlreadyExists, appErr.Code)
+		require.Equal(t, mrpc.AlreadyExists, appErr.Code)
 		require.Contains(t, appErr.Message, "already exists")
 
 		// Verify the first barrier is still accessible and unchanged
 		barrier := getBarrier(t, core, barrierId1)
 
 		require.Equal(t, barrierId1.BarrierId, barrier.Id.BarrierId)
+	})
+
+	t.Run("duplicate id", func(t *testing.T) {
+		core := newBarriersCore(t)
+		now := time.Now()
+		barrierId := &corepb.BarrierId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint64(),
+			BarrierId:   rand.Uint64(),
+		}
+
+		// Create first barrier
+		_ = createBarrier(t, core, barrierId, "barrier_1", 3, 10, now)
+
+		// Try to create another barrier reusing the same ID (a different name, so
+		// this is an ID collision and not a name conflict) - should fail
+		appErr := createBarrierWithError(t, core, barrierId, "barrier_2", 5, 10, now.Add(time.Minute))
+		require.NotNil(t, appErr)
+		require.Equal(t, mrpc.IDCollision, appErr.Code)
 	})
 
 	t.Run("max number of barriers per namespace", func(t *testing.T) {
@@ -105,7 +125,7 @@ func TestCore_CreateBarrier(t *testing.T) {
 
 		appErr := createBarrierWithError(t, core, barrierId, "barrier_exceeding_limit", 3, maxBarriers, now.Add(time.Minute))
 		require.NotNil(t, appErr)
-		require.Equal(t, monsterax.ResourceExhausted, appErr.Code)
+		require.Equal(t, mrpc.ResourceExhausted, appErr.Code)
 		require.Contains(t, appErr.Message, "max number of barriers per namespace reached")
 	})
 
@@ -121,7 +141,7 @@ func TestCore_CreateBarrier(t *testing.T) {
 		// A barrier expecting zero processes could never trip, so it is rejected.
 		appErr := createBarrierWithError(t, core, barrierId, "test_barrier", 0, 10, now)
 		require.NotNil(t, appErr)
-		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Equal(t, mrpc.InvalidRequest, appErr.Code)
 		require.Contains(t, appErr.Message, "expected processes must be greater than 0")
 	})
 }
@@ -160,7 +180,7 @@ func TestCore_GetBarrier(t *testing.T) {
 		// Get nonexistent barrier
 		appErr := getBarrierWithError(t, core, barrierId)
 		require.NotNil(t, appErr)
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 		require.Contains(t, appErr.Message, "barrier not found")
 	})
 }
@@ -198,7 +218,7 @@ func TestCore_GetBarrierByName(t *testing.T) {
 
 		// Get nonexistent barrier by name
 		appErr := getBarrierByNameWithError(t, core, namespaceId, "nonexistent_barrier")
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 		require.Contains(t, appErr.Message, "barrier not found")
 	})
 }
@@ -404,7 +424,7 @@ func TestCore_UpdateBarrier(t *testing.T) {
 
 		// Try to update a barrier that doesn't exist
 		appErr := updateBarrierWithError(t, core, barrierId, "Updated description", 5, 1, now)
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 		require.Contains(t, appErr.Message, "barrier not found")
 	})
 
@@ -432,7 +452,7 @@ func TestCore_UpdateBarrier(t *testing.T) {
 		// T+2m: Try to update expected_processes to 2 (less than 3 arrived processes)
 		appErr := updateBarrierWithError(t, core, barrierId, "Updated description", 2, 1, now.Add(2*time.Minute))
 		require.NotNil(t, appErr)
-		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Equal(t, mrpc.InvalidRequest, appErr.Code)
 		require.Contains(t, appErr.Message, "there are currently more arrived processes than the new expected processes")
 
 		// T+3m: Update to expected_processes = 3 (equal to arrived_processes) should succeed
@@ -484,7 +504,7 @@ func TestCore_UpdateBarrier(t *testing.T) {
 
 		// Reusing the stale version 1 is rejected with a version mismatch
 		appErr := updateBarrierWithError(t, core, barrierId, "Should not apply", 7, 1, now.Add(2*time.Minute))
-		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Equal(t, mrpc.InvalidRequest, appErr.Code)
 		require.Contains(t, appErr.Message, "version mismatch")
 
 		// The rejected update did not change anything
@@ -507,7 +527,7 @@ func TestCore_UpdateBarrier(t *testing.T) {
 
 		// Passing a version the barrier has never reached is rejected
 		appErr := updateBarrierWithError(t, core, barrierId, "Updated description", 5, 99, now.Add(time.Minute))
-		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Equal(t, mrpc.InvalidRequest, appErr.Code)
 		require.Contains(t, appErr.Message, "version mismatch")
 	})
 
@@ -560,7 +580,7 @@ func TestCore_UpdateBarrier(t *testing.T) {
 		_ = createBarrier(t, core, barrierId, "test_barrier", 3, 10, now)
 
 		appErr := updateBarrierWithError(t, core, barrierId, "wedge me", 0, 1, now.Add(time.Minute))
-		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Equal(t, mrpc.InvalidRequest, appErr.Code)
 		require.Contains(t, appErr.Message, "expected processes must be greater than 0")
 
 		// The rejected update did not change anything
@@ -655,7 +675,7 @@ func TestCore_ArriveAtBarrier(t *testing.T) {
 		// Try to arrive at nonexistent barrier
 		err := arriveAtBarrierWithError(t, core, namespaceId, "nonexistent_barrier", "process_1", 1, now)
 		require.NotNil(t, err)
-		require.Equal(t, monsterax.NotFound, err.Code)
+		require.Equal(t, mrpc.NotFound, err.Code)
 		require.Contains(t, err.Message, "barrier not found")
 	})
 
@@ -695,7 +715,7 @@ func TestCore_ArriveAtBarrier(t *testing.T) {
 		// T+3m: A third process that still references generation 1 is now stale and
 		// must be rejected (the trip already happened, generation moved to 2).
 		appErr := arriveAtBarrierWithError(t, core, namespaceId, "test_barrier", "process_3", 1, now.Add(3*time.Minute))
-		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Equal(t, mrpc.InvalidRequest, appErr.Code)
 		require.Contains(t, appErr.Message, "generation")
 
 		// The next round at generation 2 starts clean.
@@ -745,7 +765,7 @@ func TestCore_ArriveAtBarrier(t *testing.T) {
 
 		// Arrival with a generation older than the current one must be rejected
 		appErr := arriveAtBarrierWithError(t, core, namespaceId, "test_barrier", "process_1", 0, now.Add(time.Minute))
-		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Equal(t, mrpc.InvalidRequest, appErr.Code)
 		require.Contains(t, appErr.Message, "generation")
 
 		// No state should have been persisted
@@ -920,7 +940,7 @@ func TestCore_ListBarrierParticipants(t *testing.T) {
 		// Try to list participants of nonexistent barrier
 		appErr := listBarrierParticipantsWithError(t, core, namespaceId, "nonexistent_barrier")
 		require.Contains(t, appErr.Message, "barrier not found")
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 	})
 }
 
@@ -1013,7 +1033,7 @@ func TestCore_RunBarriersGarbageCollection(t *testing.T) {
 
 		// The barrier row itself is already gone.
 		appErr := getBarrierWithError(t, core, barrierId)
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 
 		// Run GC with a tight budget (5 visits per pass) — must take multiple iterations to drain.
 		const maxVisitedPerPass = int64(5)
@@ -1162,7 +1182,7 @@ func TestCore_AutoDeleteInactiveBarriers(t *testing.T) {
 		// GC after the inactivity window deletes the barrier.
 		runBarriersGarbageCollection(t, core, now.Add(time.Duration(deleteInactiveAfterSeconds)*time.Second).Add(time.Minute), 100, 1000, 1000, 1000)
 		appErr := getBarrierWithError(t, core, barrierId)
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 	})
 
 	t.Run("activity pushes the deletion out", func(t *testing.T) {
@@ -1194,7 +1214,7 @@ func TestCore_AutoDeleteInactiveBarriers(t *testing.T) {
 		// GC past the new deletion time (arrival + 10m) deletes it.
 		runBarriersGarbageCollection(t, core, arriveTime.Add(time.Duration(deleteInactiveAfterSeconds)*time.Second).Add(time.Minute), 100, 1000, 1000, 1000)
 		appErr := getBarrierWithError(t, core, barrierId)
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 	})
 }
 
@@ -1259,7 +1279,7 @@ func createBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, name s
 	return resp.Payload.Barrier
 }
 
-func createBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierId, name string, expectedProcesses int64, maxNumberOfBarriersPerNamespace int64, now time.Time) *monsterax.Error {
+func createBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierId, name string, expectedProcesses int64, maxNumberOfBarriersPerNamespace int64, now time.Time) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.CreateBarrier(&coreapis.CreateBarrierRequest{
@@ -1304,7 +1324,7 @@ func arriveAtBarrier(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, 
 	return resp.Payload.Barrier
 }
 
-func arriveAtBarrierWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, barrierName string, processId string, generation int64, now time.Time) *monsterax.Error {
+func arriveAtBarrierWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, barrierName string, processId string, generation int64, now time.Time) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.ArriveAtBarrier(&coreapis.ArriveAtBarrierRequest{
@@ -1343,7 +1363,7 @@ func getBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId) *corepb.B
 	return resp.Payload.Barrier
 }
 
-func getBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierId) *monsterax.Error {
+func getBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierId) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.GetBarrier(&coreapis.GetBarrierRequest{
@@ -1395,7 +1415,7 @@ func listBarrierParticipants(t *testing.T, core *Core, namespaceId *corepb.Names
 	return resp.Payload
 }
 
-func listBarrierParticipantsWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, barrierName string) *monsterax.Error {
+func listBarrierParticipantsWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, barrierName string) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.ListBarrierParticipants(&coreapis.ListBarrierParticipantsRequest{
@@ -1435,7 +1455,7 @@ func updateBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, descri
 	return resp.Payload
 }
 
-func updateBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierId, description string, expectedProcesses int64, version int64, now time.Time) *monsterax.Error {
+func updateBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierId, description string, expectedProcesses int64, version int64, now time.Time) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.UpdateBarrier(&coreapis.UpdateBarrierRequest{
@@ -1475,7 +1495,7 @@ func getBarrierByName(t *testing.T, core *Core, namespaceId *corepb.NamespaceId,
 	return resp.Payload
 }
 
-func getBarrierByNameWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, barrierName string) *monsterax.Error {
+func getBarrierByNameWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, barrierName string) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.GetBarrierByName(&coreapis.GetBarrierByNameRequest{

@@ -5,7 +5,7 @@ import (
 
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/pagination"
@@ -29,18 +29,18 @@ import (
 // 3. namespace id
 // 4. wait group name
 type waitGroupsTable struct {
-	table      *monsterax.BinaryTable[*corepb.WaitGroup, corepb.WaitGroup]
-	namesIndex *monsterax.Uint64Table
+	table      *honey.BinaryTable[*corepb.WaitGroup, corepb.WaitGroup]
+	namesIndex *honey.Uint64Table
 }
 
 func newWaitGroupsTable(shardLowerBound []byte, shardUpperBound []byte) *waitGroupsTable {
 	return &waitGroupsTable{
-		table: monsterax.NewBinaryTable[*corepb.WaitGroup, corepb.WaitGroup](
+		table: honey.NewBinaryTable[*corepb.WaitGroup, corepb.WaitGroup](
 			tables.Grackle["Grackle.WaitGroupsCore.WaitGroups.Table"].Bytes(),
 			shardLowerBound,
 			shardUpperBound,
 		),
-		namesIndex: monsterax.NewUint64Table(
+		namesIndex: honey.NewUint64Table(
 			tables.Grackle["Grackle.WaitGroupsCore.WaitGroups.NamesIndex"].Bytes(),
 			shardLowerBound,
 			shardUpperBound,
@@ -48,8 +48,8 @@ func newWaitGroupsTable(shardLowerBound []byte, shardUpperBound []byte) *waitGro
 	}
 }
 
-func (t *waitGroupsTable) GetTableKeyRanges() []monsterax.KeyRange {
-	return []monsterax.KeyRange{
+func (t *waitGroupsTable) GetTableKeyRanges() []honey.KeyRange {
+	return []honey.KeyRange{
 		t.table.GetTableKeyRange(),
 		t.namesIndex.GetTableKeyRange(),
 	}

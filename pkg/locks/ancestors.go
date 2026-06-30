@@ -5,7 +5,7 @@ import (
 
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/sharding"
@@ -25,12 +25,12 @@ import (
 // Table Sort Key:
 // 1. ancestor name (path prefix)
 type lockAncestorsTable struct {
-	table *monsterax.BinaryTable[*corepb.LockAncestor, corepb.LockAncestor]
+	table *honey.BinaryTable[*corepb.LockAncestor, corepb.LockAncestor]
 }
 
 func newLockAncestorsTable(shardLowerBound []byte, shardUpperBound []byte) *lockAncestorsTable {
 	return &lockAncestorsTable{
-		table: monsterax.NewBinaryTable[*corepb.LockAncestor, corepb.LockAncestor](
+		table: honey.NewBinaryTable[*corepb.LockAncestor, corepb.LockAncestor](
 			tables.Grackle["Grackle.LocksCore.Ancestors.Table"].Bytes(),
 			shardLowerBound,
 			shardUpperBound,
@@ -38,7 +38,7 @@ func newLockAncestorsTable(shardLowerBound []byte, shardUpperBound []byte) *lock
 	}
 }
 
-func (t *lockAncestorsTable) GetTableKeyRange() monsterax.KeyRange {
+func (t *lockAncestorsTable) GetTableKeyRange() honey.KeyRange {
 	return t.table.GetTableKeyRange()
 }
 

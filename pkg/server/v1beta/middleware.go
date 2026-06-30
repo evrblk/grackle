@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/evrblk/evrblk-go/authn"
-	monsterax "github.com/evrblk/monstera/x"
 	"github.com/evrblk/yellowstone-common/metrics"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -165,15 +164,15 @@ type MonitoringMiddleware struct {
 
 func (m *MonitoringMiddleware) Unary(
 	ctx context.Context,
-	req interface{},
+	req any,
 	info *grpc.UnaryServerInfo,
 	handler grpc.UnaryHandler,
-) (interface{}, error) {
+) (any, error) {
 	_, method := extractServiceAndMethod(info.FullMethod)
 
 	totalRequestsCounter.WithLabelValues(method).Inc()
 
-	defer monsterax.MeasureSince(requestsDuration.WithLabelValues(method), time.Now())
+	defer metrics.MeasureSince(requestsDuration.WithLabelValues(method), time.Now())
 
 	resp, err := handler(ctx, req)
 

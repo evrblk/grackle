@@ -2,6 +2,7 @@ package v1beta
 
 import (
 	"context"
+	"errors"
 	"math/rand/v2"
 	"time"
 
@@ -9,7 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	gracklepb "github.com/evrblk/evrblk-go/grackle/v1beta"
-	monsterax "github.com/evrblk/monstera/x"
+	mrpc "github.com/evrblk/monstera/rpc"
 
 	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/corepb"
@@ -21,6 +22,10 @@ const (
 	// minWaitGroupExpiresInFuture is the minimum lead time required between now and
 	// a wait group's expires_at deadline.
 	minWaitGroupExpiresInFuture = 1 * time.Minute
+
+	// maxIDGenerationAttempts bounds how many times a handler regenerates a random
+	// entity ID and retries when the core reports an ID collision.
+	maxIDGenerationAttempts = 5
 )
 
 type GrackleApiServerHandler struct {
@@ -34,25 +39,34 @@ func (s *GrackleApiServerHandler) Stop() {
 func (s *GrackleApiServerHandler) CreateNamespace(ctx context.Context, req *gracklepb.CreateNamespaceRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.CreateNamespaceResponse, error) {
 	now := time.Now()
 
-	// Create namespace with generated ID and enforce account limits
-	resp, err := s.grackleClient.CreateNamespace(ctx, &corepb.CreateNamespaceRequest{
-		NamespaceId: &corepb.NamespaceId{
-			AccountId:   accountId,
-			NamespaceId: rand.Uint64(),
-		},
-		Name:                  req.Name,
-		Description:           req.Description,
-		Now:                   now.UnixNano(),
-		Metadata:              req.Metadata,
-		MaxNumberOfNamespaces: limits.MaxNumberOfNamespaces,
-	})
-	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+	// The namespace ID is randomly generated here. On the rare ID collision
+	// the core returns IDCollision; we regenerate the ID and retry.
+	for range maxIDGenerationAttempts {
+		// Create namespace with generated ID and enforce account limits
+		resp, err := s.grackleClient.CreateNamespace(ctx, &corepb.CreateNamespaceRequest{
+			NamespaceId: &corepb.NamespaceId{
+				AccountId:   accountId,
+				NamespaceId: rand.Uint64(),
+			},
+			Name:                  req.Name,
+			Description:           req.Description,
+			Now:                   now.UnixNano(),
+			Metadata:              req.Metadata,
+			MaxNumberOfNamespaces: limits.MaxNumberOfNamespaces,
+		})
+		if err != nil {
+			if isIDCollision(err) {
+				continue
+			}
+			return nil, mrpc.ErrorToGRPC(err)
+		}
+
+		return &gracklepb.CreateNamespaceResponse{
+			Namespace: namespaceToFront(resp.Namespace),
+		}, nil
 	}
 
-	return &gracklepb.CreateNamespaceResponse{
-		Namespace: namespaceToFront(resp.Namespace),
-	}, nil
+	return nil, status.Error(codes.Internal, "failed to generate a unique namespace id")
 }
 
 func (s *GrackleApiServerHandler) GetNamespace(ctx context.Context, req *gracklepb.GetNamespaceRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.GetNamespaceResponse, error) {
@@ -62,7 +76,7 @@ func (s *GrackleApiServerHandler) GetNamespace(ctx context.Context, req *grackle
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.GetNamespaceResponse{
@@ -83,7 +97,7 @@ func (s *GrackleApiServerHandler) UpdateNamespace(ctx context.Context, req *grac
 		ExpectedVersion: req.ExpectedVersion,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.UpdateNamespaceResponse{
@@ -104,7 +118,7 @@ func (s *GrackleApiServerHandler) DeleteNamespace(ctx context.Context, req *grac
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Mark locks for garbage collection
@@ -114,7 +128,7 @@ func (s *GrackleApiServerHandler) DeleteNamespace(ctx context.Context, req *grac
 		Now:         now.UnixNano(),
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Mark wait groups for garbage collection
@@ -124,7 +138,7 @@ func (s *GrackleApiServerHandler) DeleteNamespace(ctx context.Context, req *grac
 		Now:         now.UnixNano(),
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Mark semaphores for garbage collection
@@ -134,7 +148,7 @@ func (s *GrackleApiServerHandler) DeleteNamespace(ctx context.Context, req *grac
 		Now:         now.UnixNano(),
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Mark barriers for garbage collection
@@ -144,7 +158,7 @@ func (s *GrackleApiServerHandler) DeleteNamespace(ctx context.Context, req *grac
 		Now:         now.UnixNano(),
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Delete the namespace itself
@@ -153,7 +167,7 @@ func (s *GrackleApiServerHandler) DeleteNamespace(ctx context.Context, req *grac
 		Now:           now.UnixNano(),
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.DeleteNamespaceResponse{}, nil
@@ -173,17 +187,17 @@ func (s *GrackleApiServerHandler) ListNamespaces(ctx context.Context, req *grack
 		Limit:           req.Limit,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Encode pagination tokens for response
 	nextPaginationToken, err := paginationTokenToFront(resp1.NextPaginationToken)
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 	previousPaginationToken, err := paginationTokenToFront(resp1.PreviousPaginationToken)
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.ListNamespacesResponse{
@@ -212,32 +226,40 @@ func (s *GrackleApiServerHandler) CreateWaitGroup(ctx context.Context, req *grac
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
-	// Create wait group with generated ID
-	resp2, err := s.grackleClient.CreateWaitGroup(ctx, &corepb.CreateWaitGroupRequest{
-		WaitGroupId: &corepb.WaitGroupId{
-			AccountId:   accountId,
-			NamespaceId: resp1.Namespace.Id.NamespaceId,
-			WaitGroupId: rand.Uint64(),
-		},
-		Name:                              req.WaitGroupName,
-		Description:                       req.Description,
-		Now:                               now.UnixNano(),
-		Counter:                           req.Counter,
-		ExpiresAt:                         req.ExpiresAt,
-		Metadata:                          req.Metadata,
-		MaxNumberOfWaitGroupsPerNamespace: limits.MaxNumberOfWaitGroupsPerNamespace,
-		DeleteAfterFinishedSeconds:        req.DeleteAfterFinishedSeconds,
-	})
-	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+	// Create wait group with generated ID. On the rare ID collision the core
+	// returns IDCollision; regenerate the ID and retry rather than surfacing it.
+	for range maxIDGenerationAttempts {
+		resp2, err := s.grackleClient.CreateWaitGroup(ctx, &corepb.CreateWaitGroupRequest{
+			WaitGroupId: &corepb.WaitGroupId{
+				AccountId:   accountId,
+				NamespaceId: resp1.Namespace.Id.NamespaceId,
+				WaitGroupId: rand.Uint64(),
+			},
+			Name:                              req.WaitGroupName,
+			Description:                       req.Description,
+			Now:                               now.UnixNano(),
+			Counter:                           req.Counter,
+			ExpiresAt:                         req.ExpiresAt,
+			Metadata:                          req.Metadata,
+			MaxNumberOfWaitGroupsPerNamespace: limits.MaxNumberOfWaitGroupsPerNamespace,
+			DeleteAfterFinishedSeconds:        req.DeleteAfterFinishedSeconds,
+		})
+		if err != nil {
+			if isIDCollision(err) {
+				continue
+			}
+			return nil, mrpc.ErrorToGRPC(err)
+		}
+
+		return &gracklepb.CreateWaitGroupResponse{
+			WaitGroup: waitGroupToFront(resp2.WaitGroup),
+		}, nil
 	}
 
-	return &gracklepb.CreateWaitGroupResponse{
-		WaitGroup: waitGroupToFront(resp2.WaitGroup),
-	}, nil
+	return nil, status.Error(codes.Internal, "failed to generate a unique wait group id")
 }
 
 func (s *GrackleApiServerHandler) UpdateWaitGroup(ctx context.Context, req *gracklepb.UpdateWaitGroupRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.UpdateWaitGroupResponse, error) {
@@ -260,7 +282,7 @@ func (s *GrackleApiServerHandler) UpdateWaitGroup(ctx context.Context, req *grac
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Create wait group with generated ID
@@ -276,7 +298,7 @@ func (s *GrackleApiServerHandler) UpdateWaitGroup(ctx context.Context, req *grac
 		DeleteAfterFinishedSeconds: req.DeleteAfterFinishedSeconds,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.UpdateWaitGroupResponse{
@@ -291,7 +313,7 @@ func (s *GrackleApiServerHandler) GetWaitGroup(ctx context.Context, req *grackle
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Retrieve wait group by name within the namespace
@@ -300,7 +322,7 @@ func (s *GrackleApiServerHandler) GetWaitGroup(ctx context.Context, req *grackle
 		WaitGroupName: req.WaitGroupName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.GetWaitGroupResponse{
@@ -315,7 +337,7 @@ func (s *GrackleApiServerHandler) WaitForWaitGroup(ctx context.Context, req *gra
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Calculate absolute deadline for timeout
@@ -337,7 +359,7 @@ func (s *GrackleApiServerHandler) WaitForWaitGroup(ctx context.Context, req *gra
 			WaitGroupName: req.WaitGroupName,
 		})
 		if err != nil {
-			return nil, monsterax.ErrorToGRPC(err)
+			return nil, mrpc.ErrorToGRPC(err)
 		}
 
 		// Return as soon as the wait group has finished (completed or expired),
@@ -387,7 +409,7 @@ func (s *GrackleApiServerHandler) CompleteJobsFromWaitGroup(ctx context.Context,
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Mark jobs as completed in the wait group
@@ -398,7 +420,7 @@ func (s *GrackleApiServerHandler) CompleteJobsFromWaitGroup(ctx context.Context,
 		Now:           now.UnixNano(),
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.CompleteJobsFromWaitGroupResponse{
@@ -413,7 +435,7 @@ func (s *GrackleApiServerHandler) DeleteWaitGroup(ctx context.Context, req *grac
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Delete wait group and mark for garbage collection
@@ -423,7 +445,7 @@ func (s *GrackleApiServerHandler) DeleteWaitGroup(ctx context.Context, req *grac
 		RecordId:      rand.Uint64(),
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.DeleteWaitGroupResponse{}, nil
@@ -436,7 +458,7 @@ func (s *GrackleApiServerHandler) ListWaitGroups(ctx context.Context, req *grack
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Decode pagination token from base64-encoded format
@@ -452,17 +474,17 @@ func (s *GrackleApiServerHandler) ListWaitGroups(ctx context.Context, req *grack
 		Limit:           req.Limit,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Encode pagination tokens for response
 	nextPaginationToken, err := paginationTokenToFront(resp2.NextPaginationToken)
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 	previousPaginationToken, err := paginationTokenToFront(resp2.PreviousPaginationToken)
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.ListWaitGroupsResponse{
@@ -479,7 +501,7 @@ func (s *GrackleApiServerHandler) ListWaitGroupCompletedJobs(ctx context.Context
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Decode pagination token from base64-encoded format
@@ -496,17 +518,17 @@ func (s *GrackleApiServerHandler) ListWaitGroupCompletedJobs(ctx context.Context
 		Limit:           req.Limit,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Encode pagination tokens for response
 	nextPaginationToken, err := paginationTokenToFront(resp2.NextPaginationToken)
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 	previousPaginationToken, err := paginationTokenToFront(resp2.PreviousPaginationToken)
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.ListWaitGroupCompletedJobsResponse{
@@ -523,7 +545,7 @@ func (s *GrackleApiServerHandler) AcquireLock(ctx context.Context, req *gracklep
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Decode and validate lease ID
@@ -563,7 +585,7 @@ func (s *GrackleApiServerHandler) AcquireLock(ctx context.Context, req *gracklep
 			MaxNumberOfLocksPerNamespace: limits.MaxNumberOfLocksPerNamespace,
 		})
 		if err != nil {
-			return nil, monsterax.ErrorToGRPC(err)
+			return nil, mrpc.ErrorToGRPC(err)
 		}
 
 		// Return as soon as the lock is acquired, or once the deadline passes.
@@ -607,7 +629,7 @@ func (s *GrackleApiServerHandler) ReleaseLock(ctx context.Context, req *gracklep
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Decode and validate lease ID
@@ -631,7 +653,7 @@ func (s *GrackleApiServerHandler) ReleaseLock(ctx context.Context, req *gracklep
 		Now:     now.UnixNano(),
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.ReleaseLockResponse{
@@ -648,7 +670,7 @@ func (s *GrackleApiServerHandler) GetLock(ctx context.Context, req *gracklepb.Ge
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Retrieve lock state
@@ -661,7 +683,7 @@ func (s *GrackleApiServerHandler) GetLock(ctx context.Context, req *gracklepb.Ge
 		Now: now.UnixNano(),
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.GetLockResponse{
@@ -678,7 +700,7 @@ func (s *GrackleApiServerHandler) DeleteLock(ctx context.Context, req *gracklepb
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Delete the lock
@@ -691,7 +713,7 @@ func (s *GrackleApiServerHandler) DeleteLock(ctx context.Context, req *gracklepb
 		Now: now.UnixNano(),
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.DeleteLockResponse{}, nil
@@ -706,7 +728,7 @@ func (s *GrackleApiServerHandler) ListLocks(ctx context.Context, req *gracklepb.
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Decode pagination token from base64-encoded format
@@ -723,17 +745,17 @@ func (s *GrackleApiServerHandler) ListLocks(ctx context.Context, req *gracklepb.
 		Limit:           req.Limit,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Encode pagination tokens for response
 	nextPaginationToken, err := paginationTokenToFront(resp2.NextPaginationToken)
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 	previousPaginationToken, err := paginationTokenToFront(resp2.PreviousPaginationToken)
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.ListLocksResponse{
@@ -757,30 +779,38 @@ func (s *GrackleApiServerHandler) CreateSemaphore(ctx context.Context, req *grac
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
-	// Create semaphore with generated ID
-	resp2, err := s.grackleClient.CreateSemaphore(ctx, &corepb.CreateSemaphoreRequest{
-		SemaphoreId: &corepb.SemaphoreId{
-			AccountId:   accountId,
-			NamespaceId: resp1.Namespace.Id.NamespaceId,
-			SemaphoreId: rand.Uint64(),
-		},
-		Name:                              req.SemaphoreName,
-		Description:                       req.Description,
-		Now:                               now.UnixNano(),
-		Permits:                           req.Permits,
-		Metadata:                          req.Metadata,
-		MaxNumberOfSemaphoresPerNamespace: limits.MaxNumberOfSemaphoresPerNamespace,
-	})
-	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+	// Create semaphore with generated ID. On the rare ID collision the core
+	// returns IDCollision; regenerate the ID and retry.
+	for range maxIDGenerationAttempts {
+		resp2, err := s.grackleClient.CreateSemaphore(ctx, &corepb.CreateSemaphoreRequest{
+			SemaphoreId: &corepb.SemaphoreId{
+				AccountId:   accountId,
+				NamespaceId: resp1.Namespace.Id.NamespaceId,
+				SemaphoreId: rand.Uint64(),
+			},
+			Name:                              req.SemaphoreName,
+			Description:                       req.Description,
+			Now:                               now.UnixNano(),
+			Permits:                           req.Permits,
+			Metadata:                          req.Metadata,
+			MaxNumberOfSemaphoresPerNamespace: limits.MaxNumberOfSemaphoresPerNamespace,
+		})
+		if err != nil {
+			if isIDCollision(err) {
+				continue
+			}
+			return nil, mrpc.ErrorToGRPC(err)
+		}
+
+		return &gracklepb.CreateSemaphoreResponse{
+			Semaphore: semaphoreToFront(resp2.Semaphore),
+		}, nil
 	}
 
-	return &gracklepb.CreateSemaphoreResponse{
-		Semaphore: semaphoreToFront(resp2.Semaphore),
-	}, nil
+	return nil, status.Error(codes.Internal, "failed to generate a unique semaphore id")
 }
 
 func (s *GrackleApiServerHandler) ListSemaphores(ctx context.Context, req *gracklepb.ListSemaphoresRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.ListSemaphoresResponse, error) {
@@ -792,7 +822,7 @@ func (s *GrackleApiServerHandler) ListSemaphores(ctx context.Context, req *grack
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Decode pagination token from base64-encoded format
@@ -809,17 +839,17 @@ func (s *GrackleApiServerHandler) ListSemaphores(ctx context.Context, req *grack
 		Limit:           req.Limit,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Encode pagination tokens for response
 	nextPaginationToken, err := paginationTokenToFront(resp2.NextPaginationToken)
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 	previousPaginationToken, err := paginationTokenToFront(resp2.PreviousPaginationToken)
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.ListSemaphoresResponse{
@@ -838,7 +868,7 @@ func (s *GrackleApiServerHandler) ListSemaphoreHolders(ctx context.Context, req 
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Decode pagination token from base64-encoded format
@@ -856,17 +886,17 @@ func (s *GrackleApiServerHandler) ListSemaphoreHolders(ctx context.Context, req 
 		Limit:           req.Limit,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Encode pagination tokens for response
 	nextPaginationToken, err := paginationTokenToFront(resp2.NextPaginationToken)
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 	previousPaginationToken, err := paginationTokenToFront(resp2.PreviousPaginationToken)
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.ListSemaphoreHoldersResponse{
@@ -885,7 +915,7 @@ func (s *GrackleApiServerHandler) GetSemaphore(ctx context.Context, req *grackle
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Retrieve semaphore by name within the namespace
@@ -895,7 +925,7 @@ func (s *GrackleApiServerHandler) GetSemaphore(ctx context.Context, req *grackle
 		Now:           now.UnixNano(),
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.GetSemaphoreResponse{
@@ -910,7 +940,7 @@ func (s *GrackleApiServerHandler) AcquireSemaphore(ctx context.Context, req *gra
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Decode and validate lease ID
@@ -946,7 +976,7 @@ func (s *GrackleApiServerHandler) AcquireSemaphore(ctx context.Context, req *gra
 			Metadata:      req.Metadata,
 		})
 		if err != nil {
-			return nil, monsterax.ErrorToGRPC(err)
+			return nil, mrpc.ErrorToGRPC(err)
 		}
 
 		// Return as soon as the semaphore is acquired, or once the deadline passes.
@@ -988,7 +1018,7 @@ func (s *GrackleApiServerHandler) ReleaseSemaphore(ctx context.Context, req *gra
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Decode and validate lease ID
@@ -1010,7 +1040,7 @@ func (s *GrackleApiServerHandler) ReleaseSemaphore(ctx context.Context, req *gra
 		Now:           now.UnixNano(),
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.ReleaseSemaphoreResponse{
@@ -1032,7 +1062,7 @@ func (s *GrackleApiServerHandler) UpdateSemaphore(ctx context.Context, req *grac
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Update the semaphore
@@ -1046,7 +1076,7 @@ func (s *GrackleApiServerHandler) UpdateSemaphore(ctx context.Context, req *grac
 		ExpectedVersion: req.ExpectedVersion,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.UpdateSemaphoreResponse{
@@ -1061,7 +1091,7 @@ func (s *GrackleApiServerHandler) DeleteSemaphore(ctx context.Context, req *grac
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Delete the semaphore
@@ -1071,7 +1101,7 @@ func (s *GrackleApiServerHandler) DeleteSemaphore(ctx context.Context, req *grac
 		RecordId:      rand.Uint64(),
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.DeleteSemaphoreResponse{}, nil
@@ -1086,31 +1116,39 @@ func (s *GrackleApiServerHandler) CreateBarrier(ctx context.Context, req *grackl
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
-	// Create barrier with generated ID
-	resp2, err := s.grackleClient.CreateBarrier(ctx, &corepb.CreateBarrierRequest{
-		BarrierId: &corepb.BarrierId{
-			AccountId:   accountId,
-			NamespaceId: resp1.Namespace.Id.NamespaceId,
-			BarrierId:   rand.Uint64(),
-		},
-		Name:                            req.BarrierName,
-		Description:                     req.Description,
-		ExpectedProcesses:               req.ExpectedProcesses,
-		Now:                             now.UnixNano(),
-		Metadata:                        req.Metadata,
-		MaxNumberOfBarriersPerNamespace: limits.MaxNumberOfBarriersPerNamespace,
-		DeleteInactiveAfterSeconds:      req.DeleteInactiveAfterSeconds,
-	})
-	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+	// Create barrier with generated ID. On the rare ID collision the core returns
+	// IDCollision; regenerate the ID and retry.
+	for range maxIDGenerationAttempts {
+		resp2, err := s.grackleClient.CreateBarrier(ctx, &corepb.CreateBarrierRequest{
+			BarrierId: &corepb.BarrierId{
+				AccountId:   accountId,
+				NamespaceId: resp1.Namespace.Id.NamespaceId,
+				BarrierId:   rand.Uint64(),
+			},
+			Name:                            req.BarrierName,
+			Description:                     req.Description,
+			ExpectedProcesses:               req.ExpectedProcesses,
+			Now:                             now.UnixNano(),
+			Metadata:                        req.Metadata,
+			MaxNumberOfBarriersPerNamespace: limits.MaxNumberOfBarriersPerNamespace,
+			DeleteInactiveAfterSeconds:      req.DeleteInactiveAfterSeconds,
+		})
+		if err != nil {
+			if isIDCollision(err) {
+				continue
+			}
+			return nil, mrpc.ErrorToGRPC(err)
+		}
+
+		return &gracklepb.CreateBarrierResponse{
+			Barrier: barrierToFront(resp2.Barrier),
+		}, nil
 	}
 
-	return &gracklepb.CreateBarrierResponse{
-		Barrier: barrierToFront(resp2.Barrier),
-	}, nil
+	return nil, status.Error(codes.Internal, "failed to generate a unique barrier id")
 }
 
 func (s *GrackleApiServerHandler) ListBarriers(ctx context.Context, req *gracklepb.ListBarriersRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.ListBarriersResponse, error) {
@@ -1120,7 +1158,7 @@ func (s *GrackleApiServerHandler) ListBarriers(ctx context.Context, req *grackle
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Decode pagination token from base64-encoded format
@@ -1136,17 +1174,17 @@ func (s *GrackleApiServerHandler) ListBarriers(ctx context.Context, req *grackle
 		Limit:           req.Limit,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Encode pagination tokens for response
 	nextPaginationToken, err := paginationTokenToFront(resp2.NextPaginationToken)
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 	previousPaginationToken, err := paginationTokenToFront(resp2.PreviousPaginationToken)
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.ListBarriersResponse{
@@ -1163,7 +1201,7 @@ func (s *GrackleApiServerHandler) GetBarrier(ctx context.Context, req *gracklepb
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Retrieve barrier by name
@@ -1172,7 +1210,7 @@ func (s *GrackleApiServerHandler) GetBarrier(ctx context.Context, req *gracklepb
 		BarrierName: req.BarrierName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.GetBarrierResponse{
@@ -1189,7 +1227,7 @@ func (s *GrackleApiServerHandler) DeleteBarrier(ctx context.Context, req *grackl
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Delete the barrier
@@ -1199,7 +1237,7 @@ func (s *GrackleApiServerHandler) DeleteBarrier(ctx context.Context, req *grackl
 		Now:         now.UnixNano(),
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.DeleteBarrierResponse{}, nil
@@ -1214,7 +1252,7 @@ func (s *GrackleApiServerHandler) UpdateBarrier(ctx context.Context, req *grackl
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Retrieve barrier to get its ID
@@ -1223,7 +1261,7 @@ func (s *GrackleApiServerHandler) UpdateBarrier(ctx context.Context, req *grackl
 		BarrierName: req.BarrierName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Update barrier
@@ -1237,7 +1275,7 @@ func (s *GrackleApiServerHandler) UpdateBarrier(ctx context.Context, req *grackl
 		DeleteInactiveAfterSeconds: req.DeleteInactiveAfterSeconds,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.UpdateBarrierResponse{
@@ -1254,7 +1292,7 @@ func (s *GrackleApiServerHandler) ArriveAtBarrier(ctx context.Context, req *grac
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Mark process as arrived at barrier
@@ -1267,7 +1305,7 @@ func (s *GrackleApiServerHandler) ArriveAtBarrier(ctx context.Context, req *grac
 		Metadata:    req.Metadata,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.ArriveAtBarrierResponse{
@@ -1283,7 +1321,7 @@ func (s *GrackleApiServerHandler) WaitAtBarrier(ctx context.Context, req *grackl
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Calculate absolute deadline for timeout
@@ -1305,7 +1343,7 @@ func (s *GrackleApiServerHandler) WaitAtBarrier(ctx context.Context, req *grackl
 			BarrierName: req.BarrierName,
 		})
 		if err != nil {
-			return nil, monsterax.ErrorToGRPC(err)
+			return nil, mrpc.ErrorToGRPC(err)
 		}
 
 		// The barrier auto-trips inside ArriveAtBarrier by advancing Generation. From the
@@ -1356,7 +1394,7 @@ func (s *GrackleApiServerHandler) ListBarrierParticipants(ctx context.Context, r
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Decode pagination token from base64-encoded format
@@ -1374,17 +1412,17 @@ func (s *GrackleApiServerHandler) ListBarrierParticipants(ctx context.Context, r
 		Limit:           req.Limit,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Encode pagination tokens for response
 	nextPaginationToken, err := paginationTokenToFront(resp2.NextPaginationToken)
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 	previousPaginationToken, err := paginationTokenToFront(resp2.PreviousPaginationToken)
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.ListBarrierParticipantsResponse{
@@ -1403,29 +1441,37 @@ func (s *GrackleApiServerHandler) CreateSemaphoreLease(ctx context.Context, req 
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
-	// Create semaphore lease with generated ID
-	resp2, err := s.grackleClient.CreateSemaphoreLease(ctx, &corepb.CreateSemaphoreLeaseRequest{
-		LeaseId: &corepb.LeaseId{
-			AccountId:   accountId,
-			NamespaceId: resp1.Namespace.Id.NamespaceId,
-			LeaseId:     rand.Uint64(),
-		},
-		ProcessId:                  req.ProcessId,
-		TtlSeconds:                 req.TtlSeconds,
-		Now:                        now.UnixNano(),
-		Metadata:                   req.Metadata,
-		MaxNumberOfSemaphoreLeases: limits.MaxNumberOfSemaphoreLeases,
-	})
-	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+	// Create semaphore lease with generated ID. On the rare ID collision the core
+	// returns IDCollision; regenerate the ID and retry.
+	for range maxIDGenerationAttempts {
+		resp2, err := s.grackleClient.CreateSemaphoreLease(ctx, &corepb.CreateSemaphoreLeaseRequest{
+			LeaseId: &corepb.LeaseId{
+				AccountId:   accountId,
+				NamespaceId: resp1.Namespace.Id.NamespaceId,
+				LeaseId:     rand.Uint64(),
+			},
+			ProcessId:                  req.ProcessId,
+			TtlSeconds:                 req.TtlSeconds,
+			Now:                        now.UnixNano(),
+			Metadata:                   req.Metadata,
+			MaxNumberOfSemaphoreLeases: limits.MaxNumberOfSemaphoreLeases,
+		})
+		if err != nil {
+			if isIDCollision(err) {
+				continue
+			}
+			return nil, mrpc.ErrorToGRPC(err)
+		}
+
+		return &gracklepb.CreateSemaphoreLeaseResponse{
+			Lease: leaseToFront(resp2.Lease),
+		}, nil
 	}
 
-	return &gracklepb.CreateSemaphoreLeaseResponse{
-		Lease: leaseToFront(resp2.Lease),
-	}, nil
+	return nil, status.Error(codes.Internal, "failed to generate a unique lease id")
 }
 
 func (s *GrackleApiServerHandler) RevokeSemaphoreLease(ctx context.Context, req *gracklepb.RevokeSemaphoreLeaseRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.RevokeSemaphoreLeaseResponse, error) {
@@ -1437,7 +1483,7 @@ func (s *GrackleApiServerHandler) RevokeSemaphoreLease(ctx context.Context, req 
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Decode and validate lease ID
@@ -1457,7 +1503,7 @@ func (s *GrackleApiServerHandler) RevokeSemaphoreLease(ctx context.Context, req 
 		Now:     now.UnixNano(),
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.RevokeSemaphoreLeaseResponse{}, nil
@@ -1472,7 +1518,7 @@ func (s *GrackleApiServerHandler) RefreshSemaphoreLease(ctx context.Context, req
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Decode and validate lease ID
@@ -1493,7 +1539,7 @@ func (s *GrackleApiServerHandler) RefreshSemaphoreLease(ctx context.Context, req
 		Now:        now.UnixNano(),
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.RefreshSemaphoreLeaseResponse{
@@ -1508,7 +1554,7 @@ func (s *GrackleApiServerHandler) ListSemaphoreLeases(ctx context.Context, req *
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Decode pagination token from base64-encoded format
@@ -1524,17 +1570,17 @@ func (s *GrackleApiServerHandler) ListSemaphoreLeases(ctx context.Context, req *
 		Limit:           req.Limit,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Encode pagination tokens for response
 	nextPaginationToken, err := paginationTokenToFront(resp2.NextPaginationToken)
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 	previousPaginationToken, err := paginationTokenToFront(resp2.PreviousPaginationToken)
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.ListSemaphoreLeasesResponse{
@@ -1553,7 +1599,7 @@ func (s *GrackleApiServerHandler) GetSemaphoreLease(ctx context.Context, req *gr
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Decode and validate lease ID
@@ -1573,7 +1619,7 @@ func (s *GrackleApiServerHandler) GetSemaphoreLease(ctx context.Context, req *gr
 		Now:     now.UnixNano(),
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.GetSemaphoreLeaseResponse{
@@ -1590,29 +1636,37 @@ func (s *GrackleApiServerHandler) CreateLockLease(ctx context.Context, req *grac
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
-	// Create lock lease with generated ID
-	resp2, err := s.grackleClient.CreateLockLease(ctx, &corepb.CreateLockLeaseRequest{
-		LeaseId: &corepb.LeaseId{
-			AccountId:   accountId,
-			NamespaceId: resp1.Namespace.Id.NamespaceId,
-			LeaseId:     rand.Uint64(),
-		},
-		ProcessId:             req.ProcessId,
-		TtlSeconds:            req.TtlSeconds,
-		Now:                   now.UnixNano(),
-		Metadata:              req.Metadata,
-		MaxNumberOfLockLeases: limits.MaxNumberOfLockLeases,
-	})
-	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+	// Create lock lease with generated ID. On the rare ID collision the core
+	// returns IDCollision; regenerate the ID and retry.
+	for range maxIDGenerationAttempts {
+		resp2, err := s.grackleClient.CreateLockLease(ctx, &corepb.CreateLockLeaseRequest{
+			LeaseId: &corepb.LeaseId{
+				AccountId:   accountId,
+				NamespaceId: resp1.Namespace.Id.NamespaceId,
+				LeaseId:     rand.Uint64(),
+			},
+			ProcessId:             req.ProcessId,
+			TtlSeconds:            req.TtlSeconds,
+			Now:                   now.UnixNano(),
+			Metadata:              req.Metadata,
+			MaxNumberOfLockLeases: limits.MaxNumberOfLockLeases,
+		})
+		if err != nil {
+			if isIDCollision(err) {
+				continue
+			}
+			return nil, mrpc.ErrorToGRPC(err)
+		}
+
+		return &gracklepb.CreateLockLeaseResponse{
+			Lease: leaseToFront(resp2.Lease),
+		}, nil
 	}
 
-	return &gracklepb.CreateLockLeaseResponse{
-		Lease: leaseToFront(resp2.Lease),
-	}, nil
+	return nil, status.Error(codes.Internal, "failed to generate a unique lease id")
 }
 
 func (s *GrackleApiServerHandler) RevokeLockLease(ctx context.Context, req *gracklepb.RevokeLockLeaseRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.RevokeLockLeaseResponse, error) {
@@ -1624,7 +1678,7 @@ func (s *GrackleApiServerHandler) RevokeLockLease(ctx context.Context, req *grac
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Decode and validate lease ID
@@ -1644,7 +1698,7 @@ func (s *GrackleApiServerHandler) RevokeLockLease(ctx context.Context, req *grac
 		Now:     now.UnixNano(),
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.RevokeLockLeaseResponse{}, nil
@@ -1659,7 +1713,7 @@ func (s *GrackleApiServerHandler) RefreshLockLease(ctx context.Context, req *gra
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Decode and validate lease ID
@@ -1680,7 +1734,7 @@ func (s *GrackleApiServerHandler) RefreshLockLease(ctx context.Context, req *gra
 		Now:        now.UnixNano(),
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.RefreshLockLeaseResponse{
@@ -1697,7 +1751,7 @@ func (s *GrackleApiServerHandler) ListLockLeases(ctx context.Context, req *grack
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Decode pagination token from base64-encoded format
@@ -1714,17 +1768,17 @@ func (s *GrackleApiServerHandler) ListLockLeases(ctx context.Context, req *grack
 		Limit:           req.Limit,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Encode pagination tokens for response
 	nextPaginationToken, err := paginationTokenToFront(resp2.NextPaginationToken)
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 	previousPaginationToken, err := paginationTokenToFront(resp2.PreviousPaginationToken)
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.ListLockLeasesResponse{
@@ -1743,7 +1797,7 @@ func (s *GrackleApiServerHandler) GetLockLease(ctx context.Context, req *grackle
 		NamespaceName: req.NamespaceName,
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	// Decode and validate lease ID
@@ -1763,7 +1817,7 @@ func (s *GrackleApiServerHandler) GetLockLease(ctx context.Context, req *grackle
 		Now:     now.UnixNano(),
 	})
 	if err != nil {
-		return nil, monsterax.ErrorToGRPC(err)
+		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.GetLockLeaseResponse{
@@ -1785,4 +1839,9 @@ func acquireFailureOutcome(timeoutSeconds int32) gracklepb.AcquireOutcome {
 		return gracklepb.AcquireOutcome_ACQUIRE_OUTCOME_UNAVAILABLE
 	}
 	return gracklepb.AcquireOutcome_ACQUIRE_OUTCOME_TIMED_OUT
+}
+
+func isIDCollision(err error) bool {
+	var appErr *mrpc.Error
+	return errors.As(err, &appErr) && appErr.Code == mrpc.IDCollision
 }

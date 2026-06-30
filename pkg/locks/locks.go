@@ -5,7 +5,7 @@ import (
 
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/pagination"
@@ -32,18 +32,18 @@ import (
 // Lease Id Index Sort Key:
 // 1. lock name
 type locksTable struct {
-	table        *monsterax.BinaryTable[*corepb.Lock, corepb.Lock]
-	leaseIdIndex *monsterax.OneToManySortedIndex
+	table        *honey.BinaryTable[*corepb.Lock, corepb.Lock]
+	leaseIdIndex *honey.OneToManySortedIndex
 }
 
 func newLocksTable(shardLowerBound []byte, shardUpperBound []byte) *locksTable {
 	return &locksTable{
-		table: monsterax.NewBinaryTable[*corepb.Lock, corepb.Lock](
+		table: honey.NewBinaryTable[*corepb.Lock, corepb.Lock](
 			tables.Grackle["Grackle.LocksCore.Locks.Table"].Bytes(),
 			shardLowerBound,
 			shardUpperBound,
 		),
-		leaseIdIndex: monsterax.NewOneToManySortedIndex(
+		leaseIdIndex: honey.NewOneToManySortedIndex(
 			tables.Grackle["Grackle.LocksCore.Locks.LeaseIdIndex"].Bytes(),
 			shardLowerBound,
 			shardUpperBound,
@@ -51,8 +51,8 @@ func newLocksTable(shardLowerBound []byte, shardUpperBound []byte) *locksTable {
 	}
 }
 
-func (t *locksTable) GetTableKeyRanges() []monsterax.KeyRange {
-	return []monsterax.KeyRange{
+func (t *locksTable) GetTableKeyRanges() []honey.KeyRange {
+	return []honey.KeyRange{
 		t.table.GetTableKeyRange(),
 		t.leaseIdIndex.GetTableKeyRange(),
 	}

@@ -47,6 +47,8 @@ func waitGroupJobToFront(job *corepb.WaitGroupJob) *gracklepb.WaitGroupJob {
 		return nil
 	}
 
+	// job.Id should always be present
+
 	return &gracklepb.WaitGroupJob{
 		JobId:       job.Id.JobId,
 		CompletedAt: job.CompletedAt,
@@ -129,6 +131,8 @@ func lockToFront(lock *corepb.Lock) *gracklepb.Lock {
 		return nil
 	}
 
+	// lock.Id should always be present
+
 	return &gracklepb.Lock{
 		Name:           lock.Id.LockName,
 		State:          lockStateToFront(lock.State),
@@ -193,6 +197,8 @@ func semaphoreHolderToFront(holder *corepb.SemaphoreHolder) *gracklepb.Semaphore
 	if holder == nil {
 		return nil
 	}
+
+	// holder.Id should always be present
 
 	return &gracklepb.SemaphoreHolder{
 		LeaseId: ids.EncodeLeaseId(&corepb.LeaseId{
@@ -298,6 +304,8 @@ func leaseToFront(lease *corepb.Lease) *gracklepb.Lease {
 	if lease == nil {
 		return nil
 	}
+
+	// lease.Id should always be present
 
 	return &gracklepb.Lease{
 		LeaseId:   ids.EncodeLeaseId(lease.Id),

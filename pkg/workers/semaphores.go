@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/metrics"
 	"github.com/evrblk/yellowstone-common/workers"
 
 	"github.com/evrblk/grackle/pkg/coreapis"
@@ -56,7 +56,7 @@ func (w *GrackleSemaphoresGCWorker) handler() {
 }
 
 func (w *GrackleSemaphoresGCWorker) runGarbageCollection(shardId string, now time.Time) {
-	defer monsterax.MeasureSince(grackleSemaphoresGCWorkerDuration.WithLabelValues(shardId), time.Now())
+	defer metrics.MeasureSince(grackleSemaphoresGCWorkerDuration.WithLabelValues(shardId), time.Now())
 
 	_, err := w.coreApiClient.RunSemaphoresGarbageCollection(context.TODO(), &corepb.RunSemaphoresGarbageCollectionRequest{
 		Now:                        now.UnixNano(),

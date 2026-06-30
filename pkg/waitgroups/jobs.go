@@ -3,7 +3,7 @@ package waitgroups
 import (
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/pagination"
@@ -22,12 +22,12 @@ import (
 // Table Sort Key:
 // 1. job id
 type jobsTable struct {
-	table *monsterax.BinaryTable[*corepb.WaitGroupJob, corepb.WaitGroupJob]
+	table *honey.BinaryTable[*corepb.WaitGroupJob, corepb.WaitGroupJob]
 }
 
 func newJobsTable(shardLowerBound []byte, shardUpperBound []byte) *jobsTable {
 	return &jobsTable{
-		table: monsterax.NewBinaryTable[*corepb.WaitGroupJob, corepb.WaitGroupJob](
+		table: honey.NewBinaryTable[*corepb.WaitGroupJob, corepb.WaitGroupJob](
 			tables.Grackle["Grackle.WaitGroupsCore.Jobs.Table"].Bytes(),
 			shardLowerBound,
 			shardUpperBound,
@@ -35,7 +35,7 @@ func newJobsTable(shardLowerBound []byte, shardUpperBound []byte) *jobsTable {
 	}
 }
 
-func (t *jobsTable) GetTableKeyRange() monsterax.KeyRange {
+func (t *jobsTable) GetTableKeyRange() honey.KeyRange {
 	return t.table.GetTableKeyRange()
 }
 

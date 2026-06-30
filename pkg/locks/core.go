@@ -10,8 +10,9 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/evrblk/monstera"
+	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 
 	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/corepb"
@@ -62,8 +63,8 @@ func NewCore(badgerStore *store.BadgerStore, shardGlobalIndexPrefix []byte, shar
 	}
 }
 
-func (c *Core) ranges() []monsterax.KeyRange {
-	ranges := []monsterax.KeyRange{
+func (c *Core) ranges() []honey.KeyRange {
+	ranges := []honey.KeyRange{
 		c.counters.GetTableKeyRange(),
 		c.ancestors.GetTableKeyRange(),
 		c.gcRecords.GetTableKeyRange(),
@@ -78,13 +79,13 @@ func (c *Core) ranges() []monsterax.KeyRange {
 // Snapshot returns a consistent snapshot of every key range owned by this
 // shard's locks Core, suitable for Raft snapshot transfer.
 func (c *Core) Snapshot() monstera.ApplicationCoreSnapshot {
-	return monsterax.Snapshot(c.badgerStore, c.ranges())
+	return honey.Snapshot(c.badgerStore, c.ranges())
 }
 
 // Restore replaces the contents of this shard's key ranges with the data read
 // from reader. Any existing keys in those ranges are removed first.
 func (c *Core) Restore(reader io.ReadCloser) error {
-	return monsterax.Restore(c.badgerStore, c.ranges(), reader)
+	return honey.Restore(c.badgerStore, c.ranges(), reader)
 }
 
 // Close releases any Core-owned resources. The underlying Badger store is
@@ -242,8 +243,8 @@ func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest) (*coreapis.AcquireL
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.AcquireLockResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"lease not found",
 					map[string]string{
 						"lease_id": fmt.Sprintf("%d", req.Payload.LeaseId),
@@ -259,8 +260,8 @@ func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest) (*coreapis.AcquireL
 	if lease.ExpiresAt <= req.Payload.Now {
 		// On return, the transaction will be discarded, and the expired lease will be deleted later by the garbage collector.
 		return &coreapis.AcquireLockResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.NotFound,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.NotFound,
 				"lease not found",
 				map[string]string{
 					"lease_id": fmt.Sprintf("%d", req.Payload.LeaseId),
@@ -290,8 +291,8 @@ func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest) (*coreapis.AcquireL
 			// Check the total number of locks
 			if counters.NumberOfLocks > req.Payload.MaxNumberOfLocksPerNamespace {
 				return &coreapis.AcquireLockResponse{
-					ApplicationError: monsterax.NewErrorWithContext(
-						monsterax.ResourceExhausted,
+					ApplicationError: mrpc.NewErrorWithContext(
+						mrpc.ResourceExhausted,
 						"max number of locks per namespace reached",
 						map[string]string{
 							"limit": fmt.Sprintf("%d", req.Payload.MaxNumberOfLocksPerNamespace),
@@ -795,13 +796,31 @@ func (c *Core) CreateLockLease(req *coreapis.CreateLockLeaseRequest) (*coreapis.
 	// Check the total number of leases
 	if counters.NumberOfLeases > req.Payload.MaxNumberOfLockLeases {
 		return &coreapis.CreateLockLeaseResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.ResourceExhausted,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.ResourceExhausted,
 				"max number of lock leases per namespace reached",
 				map[string]string{
 					"limit": fmt.Sprintf("%d", req.Payload.MaxNumberOfLockLeases),
 				},
 			),
+		}, nil
+	}
+
+	// Checking ID uniqueness. The ID is randomly generated and passed to the core,
+	// so a collision is expected to be rare; when it does happen we return IDCollision
+	// so the caller can regenerate the ID and retry. This is not a user-facing error.
+	// Without this check c.leases.Create would silently overwrite the colliding lease.
+	_, err = c.leases.Get(txn, req.Payload.LeaseId)
+	if err != nil {
+		if !errors.Is(err, store.ErrNotFound) {
+			return nil, err
+		}
+	} else {
+		return &coreapis.CreateLockLeaseResponse{
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.IDCollision,
+				"lease with this id already exists",
+				map[string]string{"lease_id": fmt.Sprintf("%d", req.Payload.LeaseId.LeaseId)}),
 		}, nil
 	}
 
@@ -850,8 +869,8 @@ func (c *Core) GetLockLease(req *coreapis.GetLockLeaseRequest) (*coreapis.GetLoc
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.GetLockLeaseResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"lease not found",
 					map[string]string{
 						"lease_id": ids.EncodeLeaseId(req.Payload.LeaseId),
@@ -865,8 +884,8 @@ func (c *Core) GetLockLease(req *coreapis.GetLockLeaseRequest) (*coreapis.GetLoc
 
 	if lease.ExpiresAt <= req.Payload.Now {
 		return &coreapis.GetLockLeaseResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.NotFound,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.NotFound,
 				"lease not found",
 				map[string]string{
 					"lease_id": ids.EncodeLeaseId(req.Payload.LeaseId),
@@ -920,8 +939,8 @@ func (c *Core) RefreshLockLease(req *coreapis.RefreshLockLeaseRequest) (*coreapi
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.RefreshLockLeaseResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"lease not found",
 					map[string]string{
 						"lease_id": ids.EncodeLeaseId(req.Payload.LeaseId),
@@ -946,8 +965,8 @@ func (c *Core) RefreshLockLease(req *coreapis.RefreshLockLeaseRequest) (*coreapi
 		}
 
 		return &coreapis.RefreshLockLeaseResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.NotFound,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.NotFound,
 				"lease not found",
 				map[string]string{
 					"lease_id": ids.EncodeLeaseId(req.Payload.LeaseId),

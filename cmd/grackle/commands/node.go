@@ -14,7 +14,7 @@ import (
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/transport/grpc"
 	"github.com/evrblk/monstera/utils"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 	"github.com/evrblk/yellowstone-common/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
@@ -46,7 +46,7 @@ var nodeCmd = &cobra.Command{
 		metricsSrv.Start()
 
 		// Register table prefixes
-		registry := monsterax.NewBaseTableRegistry(1)
+		registry := honey.NewBaseTableRegistry(1)
 		tables.RegisterGracklePrefixes(registry)
 
 		// Load monstera cluster config

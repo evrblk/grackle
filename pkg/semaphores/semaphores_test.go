@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
+	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
-	monsterax "github.com/evrblk/monstera/x"
 	"github.com/stretchr/testify/require"
 
 	"github.com/evrblk/grackle/pkg/corepb"
@@ -254,7 +254,7 @@ func TestSemaphoresTable_Create(t *testing.T) {
 
 		require.NoError(t, err)
 		require.NotNil(t, appErr)
-		require.Equal(t, monsterax.AlreadyExists, appErr.Code)
+		require.Equal(t, mrpc.AlreadyExists, appErr.Code)
 		require.Contains(t, appErr.Message, "already exists")
 	})
 }

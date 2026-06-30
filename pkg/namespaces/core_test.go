@@ -7,8 +7,9 @@ import (
 	"testing"
 	"time"
 
+	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 	"github.com/stretchr/testify/require"
 
 	"github.com/evrblk/grackle/pkg/coreapis"
@@ -17,7 +18,7 @@ import (
 )
 
 func init() {
-	registry := monsterax.NewBaseTableRegistry(1)
+	registry := honey.NewBaseTableRegistry(1)
 	tables.RegisterGracklePrefixes(registry)
 }
 
@@ -49,7 +50,7 @@ func TestCore_CreateNamespace(t *testing.T) {
 			AccountId:   rand.Uint64(),
 			NamespaceId: rand.Uint64(),
 		})
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 	})
 
 	t.Run("maximum number of namespaces", func(t *testing.T) {
@@ -70,7 +71,7 @@ func TestCore_CreateNamespace(t *testing.T) {
 
 		// Create namespace 2
 		appErr := createNamespaceWithError(t, core, namespace2Id, "test_namespace_2", 1, now)
-		require.Equal(t, monsterax.ResourceExhausted, appErr.Code)
+		require.Equal(t, mrpc.ResourceExhausted, appErr.Code)
 	})
 
 	t.Run("create namespace with duplicate name", func(t *testing.T) {
@@ -91,7 +92,24 @@ func TestCore_CreateNamespace(t *testing.T) {
 
 		// Try to create second namespace with the same name in the same account
 		appErr := createNamespaceWithError(t, core, namespace2Id, "test_namespace", 20, now)
-		require.Equal(t, monsterax.AlreadyExists, appErr.Code)
+		require.Equal(t, mrpc.AlreadyExists, appErr.Code)
+	})
+
+	t.Run("create namespace with duplicate id", func(t *testing.T) {
+		core := newNamespacesCore(t)
+		now := time.Now()
+		namespaceId := &corepb.NamespaceId{
+			AccountId:   rand.Uint64(),
+			NamespaceId: rand.Uint64(),
+		}
+
+		// Create first namespace
+		_ = createNamespace(t, core, namespaceId, "test_namespace_1", 20, now)
+
+		// Try to create a second namespace reusing the same ID (a different name,
+		// so this is an ID collision and not a name conflict)
+		appErr := createNamespaceWithError(t, core, namespaceId, "test_namespace_2", 20, now)
+		require.Equal(t, mrpc.IDCollision, appErr.Code)
 	})
 
 	t.Run("create namespace with same name in different accounts", func(t *testing.T) {
@@ -145,7 +163,7 @@ func TestCore_GetNamespaceByName(t *testing.T) {
 
 		// Try to get nonexistent namespace
 		appErr := getNamespaceByNameWithError(t, core, accountId, "nonexistent_namespace")
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 	})
 
 	t.Run("get namespace by name from different account", func(t *testing.T) {
@@ -163,7 +181,7 @@ func TestCore_GetNamespaceByName(t *testing.T) {
 
 		// Try to get namespace by name from account 2 (should fail)
 		appErr := getNamespaceByNameWithError(t, core, accountId2, "test_namespace")
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 
 		// Verify can get from correct account
 		namespace := getNamespaceByName(t, core, accountId1, "test_namespace")
@@ -278,7 +296,7 @@ func TestCore_UpdateNamespace(t *testing.T) {
 		now := time.Now()
 
 		appErr := updateNamespaceWithError(t, core, rand.Uint64(), "nonexistent_namespace", "updated description", 2, now)
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 	})
 
 	t.Run("version increments on each successful update", func(t *testing.T) {
@@ -319,7 +337,7 @@ func TestCore_UpdateNamespace(t *testing.T) {
 
 		// Reusing the stale version 1 is rejected with a version mismatch
 		appErr := updateNamespaceWithError(t, core, accountId, "namespace_1", "desc v3", 1, now.Add(2*time.Minute))
-		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Equal(t, mrpc.InvalidRequest, appErr.Code)
 		require.Contains(t, appErr.Message, "version mismatch")
 
 		// The rejected update did not change anything
@@ -341,7 +359,7 @@ func TestCore_UpdateNamespace(t *testing.T) {
 
 		// Passing a version the namespace has never reached is rejected
 		appErr := updateNamespaceWithError(t, core, accountId, "namespace_1", "desc", 99, now.Add(time.Minute))
-		require.Equal(t, monsterax.InvalidArgument, appErr.Code)
+		require.Equal(t, mrpc.InvalidRequest, appErr.Code)
 		require.Contains(t, appErr.Message, "version mismatch")
 	})
 }
@@ -367,7 +385,7 @@ func TestCore_DeleteNamespace(t *testing.T) {
 
 		// Verify the namespace no longer exists
 		appErr := getNamespaceWithError(t, core, namespaceId)
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 	})
 
 	t.Run("delete nonexistent namespace", func(t *testing.T) {
@@ -408,7 +426,7 @@ func TestCore_DeleteNamespace(t *testing.T) {
 
 		// Verify the first namespace no longer exists
 		appErr := getNamespaceWithError(t, core, namespace1Id)
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 
 		// Verify the second namespace still exists
 		namespace2 := getNamespace(t, core, namespace2Id)
@@ -474,7 +492,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 
 		// Verify third namespace doesn't exist in restored state
 		appErr := getNamespaceByNameWithError(t, core2, accountId, "test_namespace_3")
-		require.Equal(t, monsterax.NotFound, appErr.Code)
+		require.Equal(t, mrpc.NotFound, appErr.Code)
 
 		// Verify name index works correctly in restored state
 		namespace1 = getNamespaceByName(t, core2, accountId, "test_namespace_1")
@@ -660,7 +678,7 @@ func createNamespace(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, 
 	return resp.Payload.Namespace
 }
 
-func createNamespaceWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, name string, maxNumberOfNamespaces int64, now time.Time) *monsterax.Error {
+func createNamespaceWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, name string, maxNumberOfNamespaces int64, now time.Time) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.CreateNamespace(&coreapis.CreateNamespaceRequest{
@@ -718,7 +736,7 @@ func getNamespace(t *testing.T, core *Core, namespaceId *corepb.NamespaceId) *co
 	return resp.Payload.Namespace
 }
 
-func getNamespaceWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId) *monsterax.Error {
+func getNamespaceWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.GetNamespace(&coreapis.GetNamespaceRequest{
@@ -735,7 +753,7 @@ func getNamespaceWithError(t *testing.T, core *Core, namespaceId *corepb.Namespa
 	return resp.ApplicationError
 }
 
-func getNamespaceByNameWithError(t *testing.T, core *Core, accountId uint64, name string) *monsterax.Error {
+func getNamespaceByNameWithError(t *testing.T, core *Core, accountId uint64, name string) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.GetNamespaceByName(&coreapis.GetNamespaceByNameRequest{
@@ -792,7 +810,7 @@ func updateNamespace(t *testing.T, core *Core, accountId uint64, namespaceName s
 	return resp.Payload.Namespace
 }
 
-func updateNamespaceWithError(t *testing.T, core *Core, accountId uint64, namespaceName string, description string, version int64, now time.Time) *monsterax.Error {
+func updateNamespaceWithError(t *testing.T, core *Core, accountId uint64, namespaceName string, description string, version int64, now time.Time) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.UpdateNamespace(&coreapis.UpdateNamespaceRequest{

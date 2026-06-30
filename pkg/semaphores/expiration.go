@@ -3,7 +3,7 @@ package semaphores
 import (
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/tables"
@@ -24,14 +24,14 @@ import (
 type expirationRecordsTable struct {
 	shardGlobalIndexPrefix []byte
 
-	table *monsterax.BinaryTable[*corepb.SemaphoresExpirationRecord, corepb.SemaphoresExpirationRecord]
+	table *honey.BinaryTable[*corepb.SemaphoresExpirationRecord, corepb.SemaphoresExpirationRecord]
 }
 
 func newExpirationRecordsTable(shardGlobalIndexPrefix []byte) *expirationRecordsTable {
 	return &expirationRecordsTable{
 		shardGlobalIndexPrefix: shardGlobalIndexPrefix,
 
-		table: monsterax.NewBinaryTable[*corepb.SemaphoresExpirationRecord, corepb.SemaphoresExpirationRecord](
+		table: honey.NewBinaryTable[*corepb.SemaphoresExpirationRecord, corepb.SemaphoresExpirationRecord](
 			tables.Grackle["Grackle.SemaphoresCore.ExpirationRecords.Table"].Bytes(),
 			shardGlobalIndexPrefix,
 			shardGlobalIndexPrefix,
@@ -39,7 +39,7 @@ func newExpirationRecordsTable(shardGlobalIndexPrefix []byte) *expirationRecords
 	}
 }
 
-func (t *expirationRecordsTable) GetTableKeyRange() monsterax.KeyRange {
+func (t *expirationRecordsTable) GetTableKeyRange() honey.KeyRange {
 	return t.table.GetTableKeyRange()
 }
 

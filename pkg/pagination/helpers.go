@@ -1,9 +1,8 @@
 package pagination
 
 import (
-	monsterax "github.com/evrblk/monstera/x"
-
 	"github.com/evrblk/grackle/pkg/corepb"
+	"github.com/evrblk/yellowstone-common/honey"
 )
 
 const (
@@ -21,18 +20,18 @@ func GetLimitWithDefaults(requestedLimit int) int {
 	return MaxPaginationLimit
 }
 
-func CoreToMonstera(paginationToken *corepb.PaginationToken) *monsterax.PaginationToken {
+func CoreToMonstera(paginationToken *corepb.PaginationToken) *honey.PaginationToken {
 	if paginationToken == nil {
 		return nil
 	}
 
-	return &monsterax.PaginationToken{
+	return &honey.PaginationToken{
 		Key:     paginationToken.Value,
 		Reverse: paginationToken.Type == corepb.PaginationToken_PREVIOUS,
 	}
 }
 
-func MonsteraToCore(monsteraPaginationToken *monsterax.PaginationToken) *corepb.PaginationToken {
+func MonsteraToCore(monsteraPaginationToken *honey.PaginationToken) *corepb.PaginationToken {
 	if monsteraPaginationToken == nil {
 		return nil
 	}

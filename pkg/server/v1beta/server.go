@@ -317,6 +317,9 @@ func (s *GrackleApiServer) ArriveAtBarrier(ctx context.Context, req *gracklepb.A
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
+	// Increment counter of total barriers operations
+	barriersOperationsTotal.Inc()
+
 	return s.handler.ArriveAtBarrier(ctx, req, 0, grackle.DefaultServiceLimits)
 }
 
@@ -324,6 +327,9 @@ func (s *GrackleApiServer) WaitAtBarrier(ctx context.Context, req *gracklepb.Wai
 	if err := ValidateWaitAtBarrierRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
+
+	// Increment counter of total barriers operations
+	barriersOperationsTotal.Inc()
 
 	return s.handler.WaitAtBarrier(ctx, req, 0, grackle.DefaultServiceLimits)
 }

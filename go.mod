@@ -5,8 +5,8 @@ go 1.26.0
 require (
 	github.com/dave/jennifer v1.7.1
 	github.com/evrblk/evrblk-go v0.0.0-20260626162712-8d4590eeb250
-	github.com/evrblk/monstera v0.0.0-20260610153412-ffd2127186cd
-	github.com/evrblk/yellowstone-common v0.0.0-20260317193758-e5d4f0d6d632
+	github.com/evrblk/monstera v0.0.0-20260630004959-f62edfd59775
+	github.com/evrblk/yellowstone-common v0.0.0-20260630004209-fc48e9f3184e
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10
 	github.com/prometheus/client_golang v1.23.2
 	github.com/samber/lo v1.53.0
@@ -31,7 +31,7 @@ require (
 	github.com/google/flatbuffers v25.12.19+incompatible // indirect
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
-	github.com/hashicorp/go-metrics v0.5.4 // indirect
+	github.com/hashicorp/go-metrics v0.6.0 // indirect
 	github.com/hashicorp/go-msgpack/v2 v2.1.5 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/raft v1.7.3 // indirect
@@ -55,10 +55,10 @@ require (
 	go.opentelemetry.io/otel/trace v1.44.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	golang.org/x/crypto v0.53.0 // indirect
-	golang.org/x/net v0.55.0 // indirect
+	golang.org/x/net v0.56.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/text v0.38.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260608224507-4308a22a1bab // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260622175928-b703f567277d // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 

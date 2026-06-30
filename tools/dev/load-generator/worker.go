@@ -30,12 +30,10 @@ func NewBlockingPool(max int) *BlockingPool {
 func (p *BlockingPool) Dispatch(fn func()) bool {
 	select {
 	case p.slots <- struct{}{}:
-		p.wg.Add(1)
-		go func() {
-			defer p.wg.Done()
+		p.wg.Go(func() {
 			defer func() { <-p.slots }()
 			fn()
-		}()
+		})
 		return true
 	default:
 		return false

@@ -1,12 +1,14 @@
 package tables
 
-import monsterax "github.com/evrblk/monstera/x"
+import (
+	"github.com/evrblk/yellowstone-common/honey"
+)
 
 // Grackle is the global map containing all Grackle table prefixes.
-var Grackle map[string]monsterax.TablePrefix
+var Grackle map[string]honey.TablePrefix
 
-func RegisterGracklePrefixes(registry monsterax.TableRegistry) {
-	Grackle = map[string]monsterax.TablePrefix{
+func RegisterGracklePrefixes(registry honey.TableRegistry) {
+	Grackle = map[string]honey.TablePrefix{
 		// Locks
 		"Grackle.LocksCore.Locks.Table":                    registry.RegisterPrefix([]byte{0x01}),
 		"Grackle.LocksCore.Locks.LeaseIdIndex":             registry.RegisterPrefix([]byte{0x02}),

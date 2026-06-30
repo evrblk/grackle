@@ -20,7 +20,7 @@ import (
 	"github.com/evrblk/monstera/transport/grpc"
 	"github.com/evrblk/monstera/transport/local"
 	"github.com/evrblk/monstera/utils"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 	"github.com/evrblk/yellowstone-common/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	grpc_server "google.golang.org/grpc"
@@ -214,7 +214,7 @@ func main() {
 	defer metricsSrv.Stop()
 
 	// Register table prefixes
-	registry := monsterax.NewBaseTableRegistry(1)
+	registry := honey.NewBaseTableRegistry(1)
 	tables.RegisterGracklePrefixes(registry)
 
 	// Validate and configure transport

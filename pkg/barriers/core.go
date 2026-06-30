@@ -7,8 +7,9 @@ import (
 	"time"
 
 	"github.com/evrblk/monstera"
+	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
-	monsterax "github.com/evrblk/monstera/x"
+	"github.com/evrblk/yellowstone-common/honey"
 
 	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/corepb"
@@ -52,8 +53,8 @@ func NewCore(badgerStore *store.BadgerStore, globalIndexPrefix []byte, shardLowe
 	}
 }
 
-func (c *Core) ranges() []monsterax.KeyRange {
-	ranges := []monsterax.KeyRange{
+func (c *Core) ranges() []honey.KeyRange {
+	ranges := []honey.KeyRange{
 		c.counters.GetTableKeyRange(),
 		c.gcRecords.GetTableKeyRange(),
 		c.deletionRecords.GetTableKeyRange(),
@@ -68,13 +69,13 @@ func (c *Core) ranges() []monsterax.KeyRange {
 // Snapshot returns a consistent snapshot of every key range owned by this
 // shard's barriers Core, suitable for Raft snapshot transfer.
 func (c *Core) Snapshot() monstera.ApplicationCoreSnapshot {
-	return monsterax.Snapshot(c.badgerStore, c.ranges())
+	return honey.Snapshot(c.badgerStore, c.ranges())
 }
 
 // Restore replaces the contents of this shard's key ranges with the data read
 // from reader. Any existing keys in those ranges are removed first.
 func (c *Core) Restore(reader io.ReadCloser) error {
-	return monsterax.Restore(c.badgerStore, c.ranges(), reader)
+	return honey.Restore(c.badgerStore, c.ranges(), reader)
 }
 
 // Close releases any Core-owned resources. The underlying Badger store is
@@ -93,8 +94,8 @@ func (c *Core) GetBarrier(req *coreapis.GetBarrierRequest) (*coreapis.GetBarrier
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.GetBarrierResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"barrier not found",
 					map[string]string{
 						"barrier_id": ids.EncodeBarrierId(req.Payload.BarrierId),
@@ -123,8 +124,8 @@ func (c *Core) GetBarrierByName(req *coreapis.GetBarrierByNameRequest) (*coreapi
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.GetBarrierByNameResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"barrier not found",
 					map[string]string{
 						"barrier_name": req.Payload.BarrierName,
@@ -174,8 +175,8 @@ func (c *Core) ListBarrierParticipants(req *coreapis.ListBarrierParticipantsRequ
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.ListBarrierParticipantsResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"barrier not found",
 					map[string]string{
 						"barrier_name": req.Payload.BarrierName,
@@ -212,8 +213,8 @@ func (c *Core) CreateBarrier(req *coreapis.CreateBarrierRequest) (*coreapis.Crea
 	// A barrier that expects zero processes can never trip; reject it outright.
 	if req.Payload.ExpectedProcesses == 0 {
 		return &coreapis.CreateBarrierResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.InvalidArgument,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.InvalidRequest,
 				"expected processes must be greater than 0",
 				map[string]string{
 					"barrier_name": req.Payload.Name,
@@ -230,8 +231,8 @@ func (c *Core) CreateBarrier(req *coreapis.CreateBarrierRequest) (*coreapis.Crea
 	// Checking max number of barriers
 	if counters.NumberOfBarriers >= req.Payload.MaxNumberOfBarriersPerNamespace {
 		return &coreapis.CreateBarrierResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.ResourceExhausted,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.ResourceExhausted,
 				"max number of barriers per namespace reached",
 				map[string]string{
 					"limit": fmt.Sprintf("%d", req.Payload.MaxNumberOfBarriersPerNamespace),
@@ -371,8 +372,8 @@ func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest) (*coreapis.Upda
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.UpdateBarrierResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"barrier not found",
 					map[string]string{
 						"barrier_id": ids.EncodeBarrierId(req.Payload.BarrierId),
@@ -385,8 +386,8 @@ func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest) (*coreapis.Upda
 
 	if barrier.Version != req.Payload.ExpectedVersion {
 		return &coreapis.UpdateBarrierResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.InvalidArgument,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.InvalidRequest,
 				"version mismatch",
 				map[string]string{
 					"barrier_id":       ids.EncodeBarrierId(req.Payload.BarrierId),
@@ -400,8 +401,8 @@ func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest) (*coreapis.Upda
 	// A barrier that expects zero processes can never trip; reject it outright.
 	if req.Payload.ExpectedProcesses == 0 {
 		return &coreapis.UpdateBarrierResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.InvalidArgument,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.InvalidRequest,
 				"expected processes must be greater than 0",
 				map[string]string{
 					"barrier_id": ids.EncodeBarrierId(req.Payload.BarrierId),
@@ -412,8 +413,8 @@ func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest) (*coreapis.Upda
 	// If there are currently more arrived processes than the new expected processes
 	if barrier.ArrivedProcesses > req.Payload.ExpectedProcesses {
 		return &coreapis.UpdateBarrierResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.InvalidArgument,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.InvalidRequest,
 				"there are currently more arrived processes than the new expected processes",
 				map[string]string{}),
 		}, nil
@@ -490,8 +491,8 @@ func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest) (*coreapis.
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return &coreapis.ArriveAtBarrierResponse{
-				ApplicationError: monsterax.NewErrorWithContext(
-					monsterax.NotFound,
+				ApplicationError: mrpc.NewErrorWithContext(
+					mrpc.NotFound,
 					"barrier not found",
 					map[string]string{
 						"barrier_name": req.Payload.BarrierName,
@@ -505,8 +506,8 @@ func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest) (*coreapis.
 	// Reject arrivals for a generation other than the barrier's current one.
 	if req.Payload.Generation != barrier.Generation {
 		return &coreapis.ArriveAtBarrierResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.InvalidArgument,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.InvalidRequest,
 				"request generation is different from the current barrier generation",
 				map[string]string{
 					"barrier_name":       req.Payload.BarrierName,
@@ -537,8 +538,8 @@ func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest) (*coreapis.
 	// invariant broken, reject loudly rather than silently overflowing the counter.
 	if barrier.ArrivedProcesses >= barrier.ExpectedProcesses {
 		return &coreapis.ArriveAtBarrierResponse{
-			ApplicationError: monsterax.NewErrorWithContext(
-				monsterax.InvalidArgument,
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.InvalidRequest,
 				"too many participants arrived at the barrier",
 				map[string]string{
 					"barrier_name":       req.Payload.BarrierName,
