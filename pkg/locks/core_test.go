@@ -49,8 +49,8 @@ func TestCore_AcquireLock(t *testing.T) {
 		resp2, err := core.GetLock(&coreapis.GetLockRequest{
 			Payload: &corepb.GetLockRequest{
 				LockId: lockId,
-				Now:    now.Add(time.Minute).UnixNano(),
 			},
+			Now: now.Add(time.Minute).UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -63,8 +63,8 @@ func TestCore_AcquireLock(t *testing.T) {
 		resp3, err := core.GetLock(&coreapis.GetLockRequest{
 			Payload: &corepb.GetLockRequest{
 				LockId: lockId,
-				Now:    now.Add(61 * time.Minute).UnixNano(),
 			},
+			Now: now.Add(61 * time.Minute).UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -243,10 +243,10 @@ func TestCore_AcquireLock(t *testing.T) {
 				Payload: &corepb.AcquireLockRequest{
 					LockId:                       lockId,
 					LeaseId:                      lease.Id.LeaseId,
-					Now:                          now.UnixNano(),
 					Exclusive:                    false,
 					MaxNumberOfLocksPerNamespace: maxLocksPerNamespace,
 				},
+				Now: now.UnixNano(),
 			})
 
 			require.NoError(t, err)
@@ -268,10 +268,10 @@ func TestCore_AcquireLock(t *testing.T) {
 			Payload: &corepb.AcquireLockRequest{
 				LockId:                       lockId,
 				LeaseId:                      lease.Id.LeaseId,
-				Now:                          now.Add(time.Second).UnixNano(),
 				Exclusive:                    false,
 				MaxNumberOfLocksPerNamespace: maxLocksPerNamespace,
 			},
+			Now: now.Add(time.Second).UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -297,10 +297,10 @@ func TestCore_AcquireLock(t *testing.T) {
 			Payload: &corepb.AcquireLockRequest{
 				LockId:                       existingLockId,
 				LeaseId:                      lease.Id.LeaseId,
-				Now:                          now.Add(time.Second * 2).UnixNano(),
 				Exclusive:                    false,
 				MaxNumberOfLocksPerNamespace: maxLocksPerNamespace,
 			},
+			Now: now.Add(time.Second * 2).UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -320,10 +320,10 @@ func TestCore_AcquireLock(t *testing.T) {
 					LockName:    "lock_4",
 				},
 				LeaseId:                      lease.Id.LeaseId,
-				Now:                          now.Add(time.Second * 4).UnixNano(),
 				Exclusive:                    true,
 				MaxNumberOfLocksPerNamespace: maxLocksPerNamespace,
 			},
+			Now: now.Add(time.Second * 4).UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -345,10 +345,10 @@ func TestCore_AcquireLock(t *testing.T) {
 			Payload: &corepb.AcquireLockRequest{
 				LockId:                       differentNamespaceLockId,
 				LeaseId:                      lease2.Id.LeaseId,
-				Now:                          now.UnixNano(),
 				Exclusive:                    true,
 				MaxNumberOfLocksPerNamespace: maxLocksPerNamespace,
 			},
+			Now: now.UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -370,10 +370,10 @@ func TestCore_AcquireLock(t *testing.T) {
 			Payload: &corepb.AcquireLockRequest{
 				LockId:                       differentAccountLockId,
 				LeaseId:                      lease3.Id.LeaseId,
-				Now:                          now.UnixNano(),
 				Exclusive:                    true,
 				MaxNumberOfLocksPerNamespace: maxLocksPerNamespace,
 			},
+			Now: now.UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -925,11 +925,11 @@ func TestCore_LockHolderMetadata(t *testing.T) {
 		Payload: &corepb.AcquireLockRequest{
 			LockId:                       lockId,
 			LeaseId:                      lease.Id.LeaseId,
-			Now:                          now.UnixNano(),
 			Exclusive:                    true,
 			Metadata:                     metadata,
 			MaxNumberOfLocksPerNamespace: 2_000,
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -983,9 +983,9 @@ func TestCore_CreateLockLease(t *testing.T) {
 					LeaseId:               leaseId,
 					ProcessId:             processId,
 					TtlSeconds:            60,
-					Now:                   now.UnixNano(),
 					MaxNumberOfLockLeases: 100,
 				},
+				Now: now.UnixNano(),
 			}
 		}
 
@@ -1151,8 +1151,8 @@ func TestCore_DeleteLock(t *testing.T) {
 		_, err := core.DeleteLock(&coreapis.DeleteLockRequest{
 			Payload: &corepb.DeleteLockRequest{
 				LockId: lockId,
-				Now:    now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -1181,8 +1181,8 @@ func TestCore_DeleteLock(t *testing.T) {
 		_, err := core.DeleteLock(&coreapis.DeleteLockRequest{
 			Payload: &corepb.DeleteLockRequest{
 				LockId: lockId,
-				Now:    now.Add(time.Minute).UnixNano(),
 			},
+			Now: now.Add(time.Minute).UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -1341,11 +1341,11 @@ func TestCore_ReleaseLock(t *testing.T) {
 		// (pointing to a lock that still exists but with the wrong expiration time)
 		gcResponse, err := core.RunLocksGarbageCollection(&coreapis.RunLocksGarbageCollectionRequest{
 			Payload: &corepb.RunLocksGarbageCollectionRequest{
-				Now:                   now.Add(3 * time.Minute).UnixNano(),
 				GcRecordsPageSize:     100,
 				GcRecordLocksPageSize: 100,
 				MaxVisitedLocks:       100,
 			},
+			Now: now.Add(3 * time.Minute).UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, gcResponse)
@@ -1425,8 +1425,8 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 		Payload: &corepb.ReleaseLockRequest{
 			LockId:  lockId,
 			LeaseId: lease1.Id.LeaseId,
-			Now:     now.Add(6 * time.Minute).UnixNano(),
 		},
+		Now: now.Add(6 * time.Minute).UnixNano(),
 	})
 	require.NoError(t, err)
 
@@ -1458,8 +1458,8 @@ func TestCore_ListLocks(t *testing.T) {
 		response, err := core.ListLocks(&coreapis.ListLocksRequest{
 			Payload: &corepb.ListLocksRequest{
 				NamespaceId: namespaceId,
-				Now:         now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -1515,8 +1515,8 @@ func TestCore_ListLocks(t *testing.T) {
 		response4, err := core.ListLocks(&coreapis.ListLocksRequest{
 			Payload: &corepb.ListLocksRequest{
 				NamespaceId: namespaceId,
-				Now:         now.Add(3 * time.Minute).UnixNano(),
 			},
+			Now: now.Add(3 * time.Minute).UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -1576,8 +1576,8 @@ func TestCore_ListLocks(t *testing.T) {
 		response3, err := core.ListLocks(&coreapis.ListLocksRequest{
 			Payload: &corepb.ListLocksRequest{
 				NamespaceId: namespaceId,
-				Now:         now.Add(3 * time.Minute).UnixNano(),
 			},
+			Now: now.Add(3 * time.Minute).UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -1626,8 +1626,8 @@ func TestCore_ListLocks(t *testing.T) {
 					AccountId:   accountId,
 					NamespaceId: lockId1.NamespaceId,
 				},
-				Now: now.Add(2 * time.Minute).UnixNano(),
 			},
+			Now: now.Add(2 * time.Minute).UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -1645,8 +1645,8 @@ func TestCore_ListLocks(t *testing.T) {
 					AccountId:   accountId,
 					NamespaceId: lockId2.NamespaceId,
 				},
-				Now: now.Add(3 * time.Minute).UnixNano(),
 			},
+			Now: now.Add(3 * time.Minute).UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -1664,8 +1664,8 @@ func TestCore_ListLocks(t *testing.T) {
 					AccountId:   accountId,
 					NamespaceId: rand.Uint64(),
 				},
-				Now: now.Add(4 * time.Minute).UnixNano(),
 			},
+			Now: now.Add(4 * time.Minute).UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -1724,8 +1724,8 @@ func TestCore_ListLocks(t *testing.T) {
 		response5, err := core.ListLocks(&coreapis.ListLocksRequest{
 			Payload: &corepb.ListLocksRequest{
 				NamespaceId: namespaceId,
-				Now:         now.Add(4 * time.Minute).UnixNano(),
 			},
+			Now: now.Add(4 * time.Minute).UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -1789,8 +1789,8 @@ func TestCore_ListLocks(t *testing.T) {
 		response3, err := core.ListLocks(&coreapis.ListLocksRequest{
 			Payload: &corepb.ListLocksRequest{
 				NamespaceId: namespaceId,
-				Now:         now.Add(3 * time.Minute).UnixNano(),
 			},
+			Now: now.Add(3 * time.Minute).UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -1879,11 +1879,11 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 		gcTime := now.Add(31 * time.Minute)
 		gcResponse, err := core.RunLocksGarbageCollection(&coreapis.RunLocksGarbageCollectionRequest{
 			Payload: &corepb.RunLocksGarbageCollectionRequest{
-				Now:                   gcTime.UnixNano(),
 				GcRecordsPageSize:     100,
 				GcRecordLocksPageSize: 100,
 				MaxVisitedLocks:       maxVisitedLocks,
 			},
+			Now: gcTime.UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -1925,11 +1925,11 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 		// This should process locks 5-14 since locks 0-4 were already deleted
 		gcResponse2, err := core.RunLocksGarbageCollection(&coreapis.RunLocksGarbageCollectionRequest{
 			Payload: &corepb.RunLocksGarbageCollectionRequest{
-				Now:                   gcTime.UnixNano(),
 				GcRecordsPageSize:     100,
 				GcRecordLocksPageSize: 100,
 				MaxVisitedLocks:       maxVisitedLocks,
 			},
+			Now: gcTime.UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -2002,8 +2002,8 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 		deleteResponse, err := core.LocksDeleteNamespace(&coreapis.LocksDeleteNamespaceRequest{
 			Payload: &corepb.LocksDeleteNamespaceRequest{
 				NamespaceId: namespaceId,
-				Now:         now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -2012,11 +2012,11 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 		// Run garbage collection to clean up the deleted namespace
 		gcResponse, err := core.RunLocksGarbageCollection(&coreapis.RunLocksGarbageCollectionRequest{
 			Payload: &corepb.RunLocksGarbageCollectionRequest{
-				Now:                   now.UnixNano(),
 				GcRecordsPageSize:     100,
 				GcRecordLocksPageSize: 100,
 				MaxVisitedLocks:       1000,
 			},
+			Now: now.UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -2189,8 +2189,8 @@ func TestCore_RevokeLockLease(t *testing.T) {
 		_, err = core.RevokeLockLease(&coreapis.RevokeLockLeaseRequest{
 			Payload: &corepb.RevokeLockLeaseRequest{
 				LeaseId: lease.Id,
-				Now:     now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 		require.NoError(t, err)
 
@@ -2300,8 +2300,8 @@ func TestCore_RevokeLockLease_ReleasesSharedLocks(t *testing.T) {
 	_, err := core.RevokeLockLease(&coreapis.RevokeLockLeaseRequest{
 		Payload: &corepb.RevokeLockLeaseRequest{
 			LeaseId: lease1.Id,
-			Now:     now.UnixNano(),
 		},
+		Now: now.UnixNano(),
 	})
 	require.NoError(t, err)
 
@@ -2315,8 +2315,8 @@ func TestCore_RevokeLockLease_ReleasesSharedLocks(t *testing.T) {
 	_, err = core.RevokeLockLease(&coreapis.RevokeLockLeaseRequest{
 		Payload: &corepb.RevokeLockLeaseRequest{
 			LeaseId: lease2.Id,
-			Now:     now.UnixNano(),
 		},
+		Now: now.UnixNano(),
 	})
 	require.NoError(t, err)
 
@@ -2340,8 +2340,8 @@ func TestCore_RefreshLockLease(t *testing.T) {
 			Payload: &corepb.RefreshLockLeaseRequest{
 				LeaseId:    lease.Id,
 				TtlSeconds: int64((5 * time.Minute).Seconds()),
-				Now:        refreshAt.UnixNano(),
 			},
+			Now: refreshAt.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.Nil(t, resp.ApplicationError)
@@ -2353,8 +2353,8 @@ func TestCore_RefreshLockLease(t *testing.T) {
 		getResp, err := core.GetLockLease(&coreapis.GetLockLeaseRequest{
 			Payload: &corepb.GetLockLeaseRequest{
 				LeaseId: lease.Id,
-				Now:     refreshAt.Add(4 * time.Minute).UnixNano(),
 			},
+			Now: refreshAt.Add(4 * time.Minute).UnixNano(),
 		})
 		require.NoError(t, err)
 		require.Nil(t, getResp.ApplicationError)
@@ -2373,8 +2373,8 @@ func TestCore_RefreshLockLease(t *testing.T) {
 					LeaseId:     rand.Uint64(),
 				},
 				TtlSeconds: 60,
-				Now:        now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.Nil(t, resp.Payload)
@@ -2419,8 +2419,8 @@ func TestCore_RefreshLockLease(t *testing.T) {
 			Payload: &corepb.RefreshLockLeaseRequest{
 				LeaseId:    lease.Id,
 				TtlSeconds: 60,
-				Now:        refreshAt.UnixNano(),
 			},
+			Now: refreshAt.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.Nil(t, resp.Payload)
@@ -2431,8 +2431,8 @@ func TestCore_RefreshLockLease(t *testing.T) {
 		getResp, err := core.GetLockLease(&coreapis.GetLockLeaseRequest{
 			Payload: &corepb.GetLockLeaseRequest{
 				LeaseId: lease.Id,
-				Now:     refreshAt.UnixNano(),
 			},
+			Now: refreshAt.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.Nil(t, getResp.Payload)
@@ -2477,8 +2477,8 @@ func TestCore_RefreshLockLease(t *testing.T) {
 			Payload: &corepb.RefreshLockLeaseRequest{
 				LeaseId:    expiringLease.Id,
 				TtlSeconds: 60,
-				Now:        refreshAt.UnixNano(),
 			},
+			Now: refreshAt.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.Nil(t, resp.Payload)
@@ -2805,9 +2805,9 @@ func createLease(t *testing.T, core *Core, accountId uint64, namespaceId uint64,
 			},
 			ProcessId:             processId,
 			TtlSeconds:            int64(ttl.Seconds()),
-			Now:                   now.UnixNano(),
 			MaxNumberOfLockLeases: 100,
 		},
+		Now: now.UnixNano(),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -2824,10 +2824,10 @@ func acquireLock(t *testing.T, core *Core, lockId *corepb.LockId, leaseId *corep
 		Payload: &corepb.AcquireLockRequest{
 			LockId:                       lockId,
 			LeaseId:                      leaseId.LeaseId,
-			Now:                          now.UnixNano(),
 			Exclusive:                    exclusive,
 			MaxNumberOfLocksPerNamespace: 2_000,
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -2848,10 +2848,10 @@ func acquireLockReason(t *testing.T, core *Core, lockId *corepb.LockId, leaseId 
 		Payload: &corepb.AcquireLockRequest{
 			LockId:                       lockId,
 			LeaseId:                      leaseId.LeaseId,
-			Now:                          now.UnixNano(),
 			Exclusive:                    exclusive,
 			MaxNumberOfLocksPerNamespace: 2_000,
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -2877,8 +2877,8 @@ func releaseLock(t *testing.T, core *Core, lockId *corepb.LockId, leaseId *corep
 		Payload: &corepb.ReleaseLockRequest{
 			LockId:  lockId,
 			LeaseId: leaseId.LeaseId,
-			Now:     now.UnixNano(),
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -2896,8 +2896,8 @@ func getLock(t *testing.T, core *Core, lockId *corepb.LockId, now time.Time) *co
 	resp, err := core.GetLock(&coreapis.GetLockRequest{
 		Payload: &corepb.GetLockRequest{
 			LockId: lockId,
-			Now:    now.UnixNano(),
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -2916,10 +2916,10 @@ func acquireLockWithError(t *testing.T, core *Core, lockId *corepb.LockId, lease
 		Payload: &corepb.AcquireLockRequest{
 			LockId:                       lockId,
 			LeaseId:                      leaseId.LeaseId,
-			Now:                          now.UnixNano(),
 			Exclusive:                    exclusive,
 			MaxNumberOfLocksPerNamespace: 2_000,
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -2942,9 +2942,9 @@ func createLeaseWithMax(t *testing.T, core *Core, accountId uint64, namespaceId 
 			},
 			ProcessId:             processId,
 			TtlSeconds:            int64(ttl.Seconds()),
-			Now:                   now.UnixNano(),
 			MaxNumberOfLockLeases: maxNumberOfLockLeases,
 		},
+		Now: now.UnixNano(),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -2966,9 +2966,9 @@ func createLeaseWithError(t *testing.T, core *Core, accountId uint64, namespaceI
 			},
 			ProcessId:             processId,
 			TtlSeconds:            int64(ttl.Seconds()),
-			Now:                   now.UnixNano(),
 			MaxNumberOfLockLeases: maxNumberOfLockLeases,
 		},
+		Now: now.UnixNano(),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -2983,8 +2983,8 @@ func getLockLease(t *testing.T, core *Core, leaseId *corepb.LeaseId, now time.Ti
 	resp, err := core.GetLockLease(&coreapis.GetLockLeaseRequest{
 		Payload: &corepb.GetLockLeaseRequest{
 			LeaseId: leaseId,
-			Now:     now.UnixNano(),
 		},
+		Now: now.UnixNano(),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -3000,8 +3000,8 @@ func getLockLeaseWithError(t *testing.T, core *Core, leaseId *corepb.LeaseId, no
 	resp, err := core.GetLockLease(&coreapis.GetLockLeaseRequest{
 		Payload: &corepb.GetLockLeaseRequest{
 			LeaseId: leaseId,
-			Now:     now.UnixNano(),
 		},
+		Now: now.UnixNano(),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -3016,8 +3016,8 @@ func revokeLockLease(t *testing.T, core *Core, leaseId *corepb.LeaseId, now time
 	resp, err := core.RevokeLockLease(&coreapis.RevokeLockLeaseRequest{
 		Payload: &corepb.RevokeLockLeaseRequest{
 			LeaseId: leaseId,
-			Now:     now.UnixNano(),
 		},
+		Now: now.UnixNano(),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -3031,8 +3031,8 @@ func listLockLeases(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, n
 	resp, err := core.ListLockLeases(&coreapis.ListLockLeasesRequest{
 		Payload: &corepb.ListLockLeasesRequest{
 			NamespaceId: namespaceId,
-			Now:         now.UnixNano(),
 		},
+		Now: now.UnixNano(),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -3048,8 +3048,8 @@ func listLockLeasesByProcessId(t *testing.T, core *Core, namespaceId *corepb.Nam
 		Payload: &corepb.ListLockLeasesByProcessIdRequest{
 			NamespaceId: namespaceId,
 			ProcessId:   processId,
-			Now:         now.UnixNano(),
 		},
+		Now: now.UnixNano(),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -3064,8 +3064,8 @@ func listLocksByLeaseId(t *testing.T, core *Core, leaseId *corepb.LeaseId, now t
 	resp, err := core.ListLocksByLeaseId(&coreapis.ListLocksByLeaseIdRequest{
 		Payload: &corepb.ListLocksByLeaseIdRequest{
 			LeaseId: leaseId,
-			Now:     now.UnixNano(),
 		},
+		Now: now.UnixNano(),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, resp)

@@ -14,13 +14,9 @@ message AcquireLockRequest {
   // (multiple shared holders coexist but block exclusive acquirers).
   bool exclusive = 3;
   map<string, string> metadata = 4;
-  // Caller-supplied current time, Unix nanoseconds. The core is a deterministic
-  // replicated state machine, so the clock is passed in rather than read from the
-  // host. Recurs on most requests with the same meaning.
-  sfixed64 now = 5;
   // Per-namespace quota enforced by the core; acquiring a brand-new lock is
   // rejected if it would exceed this.
-  int64 max_number_of_locks_per_namespace = 6;
+  int64 max_number_of_locks_per_namespace = 5;
 }
 
 message AcquireLockResponse {
@@ -52,7 +48,6 @@ enum ContentionReason {
 message ReleaseLockRequest {
   LockId lock_id = 1;
   fixed64 lease_id = 2;
-  sfixed64 now = 3;
 }
 
 message ReleaseLockResponse {
@@ -61,7 +56,6 @@ message ReleaseLockResponse {
 
 message GetLockRequest {
   LockId lock_id = 1;
-  sfixed64 now = 2;
 }
 
 message GetLockResponse {
@@ -70,16 +64,14 @@ message GetLockResponse {
 
 message DeleteLockRequest {
   LockId lock_id = 1;
-  sfixed64 now = 2;
 }
 
 message DeleteLockResponse {}
 
 message ListLocksRequest {
   NamespaceId namespace_id = 1;
-  sfixed64 now = 2;
-  PaginationToken pagination_token = 3;
-  int32 limit = 4;
+  PaginationToken pagination_token = 2;
+  int32 limit = 3;
 }
 
 message ListLocksResponse {
@@ -90,9 +82,8 @@ message ListLocksResponse {
 
 message ListLocksByLeaseIdRequest {
   LeaseId lease_id = 1;
-  sfixed64 now = 2;
-  PaginationToken pagination_token = 3;
-  int32 limit = 4;
+  PaginationToken pagination_token = 2;
+  int32 limit = 3;
 }
 
 message ListLocksByLeaseIdResponse {
@@ -102,10 +93,9 @@ message ListLocksByLeaseIdResponse {
 }
 
 message RunLocksGarbageCollectionRequest {
-  sfixed64 now = 1;
-  int64 gc_records_page_size = 2;
-  int64 gc_record_locks_page_size = 3;
-  int64 max_visited_locks = 4;
+  int64 gc_records_page_size = 1;
+  int64 gc_record_locks_page_size = 2;
+  int64 max_visited_locks = 3;
 }
 
 message RunLocksGarbageCollectionResponse {}
@@ -113,7 +103,6 @@ message RunLocksGarbageCollectionResponse {}
 message LocksDeleteNamespaceRequest {
   NamespaceId namespace_id = 1;
   fixed64 record_id = 2;
-  sfixed64 now = 3;
 }
 
 message LocksDeleteNamespaceResponse {}
@@ -122,9 +111,8 @@ message CreateLockLeaseRequest {
   LeaseId lease_id = 1;
   string process_id = 2;
   int64 ttl_seconds = 3;
-  sfixed64 now = 4;
-  map<string, string> metadata = 5;
-  int64 max_number_of_lock_leases = 6;
+  map<string, string> metadata = 4;
+  int64 max_number_of_lock_leases = 5;
 }
 
 message CreateLockLeaseResponse {
@@ -133,7 +121,6 @@ message CreateLockLeaseResponse {
 
 message RevokeLockLeaseRequest {
   LeaseId lease_id = 1;
-  sfixed64 now = 2;
 }
 
 message RevokeLockLeaseResponse {}
@@ -141,7 +128,6 @@ message RevokeLockLeaseResponse {}
 message RefreshLockLeaseRequest {
   LeaseId lease_id = 1;
   int64 ttl_seconds = 2;
-  sfixed64 now = 3;
 }
 
 message RefreshLockLeaseResponse {
@@ -150,7 +136,6 @@ message RefreshLockLeaseResponse {
 
 message GetLockLeaseRequest {
   LeaseId lease_id = 1;
-  sfixed64 now = 2;
 }
 
 message GetLockLeaseResponse {
@@ -159,9 +144,8 @@ message GetLockLeaseResponse {
 
 message ListLockLeasesRequest {
   NamespaceId namespace_id = 1;
-  sfixed64 now = 2;
-  PaginationToken pagination_token = 3;
-  int32 limit = 4;
+  PaginationToken pagination_token = 2;
+  int32 limit = 3;
 }
 
 message ListLockLeasesResponse {
@@ -173,9 +157,8 @@ message ListLockLeasesResponse {
 message ListLockLeasesByProcessIdRequest {
   NamespaceId namespace_id = 1;
   string process_id = 2;
-  sfixed64 now = 3;
-  PaginationToken pagination_token = 4;
-  int32 limit = 5;
+  PaginationToken pagination_token = 3;
+  int32 limit = 4;
 }
 
 message ListLockLeasesByProcessIdResponse {

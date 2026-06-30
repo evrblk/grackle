@@ -52,7 +52,7 @@ func (m *CreateNamespaceRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error
 	if m.MaxNumberOfNamespaces != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.MaxNumberOfNamespaces))
 		i--
-		dAtA[i] = 0x30
+		dAtA[i] = 0x28
 	}
 	if len(m.Metadata) > 0 {
 		for k := range m.Metadata {
@@ -70,14 +70,8 @@ func (m *CreateNamespaceRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error
 			dAtA[i] = 0xa
 			i = protohelpers.EncodeVarint(dAtA, i, uint64(baseI-i))
 			i--
-			dAtA[i] = 0x2a
+			dAtA[i] = 0x22
 		}
-	}
-	if m.Now != 0 {
-		i -= 8
-		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
-		i--
-		dAtA[i] = 0x21
 	}
 	if len(m.Description) > 0 {
 		i -= len(m.Description)
@@ -473,12 +467,6 @@ func (m *DeleteNamespaceRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if m.Now != 0 {
-		i -= 8
-		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
-		i--
-		dAtA[i] = 0x19
-	}
 	if len(m.NamespaceName) > 0 {
 		i -= len(m.NamespaceName)
 		copy(dAtA[i:], m.NamespaceName)
@@ -557,12 +545,6 @@ func (m *UpdateNamespaceRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error
 	if m.unknownFields != nil {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
-	}
-	if m.Now != 0 {
-		i -= 8
-		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
-		i--
-		dAtA[i] = 0x31
 	}
 	if m.ExpectedVersion != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.ExpectedVersion))
@@ -848,9 +830,6 @@ func (m *CreateNamespaceRequest) SizeVT() (n int) {
 	if l > 0 {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
-	if m.Now != 0 {
-		n += 9
-	}
 	if len(m.Metadata) > 0 {
 		for k, v := range m.Metadata {
 			_ = k
@@ -996,9 +975,6 @@ func (m *DeleteNamespaceRequest) SizeVT() (n int) {
 	if l > 0 {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
-	if m.Now != 0 {
-		n += 9
-	}
 	n += len(m.unknownFields)
 	return n
 }
@@ -1040,9 +1016,6 @@ func (m *UpdateNamespaceRequest) SizeVT() (n int) {
 	}
 	if m.ExpectedVersion != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.ExpectedVersion))
-	}
-	if m.Now != 0 {
-		n += 9
 	}
 	n += len(m.unknownFields)
 	return n
@@ -1260,16 +1233,6 @@ func (m *CreateNamespaceRequest) UnmarshalVT(dAtA []byte) error {
 			m.Description = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
-			}
-			m.Now = 0
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
-		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 			}
@@ -1396,7 +1359,7 @@ func (m *CreateNamespaceRequest) UnmarshalVT(dAtA []byte) error {
 			}
 			m.Metadata[mapkey] = mapvalue
 			iNdEx = postIndex
-		case 6:
+		case 5:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MaxNumberOfNamespaces", wireType)
 			}
@@ -2222,16 +2185,6 @@ func (m *DeleteNamespaceRequest) UnmarshalVT(dAtA []byte) error {
 			}
 			m.NamespaceName = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 3:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
-			}
-			m.Now = 0
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -2554,16 +2507,6 @@ func (m *UpdateNamespaceRequest) UnmarshalVT(dAtA []byte) error {
 					break
 				}
 			}
-		case 6:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
-			}
-			m.Now = 0
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])

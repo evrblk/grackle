@@ -210,11 +210,11 @@ func TestAncestors_ExpirationCleansUpAncestors(t *testing.T) {
 	// Run garbage collection to clean up the expired lock and its ancestors.
 	gcResponse, err := core.RunLocksGarbageCollection(&coreapis.RunLocksGarbageCollectionRequest{
 		Payload: &corepb.RunLocksGarbageCollectionRequest{
-			Now:                   now.Add(2 * time.Minute).UnixNano(),
 			GcRecordsPageSize:     100,
 			GcRecordLocksPageSize: 100,
 			MaxVisitedLocks:       100,
 		},
+		Now: now.Add(2 * time.Minute).UnixNano(),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, gcResponse)
@@ -247,11 +247,11 @@ func TestAncestors_GarbageCollectionCleansUpAncestors(t *testing.T) {
 	// Run GC after expiry
 	resp1, err := core.RunLocksGarbageCollection(&coreapis.RunLocksGarbageCollectionRequest{
 		Payload: &corepb.RunLocksGarbageCollectionRequest{
-			Now:                   now.Add(2 * time.Minute).UnixNano(),
 			GcRecordsPageSize:     100,
 			GcRecordLocksPageSize: 100,
 			MaxVisitedLocks:       100,
 		},
+		Now: now.Add(2 * time.Minute).UnixNano(),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, resp1)
@@ -300,11 +300,11 @@ func TestAncestors_NamespaceGCCleansUpAncestors(t *testing.T) {
 	// Run GC to delete the namespace's locks
 	resp2, err := core.RunLocksGarbageCollection(&coreapis.RunLocksGarbageCollectionRequest{
 		Payload: &corepb.RunLocksGarbageCollectionRequest{
-			Now:                   now.Add(time.Minute).UnixNano(),
 			GcRecordsPageSize:     100,
 			GcRecordLocksPageSize: 100,
 			MaxVisitedLocks:       100,
 		},
+		Now: now.Add(time.Minute).UnixNano(),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, resp2)

@@ -11,16 +11,12 @@ message CreateSemaphoreRequest {
   SemaphoreId semaphore_id = 1;
   string name = 2;
   string description = 3;
-  // Caller-supplied current time, Unix nanoseconds. The core is a deterministic
-  // replicated state machine, so the clock is passed in rather than read from the
-  // host. Recurs on most requests with the same meaning.
-  sfixed64 now = 4;
   // Total capacity: the maximum sum of holder weights admitted at once.
-  int64 permits = 5;
-  map<string, string> metadata = 6;
+  int64 permits = 4;
+  map<string, string> metadata = 5;
   // Per-namespace quota enforced by the core; the create is rejected if it would
   // be exceeded.
-  int64 max_number_of_semaphores_per_namespace = 7;
+  int64 max_number_of_semaphores_per_namespace = 6;
 }
 
 message CreateSemaphoreResponse {
@@ -31,7 +27,6 @@ message ListSemaphoresRequest {
   NamespaceId namespace_id = 1;
   PaginationToken pagination_token = 2;
   int32 limit = 3;
-  sfixed64 now = 4;
 }
 
 message ListSemaphoresResponse {
@@ -44,7 +39,6 @@ message ListSemaphoresByLeaseIdRequest {
   LeaseId lease_id = 1;
   PaginationToken pagination_token = 2;
   int32 limit = 3;
-  sfixed64 now = 4;
 }
 
 message ListSemaphoresByLeaseIdResponse {
@@ -55,7 +49,6 @@ message ListSemaphoresByLeaseIdResponse {
 
 message GetSemaphoreRequest {
   SemaphoreId semaphore_id = 1;
-  sfixed64 now = 2;
 }
 
 message GetSemaphoreResponse {
@@ -65,7 +58,6 @@ message GetSemaphoreResponse {
 message GetSemaphoreByNameRequest {
   NamespaceId namespace_id = 1;
   string semaphore_name = 2;
-  sfixed64 now = 3;
 }
 
 message GetSemaphoreByNameResponse {
@@ -80,8 +72,7 @@ message AcquireSemaphoreRequest {
   // weight permits are free. Re-acquiring under the same lease adjusts that
   // lease's existing hold rather than adding a second one.
   int64 weight = 4;
-  sfixed64 now = 5;
-  map<string, string> metadata = 6;
+  map<string, string> metadata = 5;
 }
 
 message AcquireSemaphoreResponse {
@@ -93,7 +84,6 @@ message ReleaseSemaphoreRequest {
   NamespaceId namespace_id = 1;
   string semaphore_name = 2;
   fixed64 lease_id = 3;
-  sfixed64 now = 4;
 }
 
 message ReleaseSemaphoreResponse {
@@ -107,11 +97,10 @@ message UpdateSemaphoreRequest {
   // New total capacity. Cannot be lowered below the permits currently held
   // (active_holds).
   int64 permits = 4;
-  sfixed64 now = 5;
-  map<string, string> metadata = 6;
+  map<string, string> metadata = 5;
   // Optimistic concurrency check: must equal the semaphore's current version or
   // the update is rejected.
-  int64 expected_version = 7;
+  int64 expected_version = 6;
 }
 
 message UpdateSemaphoreResponse {
@@ -133,7 +122,6 @@ message ListSemaphoreHoldersRequest {
   string semaphore_name = 2;
   PaginationToken pagination_token = 3;
   int32 limit = 4;
-  sfixed64 now = 5;
 }
 
 message ListSemaphoreHoldersResponse {
@@ -146,7 +134,6 @@ message ListSemaphoreLeasesRequest {
   NamespaceId namespace_id = 1;
   PaginationToken pagination_token = 2;
   int32 limit = 3;
-  sfixed64 now = 4;
 }
 
 message ListSemaphoreLeasesResponse {
@@ -160,7 +147,6 @@ message ListSemaphoreLeasesByProcessIdRequest {
   string process_id = 2;
   PaginationToken pagination_token = 3;
   int32 limit = 4;
-  sfixed64 now = 5;
 }
 
 message ListSemaphoreLeasesByProcessIdResponse {
@@ -171,7 +157,6 @@ message ListSemaphoreLeasesByProcessIdResponse {
 
 message GetSemaphoreLeaseRequest {
   LeaseId lease_id = 1;
-  sfixed64 now = 2;
 }
 
 message GetSemaphoreLeaseResponse {
@@ -182,9 +167,8 @@ message CreateSemaphoreLeaseRequest {
   LeaseId lease_id = 1;
   string process_id = 2;
   int64 ttl_seconds = 3;
-  sfixed64 now = 4;
-  map<string, string> metadata = 5;
-  int64 max_number_of_semaphore_leases = 6;
+  map<string, string> metadata = 4;
+  int64 max_number_of_semaphore_leases = 5;
 }
 
 message CreateSemaphoreLeaseResponse {
@@ -193,7 +177,6 @@ message CreateSemaphoreLeaseResponse {
 
 message RevokeSemaphoreLeaseRequest {
   LeaseId lease_id = 1;
-  sfixed64 now = 2;
 }
 
 message RevokeSemaphoreLeaseResponse {}
@@ -201,7 +184,6 @@ message RevokeSemaphoreLeaseResponse {}
 message RefreshSemaphoreLeaseRequest {
   LeaseId lease_id = 1;
   int64 ttl_seconds = 2;
-  sfixed64 now = 3;
 }
 
 message RefreshSemaphoreLeaseResponse {
@@ -211,19 +193,17 @@ message RefreshSemaphoreLeaseResponse {
 message SemaphoresDeleteNamespaceRequest {
   fixed64 record_id = 1;
   NamespaceId namespace_id = 2;
-  sfixed64 now = 3;
 }
 
 message SemaphoresDeleteNamespaceResponse {}
 
 message RunSemaphoresGarbageCollectionRequest {
-  sfixed64 now = 1;
-  int64 gc_records_page_size = 2;
-  int64 gc_record_semaphores_page_size = 3;
+  int64 gc_records_page_size = 1;
+  int64 gc_record_semaphores_page_size = 2;
   // Maximum number of records (holders + semaphores + leases) deleted by one GC pass.
   // Bounds the transaction size; the GC worker calls this method repeatedly until everything drains.
-  int64 max_visited = 4;
-  int64 gc_record_holders_page_size = 5;
+  int64 max_visited = 3;
+  int64 gc_record_holders_page_size = 4;
 }
 
 message RunSemaphoresGarbageCollectionResponse {}

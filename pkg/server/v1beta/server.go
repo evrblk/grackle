@@ -69,9 +69,6 @@ func (s *GrackleApiServer) CreateWaitGroup(ctx context.Context, req *gracklepb.C
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	// Increment counter of total wait groups operations
-	waitGroupsOperationsTotal.Inc()
-
 	return s.handler.CreateWaitGroup(ctx, req, 0, grackle.DefaultServiceLimits)
 }
 
@@ -79,10 +76,6 @@ func (s *GrackleApiServer) UpdateWaitGroup(ctx context.Context, req *gracklepb.U
 	if err := ValidateUpdateWaitGroupRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
-
-	// Increment counter of total wait groups operations
-	// TODO: what is considered a wait group operation?
-	waitGroupsOperationsTotal.Inc()
 
 	return s.handler.UpdateWaitGroup(ctx, req, 0, grackle.DefaultServiceLimits)
 }
@@ -92,9 +85,6 @@ func (s *GrackleApiServer) GetWaitGroup(ctx context.Context, req *gracklepb.GetW
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	// Increment counter of total wait groups operations
-	waitGroupsOperationsTotal.Inc()
-
 	return s.handler.GetWaitGroup(ctx, req, 0, grackle.DefaultServiceLimits)
 }
 
@@ -102,9 +92,6 @@ func (s *GrackleApiServer) WaitForWaitGroup(ctx context.Context, req *gracklepb.
 	if err := ValidateWaitForWaitGroupRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
-
-	// Increment counter of total wait groups operations
-	waitGroupsOperationsTotal.Inc()
 
 	return s.handler.WaitForWaitGroup(ctx, req, 0, grackle.DefaultServiceLimits)
 }
@@ -114,9 +101,6 @@ func (s *GrackleApiServer) CompleteJobsFromWaitGroup(ctx context.Context, req *g
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	// Increment counter of total wait groups operations
-	waitGroupsOperationsTotal.Inc()
-
 	return s.handler.CompleteJobsFromWaitGroup(ctx, req, 0, grackle.DefaultServiceLimits)
 }
 
@@ -124,9 +108,6 @@ func (s *GrackleApiServer) DeleteWaitGroup(ctx context.Context, req *gracklepb.D
 	if err := ValidateDeleteWaitGroupRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
-
-	// Increment counter of total wait groups operations
-	waitGroupsOperationsTotal.Inc()
 
 	return s.handler.DeleteWaitGroup(ctx, req, 0, grackle.DefaultServiceLimits)
 }
@@ -152,9 +133,6 @@ func (s *GrackleApiServer) AcquireLock(ctx context.Context, req *gracklepb.Acqui
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	// Increment counter of total locks operations
-	locksOperationsTotal.Inc()
-
 	return s.handler.AcquireLock(ctx, req, 0, grackle.DefaultServiceLimits)
 }
 
@@ -162,9 +140,6 @@ func (s *GrackleApiServer) ReleaseLock(ctx context.Context, req *gracklepb.Relea
 	if err := ValidateReleaseLockRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
-
-	// Increment counter of total locks operations
-	locksOperationsTotal.Inc()
 
 	return s.handler.ReleaseLock(ctx, req, 0, grackle.DefaultServiceLimits)
 }
@@ -174,9 +149,6 @@ func (s *GrackleApiServer) GetLock(ctx context.Context, req *gracklepb.GetLockRe
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	// Increment counter of total locks operations
-	locksOperationsTotal.Inc()
-
 	return s.handler.GetLock(ctx, req, 0, grackle.DefaultServiceLimits)
 }
 
@@ -184,9 +156,6 @@ func (s *GrackleApiServer) DeleteLock(ctx context.Context, req *gracklepb.Delete
 	if err := ValidateDeleteLockRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
-
-	// Increment counter of total locks operations
-	locksOperationsTotal.Inc()
 
 	return s.handler.DeleteLock(ctx, req, 0, grackle.DefaultServiceLimits)
 }
@@ -228,9 +197,6 @@ func (s *GrackleApiServer) GetSemaphore(ctx context.Context, req *gracklepb.GetS
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	// Increment counter of total semaphore operations
-	semaphoresOperationsTotal.Inc()
-
 	return s.handler.GetSemaphore(ctx, req, 0, grackle.DefaultServiceLimits)
 }
 
@@ -239,9 +205,6 @@ func (s *GrackleApiServer) AcquireSemaphore(ctx context.Context, req *gracklepb.
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	// Increment counter of total semaphore operations
-	semaphoresOperationsTotal.Inc()
-
 	return s.handler.AcquireSemaphore(ctx, req, 0, grackle.DefaultServiceLimits)
 }
 
@@ -249,9 +212,6 @@ func (s *GrackleApiServer) ReleaseSemaphore(ctx context.Context, req *gracklepb.
 	if err := ValidateReleaseSemaphoreRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
-
-	// Increment counter of total semaphore operations
-	semaphoresOperationsTotal.Inc()
 
 	return s.handler.ReleaseSemaphore(ctx, req, 0, grackle.DefaultServiceLimits)
 }
@@ -317,9 +277,6 @@ func (s *GrackleApiServer) ArriveAtBarrier(ctx context.Context, req *gracklepb.A
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
 
-	// Increment counter of total barriers operations
-	barriersOperationsTotal.Inc()
-
 	return s.handler.ArriveAtBarrier(ctx, req, 0, grackle.DefaultServiceLimits)
 }
 
@@ -327,9 +284,6 @@ func (s *GrackleApiServer) WaitAtBarrier(ctx context.Context, req *gracklepb.Wai
 	if err := ValidateWaitAtBarrierRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%s", err)
 	}
-
-	// Increment counter of total barriers operations
-	barriersOperationsTotal.Inc()
 
 	return s.handler.WaitAtBarrier(ctx, req, 0, grackle.DefaultServiceLimits)
 }

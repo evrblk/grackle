@@ -29,16 +29,12 @@ type CreateBarrierRequest struct {
 	// Number of arrivals required to trip the barrier each generation.
 	ExpectedProcesses int64             `protobuf:"varint,4,opt,name=expected_processes,json=expectedProcesses,proto3" json:"expected_processes,omitempty"`
 	Metadata          map[string]string `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	// Caller-supplied current time, Unix nanoseconds. The core is a deterministic
-	// replicated state machine, so the clock is passed in rather than read from the
-	// host. Recurs on most requests with the same meaning.
-	Now int64 `protobuf:"fixed64,6,opt,name=now,proto3" json:"now,omitempty"`
 	// Per-namespace quota enforced by the core; the create is rejected if it would
 	// be exceeded.
-	MaxNumberOfBarriersPerNamespace int64 `protobuf:"varint,7,opt,name=max_number_of_barriers_per_namespace,json=maxNumberOfBarriersPerNamespace,proto3" json:"max_number_of_barriers_per_namespace,omitempty"`
+	MaxNumberOfBarriersPerNamespace int64 `protobuf:"varint,6,opt,name=max_number_of_barriers_per_namespace,json=maxNumberOfBarriersPerNamespace,proto3" json:"max_number_of_barriers_per_namespace,omitempty"`
 	// Inactivity window: the barrier is auto-deleted this many seconds after its
 	// last activity (each arrival pushes the deadline out).
-	DeleteInactiveAfterSeconds int64 `protobuf:"varint,8,opt,name=delete_inactive_after_seconds,json=deleteInactiveAfterSeconds,proto3" json:"delete_inactive_after_seconds,omitempty"`
+	DeleteInactiveAfterSeconds int64 `protobuf:"varint,7,opt,name=delete_inactive_after_seconds,json=deleteInactiveAfterSeconds,proto3" json:"delete_inactive_after_seconds,omitempty"`
 	unknownFields              protoimpl.UnknownFields
 	sizeCache                  protoimpl.SizeCache
 }
@@ -108,13 +104,6 @@ func (x *CreateBarrierRequest) GetMetadata() map[string]string {
 	return nil
 }
 
-func (x *CreateBarrierRequest) GetNow() int64 {
-	if x != nil {
-		return x.Now
-	}
-	return 0
-}
-
 func (x *CreateBarrierRequest) GetMaxNumberOfBarriersPerNamespace() int64 {
 	if x != nil {
 		return x.MaxNumberOfBarriersPerNamespace
@@ -182,8 +171,7 @@ type UpdateBarrierRequest struct {
 	// Optimistic concurrency check: must equal the barrier's current version or the
 	// update is rejected.
 	ExpectedVersion            int64 `protobuf:"varint,5,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
-	Now                        int64 `protobuf:"fixed64,6,opt,name=now,proto3" json:"now,omitempty"`
-	DeleteInactiveAfterSeconds int64 `protobuf:"varint,7,opt,name=delete_inactive_after_seconds,json=deleteInactiveAfterSeconds,proto3" json:"delete_inactive_after_seconds,omitempty"`
+	DeleteInactiveAfterSeconds int64 `protobuf:"varint,6,opt,name=delete_inactive_after_seconds,json=deleteInactiveAfterSeconds,proto3" json:"delete_inactive_after_seconds,omitempty"`
 	unknownFields              protoimpl.UnknownFields
 	sizeCache                  protoimpl.SizeCache
 }
@@ -249,13 +237,6 @@ func (x *UpdateBarrierRequest) GetMetadata() map[string]string {
 func (x *UpdateBarrierRequest) GetExpectedVersion() int64 {
 	if x != nil {
 		return x.ExpectedVersion
-	}
-	return 0
-}
-
-func (x *UpdateBarrierRequest) GetNow() int64 {
-	if x != nil {
-		return x.Now
 	}
 	return 0
 }
@@ -329,7 +310,6 @@ type ArriveAtBarrierRequest struct {
 	// accidentally contributes to a later cycle than the one it observed.
 	Generation    int64             `protobuf:"varint,4,opt,name=generation,proto3" json:"generation,omitempty"`
 	Metadata      map[string]string `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	Now           int64             `protobuf:"fixed64,6,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -397,13 +377,6 @@ func (x *ArriveAtBarrierRequest) GetMetadata() map[string]string {
 		return x.Metadata
 	}
 	return nil
-}
-
-func (x *ArriveAtBarrierRequest) GetNow() int64 {
-	if x != nil {
-		return x.Now
-	}
-	return 0
 }
 
 type ArriveAtBarrierResponse struct {
@@ -646,10 +619,9 @@ type DeleteBarrierRequest struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
 	NamespaceId *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	BarrierName string                 `protobuf:"bytes,2,opt,name=barrier_name,json=barrierName,proto3" json:"barrier_name,omitempty"`
-	Now         int64                  `protobuf:"fixed64,3,opt,name=now,proto3" json:"now,omitempty"`
 	// Idempotency / bookkeeping id the core uses to track the asynchronous deletion
 	// of this object's data. Recurs on delete and namespace-teardown requests.
-	RecordId      uint64 `protobuf:"fixed64,4,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
+	RecordId      uint64 `protobuf:"fixed64,3,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -698,13 +670,6 @@ func (x *DeleteBarrierRequest) GetBarrierName() string {
 	return ""
 }
 
-func (x *DeleteBarrierRequest) GetNow() int64 {
-	if x != nil {
-		return x.Now
-	}
-	return 0
-}
-
 func (x *DeleteBarrierRequest) GetRecordId() uint64 {
 	if x != nil {
 		return x.RecordId
@@ -751,9 +716,8 @@ func (*DeleteBarrierResponse) Descriptor() ([]byte, []int) {
 type ListBarriersRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	NamespaceId     *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	Now             int64                  `protobuf:"fixed64,2,opt,name=now,proto3" json:"now,omitempty"`
-	PaginationToken *PaginationToken       `protobuf:"bytes,3,opt,name=pagination_token,json=paginationToken,proto3" json:"pagination_token,omitempty"`
-	Limit           int32                  `protobuf:"varint,4,opt,name=limit,proto3" json:"limit,omitempty"`
+	PaginationToken *PaginationToken       `protobuf:"bytes,2,opt,name=pagination_token,json=paginationToken,proto3" json:"pagination_token,omitempty"`
+	Limit           int32                  `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -793,13 +757,6 @@ func (x *ListBarriersRequest) GetNamespaceId() *NamespaceId {
 		return x.NamespaceId
 	}
 	return nil
-}
-
-func (x *ListBarriersRequest) GetNow() int64 {
-	if x != nil {
-		return x.Now
-	}
-	return 0
 }
 
 func (x *ListBarriersRequest) GetPaginationToken() *PaginationToken {
@@ -1014,11 +971,10 @@ func (x *ListBarrierParticipantsResponse) GetPreviousPaginationToken() *Paginati
 
 type RunBarriersGarbageCollectionRequest struct {
 	state                        protoimpl.MessageState `protogen:"open.v1"`
-	Now                          int64                  `protobuf:"fixed64,1,opt,name=now,proto3" json:"now,omitempty"`
-	GcRecordsPageSize            int64                  `protobuf:"varint,2,opt,name=gc_records_page_size,json=gcRecordsPageSize,proto3" json:"gc_records_page_size,omitempty"`
-	GcRecordBarriersPageSize     int64                  `protobuf:"varint,3,opt,name=gc_record_barriers_page_size,json=gcRecordBarriersPageSize,proto3" json:"gc_record_barriers_page_size,omitempty"`
-	GcRecordParticipantsPageSize int64                  `protobuf:"varint,4,opt,name=gc_record_participants_page_size,json=gcRecordParticipantsPageSize,proto3" json:"gc_record_participants_page_size,omitempty"`
-	MaxVisited                   int64                  `protobuf:"varint,5,opt,name=max_visited,json=maxVisited,proto3" json:"max_visited,omitempty"`
+	GcRecordsPageSize            int64                  `protobuf:"varint,1,opt,name=gc_records_page_size,json=gcRecordsPageSize,proto3" json:"gc_records_page_size,omitempty"`
+	GcRecordBarriersPageSize     int64                  `protobuf:"varint,2,opt,name=gc_record_barriers_page_size,json=gcRecordBarriersPageSize,proto3" json:"gc_record_barriers_page_size,omitempty"`
+	GcRecordParticipantsPageSize int64                  `protobuf:"varint,3,opt,name=gc_record_participants_page_size,json=gcRecordParticipantsPageSize,proto3" json:"gc_record_participants_page_size,omitempty"`
+	MaxVisited                   int64                  `protobuf:"varint,4,opt,name=max_visited,json=maxVisited,proto3" json:"max_visited,omitempty"`
 	unknownFields                protoimpl.UnknownFields
 	sizeCache                    protoimpl.SizeCache
 }
@@ -1051,13 +1007,6 @@ func (x *RunBarriersGarbageCollectionRequest) ProtoReflect() protoreflect.Messag
 // Deprecated: Use RunBarriersGarbageCollectionRequest.ProtoReflect.Descriptor instead.
 func (*RunBarriersGarbageCollectionRequest) Descriptor() ([]byte, []int) {
 	return file_pkg_corepb_barriers_proto_rawDescGZIP(), []int{16}
-}
-
-func (x *RunBarriersGarbageCollectionRequest) GetNow() int64 {
-	if x != nil {
-		return x.Now
-	}
-	return 0
 }
 
 func (x *RunBarriersGarbageCollectionRequest) GetGcRecordsPageSize() int64 {
@@ -1128,7 +1077,6 @@ type BarriersDeleteNamespaceRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	RecordId      uint64                 `protobuf:"fixed64,2,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
-	Now           int64                  `protobuf:"fixed64,3,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1173,13 +1121,6 @@ func (x *BarriersDeleteNamespaceRequest) GetNamespaceId() *NamespaceId {
 func (x *BarriersDeleteNamespaceRequest) GetRecordId() uint64 {
 	if x != nil {
 		return x.RecordId
-	}
-	return 0
-}
-
-func (x *BarriersDeleteNamespaceRequest) GetNow() int64 {
-	if x != nil {
-		return x.Now
 	}
 	return 0
 }
@@ -1705,38 +1646,36 @@ var File_pkg_corepb_barriers_proto protoreflect.FileDescriptor
 
 const file_pkg_corepb_barriers_proto_rawDesc = "" +
 	"\n" +
-	"\x19pkg/corepb/barriers.proto\x12\x19com.evrblk.grackle.corepb\x1a\x17pkg/corepb/common.proto\x1a\x1bpkg/corepb/namespaces.proto\"\xfc\x03\n" +
+	"\x19pkg/corepb/barriers.proto\x12\x19com.evrblk.grackle.corepb\x1a\x17pkg/corepb/common.proto\x1a\x1bpkg/corepb/namespaces.proto\"\xea\x03\n" +
 	"\x14CreateBarrierRequest\x12C\n" +
 	"\n" +
 	"barrier_id\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.BarrierIdR\tbarrierId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12-\n" +
 	"\x12expected_processes\x18\x04 \x01(\x03R\x11expectedProcesses\x12Y\n" +
-	"\bmetadata\x18\x05 \x03(\v2=.com.evrblk.grackle.corepb.CreateBarrierRequest.MetadataEntryR\bmetadata\x12\x10\n" +
-	"\x03now\x18\x06 \x01(\x10R\x03now\x12M\n" +
-	"$max_number_of_barriers_per_namespace\x18\a \x01(\x03R\x1fmaxNumberOfBarriersPerNamespace\x12A\n" +
-	"\x1ddelete_inactive_after_seconds\x18\b \x01(\x03R\x1adeleteInactiveAfterSeconds\x1a;\n" +
+	"\bmetadata\x18\x05 \x03(\v2=.com.evrblk.grackle.corepb.CreateBarrierRequest.MetadataEntryR\bmetadata\x12M\n" +
+	"$max_number_of_barriers_per_namespace\x18\x06 \x01(\x03R\x1fmaxNumberOfBarriersPerNamespace\x12A\n" +
+	"\x1ddelete_inactive_after_seconds\x18\a \x01(\x03R\x1adeleteInactiveAfterSeconds\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"U\n" +
 	"\x15CreateBarrierResponse\x12<\n" +
-	"\abarrier\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.BarrierR\abarrier\"\xc4\x03\n" +
+	"\abarrier\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.BarrierR\abarrier\"\xb2\x03\n" +
 	"\x14UpdateBarrierRequest\x12C\n" +
 	"\n" +
 	"barrier_id\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.BarrierIdR\tbarrierId\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12-\n" +
 	"\x12expected_processes\x18\x03 \x01(\x03R\x11expectedProcesses\x12Y\n" +
 	"\bmetadata\x18\x04 \x03(\v2=.com.evrblk.grackle.corepb.UpdateBarrierRequest.MetadataEntryR\bmetadata\x12)\n" +
-	"\x10expected_version\x18\x05 \x01(\x03R\x0fexpectedVersion\x12\x10\n" +
-	"\x03now\x18\x06 \x01(\x10R\x03now\x12A\n" +
-	"\x1ddelete_inactive_after_seconds\x18\a \x01(\x03R\x1adeleteInactiveAfterSeconds\x1a;\n" +
+	"\x10expected_version\x18\x05 \x01(\x03R\x0fexpectedVersion\x12A\n" +
+	"\x1ddelete_inactive_after_seconds\x18\x06 \x01(\x03R\x1adeleteInactiveAfterSeconds\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"v\n" +
 	"\x15UpdateBarrierResponse\x12<\n" +
 	"\abarrier\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.BarrierR\abarrier\x12\x1f\n" +
 	"\vall_arrived\x18\x02 \x01(\bR\n" +
-	"allArrived\"\xf1\x02\n" +
+	"allArrived\"\xdf\x02\n" +
 	"\x16ArriveAtBarrierRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12!\n" +
 	"\fbarrier_name\x18\x02 \x01(\tR\vbarrierName\x12\x1d\n" +
@@ -1745,8 +1684,7 @@ const file_pkg_corepb_barriers_proto_rawDesc = "" +
 	"\n" +
 	"generation\x18\x04 \x01(\x03R\n" +
 	"generation\x12[\n" +
-	"\bmetadata\x18\x05 \x03(\v2?.com.evrblk.grackle.corepb.ArriveAtBarrierRequest.MetadataEntryR\bmetadata\x12\x10\n" +
-	"\x03now\x18\x06 \x01(\x10R\x03now\x1a;\n" +
+	"\bmetadata\x18\x05 \x03(\v2?.com.evrblk.grackle.corepb.ArriveAtBarrierRequest.MetadataEntryR\bmetadata\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"x\n" +
@@ -1763,18 +1701,16 @@ const file_pkg_corepb_barriers_proto_rawDesc = "" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12!\n" +
 	"\fbarrier_name\x18\x02 \x01(\tR\vbarrierName\"X\n" +
 	"\x18GetBarrierByNameResponse\x12<\n" +
-	"\abarrier\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.BarrierR\abarrier\"\xb3\x01\n" +
+	"\abarrier\x18\x01 \x01(\v2\".com.evrblk.grackle.corepb.BarrierR\abarrier\"\xa1\x01\n" +
 	"\x14DeleteBarrierRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12!\n" +
-	"\fbarrier_name\x18\x02 \x01(\tR\vbarrierName\x12\x10\n" +
-	"\x03now\x18\x03 \x01(\x10R\x03now\x12\x1b\n" +
-	"\trecord_id\x18\x04 \x01(\x06R\brecordId\"\x17\n" +
-	"\x15DeleteBarrierResponse\"\xdf\x01\n" +
+	"\fbarrier_name\x18\x02 \x01(\tR\vbarrierName\x12\x1b\n" +
+	"\trecord_id\x18\x03 \x01(\x06R\brecordId\"\x17\n" +
+	"\x15DeleteBarrierResponse\"\xcd\x01\n" +
 	"\x13ListBarriersRequest\x12I\n" +
-	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x10\n" +
-	"\x03now\x18\x02 \x01(\x10R\x03now\x12U\n" +
-	"\x10pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x0fpaginationToken\x12\x14\n" +
-	"\x05limit\x18\x04 \x01(\x05R\x05limit\"\x9e\x02\n" +
+	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12U\n" +
+	"\x10pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x0fpaginationToken\x12\x14\n" +
+	"\x05limit\x18\x03 \x01(\x05R\x05limit\"\x9e\x02\n" +
 	"\x14ListBarriersResponse\x12>\n" +
 	"\bbarriers\x18\x01 \x03(\v2\".com.evrblk.grackle.corepb.BarrierR\bbarriers\x12^\n" +
 	"\x15next_pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x13nextPaginationToken\x12f\n" +
@@ -1790,19 +1726,17 @@ const file_pkg_corepb_barriers_proto_rawDesc = "" +
 	"\x1fListBarrierParticipantsResponse\x12Q\n" +
 	"\fparticipants\x18\x01 \x03(\v2-.com.evrblk.grackle.corepb.BarrierParticipantR\fparticipants\x12^\n" +
 	"\x15next_pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x13nextPaginationToken\x12f\n" +
-	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"\x91\x02\n" +
-	"#RunBarriersGarbageCollectionRequest\x12\x10\n" +
-	"\x03now\x18\x01 \x01(\x10R\x03now\x12/\n" +
-	"\x14gc_records_page_size\x18\x02 \x01(\x03R\x11gcRecordsPageSize\x12>\n" +
-	"\x1cgc_record_barriers_page_size\x18\x03 \x01(\x03R\x18gcRecordBarriersPageSize\x12F\n" +
-	" gc_record_participants_page_size\x18\x04 \x01(\x03R\x1cgcRecordParticipantsPageSize\x12\x1f\n" +
-	"\vmax_visited\x18\x05 \x01(\x03R\n" +
+	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"\xff\x01\n" +
+	"#RunBarriersGarbageCollectionRequest\x12/\n" +
+	"\x14gc_records_page_size\x18\x01 \x01(\x03R\x11gcRecordsPageSize\x12>\n" +
+	"\x1cgc_record_barriers_page_size\x18\x02 \x01(\x03R\x18gcRecordBarriersPageSize\x12F\n" +
+	" gc_record_participants_page_size\x18\x03 \x01(\x03R\x1cgcRecordParticipantsPageSize\x12\x1f\n" +
+	"\vmax_visited\x18\x04 \x01(\x03R\n" +
 	"maxVisited\"&\n" +
-	"$RunBarriersGarbageCollectionResponse\"\x9a\x01\n" +
+	"$RunBarriersGarbageCollectionResponse\"\x88\x01\n" +
 	"\x1eBarriersDeleteNamespaceRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x1b\n" +
-	"\trecord_id\x18\x02 \x01(\x06R\brecordId\x12\x10\n" +
-	"\x03now\x18\x03 \x01(\x10R\x03now\"!\n" +
+	"\trecord_id\x18\x02 \x01(\x06R\brecordId\"!\n" +
 	"\x1fBarriersDeleteNamespaceResponse\"\xc1\x04\n" +
 	"\aBarrier\x124\n" +
 	"\x02id\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.BarrierIdR\x02id\x12\x12\n" +

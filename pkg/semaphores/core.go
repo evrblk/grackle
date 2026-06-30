@@ -141,11 +141,11 @@ func (c *Core) CreateSemaphore(req *coreapis.CreateSemaphoreRequest) (*coreapis.
 		Name:           req.Payload.Name,
 		Description:    req.Payload.Description,
 		Permits:        req.Payload.Permits,
-		CreatedAt:      req.Payload.Now,
-		UpdatedAt:      req.Payload.Now,
+		CreatedAt:      req.Now,
+		UpdatedAt:      req.Now,
 		Metadata:       req.Payload.Metadata,
 		Version:        1,
-		LastActivityAt: req.Payload.Now,
+		LastActivityAt: req.Now,
 	}
 
 	appError, err := c.semaphores.Create(txn, semaphore)
@@ -182,6 +182,18 @@ func (c *Core) CreateSemaphore(req *coreapis.CreateSemaphoreRequest) (*coreapis.
 // a legitimate shrink. Returns NotFound if the semaphore does not exist, or InvalidArgument if
 // the new permit count is below the current ActiveHolds.
 func (c *Core) UpdateSemaphore(req *coreapis.UpdateSemaphoreRequest) (*coreapis.UpdateSemaphoreResponse, error) {
+	if req.Payload.Permits == 0 {
+		return &coreapis.UpdateSemaphoreResponse{
+			ApplicationError: mrpc.NewErrorWithContext(
+				mrpc.InvalidRequest,
+				"permits must be greater than 0",
+				map[string]string{
+					"permits": fmt.Sprintf("%d", req.Payload.Permits),
+				},
+			),
+		}, nil
+	}
+
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -217,7 +229,7 @@ func (c *Core) UpdateSemaphore(req *coreapis.UpdateSemaphoreRequest) (*coreapis.
 	}
 
 	// Check expired holders
-	updatedSemaphore, _, err := c.deleteExpiredSemaphoreHolders(txn, semaphore, req.Payload.Now)
+	updatedSemaphore, _, err := c.deleteExpiredSemaphoreHolders(txn, semaphore, req.Now)
 	if err != nil {
 		return nil, err
 	}
@@ -239,7 +251,7 @@ func (c *Core) UpdateSemaphore(req *coreapis.UpdateSemaphoreRequest) (*coreapis.
 
 	updatedSemaphore.Description = req.Payload.Description
 	updatedSemaphore.Permits = req.Payload.Permits
-	updatedSemaphore.UpdatedAt = req.Payload.Now
+	updatedSemaphore.UpdatedAt = req.Now
 	updatedSemaphore.Metadata = req.Payload.Metadata
 	updatedSemaphore.Version += 1
 
@@ -375,7 +387,7 @@ func (c *Core) GetSemaphore(req *coreapis.GetSemaphoreRequest) (*coreapis.GetSem
 	}
 
 	// Filter out expired holders
-	updatedSemaphore, _, err := c.computeExpiredSemaphoreHolders(txn, semaphore, req.Payload.Now)
+	updatedSemaphore, _, err := c.computeExpiredSemaphoreHolders(txn, semaphore, req.Now)
 	if err != nil {
 		return nil, err
 	}
@@ -414,7 +426,7 @@ func (c *Core) GetSemaphoreByName(req *coreapis.GetSemaphoreByNameRequest) (*cor
 	}
 
 	// Filter out expired holders
-	updatedSemaphore, _, err := c.computeExpiredSemaphoreHolders(txn, semaphore, req.Payload.Now)
+	updatedSemaphore, _, err := c.computeExpiredSemaphoreHolders(txn, semaphore, req.Now)
 	if err != nil {
 		return nil, err
 	}
@@ -457,7 +469,7 @@ func (c *Core) ListSemaphoreHolders(req *coreapis.ListSemaphoreHoldersRequest) (
 	}
 
 	activeHolders := lo.Filter(result.holders, func(h *corepb.SemaphoreHolder, _ int) bool {
-		return h.ExpiresAt > req.Payload.Now
+		return h.ExpiresAt > req.Now
 	})
 
 	return &coreapis.ListSemaphoreHoldersResponse{
@@ -484,7 +496,7 @@ func (c *Core) ListSemaphores(req *coreapis.ListSemaphoresRequest) (*coreapis.Li
 
 	semaphores := make([]*corepb.Semaphore, 0, len(result.semaphores))
 	for _, semaphore := range result.semaphores {
-		updatedSemaphore, _, err := c.computeExpiredSemaphoreHolders(txn, semaphore, req.Payload.Now)
+		updatedSemaphore, _, err := c.computeExpiredSemaphoreHolders(txn, semaphore, req.Now)
 		if err != nil {
 			return nil, err
 		}
@@ -548,7 +560,7 @@ func (c *Core) AcquireSemaphore(req *coreapis.AcquireSemaphoreRequest) (*coreapi
 	}
 
 	// Check if lease has expired
-	if lease.ExpiresAt <= req.Payload.Now {
+	if lease.ExpiresAt <= req.Now {
 		return &coreapis.AcquireSemaphoreResponse{
 			ApplicationError: mrpc.NewErrorWithContext(
 				mrpc.NotFound,
@@ -594,7 +606,7 @@ func (c *Core) AcquireSemaphore(req *coreapis.AcquireSemaphoreRequest) (*coreapi
 	}
 
 	// Check expired holders
-	updatedSemaphore, _, err := c.deleteExpiredSemaphoreHolders(txn, semaphore, req.Payload.Now)
+	updatedSemaphore, _, err := c.deleteExpiredSemaphoreHolders(txn, semaphore, req.Now)
 	if err != nil {
 		return nil, err
 	}
@@ -617,7 +629,7 @@ func (c *Core) AcquireSemaphore(req *coreapis.AcquireSemaphoreRequest) (*coreapi
 				newHolder := &corepb.SemaphoreHolder{
 					Id:        holderId,
 					ExpiresAt: lease.ExpiresAt,
-					LockedAt:  req.Payload.Now,
+					LockedAt:  req.Now,
 					Weight:    req.Payload.Weight,
 					Metadata:  req.Payload.Metadata,
 				}
@@ -664,7 +676,7 @@ func (c *Core) AcquireSemaphore(req *coreapis.AcquireSemaphoreRequest) (*coreapi
 
 			// Update expiration time (extend lock)
 			existingHolder.ExpiresAt = lease.ExpiresAt
-			existingHolder.LockedAt = req.Payload.Now
+			existingHolder.LockedAt = req.Now
 			existingHolder.Metadata = req.Payload.Metadata
 
 			// Update earliest expiration if this holder expires earlier
@@ -700,7 +712,7 @@ func (c *Core) AcquireSemaphore(req *coreapis.AcquireSemaphoreRequest) (*coreapi
 	}
 
 	// Record the acquire attempt (whether or not it succeeded).
-	updatedSemaphore.LastActivityAt = req.Payload.Now
+	updatedSemaphore.LastActivityAt = req.Now
 
 	err = c.semaphores.Update(txn, updatedSemaphore)
 	if err != nil {
@@ -752,7 +764,7 @@ func (c *Core) ReleaseSemaphore(req *coreapis.ReleaseSemaphoreRequest) (*coreapi
 
 	// Treat an expired lease the same as a missing one — its holders are already on the GC's
 	// eviction path, so Release should report the lease as gone instead of mutating state.
-	if lease.ExpiresAt <= req.Payload.Now {
+	if lease.ExpiresAt <= req.Now {
 		return &coreapis.ReleaseSemaphoreResponse{
 			ApplicationError: mrpc.NewErrorWithContext(
 				mrpc.NotFound,
@@ -813,14 +825,14 @@ func (c *Core) ReleaseSemaphore(req *coreapis.ReleaseSemaphoreRequest) (*coreapi
 	}
 
 	// Check expired holders
-	updatedSemaphore, _, err := c.deleteExpiredSemaphoreHolders(txn, semaphore, req.Payload.Now)
+	updatedSemaphore, _, err := c.deleteExpiredSemaphoreHolders(txn, semaphore, req.Now)
 	if err != nil {
 		return nil, err
 	}
 
 	updatedSemaphore.ActiveHolds -= existingHolder.Weight
 	updatedSemaphore.ActiveHoldersCount -= 1
-	updatedSemaphore.LastActivityAt = req.Payload.Now
+	updatedSemaphore.LastActivityAt = req.Now
 
 	if semaphore.EarliestHolderExpiresAt != updatedSemaphore.EarliestHolderExpiresAt {
 		// Remove a semaphore from expirationRecords at old position
@@ -954,7 +966,7 @@ func (c *Core) RunSemaphoresGarbageCollection(req *coreapis.RunSemaphoresGarbage
 
 	if visited < req.Payload.MaxVisited {
 		// Update semaphores with expired holders
-		err = c.expirationRecords.List(txn, 0, req.Payload.Now, func(record *corepb.SemaphoresExpirationRecord) (bool, error) {
+		err = c.expirationRecords.List(txn, 0, req.Now, func(record *corepb.SemaphoresExpirationRecord) (bool, error) {
 			// One visit for the semaphore row itself; the pruned holders are counted below.
 			visited++
 
@@ -982,7 +994,7 @@ func (c *Core) RunSemaphoresGarbageCollection(req *coreapis.RunSemaphoresGarbage
 				return false, err
 			}
 
-			updatedSemaphore, expiredCount, err := c.deleteExpiredSemaphoreHolders(txn, semaphore, req.Payload.Now)
+			updatedSemaphore, expiredCount, err := c.deleteExpiredSemaphoreHolders(txn, semaphore, req.Now)
 			if err != nil {
 				return false, err
 			}
@@ -1017,8 +1029,8 @@ func (c *Core) RunSemaphoresGarbageCollection(req *coreapis.RunSemaphoresGarbage
 		// Reap expired leases. Each released holder counts against MaxVisited;
 		// if the budget runs out mid-lease, revokeLeaseInTransactionBounded reports
 		// drained=false and the lease row is left in place for a subsequent GC pass.
-		err = c.leases.ListByExpiration(txn, 0, req.Payload.Now, func(lease *corepb.Lease) (bool, error) {
-			drained, err := c.revokeLeaseInTransactionBounded(txn, lease, req.Payload.Now, &visited, req.Payload.MaxVisited)
+		err = c.leases.ListByExpiration(txn, 0, req.Now, func(lease *corepb.Lease) (bool, error) {
+			drained, err := c.revokeLeaseInTransactionBounded(txn, lease, req.Now, &visited, req.Payload.MaxVisited)
 			if err != nil {
 				return false, err
 			}
@@ -1116,13 +1128,13 @@ func (c *Core) CreateSemaphoreLease(req *coreapis.CreateSemaphoreLeaseRequest) (
 	}
 
 	// Calculate expiration time
-	expiresAt := req.Payload.Now + int64(req.Payload.TtlSeconds)*1e9
+	expiresAt := req.Now + int64(req.Payload.TtlSeconds)*1e9
 
 	// Create the lease
 	lease := &corepb.Lease{
 		Id:        req.Payload.LeaseId,
 		ProcessId: req.Payload.ProcessId,
-		CreatedAt: req.Payload.Now,
+		CreatedAt: req.Now,
 		ExpiresAt: expiresAt,
 		Metadata:  req.Payload.Metadata,
 	}
@@ -1175,7 +1187,7 @@ func (c *Core) GetSemaphoreLease(req *coreapis.GetSemaphoreLeaseRequest) (*corea
 		return nil, err
 	}
 
-	if lease.ExpiresAt <= req.Payload.Now {
+	if lease.ExpiresAt <= req.Now {
 		return &coreapis.GetSemaphoreLeaseResponse{
 			ApplicationError: mrpc.NewErrorWithContext(
 				mrpc.NotFound,
@@ -1208,7 +1220,7 @@ func (c *Core) ListSemaphoreLeases(req *coreapis.ListSemaphoreLeasesRequest) (*c
 
 	// Filter out expired leases
 	activeLeases := lo.Filter(result.Leases, func(lease *corepb.Lease, _ int) bool {
-		return lease.ExpiresAt > req.Payload.Now
+		return lease.ExpiresAt > req.Now
 	})
 
 	return &coreapis.ListSemaphoreLeasesResponse{
@@ -1246,9 +1258,9 @@ func (c *Core) RefreshSemaphoreLease(req *coreapis.RefreshSemaphoreLeaseRequest)
 	}
 
 	// Check if the lease is expired
-	if lease.ExpiresAt <= req.Payload.Now {
+	if lease.ExpiresAt <= req.Now {
 		// Lease is expired, revoke it by releasing all semaphores and cleaning up
-		err = c.revokeLeaseInTransaction(txn, lease, req.Payload.Now)
+		err = c.revokeLeaseInTransaction(txn, lease, req.Now)
 		if err != nil {
 			return nil, err
 		}
@@ -1271,7 +1283,7 @@ func (c *Core) RefreshSemaphoreLease(req *coreapis.RefreshSemaphoreLeaseRequest)
 	}
 
 	// Update the expiration time
-	lease.ExpiresAt = req.Payload.Now + int64(req.Payload.TtlSeconds)*1e9
+	lease.ExpiresAt = req.Now + int64(req.Payload.TtlSeconds)*1e9
 
 	// Save the updated lease
 	err = c.leases.Update(txn, lease)
@@ -1325,7 +1337,7 @@ func (c *Core) RevokeSemaphoreLease(req *coreapis.RevokeSemaphoreLeaseRequest) (
 	}
 
 	// Revoke the lease
-	err = c.revokeLeaseInTransaction(txn, lease, req.Payload.Now)
+	err = c.revokeLeaseInTransaction(txn, lease, req.Now)
 	if err != nil {
 		return nil, err
 	}
@@ -1354,7 +1366,7 @@ func (c *Core) ListSemaphoreLeasesByProcessId(req *coreapis.ListSemaphoreLeasesB
 
 	// Filter out expired leases
 	activeLeases := lo.Filter(result.Leases, func(lease *corepb.Lease, _ int) bool {
-		return lease.ExpiresAt > req.Payload.Now
+		return lease.ExpiresAt > req.Now
 	})
 
 	return &coreapis.ListSemaphoreLeasesByProcessIdResponse{
@@ -1381,7 +1393,7 @@ func (c *Core) ListSemaphoresByLeaseId(req *coreapis.ListSemaphoresByLeaseIdRequ
 
 	semaphores := make([]*corepb.Semaphore, 0, len(result.semaphores))
 	for _, semaphore := range result.semaphores {
-		updatedSemaphore, _, err := c.computeExpiredSemaphoreHolders(txn, semaphore, req.Payload.Now)
+		updatedSemaphore, _, err := c.computeExpiredSemaphoreHolders(txn, semaphore, req.Now)
 		if err != nil {
 			return nil, err
 		}

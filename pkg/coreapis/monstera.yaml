@@ -3,10 +3,6 @@ go_code:
   core_types_package: github.com/evrblk/grackle/pkg/corepb
 cores:
   - name: GrackleLocks
-    events:
-      - name: LockAcquired
-      - name: LockReleased
-      - name: LockDeleted
     read_methods:
       - name: GetLock
         method_number: 1
@@ -167,10 +163,6 @@ cores:
         sharded: true
 
   - name: GrackleBarriers
-    events:
-      - name: BarrierCreated
-      - name: BarrierDeleted
-      - name: AllArrived
     read_methods:
       - name: GetBarrier
         method_number: 1

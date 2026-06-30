@@ -806,8 +806,8 @@ func TestCore_BarrierMetadata(t *testing.T) {
 			ExpectedProcesses:               2,
 			MaxNumberOfBarriersPerNamespace: 10,
 			Metadata:                        createMetadata,
-			Now:                             now.UnixNano(),
 		},
+		Now: now.UnixNano(),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, createResp)
@@ -829,9 +829,9 @@ func TestCore_BarrierMetadata(t *testing.T) {
 			Description:       "Updated description",
 			ExpectedProcesses: 2,
 			Metadata:          updateMetadata,
-			Now:               updateTime.UnixNano(),
 			ExpectedVersion:   1,
 		},
+		Now: updateTime.UnixNano(),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, updateResp)
@@ -855,8 +855,8 @@ func TestCore_BarrierMetadata(t *testing.T) {
 			ProcessId:   "process_1",
 			Generation:  1,
 			Metadata:    participantMetadata,
-			Now:         now.Add(2 * time.Minute).UnixNano(),
 		},
+		Now: now.Add(2 * time.Minute).UnixNano(),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, arriveResp)
@@ -1230,9 +1230,9 @@ func createBarrierWithDeletion(t *testing.T, core *Core, barrierId *corepb.Barri
 			Description:                     "Test barrier description",
 			ExpectedProcesses:               expectedProcesses,
 			MaxNumberOfBarriersPerNamespace: 100,
-			Now:                             now.UnixNano(),
 			DeleteInactiveAfterSeconds:      deleteInactiveAfterSeconds,
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -1263,11 +1263,11 @@ func createBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, name s
 			Description:                     "Test barrier description",
 			ExpectedProcesses:               expectedProcesses,
 			MaxNumberOfBarriersPerNamespace: maxNumberOfBarriersPerNamespace,
-			Now:                             now.UnixNano(),
 			// Long inactivity window so barriers created by this helper are not
 			// auto-deleted by garbage collection during the test.
 			DeleteInactiveAfterSeconds: int64((time.Hour).Seconds()),
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -1289,9 +1289,9 @@ func createBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierI
 			Description:                     "Test barrier description",
 			ExpectedProcesses:               expectedProcesses,
 			MaxNumberOfBarriersPerNamespace: maxNumberOfBarriersPerNamespace,
-			Now:                             now.UnixNano(),
 			DeleteInactiveAfterSeconds:      int64((time.Hour).Seconds()),
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -1311,8 +1311,8 @@ func arriveAtBarrier(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, 
 			BarrierName: barrierName,
 			ProcessId:   processId,
 			Generation:  generation,
-			Now:         now.UnixNano(),
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -1333,8 +1333,8 @@ func arriveAtBarrierWithError(t *testing.T, core *Core, namespaceId *corepb.Name
 			BarrierName: barrierName,
 			ProcessId:   processId,
 			Generation:  generation,
-			Now:         now.UnixNano(),
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -1441,10 +1441,10 @@ func updateBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, descri
 			BarrierId:                  barrierId,
 			Description:                description,
 			ExpectedProcesses:          expectedProcesses,
-			Now:                        now.UnixNano(),
 			ExpectedVersion:            version,
 			DeleteInactiveAfterSeconds: int64((time.Hour).Seconds()),
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -1463,10 +1463,10 @@ func updateBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierI
 			BarrierId:                  barrierId,
 			Description:                description,
 			ExpectedProcesses:          expectedProcesses,
-			Now:                        now.UnixNano(),
 			ExpectedVersion:            version,
 			DeleteInactiveAfterSeconds: int64((time.Hour).Seconds()),
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -1521,8 +1521,8 @@ func deleteBarrier(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, ba
 			NamespaceId: namespaceId,
 			BarrierName: barrierName,
 			RecordId:    recordId,
-			Now:         now.UnixNano(),
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -1540,8 +1540,8 @@ func barriersDeleteNamespace(t *testing.T, core *Core, namespaceId *corepb.Names
 		Payload: &corepb.BarriersDeleteNamespaceRequest{
 			NamespaceId: namespaceId,
 			RecordId:    recordId,
-			Now:         now.UnixNano(),
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -1555,12 +1555,12 @@ func runBarriersGarbageCollection(t *testing.T, core *Core, now time.Time, gcRec
 
 	resp, err := core.RunBarriersGarbageCollection(&coreapis.RunBarriersGarbageCollectionRequest{
 		Payload: &corepb.RunBarriersGarbageCollectionRequest{
-			Now:                          now.UnixNano(),
 			GcRecordsPageSize:            gcRecordsPageSize,
 			GcRecordBarriersPageSize:     gcRecordBarriersPageSize,
 			GcRecordParticipantsPageSize: gcRecordParticipantsPageSize,
 			MaxVisited:                   maxVisited,
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)

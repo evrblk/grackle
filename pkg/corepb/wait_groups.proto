@@ -11,22 +11,18 @@ message CreateWaitGroupRequest {
   WaitGroupId wait_group_id = 1;
   string name = 2;
   string description = 3;
-  // Caller-supplied current time, Unix nanoseconds. The core is a deterministic
-  // replicated state machine, so the clock is passed in rather than read from the
-  // host. Recurs on most requests with the same meaning.
-  sfixed64 now = 4;
   // Total number of jobs that must complete for the group to finish.
-  int64 counter = 5;
+  int64 counter = 4;
   // Absolute deadline, Unix nanoseconds; the group becomes EXPIRED if it has not
   // completed by then.
-  sfixed64 expires_at = 6;
-  map<string, string> metadata = 7;
+  sfixed64 expires_at = 5;
+  map<string, string> metadata = 6;
   // Per-namespace quota enforced by the core; the create is rejected if it would
   // be exceeded.
-  int64 max_number_of_wait_groups_per_namespace = 8;
+  int64 max_number_of_wait_groups_per_namespace = 7;
   // Retention period: once finished, the group is auto-deleted this many seconds
   // after finished_at.
-  int64 delete_after_finished_seconds = 9;
+  int64 delete_after_finished_seconds = 8;
 }
 
 message CreateWaitGroupResponse {
@@ -37,14 +33,13 @@ message UpdateWaitGroupRequest {
   NamespaceId namespace_id = 1;
   string wait_group_name = 2;
   string description = 3;
-  sfixed64 now = 4;
-  sfixed64 expires_at = 5;
-  int64 counter = 6;
-  map<string, string> metadata = 7;
+  sfixed64 expires_at = 4;
+  int64 counter = 5;
+  map<string, string> metadata = 6;
   // Optimistic concurrency check: must equal the wait group's current version or
   // the update is rejected.
-  int64 expected_version = 8;
-  int64 delete_after_finished_seconds = 9;
+  int64 expected_version = 7;
+  int64 delete_after_finished_seconds = 8;
 }
 
 message UpdateWaitGroupResponse {
@@ -94,7 +89,6 @@ message CompleteJobsFromWaitGroupRequest {
   NamespaceId namespace_id = 1;
   string wait_group_name = 2;
   repeated CompleteJobRequest jobs = 3;
-  sfixed64 now = 4;
 }
 
 message CompleteJobRequest {
@@ -120,10 +114,9 @@ message ListWaitGroupCompletedJobsResponse {
 }
 
 message RunWaitGroupsGarbageCollectionRequest {
-  sfixed64 now = 1;
-  int64 gc_records_page_size = 2;
-  int64 gc_record_wait_groups_page_size = 3;
-  int64 max_deleted_objects = 4;
+  int64 gc_records_page_size = 1;
+  int64 gc_record_wait_groups_page_size = 2;
+  int64 max_deleted_objects = 3;
 }
 
 message RunWaitGroupsGarbageCollectionResponse {}
@@ -131,7 +124,6 @@ message RunWaitGroupsGarbageCollectionResponse {}
 message WaitGroupsDeleteNamespaceRequest {
   fixed64 record_id = 1;
   NamespaceId namespace_id = 2;
-  sfixed64 now = 3;
 }
 
 message WaitGroupsDeleteNamespaceResponse {}

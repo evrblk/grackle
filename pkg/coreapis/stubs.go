@@ -12,6 +12,7 @@ import (
 	cluster "github.com/evrblk/monstera/cluster"
 	mrpc "github.com/evrblk/monstera/rpc"
 	"sync"
+	"time"
 )
 
 type GrackleMonsteraStub struct {
@@ -29,6 +30,7 @@ func (s *GrackleMonsteraStub) GetLock(ctx context.Context, request *corepb.GetLo
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 1,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -63,6 +65,7 @@ func (s *GrackleMonsteraStub) ListLocks(ctx context.Context, request *corepb.Lis
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 2,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -97,6 +100,7 @@ func (s *GrackleMonsteraStub) ListLocksByLeaseId(ctx context.Context, request *c
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 3,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -131,6 +135,7 @@ func (s *GrackleMonsteraStub) ListLockLeases(ctx context.Context, request *corep
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 4,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -165,6 +170,7 @@ func (s *GrackleMonsteraStub) ListLockLeasesByProcessId(ctx context.Context, req
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 5,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -199,6 +205,7 @@ func (s *GrackleMonsteraStub) GetLockLease(ctx context.Context, request *corepb.
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 6,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -233,6 +240,7 @@ func (s *GrackleMonsteraStub) AcquireLock(ctx context.Context, request *corepb.A
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 1,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -267,6 +275,7 @@ func (s *GrackleMonsteraStub) ReleaseLock(ctx context.Context, request *corepb.R
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 2,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -301,6 +310,7 @@ func (s *GrackleMonsteraStub) DeleteLock(ctx context.Context, request *corepb.De
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 3,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -335,6 +345,7 @@ func (s *GrackleMonsteraStub) RunLocksGarbageCollection(ctx context.Context, req
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 4,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -369,6 +380,7 @@ func (s *GrackleMonsteraStub) LocksDeleteNamespace(ctx context.Context, request 
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 5,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -403,6 +415,7 @@ func (s *GrackleMonsteraStub) CreateLockLease(ctx context.Context, request *core
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 6,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -437,6 +450,7 @@ func (s *GrackleMonsteraStub) RefreshLockLease(ctx context.Context, request *cor
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 7,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -471,6 +485,7 @@ func (s *GrackleMonsteraStub) RevokeLockLease(ctx context.Context, request *core
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 8,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -505,6 +520,7 @@ func (s *GrackleMonsteraStub) GetSemaphore(ctx context.Context, request *corepb.
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 1,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -539,6 +555,7 @@ func (s *GrackleMonsteraStub) GetSemaphoreByName(ctx context.Context, request *c
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 2,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -573,6 +590,7 @@ func (s *GrackleMonsteraStub) ListSemaphores(ctx context.Context, request *corep
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 3,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -607,6 +625,7 @@ func (s *GrackleMonsteraStub) ListSemaphoresByLeaseId(ctx context.Context, reque
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 4,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -641,6 +660,7 @@ func (s *GrackleMonsteraStub) ListSemaphoreHolders(ctx context.Context, request 
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 5,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -675,6 +695,7 @@ func (s *GrackleMonsteraStub) ListSemaphoreLeases(ctx context.Context, request *
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 6,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -709,6 +730,7 @@ func (s *GrackleMonsteraStub) ListSemaphoreLeasesByProcessId(ctx context.Context
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 7,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -743,6 +765,7 @@ func (s *GrackleMonsteraStub) GetSemaphoreLease(ctx context.Context, request *co
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 8,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -777,6 +800,7 @@ func (s *GrackleMonsteraStub) AcquireSemaphore(ctx context.Context, request *cor
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 1,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -811,6 +835,7 @@ func (s *GrackleMonsteraStub) ReleaseSemaphore(ctx context.Context, request *cor
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 2,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -845,6 +870,7 @@ func (s *GrackleMonsteraStub) CreateSemaphore(ctx context.Context, request *core
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 3,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -879,6 +905,7 @@ func (s *GrackleMonsteraStub) UpdateSemaphore(ctx context.Context, request *core
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 4,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -913,6 +940,7 @@ func (s *GrackleMonsteraStub) DeleteSemaphore(ctx context.Context, request *core
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 5,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -947,6 +975,7 @@ func (s *GrackleMonsteraStub) RunSemaphoresGarbageCollection(ctx context.Context
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 6,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -981,6 +1010,7 @@ func (s *GrackleMonsteraStub) SemaphoresDeleteNamespace(ctx context.Context, req
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 7,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1015,6 +1045,7 @@ func (s *GrackleMonsteraStub) CreateSemaphoreLease(ctx context.Context, request 
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 8,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1049,6 +1080,7 @@ func (s *GrackleMonsteraStub) RevokeSemaphoreLease(ctx context.Context, request 
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 9,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1083,6 +1115,7 @@ func (s *GrackleMonsteraStub) RefreshSemaphoreLease(ctx context.Context, request
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 10,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1117,6 +1150,7 @@ func (s *GrackleMonsteraStub) GetNamespace(ctx context.Context, request *corepb.
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 1,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1151,6 +1185,7 @@ func (s *GrackleMonsteraStub) GetNamespaceByName(ctx context.Context, request *c
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 2,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1185,6 +1220,7 @@ func (s *GrackleMonsteraStub) ListNamespaces(ctx context.Context, request *corep
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 3,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1219,6 +1255,7 @@ func (s *GrackleMonsteraStub) CreateNamespace(ctx context.Context, request *core
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 1,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1253,6 +1290,7 @@ func (s *GrackleMonsteraStub) UpdateNamespace(ctx context.Context, request *core
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 2,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1287,6 +1325,7 @@ func (s *GrackleMonsteraStub) DeleteNamespace(ctx context.Context, request *core
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 3,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1321,6 +1360,7 @@ func (s *GrackleMonsteraStub) GetWaitGroup(ctx context.Context, request *corepb.
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 1,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1355,6 +1395,7 @@ func (s *GrackleMonsteraStub) GetWaitGroupByName(ctx context.Context, request *c
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 2,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1389,6 +1430,7 @@ func (s *GrackleMonsteraStub) ListWaitGroups(ctx context.Context, request *corep
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 3,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1423,6 +1465,7 @@ func (s *GrackleMonsteraStub) ListWaitGroupCompletedJobs(ctx context.Context, re
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 4,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1457,6 +1500,7 @@ func (s *GrackleMonsteraStub) UpdateWaitGroup(ctx context.Context, request *core
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 1,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1491,6 +1535,7 @@ func (s *GrackleMonsteraStub) CompleteJobsFromWaitGroup(ctx context.Context, req
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 2,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1525,6 +1570,7 @@ func (s *GrackleMonsteraStub) CreateWaitGroup(ctx context.Context, request *core
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 3,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1559,6 +1605,7 @@ func (s *GrackleMonsteraStub) DeleteWaitGroup(ctx context.Context, request *core
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 4,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1593,6 +1640,7 @@ func (s *GrackleMonsteraStub) RunWaitGroupsGarbageCollection(ctx context.Context
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 5,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1627,6 +1675,7 @@ func (s *GrackleMonsteraStub) WaitGroupsDeleteNamespace(ctx context.Context, req
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 6,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1661,6 +1710,7 @@ func (s *GrackleMonsteraStub) GetBarrier(ctx context.Context, request *corepb.Ge
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 1,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1695,6 +1745,7 @@ func (s *GrackleMonsteraStub) GetBarrierByName(ctx context.Context, request *cor
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 2,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1729,6 +1780,7 @@ func (s *GrackleMonsteraStub) ListBarriers(ctx context.Context, request *corepb.
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 3,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1763,6 +1815,7 @@ func (s *GrackleMonsteraStub) ListBarrierParticipants(ctx context.Context, reque
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 4,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1797,6 +1850,7 @@ func (s *GrackleMonsteraStub) CreateBarrier(ctx context.Context, request *corepb
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 1,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1831,6 +1885,7 @@ func (s *GrackleMonsteraStub) DeleteBarrier(ctx context.Context, request *corepb
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 2,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1865,6 +1920,7 @@ func (s *GrackleMonsteraStub) UpdateBarrier(ctx context.Context, request *corepb
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 3,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1899,6 +1955,7 @@ func (s *GrackleMonsteraStub) ArriveAtBarrier(ctx context.Context, request *core
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 4,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1933,6 +1990,7 @@ func (s *GrackleMonsteraStub) RunBarriersGarbageCollection(ctx context.Context, 
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 5,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -1967,6 +2025,7 @@ func (s *GrackleMonsteraStub) BarriersDeleteNamespace(ctx context.Context, reque
 	appRequest := &mrpc.Request{
 		Data:         data,
 		MethodNumber: 6,
+		Now:          time.Now().UnixNano(),
 	}
 	requestBytes, err := appRequest.MarshalVT()
 	if err != nil {
@@ -2080,7 +2139,10 @@ func (s *GrackleNonclusteredStub) GetLock(ctx context.Context, request *corepb.G
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.GetLock(&mrpc.ReadRequest[*corepb.GetLockRequest]{Payload: request})
+			response, err := adapter.core.GetLock(&mrpc.ReadRequest[*corepb.GetLockRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2102,7 +2164,10 @@ func (s *GrackleNonclusteredStub) ListLocks(ctx context.Context, request *corepb
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListLocks(&mrpc.ReadRequest[*corepb.ListLocksRequest]{Payload: request})
+			response, err := adapter.core.ListLocks(&mrpc.ReadRequest[*corepb.ListLocksRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2124,7 +2189,10 @@ func (s *GrackleNonclusteredStub) ListLocksByLeaseId(ctx context.Context, reques
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListLocksByLeaseId(&mrpc.ReadRequest[*corepb.ListLocksByLeaseIdRequest]{Payload: request})
+			response, err := adapter.core.ListLocksByLeaseId(&mrpc.ReadRequest[*corepb.ListLocksByLeaseIdRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2146,7 +2214,10 @@ func (s *GrackleNonclusteredStub) ListLockLeases(ctx context.Context, request *c
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListLockLeases(&mrpc.ReadRequest[*corepb.ListLockLeasesRequest]{Payload: request})
+			response, err := adapter.core.ListLockLeases(&mrpc.ReadRequest[*corepb.ListLockLeasesRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2168,7 +2239,10 @@ func (s *GrackleNonclusteredStub) ListLockLeasesByProcessId(ctx context.Context,
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListLockLeasesByProcessId(&mrpc.ReadRequest[*corepb.ListLockLeasesByProcessIdRequest]{Payload: request})
+			response, err := adapter.core.ListLockLeasesByProcessId(&mrpc.ReadRequest[*corepb.ListLockLeasesByProcessIdRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2190,7 +2264,10 @@ func (s *GrackleNonclusteredStub) GetLockLease(ctx context.Context, request *cor
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.GetLockLease(&mrpc.ReadRequest[*corepb.GetLockLeaseRequest]{Payload: request})
+			response, err := adapter.core.GetLockLease(&mrpc.ReadRequest[*corepb.GetLockLeaseRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2212,7 +2289,10 @@ func (s *GrackleNonclusteredStub) AcquireLock(ctx context.Context, request *core
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.AcquireLock(&mrpc.UpdateRequest[*corepb.AcquireLockRequest]{Payload: request})
+			response, err := adapter.core.AcquireLock(&mrpc.UpdateRequest[*corepb.AcquireLockRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2234,7 +2314,10 @@ func (s *GrackleNonclusteredStub) ReleaseLock(ctx context.Context, request *core
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.ReleaseLock(&mrpc.UpdateRequest[*corepb.ReleaseLockRequest]{Payload: request})
+			response, err := adapter.core.ReleaseLock(&mrpc.UpdateRequest[*corepb.ReleaseLockRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2256,7 +2339,10 @@ func (s *GrackleNonclusteredStub) DeleteLock(ctx context.Context, request *corep
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.DeleteLock(&mrpc.UpdateRequest[*corepb.DeleteLockRequest]{Payload: request})
+			response, err := adapter.core.DeleteLock(&mrpc.UpdateRequest[*corepb.DeleteLockRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2277,7 +2363,10 @@ func (s *GrackleNonclusteredStub) RunLocksGarbageCollection(ctx context.Context,
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.RunLocksGarbageCollection(&mrpc.UpdateUnshardedRequest[*corepb.RunLocksGarbageCollectionRequest]{Payload: request})
+			response, err := adapter.core.RunLocksGarbageCollection(&mrpc.UpdateUnshardedRequest[*corepb.RunLocksGarbageCollectionRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2299,7 +2388,10 @@ func (s *GrackleNonclusteredStub) LocksDeleteNamespace(ctx context.Context, requ
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.LocksDeleteNamespace(&mrpc.UpdateRequest[*corepb.LocksDeleteNamespaceRequest]{Payload: request})
+			response, err := adapter.core.LocksDeleteNamespace(&mrpc.UpdateRequest[*corepb.LocksDeleteNamespaceRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2321,7 +2413,10 @@ func (s *GrackleNonclusteredStub) CreateLockLease(ctx context.Context, request *
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.CreateLockLease(&mrpc.UpdateRequest[*corepb.CreateLockLeaseRequest]{Payload: request})
+			response, err := adapter.core.CreateLockLease(&mrpc.UpdateRequest[*corepb.CreateLockLeaseRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2343,7 +2438,10 @@ func (s *GrackleNonclusteredStub) RefreshLockLease(ctx context.Context, request 
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.RefreshLockLease(&mrpc.UpdateRequest[*corepb.RefreshLockLeaseRequest]{Payload: request})
+			response, err := adapter.core.RefreshLockLease(&mrpc.UpdateRequest[*corepb.RefreshLockLeaseRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2365,7 +2463,10 @@ func (s *GrackleNonclusteredStub) RevokeLockLease(ctx context.Context, request *
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.RevokeLockLease(&mrpc.UpdateRequest[*corepb.RevokeLockLeaseRequest]{Payload: request})
+			response, err := adapter.core.RevokeLockLease(&mrpc.UpdateRequest[*corepb.RevokeLockLeaseRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2387,7 +2488,10 @@ func (s *GrackleNonclusteredStub) GetSemaphore(ctx context.Context, request *cor
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.GetSemaphore(&mrpc.ReadRequest[*corepb.GetSemaphoreRequest]{Payload: request})
+			response, err := adapter.core.GetSemaphore(&mrpc.ReadRequest[*corepb.GetSemaphoreRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2409,7 +2513,10 @@ func (s *GrackleNonclusteredStub) GetSemaphoreByName(ctx context.Context, reques
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.GetSemaphoreByName(&mrpc.ReadRequest[*corepb.GetSemaphoreByNameRequest]{Payload: request})
+			response, err := adapter.core.GetSemaphoreByName(&mrpc.ReadRequest[*corepb.GetSemaphoreByNameRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2431,7 +2538,10 @@ func (s *GrackleNonclusteredStub) ListSemaphores(ctx context.Context, request *c
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListSemaphores(&mrpc.ReadRequest[*corepb.ListSemaphoresRequest]{Payload: request})
+			response, err := adapter.core.ListSemaphores(&mrpc.ReadRequest[*corepb.ListSemaphoresRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2453,7 +2563,10 @@ func (s *GrackleNonclusteredStub) ListSemaphoresByLeaseId(ctx context.Context, r
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListSemaphoresByLeaseId(&mrpc.ReadRequest[*corepb.ListSemaphoresByLeaseIdRequest]{Payload: request})
+			response, err := adapter.core.ListSemaphoresByLeaseId(&mrpc.ReadRequest[*corepb.ListSemaphoresByLeaseIdRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2475,7 +2588,10 @@ func (s *GrackleNonclusteredStub) ListSemaphoreHolders(ctx context.Context, requ
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListSemaphoreHolders(&mrpc.ReadRequest[*corepb.ListSemaphoreHoldersRequest]{Payload: request})
+			response, err := adapter.core.ListSemaphoreHolders(&mrpc.ReadRequest[*corepb.ListSemaphoreHoldersRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2497,7 +2613,10 @@ func (s *GrackleNonclusteredStub) ListSemaphoreLeases(ctx context.Context, reque
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListSemaphoreLeases(&mrpc.ReadRequest[*corepb.ListSemaphoreLeasesRequest]{Payload: request})
+			response, err := adapter.core.ListSemaphoreLeases(&mrpc.ReadRequest[*corepb.ListSemaphoreLeasesRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2519,7 +2638,10 @@ func (s *GrackleNonclusteredStub) ListSemaphoreLeasesByProcessId(ctx context.Con
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListSemaphoreLeasesByProcessId(&mrpc.ReadRequest[*corepb.ListSemaphoreLeasesByProcessIdRequest]{Payload: request})
+			response, err := adapter.core.ListSemaphoreLeasesByProcessId(&mrpc.ReadRequest[*corepb.ListSemaphoreLeasesByProcessIdRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2541,7 +2663,10 @@ func (s *GrackleNonclusteredStub) GetSemaphoreLease(ctx context.Context, request
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.GetSemaphoreLease(&mrpc.ReadRequest[*corepb.GetSemaphoreLeaseRequest]{Payload: request})
+			response, err := adapter.core.GetSemaphoreLease(&mrpc.ReadRequest[*corepb.GetSemaphoreLeaseRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2563,7 +2688,10 @@ func (s *GrackleNonclusteredStub) AcquireSemaphore(ctx context.Context, request 
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.AcquireSemaphore(&mrpc.UpdateRequest[*corepb.AcquireSemaphoreRequest]{Payload: request})
+			response, err := adapter.core.AcquireSemaphore(&mrpc.UpdateRequest[*corepb.AcquireSemaphoreRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2585,7 +2713,10 @@ func (s *GrackleNonclusteredStub) ReleaseSemaphore(ctx context.Context, request 
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.ReleaseSemaphore(&mrpc.UpdateRequest[*corepb.ReleaseSemaphoreRequest]{Payload: request})
+			response, err := adapter.core.ReleaseSemaphore(&mrpc.UpdateRequest[*corepb.ReleaseSemaphoreRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2607,7 +2738,10 @@ func (s *GrackleNonclusteredStub) CreateSemaphore(ctx context.Context, request *
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.CreateSemaphore(&mrpc.UpdateRequest[*corepb.CreateSemaphoreRequest]{Payload: request})
+			response, err := adapter.core.CreateSemaphore(&mrpc.UpdateRequest[*corepb.CreateSemaphoreRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2629,7 +2763,10 @@ func (s *GrackleNonclusteredStub) UpdateSemaphore(ctx context.Context, request *
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.UpdateSemaphore(&mrpc.UpdateRequest[*corepb.UpdateSemaphoreRequest]{Payload: request})
+			response, err := adapter.core.UpdateSemaphore(&mrpc.UpdateRequest[*corepb.UpdateSemaphoreRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2651,7 +2788,10 @@ func (s *GrackleNonclusteredStub) DeleteSemaphore(ctx context.Context, request *
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.DeleteSemaphore(&mrpc.UpdateRequest[*corepb.DeleteSemaphoreRequest]{Payload: request})
+			response, err := adapter.core.DeleteSemaphore(&mrpc.UpdateRequest[*corepb.DeleteSemaphoreRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2672,7 +2812,10 @@ func (s *GrackleNonclusteredStub) RunSemaphoresGarbageCollection(ctx context.Con
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.RunSemaphoresGarbageCollection(&mrpc.UpdateUnshardedRequest[*corepb.RunSemaphoresGarbageCollectionRequest]{Payload: request})
+			response, err := adapter.core.RunSemaphoresGarbageCollection(&mrpc.UpdateUnshardedRequest[*corepb.RunSemaphoresGarbageCollectionRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2694,7 +2837,10 @@ func (s *GrackleNonclusteredStub) SemaphoresDeleteNamespace(ctx context.Context,
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.SemaphoresDeleteNamespace(&mrpc.UpdateRequest[*corepb.SemaphoresDeleteNamespaceRequest]{Payload: request})
+			response, err := adapter.core.SemaphoresDeleteNamespace(&mrpc.UpdateRequest[*corepb.SemaphoresDeleteNamespaceRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2716,7 +2862,10 @@ func (s *GrackleNonclusteredStub) CreateSemaphoreLease(ctx context.Context, requ
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.CreateSemaphoreLease(&mrpc.UpdateRequest[*corepb.CreateSemaphoreLeaseRequest]{Payload: request})
+			response, err := adapter.core.CreateSemaphoreLease(&mrpc.UpdateRequest[*corepb.CreateSemaphoreLeaseRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2738,7 +2887,10 @@ func (s *GrackleNonclusteredStub) RevokeSemaphoreLease(ctx context.Context, requ
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.RevokeSemaphoreLease(&mrpc.UpdateRequest[*corepb.RevokeSemaphoreLeaseRequest]{Payload: request})
+			response, err := adapter.core.RevokeSemaphoreLease(&mrpc.UpdateRequest[*corepb.RevokeSemaphoreLeaseRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2760,7 +2912,10 @@ func (s *GrackleNonclusteredStub) RefreshSemaphoreLease(ctx context.Context, req
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.RefreshSemaphoreLease(&mrpc.UpdateRequest[*corepb.RefreshSemaphoreLeaseRequest]{Payload: request})
+			response, err := adapter.core.RefreshSemaphoreLease(&mrpc.UpdateRequest[*corepb.RefreshSemaphoreLeaseRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2782,7 +2937,10 @@ func (s *GrackleNonclusteredStub) GetNamespace(ctx context.Context, request *cor
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.GetNamespace(&mrpc.ReadRequest[*corepb.GetNamespaceRequest]{Payload: request})
+			response, err := adapter.core.GetNamespace(&mrpc.ReadRequest[*corepb.GetNamespaceRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2804,7 +2962,10 @@ func (s *GrackleNonclusteredStub) GetNamespaceByName(ctx context.Context, reques
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.GetNamespaceByName(&mrpc.ReadRequest[*corepb.GetNamespaceByNameRequest]{Payload: request})
+			response, err := adapter.core.GetNamespaceByName(&mrpc.ReadRequest[*corepb.GetNamespaceByNameRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2826,7 +2987,10 @@ func (s *GrackleNonclusteredStub) ListNamespaces(ctx context.Context, request *c
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListNamespaces(&mrpc.ReadRequest[*corepb.ListNamespacesRequest]{Payload: request})
+			response, err := adapter.core.ListNamespaces(&mrpc.ReadRequest[*corepb.ListNamespacesRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2848,7 +3012,10 @@ func (s *GrackleNonclusteredStub) CreateNamespace(ctx context.Context, request *
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.CreateNamespace(&mrpc.UpdateRequest[*corepb.CreateNamespaceRequest]{Payload: request})
+			response, err := adapter.core.CreateNamespace(&mrpc.UpdateRequest[*corepb.CreateNamespaceRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2870,7 +3037,10 @@ func (s *GrackleNonclusteredStub) UpdateNamespace(ctx context.Context, request *
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.UpdateNamespace(&mrpc.UpdateRequest[*corepb.UpdateNamespaceRequest]{Payload: request})
+			response, err := adapter.core.UpdateNamespace(&mrpc.UpdateRequest[*corepb.UpdateNamespaceRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2892,7 +3062,10 @@ func (s *GrackleNonclusteredStub) DeleteNamespace(ctx context.Context, request *
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.DeleteNamespace(&mrpc.UpdateRequest[*corepb.DeleteNamespaceRequest]{Payload: request})
+			response, err := adapter.core.DeleteNamespace(&mrpc.UpdateRequest[*corepb.DeleteNamespaceRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2914,7 +3087,10 @@ func (s *GrackleNonclusteredStub) GetWaitGroup(ctx context.Context, request *cor
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.GetWaitGroup(&mrpc.ReadRequest[*corepb.GetWaitGroupRequest]{Payload: request})
+			response, err := adapter.core.GetWaitGroup(&mrpc.ReadRequest[*corepb.GetWaitGroupRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2936,7 +3112,10 @@ func (s *GrackleNonclusteredStub) GetWaitGroupByName(ctx context.Context, reques
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.GetWaitGroupByName(&mrpc.ReadRequest[*corepb.GetWaitGroupByNameRequest]{Payload: request})
+			response, err := adapter.core.GetWaitGroupByName(&mrpc.ReadRequest[*corepb.GetWaitGroupByNameRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2958,7 +3137,10 @@ func (s *GrackleNonclusteredStub) ListWaitGroups(ctx context.Context, request *c
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListWaitGroups(&mrpc.ReadRequest[*corepb.ListWaitGroupsRequest]{Payload: request})
+			response, err := adapter.core.ListWaitGroups(&mrpc.ReadRequest[*corepb.ListWaitGroupsRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -2980,7 +3162,10 @@ func (s *GrackleNonclusteredStub) ListWaitGroupCompletedJobs(ctx context.Context
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListWaitGroupCompletedJobs(&mrpc.ReadRequest[*corepb.ListWaitGroupCompletedJobsRequest]{Payload: request})
+			response, err := adapter.core.ListWaitGroupCompletedJobs(&mrpc.ReadRequest[*corepb.ListWaitGroupCompletedJobsRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -3002,7 +3187,10 @@ func (s *GrackleNonclusteredStub) UpdateWaitGroup(ctx context.Context, request *
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.UpdateWaitGroup(&mrpc.UpdateRequest[*corepb.UpdateWaitGroupRequest]{Payload: request})
+			response, err := adapter.core.UpdateWaitGroup(&mrpc.UpdateRequest[*corepb.UpdateWaitGroupRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -3024,7 +3212,10 @@ func (s *GrackleNonclusteredStub) CompleteJobsFromWaitGroup(ctx context.Context,
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.CompleteJobsFromWaitGroup(&mrpc.UpdateRequest[*corepb.CompleteJobsFromWaitGroupRequest]{Payload: request})
+			response, err := adapter.core.CompleteJobsFromWaitGroup(&mrpc.UpdateRequest[*corepb.CompleteJobsFromWaitGroupRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -3046,7 +3237,10 @@ func (s *GrackleNonclusteredStub) CreateWaitGroup(ctx context.Context, request *
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.CreateWaitGroup(&mrpc.UpdateRequest[*corepb.CreateWaitGroupRequest]{Payload: request})
+			response, err := adapter.core.CreateWaitGroup(&mrpc.UpdateRequest[*corepb.CreateWaitGroupRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -3068,7 +3262,10 @@ func (s *GrackleNonclusteredStub) DeleteWaitGroup(ctx context.Context, request *
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.DeleteWaitGroup(&mrpc.UpdateRequest[*corepb.DeleteWaitGroupRequest]{Payload: request})
+			response, err := adapter.core.DeleteWaitGroup(&mrpc.UpdateRequest[*corepb.DeleteWaitGroupRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -3089,7 +3286,10 @@ func (s *GrackleNonclusteredStub) RunWaitGroupsGarbageCollection(ctx context.Con
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.RunWaitGroupsGarbageCollection(&mrpc.UpdateUnshardedRequest[*corepb.RunWaitGroupsGarbageCollectionRequest]{Payload: request})
+			response, err := adapter.core.RunWaitGroupsGarbageCollection(&mrpc.UpdateUnshardedRequest[*corepb.RunWaitGroupsGarbageCollectionRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -3111,7 +3311,10 @@ func (s *GrackleNonclusteredStub) WaitGroupsDeleteNamespace(ctx context.Context,
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.WaitGroupsDeleteNamespace(&mrpc.UpdateRequest[*corepb.WaitGroupsDeleteNamespaceRequest]{Payload: request})
+			response, err := adapter.core.WaitGroupsDeleteNamespace(&mrpc.UpdateRequest[*corepb.WaitGroupsDeleteNamespaceRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -3133,7 +3336,10 @@ func (s *GrackleNonclusteredStub) GetBarrier(ctx context.Context, request *corep
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.GetBarrier(&mrpc.ReadRequest[*corepb.GetBarrierRequest]{Payload: request})
+			response, err := adapter.core.GetBarrier(&mrpc.ReadRequest[*corepb.GetBarrierRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -3155,7 +3361,10 @@ func (s *GrackleNonclusteredStub) GetBarrierByName(ctx context.Context, request 
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.GetBarrierByName(&mrpc.ReadRequest[*corepb.GetBarrierByNameRequest]{Payload: request})
+			response, err := adapter.core.GetBarrierByName(&mrpc.ReadRequest[*corepb.GetBarrierByNameRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -3177,7 +3386,10 @@ func (s *GrackleNonclusteredStub) ListBarriers(ctx context.Context, request *cor
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListBarriers(&mrpc.ReadRequest[*corepb.ListBarriersRequest]{Payload: request})
+			response, err := adapter.core.ListBarriers(&mrpc.ReadRequest[*corepb.ListBarriersRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -3199,7 +3411,10 @@ func (s *GrackleNonclusteredStub) ListBarrierParticipants(ctx context.Context, r
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListBarrierParticipants(&mrpc.ReadRequest[*corepb.ListBarrierParticipantsRequest]{Payload: request})
+			response, err := adapter.core.ListBarrierParticipants(&mrpc.ReadRequest[*corepb.ListBarrierParticipantsRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -3221,7 +3436,10 @@ func (s *GrackleNonclusteredStub) CreateBarrier(ctx context.Context, request *co
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.CreateBarrier(&mrpc.UpdateRequest[*corepb.CreateBarrierRequest]{Payload: request})
+			response, err := adapter.core.CreateBarrier(&mrpc.UpdateRequest[*corepb.CreateBarrierRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -3243,7 +3461,10 @@ func (s *GrackleNonclusteredStub) DeleteBarrier(ctx context.Context, request *co
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.DeleteBarrier(&mrpc.UpdateRequest[*corepb.DeleteBarrierRequest]{Payload: request})
+			response, err := adapter.core.DeleteBarrier(&mrpc.UpdateRequest[*corepb.DeleteBarrierRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -3265,7 +3486,10 @@ func (s *GrackleNonclusteredStub) UpdateBarrier(ctx context.Context, request *co
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.UpdateBarrier(&mrpc.UpdateRequest[*corepb.UpdateBarrierRequest]{Payload: request})
+			response, err := adapter.core.UpdateBarrier(&mrpc.UpdateRequest[*corepb.UpdateBarrierRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -3287,7 +3511,10 @@ func (s *GrackleNonclusteredStub) ArriveAtBarrier(ctx context.Context, request *
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.ArriveAtBarrier(&mrpc.UpdateRequest[*corepb.ArriveAtBarrierRequest]{Payload: request})
+			response, err := adapter.core.ArriveAtBarrier(&mrpc.UpdateRequest[*corepb.ArriveAtBarrierRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -3308,7 +3535,10 @@ func (s *GrackleNonclusteredStub) RunBarriersGarbageCollection(ctx context.Conte
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.RunBarriersGarbageCollection(&mrpc.UpdateUnshardedRequest[*corepb.RunBarriersGarbageCollectionRequest]{Payload: request})
+			response, err := adapter.core.RunBarriersGarbageCollection(&mrpc.UpdateUnshardedRequest[*corepb.RunBarriersGarbageCollectionRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -3330,7 +3560,10 @@ func (s *GrackleNonclusteredStub) BarriersDeleteNamespace(ctx context.Context, r
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.BarriersDeleteNamespace(&mrpc.UpdateRequest[*corepb.BarriersDeleteNamespaceRequest]{Payload: request})
+			response, err := adapter.core.BarriersDeleteNamespace(&mrpc.UpdateRequest[*corepb.BarriersDeleteNamespaceRequest]{
+				Now:     time.Now().UnixNano(),
+				Payload: request,
+			})
 			if err != nil {
 				return nil, err
 			}

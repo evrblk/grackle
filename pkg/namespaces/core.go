@@ -16,6 +16,9 @@ import (
 	"github.com/evrblk/grackle/pkg/pagination"
 )
 
+// Core implements the per-shard namespaces state machine on top of a Badger store.
+// It is the Monstera application core for the namespaces service and owns the
+// namespaces, their name index, and the per-account namespace counters.
 type Core struct {
 	badgerStore *store.BadgerStore
 
@@ -25,6 +28,9 @@ type Core struct {
 
 var _ coreapis.GrackleNamespacesCoreApi = &Core{}
 
+// NewCore constructs a Core bound to a single shard of the namespaces keyspace.
+// The given lower/upper bounds delimit the shard's local key range (used for
+// Snapshot/Restore).
 func NewCore(badgerStore *store.BadgerStore, shardLowerBound []byte, shardUpperBound []byte) *Core {
 	return &Core{
 		badgerStore: badgerStore,
@@ -42,18 +48,30 @@ func (c *Core) ranges() []honey.KeyRange {
 	return ranges
 }
 
+// Snapshot returns a consistent snapshot of every key range owned by this
+// shard's namespaces Core, suitable for Raft snapshot transfer.
 func (c *Core) Snapshot() monstera.ApplicationCoreSnapshot {
 	return honey.Snapshot(c.badgerStore, c.ranges())
 }
 
+// Restore replaces the contents of this shard's key ranges with the data read
+// from reader. Any existing keys in those ranges are removed first.
 func (c *Core) Restore(reader io.ReadCloser) error {
 	return honey.Restore(c.badgerStore, c.ranges(), reader)
 }
 
+// Close releases any Core-owned resources. The underlying Badger store is
+// shared across cores and is not closed here.
 func (c *Core) Close() {
 
 }
 
+// CreateNamespace creates a new namespace and bumps the per-account namespace
+// counter. Returns InvalidRequest if the name is empty, AlreadyExists if a
+// namespace with the same name already exists in the account, ResourceExhausted
+// if creating it would exceed MaxNumberOfNamespaces, or IDCollision if the
+// randomly generated id is already taken (the caller regenerates the id and
+// retries; IDCollision is never surfaced to clients).
 func (c *Core) CreateNamespace(req *coreapis.CreateNamespaceRequest) (*coreapis.CreateNamespaceResponse, error) {
 	if req.Payload.Name == "" {
 		return &coreapis.CreateNamespaceResponse{
@@ -121,8 +139,8 @@ func (c *Core) CreateNamespace(req *coreapis.CreateNamespaceRequest) (*coreapis.
 		Id:          req.Payload.NamespaceId,
 		Name:        req.Payload.Name,
 		Description: req.Payload.Description,
-		CreatedAt:   req.Payload.Now,
-		UpdatedAt:   req.Payload.Now,
+		CreatedAt:   req.Now,
+		UpdatedAt:   req.Now,
 		Metadata:    req.Payload.Metadata,
 		Version:     1,
 	}
@@ -151,6 +169,10 @@ func (c *Core) CreateNamespace(req *coreapis.CreateNamespaceRequest) (*coreapis.
 	}, nil
 }
 
+// UpdateNamespace updates the description and metadata of an existing namespace
+// and bumps its version. It uses optimistic concurrency: returns InvalidRequest
+// on a version mismatch (ExpectedVersion != the stored version), or NotFound if
+// the namespace does not exist. The namespace name is immutable.
 func (c *Core) UpdateNamespace(req *coreapis.UpdateNamespaceRequest) (*coreapis.UpdateNamespaceResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
@@ -185,7 +207,7 @@ func (c *Core) UpdateNamespace(req *coreapis.UpdateNamespaceRequest) (*coreapis.
 	}
 
 	namespace.Description = req.Payload.Description
-	namespace.UpdatedAt = req.Payload.Now
+	namespace.UpdatedAt = req.Now
 	namespace.Metadata = req.Payload.Metadata
 	namespace.Version += 1
 
@@ -206,6 +228,11 @@ func (c *Core) UpdateNamespace(req *coreapis.UpdateNamespaceRequest) (*coreapis.
 	}, nil
 }
 
+// DeleteNamespace removes the named namespace and decrements the per-account
+// namespace counter. Deleting a namespace that does not exist is a no-op and
+// returns success. This deletes only the namespace row and its counter; the
+// primitives (locks, semaphores, wait groups, barriers) living in the namespace
+// are torn down separately by the front handler's cross-primitive fan-out.
 func (c *Core) DeleteNamespace(req *coreapis.DeleteNamespaceRequest) (*coreapis.DeleteNamespaceResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
@@ -249,6 +276,8 @@ func (c *Core) DeleteNamespace(req *coreapis.DeleteNamespaceRequest) (*coreapis.
 	}, nil
 }
 
+// GetNamespace looks up a namespace by its full NamespaceId. Returns a NotFound
+// application error if no namespace with that id exists.
 func (c *Core) GetNamespace(req *coreapis.GetNamespaceRequest) (*coreapis.GetNamespaceResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
@@ -275,6 +304,8 @@ func (c *Core) GetNamespace(req *coreapis.GetNamespaceRequest) (*coreapis.GetNam
 	}, nil
 }
 
+// GetNamespaceByName looks up a namespace by its (account, name) pair. Returns a
+// NotFound application error if no namespace with that name exists in the account.
 func (c *Core) GetNamespaceByName(req *coreapis.GetNamespaceByNameRequest) (*coreapis.GetNamespaceByNameResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
@@ -301,6 +332,9 @@ func (c *Core) GetNamespaceByName(req *coreapis.GetNamespaceByNameRequest) (*cor
 	}, nil
 }
 
+// ListNamespaces returns a page of namespaces in the given account, ordered by
+// name. Use the returned NextPaginationToken / PreviousPaginationToken to walk
+// forward or backward through pages.
 func (c *Core) ListNamespaces(req *coreapis.ListNamespacesRequest) (*coreapis.ListNamespacesResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()

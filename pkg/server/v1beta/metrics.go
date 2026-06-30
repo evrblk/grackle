@@ -7,23 +7,6 @@ import (
 )
 
 var (
-	locksOperationsTotal = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "grackle_locks_operations_total",
-		Help: "Locks operations total",
-	})
-	semaphoresOperationsTotal = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "grackle_semaphores_operations_total",
-		Help: "Semaphores operations total",
-	})
-	waitGroupsOperationsTotal = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "grackle_wait_groups_operations_total",
-		Help: "Wait Groups operations total",
-	})
-	barriersOperationsTotal = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "grackle_barriers_operations_total",
-		Help: "Barriers operations total",
-	})
-
 	totalRequestsCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "grackle_server_requests_total",
 		Help: "Total number of requests",
@@ -42,8 +25,7 @@ var (
 )
 
 func RegisterMetrics() {
-	prometheus.MustRegister(locksOperationsTotal)
-	prometheus.MustRegister(semaphoresOperationsTotal)
-	prometheus.MustRegister(waitGroupsOperationsTotal)
-	prometheus.MustRegister(barriersOperationsTotal)
+	prometheus.MustRegister(totalRequestsCounter)
+	prometheus.MustRegister(failedRequestsCounter)
+	prometheus.MustRegister(requestsDuration)
 }

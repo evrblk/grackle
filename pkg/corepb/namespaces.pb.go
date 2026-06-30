@@ -26,14 +26,10 @@ type CreateNamespaceRequest struct {
 	NamespaceId *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	Name        string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Description string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	// Caller-supplied current time, Unix nanoseconds. The core is a deterministic
-	// replicated state machine, so the clock is passed in rather than read from the
-	// host. Recurs on most mutating requests with the same meaning.
-	Now      int64             `protobuf:"fixed64,4,opt,name=now,proto3" json:"now,omitempty"`
-	Metadata map[string]string `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Metadata    map[string]string      `protobuf:"bytes,4,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Per-account quota enforced by the core; the create is rejected if it would be
 	// exceeded.
-	MaxNumberOfNamespaces int64 `protobuf:"varint,6,opt,name=max_number_of_namespaces,json=maxNumberOfNamespaces,proto3" json:"max_number_of_namespaces,omitempty"`
+	MaxNumberOfNamespaces int64 `protobuf:"varint,5,opt,name=max_number_of_namespaces,json=maxNumberOfNamespaces,proto3" json:"max_number_of_namespaces,omitempty"`
 	unknownFields         protoimpl.UnknownFields
 	sizeCache             protoimpl.SizeCache
 }
@@ -87,13 +83,6 @@ func (x *CreateNamespaceRequest) GetDescription() string {
 		return x.Description
 	}
 	return ""
-}
-
-func (x *CreateNamespaceRequest) GetNow() int64 {
-	if x != nil {
-		return x.Now
-	}
-	return 0
 }
 
 func (x *CreateNamespaceRequest) GetMetadata() map[string]string {
@@ -462,7 +451,6 @@ type DeleteNamespaceRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AccountId     uint64                 `protobuf:"fixed64,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
 	NamespaceName string                 `protobuf:"bytes,2,opt,name=namespace_name,json=namespaceName,proto3" json:"namespace_name,omitempty"`
-	Now           int64                  `protobuf:"fixed64,3,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -511,13 +499,6 @@ func (x *DeleteNamespaceRequest) GetNamespaceName() string {
 	return ""
 }
 
-func (x *DeleteNamespaceRequest) GetNow() int64 {
-	if x != nil {
-		return x.Now
-	}
-	return 0
-}
-
 type DeleteNamespaceResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -563,7 +544,6 @@ type UpdateNamespaceRequest struct {
 	// Optimistic concurrency check: must equal the namespace's current version or
 	// the update is rejected.
 	ExpectedVersion int64 `protobuf:"varint,5,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
-	Now             int64 `protobuf:"fixed64,6,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -629,13 +609,6 @@ func (x *UpdateNamespaceRequest) GetMetadata() map[string]string {
 func (x *UpdateNamespaceRequest) GetExpectedVersion() int64 {
 	if x != nil {
 		return x.ExpectedVersion
-	}
-	return 0
-}
-
-func (x *UpdateNamespaceRequest) GetNow() int64 {
-	if x != nil {
-		return x.Now
 	}
 	return 0
 }
@@ -886,14 +859,13 @@ var File_pkg_corepb_namespaces_proto protoreflect.FileDescriptor
 
 const file_pkg_corepb_namespaces_proto_rawDesc = "" +
 	"\n" +
-	"\x1bpkg/corepb/namespaces.proto\x12\x19com.evrblk.grackle.corepb\x1a\x17pkg/corepb/common.proto\"\xfe\x02\n" +
+	"\x1bpkg/corepb/namespaces.proto\x12\x19com.evrblk.grackle.corepb\x1a\x17pkg/corepb/common.proto\"\xec\x02\n" +
 	"\x16CreateNamespaceRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
-	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x10\n" +
-	"\x03now\x18\x04 \x01(\x10R\x03now\x12[\n" +
-	"\bmetadata\x18\x05 \x03(\v2?.com.evrblk.grackle.corepb.CreateNamespaceRequest.MetadataEntryR\bmetadata\x127\n" +
-	"\x18max_number_of_namespaces\x18\x06 \x01(\x03R\x15maxNumberOfNamespaces\x1a;\n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x12[\n" +
+	"\bmetadata\x18\x04 \x03(\v2?.com.evrblk.grackle.corepb.CreateNamespaceRequest.MetadataEntryR\bmetadata\x127\n" +
+	"\x18max_number_of_namespaces\x18\x05 \x01(\x03R\x15maxNumberOfNamespaces\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"]\n" +
@@ -919,21 +891,19 @@ const file_pkg_corepb_namespaces_proto_rawDesc = "" +
 	"account_id\x18\x01 \x01(\x06R\taccountId\x12%\n" +
 	"\x0enamespace_name\x18\x02 \x01(\tR\rnamespaceName\"`\n" +
 	"\x1aGetNamespaceByNameResponse\x12B\n" +
-	"\tnamespace\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.NamespaceR\tnamespace\"p\n" +
+	"\tnamespace\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.NamespaceR\tnamespace\"^\n" +
 	"\x16DeleteNamespaceRequest\x12\x1d\n" +
 	"\n" +
 	"account_id\x18\x01 \x01(\x06R\taccountId\x12%\n" +
-	"\x0enamespace_name\x18\x02 \x01(\tR\rnamespaceName\x12\x10\n" +
-	"\x03now\x18\x03 \x01(\x10R\x03now\"\x19\n" +
-	"\x17DeleteNamespaceResponse\"\xd7\x02\n" +
+	"\x0enamespace_name\x18\x02 \x01(\tR\rnamespaceName\"\x19\n" +
+	"\x17DeleteNamespaceResponse\"\xc5\x02\n" +
 	"\x16UpdateNamespaceRequest\x12\x1d\n" +
 	"\n" +
 	"account_id\x18\x01 \x01(\x06R\taccountId\x12%\n" +
 	"\x0enamespace_name\x18\x02 \x01(\tR\rnamespaceName\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12[\n" +
 	"\bmetadata\x18\x04 \x03(\v2?.com.evrblk.grackle.corepb.UpdateNamespaceRequest.MetadataEntryR\bmetadata\x12)\n" +
-	"\x10expected_version\x18\x05 \x01(\x03R\x0fexpectedVersion\x12\x10\n" +
-	"\x03now\x18\x06 \x01(\x10R\x03now\x1a;\n" +
+	"\x10expected_version\x18\x05 \x01(\x03R\x0fexpectedVersion\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"]\n" +

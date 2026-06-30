@@ -59,7 +59,6 @@ func (w *GrackleLocksGCWorker) runGarbageCollection(shardId string, now time.Tim
 	defer metrics.MeasureSince(grackleLocksGCWorkerDuration.WithLabelValues(shardId), time.Now())
 
 	_, err := w.coreApiClient.RunLocksGarbageCollection(context.TODO(), &corepb.RunLocksGarbageCollectionRequest{
-		Now:                   now.UnixNano(),
 		GcRecordsPageSize:     100,
 		GcRecordLocksPageSize: 1000,
 		MaxVisitedLocks:       1000,

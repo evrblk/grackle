@@ -59,7 +59,6 @@ func (w *GrackleSemaphoresGCWorker) runGarbageCollection(shardId string, now tim
 	defer metrics.MeasureSince(grackleSemaphoresGCWorkerDuration.WithLabelValues(shardId), time.Now())
 
 	_, err := w.coreApiClient.RunSemaphoresGarbageCollection(context.TODO(), &corepb.RunSemaphoresGarbageCollectionRequest{
-		Now:                        now.UnixNano(),
 		GcRecordsPageSize:          100,
 		GcRecordSemaphoresPageSize: 1000,
 		GcRecordHoldersPageSize:    1000,

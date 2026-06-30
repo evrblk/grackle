@@ -52,13 +52,7 @@ func (m *AcquireLockRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	if m.MaxNumberOfLocksPerNamespace != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.MaxNumberOfLocksPerNamespace))
 		i--
-		dAtA[i] = 0x30
-	}
-	if m.Now != 0 {
-		i -= 8
-		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
-		i--
-		dAtA[i] = 0x29
+		dAtA[i] = 0x28
 	}
 	if len(m.Metadata) > 0 {
 		for k := range m.Metadata {
@@ -208,12 +202,6 @@ func (m *ReleaseLockRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if m.Now != 0 {
-		i -= 8
-		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
-		i--
-		dAtA[i] = 0x19
-	}
 	if m.LeaseId != 0 {
 		i -= 8
 		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.LeaseId))
@@ -306,12 +294,6 @@ func (m *GetLockRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if m.Now != 0 {
-		i -= 8
-		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
-		i--
-		dAtA[i] = 0x11
-	}
 	if m.LockId != nil {
 		size, err := m.LockId.MarshalToSizedBufferVT(dAtA[:i])
 		if err != nil {
@@ -398,12 +380,6 @@ func (m *DeleteLockRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if m.Now != 0 {
-		i -= 8
-		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
-		i--
-		dAtA[i] = 0x11
-	}
 	if m.LockId != nil {
 		size, err := m.LockId.MarshalToSizedBufferVT(dAtA[:i])
 		if err != nil {
@@ -483,7 +459,7 @@ func (m *ListLocksRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	if m.Limit != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Limit))
 		i--
-		dAtA[i] = 0x20
+		dAtA[i] = 0x18
 	}
 	if m.PaginationToken != nil {
 		size, err := m.PaginationToken.MarshalToSizedBufferVT(dAtA[:i])
@@ -493,13 +469,7 @@ func (m *ListLocksRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x1a
-	}
-	if m.Now != 0 {
-		i -= 8
-		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
-		i--
-		dAtA[i] = 0x11
+		dAtA[i] = 0x12
 	}
 	if m.NamespaceId != nil {
 		size, err := m.NamespaceId.MarshalToSizedBufferVT(dAtA[:i])
@@ -612,7 +582,7 @@ func (m *ListLocksByLeaseIdRequest) MarshalToSizedBufferVT(dAtA []byte) (int, er
 	if m.Limit != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Limit))
 		i--
-		dAtA[i] = 0x20
+		dAtA[i] = 0x18
 	}
 	if m.PaginationToken != nil {
 		size, err := m.PaginationToken.MarshalToSizedBufferVT(dAtA[:i])
@@ -622,13 +592,7 @@ func (m *ListLocksByLeaseIdRequest) MarshalToSizedBufferVT(dAtA []byte) (int, er
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x1a
-	}
-	if m.Now != 0 {
-		i -= 8
-		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
-		i--
-		dAtA[i] = 0x11
+		dAtA[i] = 0x12
 	}
 	if m.LeaseId != nil {
 		size, err := m.LeaseId.MarshalToSizedBufferVT(dAtA[:i])
@@ -741,23 +705,17 @@ func (m *RunLocksGarbageCollectionRequest) MarshalToSizedBufferVT(dAtA []byte) (
 	if m.MaxVisitedLocks != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.MaxVisitedLocks))
 		i--
-		dAtA[i] = 0x20
+		dAtA[i] = 0x18
 	}
 	if m.GcRecordLocksPageSize != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.GcRecordLocksPageSize))
 		i--
-		dAtA[i] = 0x18
+		dAtA[i] = 0x10
 	}
 	if m.GcRecordsPageSize != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.GcRecordsPageSize))
 		i--
-		dAtA[i] = 0x10
-	}
-	if m.Now != 0 {
-		i -= 8
-		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
-		i--
-		dAtA[i] = 0x9
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
@@ -824,12 +782,6 @@ func (m *LocksDeleteNamespaceRequest) MarshalToSizedBufferVT(dAtA []byte) (int, 
 	if m.unknownFields != nil {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
-	}
-	if m.Now != 0 {
-		i -= 8
-		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
-		i--
-		dAtA[i] = 0x19
 	}
 	if m.RecordId != 0 {
 		i -= 8
@@ -916,7 +868,7 @@ func (m *CreateLockLeaseRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error
 	if m.MaxNumberOfLockLeases != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.MaxNumberOfLockLeases))
 		i--
-		dAtA[i] = 0x30
+		dAtA[i] = 0x28
 	}
 	if len(m.Metadata) > 0 {
 		for k := range m.Metadata {
@@ -934,14 +886,8 @@ func (m *CreateLockLeaseRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error
 			dAtA[i] = 0xa
 			i = protohelpers.EncodeVarint(dAtA, i, uint64(baseI-i))
 			i--
-			dAtA[i] = 0x2a
+			dAtA[i] = 0x22
 		}
-	}
-	if m.Now != 0 {
-		i -= 8
-		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
-		i--
-		dAtA[i] = 0x21
 	}
 	if m.TtlSeconds != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.TtlSeconds))
@@ -1041,12 +987,6 @@ func (m *RevokeLockLeaseRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if m.Now != 0 {
-		i -= 8
-		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
-		i--
-		dAtA[i] = 0x11
-	}
 	if m.LeaseId != nil {
 		size, err := m.LeaseId.MarshalToSizedBufferVT(dAtA[:i])
 		if err != nil {
@@ -1122,12 +1062,6 @@ func (m *RefreshLockLeaseRequest) MarshalToSizedBufferVT(dAtA []byte) (int, erro
 	if m.unknownFields != nil {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
-	}
-	if m.Now != 0 {
-		i -= 8
-		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
-		i--
-		dAtA[i] = 0x19
 	}
 	if m.TtlSeconds != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.TtlSeconds))
@@ -1220,12 +1154,6 @@ func (m *GetLockLeaseRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if m.Now != 0 {
-		i -= 8
-		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
-		i--
-		dAtA[i] = 0x11
-	}
 	if m.LeaseId != nil {
 		size, err := m.LeaseId.MarshalToSizedBufferVT(dAtA[:i])
 		if err != nil {
@@ -1315,7 +1243,7 @@ func (m *ListLockLeasesRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error)
 	if m.Limit != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Limit))
 		i--
-		dAtA[i] = 0x20
+		dAtA[i] = 0x18
 	}
 	if m.PaginationToken != nil {
 		size, err := m.PaginationToken.MarshalToSizedBufferVT(dAtA[:i])
@@ -1325,13 +1253,7 @@ func (m *ListLockLeasesRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error)
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x1a
-	}
-	if m.Now != 0 {
-		i -= 8
-		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
-		i--
-		dAtA[i] = 0x11
+		dAtA[i] = 0x12
 	}
 	if m.NamespaceId != nil {
 		size, err := m.NamespaceId.MarshalToSizedBufferVT(dAtA[:i])
@@ -1444,7 +1366,7 @@ func (m *ListLockLeasesByProcessIdRequest) MarshalToSizedBufferVT(dAtA []byte) (
 	if m.Limit != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Limit))
 		i--
-		dAtA[i] = 0x28
+		dAtA[i] = 0x20
 	}
 	if m.PaginationToken != nil {
 		size, err := m.PaginationToken.MarshalToSizedBufferVT(dAtA[:i])
@@ -1454,13 +1376,7 @@ func (m *ListLockLeasesByProcessIdRequest) MarshalToSizedBufferVT(dAtA []byte) (
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x22
-	}
-	if m.Now != 0 {
-		i -= 8
-		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Now))
-		i--
-		dAtA[i] = 0x19
+		dAtA[i] = 0x1a
 	}
 	if len(m.ProcessId) > 0 {
 		i -= len(m.ProcessId)
@@ -1904,9 +1820,6 @@ func (m *AcquireLockRequest) SizeVT() (n int) {
 			n += mapEntrySize + 1 + protohelpers.SizeOfVarint(uint64(mapEntrySize))
 		}
 	}
-	if m.Now != 0 {
-		n += 9
-	}
 	if m.MaxNumberOfLocksPerNamespace != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.MaxNumberOfLocksPerNamespace))
 	}
@@ -1953,9 +1866,6 @@ func (m *ReleaseLockRequest) SizeVT() (n int) {
 	if m.LeaseId != 0 {
 		n += 9
 	}
-	if m.Now != 0 {
-		n += 9
-	}
 	n += len(m.unknownFields)
 	return n
 }
@@ -1983,9 +1893,6 @@ func (m *GetLockRequest) SizeVT() (n int) {
 	if m.LockId != nil {
 		l = m.LockId.SizeVT()
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
-	}
-	if m.Now != 0 {
-		n += 9
 	}
 	n += len(m.unknownFields)
 	return n
@@ -2015,9 +1922,6 @@ func (m *DeleteLockRequest) SizeVT() (n int) {
 		l = m.LockId.SizeVT()
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
-	if m.Now != 0 {
-		n += 9
-	}
 	n += len(m.unknownFields)
 	return n
 }
@@ -2041,9 +1945,6 @@ func (m *ListLocksRequest) SizeVT() (n int) {
 	if m.NamespaceId != nil {
 		l = m.NamespaceId.SizeVT()
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
-	}
-	if m.Now != 0 {
-		n += 9
 	}
 	if m.PaginationToken != nil {
 		l = m.PaginationToken.SizeVT()
@@ -2090,9 +1991,6 @@ func (m *ListLocksByLeaseIdRequest) SizeVT() (n int) {
 		l = m.LeaseId.SizeVT()
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
-	if m.Now != 0 {
-		n += 9
-	}
 	if m.PaginationToken != nil {
 		l = m.PaginationToken.SizeVT()
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
@@ -2134,9 +2032,6 @@ func (m *RunLocksGarbageCollectionRequest) SizeVT() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Now != 0 {
-		n += 9
-	}
 	if m.GcRecordsPageSize != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.GcRecordsPageSize))
 	}
@@ -2173,9 +2068,6 @@ func (m *LocksDeleteNamespaceRequest) SizeVT() (n int) {
 	if m.RecordId != 0 {
 		n += 9
 	}
-	if m.Now != 0 {
-		n += 9
-	}
 	n += len(m.unknownFields)
 	return n
 }
@@ -2206,9 +2098,6 @@ func (m *CreateLockLeaseRequest) SizeVT() (n int) {
 	}
 	if m.TtlSeconds != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.TtlSeconds))
-	}
-	if m.Now != 0 {
-		n += 9
 	}
 	if len(m.Metadata) > 0 {
 		for k, v := range m.Metadata {
@@ -2249,9 +2138,6 @@ func (m *RevokeLockLeaseRequest) SizeVT() (n int) {
 		l = m.LeaseId.SizeVT()
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
-	if m.Now != 0 {
-		n += 9
-	}
 	n += len(m.unknownFields)
 	return n
 }
@@ -2278,9 +2164,6 @@ func (m *RefreshLockLeaseRequest) SizeVT() (n int) {
 	}
 	if m.TtlSeconds != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.TtlSeconds))
-	}
-	if m.Now != 0 {
-		n += 9
 	}
 	n += len(m.unknownFields)
 	return n
@@ -2310,9 +2193,6 @@ func (m *GetLockLeaseRequest) SizeVT() (n int) {
 		l = m.LeaseId.SizeVT()
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
-	if m.Now != 0 {
-		n += 9
-	}
 	n += len(m.unknownFields)
 	return n
 }
@@ -2340,9 +2220,6 @@ func (m *ListLockLeasesRequest) SizeVT() (n int) {
 	if m.NamespaceId != nil {
 		l = m.NamespaceId.SizeVT()
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
-	}
-	if m.Now != 0 {
-		n += 9
 	}
 	if m.PaginationToken != nil {
 		l = m.PaginationToken.SizeVT()
@@ -2392,9 +2269,6 @@ func (m *ListLockLeasesByProcessIdRequest) SizeVT() (n int) {
 	l = len(m.ProcessId)
 	if l > 0 {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
-	}
-	if m.Now != 0 {
-		n += 9
 	}
 	if m.PaginationToken != nil {
 		l = m.PaginationToken.SizeVT()
@@ -2780,16 +2654,6 @@ func (m *AcquireLockRequest) UnmarshalVT(dAtA []byte) error {
 			m.Metadata[mapkey] = mapvalue
 			iNdEx = postIndex
 		case 5:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
-			}
-			m.Now = 0
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
-		case 6:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MaxNumberOfLocksPerNamespace", wireType)
 			}
@@ -3065,16 +2929,6 @@ func (m *ReleaseLockRequest) UnmarshalVT(dAtA []byte) error {
 			}
 			m.LeaseId = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-		case 3:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
-			}
-			m.Now = 0
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -3249,16 +3103,6 @@ func (m *GetLockRequest) UnmarshalVT(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 2:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
-			}
-			m.Now = 0
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -3433,16 +3277,6 @@ func (m *DeleteLockRequest) UnmarshalVT(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 2:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
-			}
-			m.Now = 0
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -3582,16 +3416,6 @@ func (m *ListLocksRequest) UnmarshalVT(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 2:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
-			}
-			m.Now = 0
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
-		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field PaginationToken", wireType)
 			}
@@ -3627,7 +3451,7 @@ func (m *ListLocksRequest) UnmarshalVT(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 4:
+		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Limit", wireType)
 			}
@@ -3891,16 +3715,6 @@ func (m *ListLocksByLeaseIdRequest) UnmarshalVT(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 2:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
-			}
-			m.Now = 0
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
-		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field PaginationToken", wireType)
 			}
@@ -3936,7 +3750,7 @@ func (m *ListLocksByLeaseIdRequest) UnmarshalVT(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 4:
+		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Limit", wireType)
 			}
@@ -4164,16 +3978,6 @@ func (m *RunLocksGarbageCollectionRequest) UnmarshalVT(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
-			}
-			m.Now = 0
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
-		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field GcRecordsPageSize", wireType)
 			}
@@ -4192,7 +3996,7 @@ func (m *RunLocksGarbageCollectionRequest) UnmarshalVT(dAtA []byte) error {
 					break
 				}
 			}
-		case 3:
+		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field GcRecordLocksPageSize", wireType)
 			}
@@ -4211,7 +4015,7 @@ func (m *RunLocksGarbageCollectionRequest) UnmarshalVT(dAtA []byte) error {
 					break
 				}
 			}
-		case 4:
+		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MaxVisitedLocks", wireType)
 			}
@@ -4377,16 +4181,6 @@ func (m *LocksDeleteNamespaceRequest) UnmarshalVT(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.RecordId = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
-		case 3:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
-			}
-			m.Now = 0
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
 		default:
 			iNdEx = preIndex
@@ -4578,16 +4372,6 @@ func (m *CreateLockLeaseRequest) UnmarshalVT(dAtA []byte) error {
 				}
 			}
 		case 4:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
-			}
-			m.Now = 0
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
-		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 			}
@@ -4714,7 +4498,7 @@ func (m *CreateLockLeaseRequest) UnmarshalVT(dAtA []byte) error {
 			}
 			m.Metadata[mapkey] = mapvalue
 			iNdEx = postIndex
-		case 6:
+		case 5:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MaxNumberOfLockLeases", wireType)
 			}
@@ -4907,16 +4691,6 @@ func (m *RevokeLockLeaseRequest) UnmarshalVT(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 2:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
-			}
-			m.Now = 0
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -5074,16 +4848,6 @@ func (m *RefreshLockLeaseRequest) UnmarshalVT(dAtA []byte) error {
 					break
 				}
 			}
-		case 3:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
-			}
-			m.Now = 0
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -5258,16 +5022,6 @@ func (m *GetLockLeaseRequest) UnmarshalVT(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 2:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
-			}
-			m.Now = 0
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -5443,16 +5197,6 @@ func (m *ListLockLeasesRequest) UnmarshalVT(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 2:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
-			}
-			m.Now = 0
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
-		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field PaginationToken", wireType)
 			}
@@ -5488,7 +5232,7 @@ func (m *ListLockLeasesRequest) UnmarshalVT(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 4:
+		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Limit", wireType)
 			}
@@ -5784,16 +5528,6 @@ func (m *ListLockLeasesByProcessIdRequest) UnmarshalVT(dAtA []byte) error {
 			m.ProcessId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Now", wireType)
-			}
-			m.Now = 0
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Now = int64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
-		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field PaginationToken", wireType)
 			}
@@ -5829,7 +5563,7 @@ func (m *ListLockLeasesByProcessIdRequest) UnmarshalVT(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 5:
+		case 4:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Limit", wireType)
 			}

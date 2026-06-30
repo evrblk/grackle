@@ -247,11 +247,11 @@ func (c *Core) CreateBarrier(req *coreapis.CreateBarrierRequest) (*coreapis.Crea
 		ExpectedProcesses:          req.Payload.ExpectedProcesses,
 		ArrivedProcesses:           0,
 		Generation:                 1,
-		CreatedAt:                  req.Payload.Now,
-		UpdatedAt:                  req.Payload.Now,
+		CreatedAt:                  req.Now,
+		UpdatedAt:                  req.Now,
 		Metadata:                   req.Payload.Metadata,
 		Version:                    1,
-		LastActivityAt:             req.Payload.Now,
+		LastActivityAt:             req.Now,
 		DeleteInactiveAfterSeconds: req.Payload.DeleteInactiveAfterSeconds,
 	}
 
@@ -438,7 +438,7 @@ func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest) (*coreapis.Upda
 
 	barrier.Description = req.Payload.Description
 	barrier.ExpectedProcesses = req.Payload.ExpectedProcesses
-	barrier.UpdatedAt = req.Payload.Now
+	barrier.UpdatedAt = req.Now
 	barrier.Metadata = req.Payload.Metadata
 	barrier.Version += 1
 	barrier.DeleteInactiveAfterSeconds = req.Payload.DeleteInactiveAfterSeconds
@@ -551,7 +551,7 @@ func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest) (*coreapis.
 	participant := &corepb.BarrierParticipant{
 		ProcessId:  req.Payload.ProcessId,
 		Generation: req.Payload.Generation,
-		ArrivedAt:  req.Payload.Now,
+		ArrivedAt:  req.Now,
 		Metadata:   req.Payload.Metadata,
 	}
 
@@ -576,7 +576,7 @@ func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest) (*coreapis.
 	// Arriving is activity: advance last_activity_at and push the auto-deletion
 	// time out accordingly.
 	oldDeleteAt := deletionTime(barrier.LastActivityAt, barrier.DeleteInactiveAfterSeconds)
-	barrier.LastActivityAt = req.Payload.Now
+	barrier.LastActivityAt = req.Now
 	newDeleteAt := deletionTime(barrier.LastActivityAt, barrier.DeleteInactiveAfterSeconds)
 	if oldDeleteAt != newDeleteAt {
 		err = c.deletionRecords.Delete(txn, oldDeleteAt, barrier.Id)
@@ -706,7 +706,7 @@ func (c *Core) RunBarriersGarbageCollection(req *coreapis.RunBarriersGarbageColl
 commit:
 
 	// Auto-delete barriers that have been inactive past their retention window.
-	err = c.deleteInactiveBarriers(txn, req.Payload.Now, int(req.Payload.GcRecordBarriersPageSize), participantsPageSize, &visited, req.Payload.MaxVisited)
+	err = c.deleteInactiveBarriers(txn, req.Now, int(req.Payload.GcRecordBarriersPageSize), participantsPageSize, &visited, req.Payload.MaxVisited)
 	if err != nil {
 		return nil, err
 	}

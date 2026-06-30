@@ -84,22 +84,18 @@ type CreateWaitGroupRequest struct {
 	WaitGroupId *WaitGroupId           `protobuf:"bytes,1,opt,name=wait_group_id,json=waitGroupId,proto3" json:"wait_group_id,omitempty"`
 	Name        string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Description string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	// Caller-supplied current time, Unix nanoseconds. The core is a deterministic
-	// replicated state machine, so the clock is passed in rather than read from the
-	// host. Recurs on most requests with the same meaning.
-	Now int64 `protobuf:"fixed64,4,opt,name=now,proto3" json:"now,omitempty"`
 	// Total number of jobs that must complete for the group to finish.
-	Counter int64 `protobuf:"varint,5,opt,name=counter,proto3" json:"counter,omitempty"`
+	Counter int64 `protobuf:"varint,4,opt,name=counter,proto3" json:"counter,omitempty"`
 	// Absolute deadline, Unix nanoseconds; the group becomes EXPIRED if it has not
 	// completed by then.
-	ExpiresAt int64             `protobuf:"fixed64,6,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	Metadata  map[string]string `protobuf:"bytes,7,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	ExpiresAt int64             `protobuf:"fixed64,5,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	Metadata  map[string]string `protobuf:"bytes,6,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Per-namespace quota enforced by the core; the create is rejected if it would
 	// be exceeded.
-	MaxNumberOfWaitGroupsPerNamespace int64 `protobuf:"varint,8,opt,name=max_number_of_wait_groups_per_namespace,json=maxNumberOfWaitGroupsPerNamespace,proto3" json:"max_number_of_wait_groups_per_namespace,omitempty"`
+	MaxNumberOfWaitGroupsPerNamespace int64 `protobuf:"varint,7,opt,name=max_number_of_wait_groups_per_namespace,json=maxNumberOfWaitGroupsPerNamespace,proto3" json:"max_number_of_wait_groups_per_namespace,omitempty"`
 	// Retention period: once finished, the group is auto-deleted this many seconds
 	// after finished_at.
-	DeleteAfterFinishedSeconds int64 `protobuf:"varint,9,opt,name=delete_after_finished_seconds,json=deleteAfterFinishedSeconds,proto3" json:"delete_after_finished_seconds,omitempty"`
+	DeleteAfterFinishedSeconds int64 `protobuf:"varint,8,opt,name=delete_after_finished_seconds,json=deleteAfterFinishedSeconds,proto3" json:"delete_after_finished_seconds,omitempty"`
 	unknownFields              protoimpl.UnknownFields
 	sizeCache                  protoimpl.SizeCache
 }
@@ -153,13 +149,6 @@ func (x *CreateWaitGroupRequest) GetDescription() string {
 		return x.Description
 	}
 	return ""
-}
-
-func (x *CreateWaitGroupRequest) GetNow() int64 {
-	if x != nil {
-		return x.Now
-	}
-	return 0
 }
 
 func (x *CreateWaitGroupRequest) GetCounter() int64 {
@@ -246,14 +235,13 @@ type UpdateWaitGroupRequest struct {
 	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	WaitGroupName string                 `protobuf:"bytes,2,opt,name=wait_group_name,json=waitGroupName,proto3" json:"wait_group_name,omitempty"`
 	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	Now           int64                  `protobuf:"fixed64,4,opt,name=now,proto3" json:"now,omitempty"`
-	ExpiresAt     int64                  `protobuf:"fixed64,5,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	Counter       int64                  `protobuf:"varint,6,opt,name=counter,proto3" json:"counter,omitempty"`
-	Metadata      map[string]string      `protobuf:"bytes,7,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	ExpiresAt     int64                  `protobuf:"fixed64,4,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	Counter       int64                  `protobuf:"varint,5,opt,name=counter,proto3" json:"counter,omitempty"`
+	Metadata      map[string]string      `protobuf:"bytes,6,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Optimistic concurrency check: must equal the wait group's current version or
 	// the update is rejected.
-	ExpectedVersion            int64 `protobuf:"varint,8,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
-	DeleteAfterFinishedSeconds int64 `protobuf:"varint,9,opt,name=delete_after_finished_seconds,json=deleteAfterFinishedSeconds,proto3" json:"delete_after_finished_seconds,omitempty"`
+	ExpectedVersion            int64 `protobuf:"varint,7,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
+	DeleteAfterFinishedSeconds int64 `protobuf:"varint,8,opt,name=delete_after_finished_seconds,json=deleteAfterFinishedSeconds,proto3" json:"delete_after_finished_seconds,omitempty"`
 	unknownFields              protoimpl.UnknownFields
 	sizeCache                  protoimpl.SizeCache
 }
@@ -307,13 +295,6 @@ func (x *UpdateWaitGroupRequest) GetDescription() string {
 		return x.Description
 	}
 	return ""
-}
-
-func (x *UpdateWaitGroupRequest) GetNow() int64 {
-	if x != nil {
-		return x.Now
-	}
-	return 0
 }
 
 func (x *UpdateWaitGroupRequest) GetExpiresAt() int64 {
@@ -802,7 +783,6 @@ type CompleteJobsFromWaitGroupRequest struct {
 	NamespaceId   *NamespaceId           `protobuf:"bytes,1,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 	WaitGroupName string                 `protobuf:"bytes,2,opt,name=wait_group_name,json=waitGroupName,proto3" json:"wait_group_name,omitempty"`
 	Jobs          []*CompleteJobRequest  `protobuf:"bytes,3,rep,name=jobs,proto3" json:"jobs,omitempty"`
-	Now           int64                  `protobuf:"fixed64,4,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -856,13 +836,6 @@ func (x *CompleteJobsFromWaitGroupRequest) GetJobs() []*CompleteJobRequest {
 		return x.Jobs
 	}
 	return nil
-}
-
-func (x *CompleteJobsFromWaitGroupRequest) GetNow() int64 {
-	if x != nil {
-		return x.Now
-	}
-	return 0
 }
 
 type CompleteJobRequest struct {
@@ -1091,10 +1064,9 @@ func (x *ListWaitGroupCompletedJobsResponse) GetPreviousPaginationToken() *Pagin
 
 type RunWaitGroupsGarbageCollectionRequest struct {
 	state                      protoimpl.MessageState `protogen:"open.v1"`
-	Now                        int64                  `protobuf:"fixed64,1,opt,name=now,proto3" json:"now,omitempty"`
-	GcRecordsPageSize          int64                  `protobuf:"varint,2,opt,name=gc_records_page_size,json=gcRecordsPageSize,proto3" json:"gc_records_page_size,omitempty"`
-	GcRecordWaitGroupsPageSize int64                  `protobuf:"varint,3,opt,name=gc_record_wait_groups_page_size,json=gcRecordWaitGroupsPageSize,proto3" json:"gc_record_wait_groups_page_size,omitempty"`
-	MaxDeletedObjects          int64                  `protobuf:"varint,4,opt,name=max_deleted_objects,json=maxDeletedObjects,proto3" json:"max_deleted_objects,omitempty"`
+	GcRecordsPageSize          int64                  `protobuf:"varint,1,opt,name=gc_records_page_size,json=gcRecordsPageSize,proto3" json:"gc_records_page_size,omitempty"`
+	GcRecordWaitGroupsPageSize int64                  `protobuf:"varint,2,opt,name=gc_record_wait_groups_page_size,json=gcRecordWaitGroupsPageSize,proto3" json:"gc_record_wait_groups_page_size,omitempty"`
+	MaxDeletedObjects          int64                  `protobuf:"varint,3,opt,name=max_deleted_objects,json=maxDeletedObjects,proto3" json:"max_deleted_objects,omitempty"`
 	unknownFields              protoimpl.UnknownFields
 	sizeCache                  protoimpl.SizeCache
 }
@@ -1127,13 +1099,6 @@ func (x *RunWaitGroupsGarbageCollectionRequest) ProtoReflect() protoreflect.Mess
 // Deprecated: Use RunWaitGroupsGarbageCollectionRequest.ProtoReflect.Descriptor instead.
 func (*RunWaitGroupsGarbageCollectionRequest) Descriptor() ([]byte, []int) {
 	return file_pkg_corepb_wait_groups_proto_rawDescGZIP(), []int{17}
-}
-
-func (x *RunWaitGroupsGarbageCollectionRequest) GetNow() int64 {
-	if x != nil {
-		return x.Now
-	}
-	return 0
 }
 
 func (x *RunWaitGroupsGarbageCollectionRequest) GetGcRecordsPageSize() int64 {
@@ -1197,7 +1162,6 @@ type WaitGroupsDeleteNamespaceRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	RecordId      uint64                 `protobuf:"fixed64,1,opt,name=record_id,json=recordId,proto3" json:"record_id,omitempty"`
 	NamespaceId   *NamespaceId           `protobuf:"bytes,2,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
-	Now           int64                  `protobuf:"fixed64,3,opt,name=now,proto3" json:"now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1244,13 +1208,6 @@ func (x *WaitGroupsDeleteNamespaceRequest) GetNamespaceId() *NamespaceId {
 		return x.NamespaceId
 	}
 	return nil
-}
-
-func (x *WaitGroupsDeleteNamespaceRequest) GetNow() int64 {
-	if x != nil {
-		return x.Now
-	}
-	return 0
 }
 
 type WaitGroupsDeleteNamespaceResponse struct {
@@ -1903,35 +1860,33 @@ var File_pkg_corepb_wait_groups_proto protoreflect.FileDescriptor
 
 const file_pkg_corepb_wait_groups_proto_rawDesc = "" +
 	"\n" +
-	"\x1cpkg/corepb/wait_groups.proto\x12\x19com.evrblk.grackle.corepb\x1a\x17pkg/corepb/common.proto\x1a\x1bpkg/corepb/namespaces.proto\"\x96\x04\n" +
+	"\x1cpkg/corepb/wait_groups.proto\x12\x19com.evrblk.grackle.corepb\x1a\x17pkg/corepb/common.proto\x1a\x1bpkg/corepb/namespaces.proto\"\x84\x04\n" +
 	"\x16CreateWaitGroupRequest\x12J\n" +
 	"\rwait_group_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.WaitGroupIdR\vwaitGroupId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
-	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x10\n" +
-	"\x03now\x18\x04 \x01(\x10R\x03now\x12\x18\n" +
-	"\acounter\x18\x05 \x01(\x03R\acounter\x12\x1d\n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x18\n" +
+	"\acounter\x18\x04 \x01(\x03R\acounter\x12\x1d\n" +
 	"\n" +
-	"expires_at\x18\x06 \x01(\x10R\texpiresAt\x12[\n" +
-	"\bmetadata\x18\a \x03(\v2?.com.evrblk.grackle.corepb.CreateWaitGroupRequest.MetadataEntryR\bmetadata\x12R\n" +
-	"'max_number_of_wait_groups_per_namespace\x18\b \x01(\x03R!maxNumberOfWaitGroupsPerNamespace\x12A\n" +
-	"\x1ddelete_after_finished_seconds\x18\t \x01(\x03R\x1adeleteAfterFinishedSeconds\x1a;\n" +
+	"expires_at\x18\x05 \x01(\x10R\texpiresAt\x12[\n" +
+	"\bmetadata\x18\x06 \x03(\v2?.com.evrblk.grackle.corepb.CreateWaitGroupRequest.MetadataEntryR\bmetadata\x12R\n" +
+	"'max_number_of_wait_groups_per_namespace\x18\a \x01(\x03R!maxNumberOfWaitGroupsPerNamespace\x12A\n" +
+	"\x1ddelete_after_finished_seconds\x18\b \x01(\x03R\x1adeleteAfterFinishedSeconds\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"^\n" +
 	"\x17CreateWaitGroupResponse\x12C\n" +
 	"\n" +
-	"wait_group\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.WaitGroupR\twaitGroup\"\x80\x04\n" +
+	"wait_group\x18\x01 \x01(\v2$.com.evrblk.grackle.corepb.WaitGroupR\twaitGroup\"\xee\x03\n" +
 	"\x16UpdateWaitGroupRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12&\n" +
 	"\x0fwait_group_name\x18\x02 \x01(\tR\rwaitGroupName\x12 \n" +
-	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x10\n" +
-	"\x03now\x18\x04 \x01(\x10R\x03now\x12\x1d\n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x1d\n" +
 	"\n" +
-	"expires_at\x18\x05 \x01(\x10R\texpiresAt\x12\x18\n" +
-	"\acounter\x18\x06 \x01(\x03R\acounter\x12[\n" +
-	"\bmetadata\x18\a \x03(\v2?.com.evrblk.grackle.corepb.UpdateWaitGroupRequest.MetadataEntryR\bmetadata\x12)\n" +
-	"\x10expected_version\x18\b \x01(\x03R\x0fexpectedVersion\x12A\n" +
-	"\x1ddelete_after_finished_seconds\x18\t \x01(\x03R\x1adeleteAfterFinishedSeconds\x1a;\n" +
+	"expires_at\x18\x04 \x01(\x10R\texpiresAt\x12\x18\n" +
+	"\acounter\x18\x05 \x01(\x03R\acounter\x12[\n" +
+	"\bmetadata\x18\x06 \x03(\v2?.com.evrblk.grackle.corepb.UpdateWaitGroupRequest.MetadataEntryR\bmetadata\x12)\n" +
+	"\x10expected_version\x18\a \x01(\x03R\x0fexpectedVersion\x12A\n" +
+	"\x1ddelete_after_finished_seconds\x18\b \x01(\x03R\x1adeleteAfterFinishedSeconds\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"^\n" +
@@ -1962,12 +1917,11 @@ const file_pkg_corepb_wait_groups_proto_rawDesc = "" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12&\n" +
 	"\x0fwait_group_name\x18\x02 \x01(\tR\rwaitGroupName\x12\x1b\n" +
 	"\trecord_id\x18\x03 \x01(\x06R\brecordId\"\x19\n" +
-	"\x17DeleteWaitGroupResponse\"\xea\x01\n" +
+	"\x17DeleteWaitGroupResponse\"\xd8\x01\n" +
 	" CompleteJobsFromWaitGroupRequest\x12I\n" +
 	"\fnamespace_id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12&\n" +
 	"\x0fwait_group_name\x18\x02 \x01(\tR\rwaitGroupName\x12A\n" +
-	"\x04jobs\x18\x03 \x03(\v2-.com.evrblk.grackle.corepb.CompleteJobRequestR\x04jobs\x12\x10\n" +
-	"\x03now\x18\x04 \x01(\x10R\x03now\"\xc1\x01\n" +
+	"\x04jobs\x18\x03 \x03(\v2-.com.evrblk.grackle.corepb.CompleteJobRequestR\x04jobs\"\xc1\x01\n" +
 	"\x12CompleteJobRequest\x12\x15\n" +
 	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12W\n" +
 	"\bmetadata\x18\x02 \x03(\v2;.com.evrblk.grackle.corepb.CompleteJobRequest.MetadataEntryR\bmetadata\x1a;\n" +
@@ -1985,17 +1939,15 @@ const file_pkg_corepb_wait_groups_proto_rawDesc = "" +
 	"\"ListWaitGroupCompletedJobsResponse\x12;\n" +
 	"\x04jobs\x18\x01 \x03(\v2'.com.evrblk.grackle.corepb.WaitGroupJobR\x04jobs\x12^\n" +
 	"\x15next_pagination_token\x18\x02 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x13nextPaginationToken\x12f\n" +
-	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"\xdf\x01\n" +
-	"%RunWaitGroupsGarbageCollectionRequest\x12\x10\n" +
-	"\x03now\x18\x01 \x01(\x10R\x03now\x12/\n" +
-	"\x14gc_records_page_size\x18\x02 \x01(\x03R\x11gcRecordsPageSize\x12C\n" +
-	"\x1fgc_record_wait_groups_page_size\x18\x03 \x01(\x03R\x1agcRecordWaitGroupsPageSize\x12.\n" +
-	"\x13max_deleted_objects\x18\x04 \x01(\x03R\x11maxDeletedObjects\"(\n" +
-	"&RunWaitGroupsGarbageCollectionResponse\"\x9c\x01\n" +
+	"\x19previous_pagination_token\x18\x03 \x01(\v2*.com.evrblk.grackle.corepb.PaginationTokenR\x17previousPaginationToken\"\xcd\x01\n" +
+	"%RunWaitGroupsGarbageCollectionRequest\x12/\n" +
+	"\x14gc_records_page_size\x18\x01 \x01(\x03R\x11gcRecordsPageSize\x12C\n" +
+	"\x1fgc_record_wait_groups_page_size\x18\x02 \x01(\x03R\x1agcRecordWaitGroupsPageSize\x12.\n" +
+	"\x13max_deleted_objects\x18\x03 \x01(\x03R\x11maxDeletedObjects\"(\n" +
+	"&RunWaitGroupsGarbageCollectionResponse\"\x8a\x01\n" +
 	" WaitGroupsDeleteNamespaceRequest\x12\x1b\n" +
 	"\trecord_id\x18\x01 \x01(\x06R\brecordId\x12I\n" +
-	"\fnamespace_id\x18\x02 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\x12\x10\n" +
-	"\x03now\x18\x03 \x01(\x10R\x03now\"#\n" +
+	"\fnamespace_id\x18\x02 \x01(\v2&.com.evrblk.grackle.corepb.NamespaceIdR\vnamespaceId\"#\n" +
 	"!WaitGroupsDeleteNamespaceResponse\"\x90\x05\n" +
 	"\tWaitGroup\x126\n" +
 	"\x02id\x18\x01 \x01(\v2&.com.evrblk.grackle.corepb.WaitGroupIdR\x02id\x12\x12\n" +

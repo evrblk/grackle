@@ -270,14 +270,14 @@ func (c *Core) CreateWaitGroup(req *coreapis.CreateWaitGroupRequest) (*coreapis.
 		Description:                req.Payload.Description,
 		Counter:                    req.Payload.Counter,
 		CompletedJobs:              0,
-		CreatedAt:                  req.Payload.Now,
-		UpdatedAt:                  req.Payload.Now,
+		CreatedAt:                  req.Now,
+		UpdatedAt:                  req.Now,
 		ExpiresAt:                  req.Payload.ExpiresAt,
 		Metadata:                   req.Payload.Metadata,
 		Version:                    1,
 		Status:                     corepb.WaitGroupStatus_WAIT_GROUP_STATUS_ACTIVE,
 		DeleteAfterFinishedSeconds: req.Payload.DeleteAfterFinishedSeconds,
-		LastActivityAt:             req.Payload.Now,
+		LastActivityAt:             req.Now,
 	}
 
 	err = c.waitGroups.Create(txn, waitGroup)
@@ -396,7 +396,7 @@ func (c *Core) UpdateWaitGroup(req *coreapis.UpdateWaitGroupRequest) (*coreapis.
 	waitGroup.Description = req.Payload.Description
 	waitGroup.ExpiresAt = req.Payload.ExpiresAt
 	waitGroup.Metadata = req.Payload.Metadata
-	waitGroup.UpdatedAt = req.Payload.Now
+	waitGroup.UpdatedAt = req.Now
 	waitGroup.Version += 1
 	waitGroup.Counter = req.Payload.Counter
 	waitGroup.DeleteAfterFinishedSeconds = req.Payload.DeleteAfterFinishedSeconds
@@ -404,7 +404,7 @@ func (c *Core) UpdateWaitGroup(req *coreapis.UpdateWaitGroupRequest) (*coreapis.
 	// Lowering the counter down to the number of completed jobs finishes the
 	// wait group.
 	if waitGroup.CompletedJobs == waitGroup.Counter {
-		err = c.markWaitGroupFinished(txn, waitGroup, corepb.WaitGroupStatus_WAIT_GROUP_STATUS_COMPLETED, req.Payload.Now)
+		err = c.markWaitGroupFinished(txn, waitGroup, corepb.WaitGroupStatus_WAIT_GROUP_STATUS_COMPLETED, req.Now)
 		if err != nil {
 			return nil, err
 		}
@@ -548,7 +548,7 @@ func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroup
 			if errors.Is(err, store.ErrNotFound) {
 				waitGroupJob := &corepb.WaitGroupJob{
 					Id:          waitGroupJobId,
-					CompletedAt: req.Payload.Now,
+					CompletedAt: req.Now,
 					Metadata:    job.Metadata,
 				}
 				err := c.jobs.Create(txn, waitGroupJob)
@@ -578,12 +578,12 @@ func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroup
 		}, nil
 	}
 
-	waitGroup.LastActivityAt = req.Payload.Now
+	waitGroup.LastActivityAt = req.Now
 
 	// When all jobs are completed the wait group becomes finished. Mark it as
 	// completed and schedule its deletion after delete_after_finished_seconds.
 	if waitGroup.CompletedJobs == waitGroup.Counter {
-		err = c.markWaitGroupFinished(txn, waitGroup, corepb.WaitGroupStatus_WAIT_GROUP_STATUS_COMPLETED, req.Payload.Now)
+		err = c.markWaitGroupFinished(txn, waitGroup, corepb.WaitGroupStatus_WAIT_GROUP_STATUS_COMPLETED, req.Now)
 		if err != nil {
 			return nil, err
 		}
@@ -622,13 +622,13 @@ func (c *Core) RunWaitGroupsGarbageCollection(req *coreapis.RunWaitGroupsGarbage
 	totalDeletedObjects := 0
 
 	// Mark expired wait groups (expires_at <= now) and schedule their deletion.
-	err := c.expireWaitGroups(txn, req.Payload.Now, int(req.Payload.GcRecordsPageSize))
+	err := c.expireWaitGroups(txn, req.Now, int(req.Payload.GcRecordsPageSize))
 	if err != nil {
 		return nil, err
 	}
 
 	// Delete finished wait groups whose retention period has elapsed.
-	deletedFinished, err := c.deleteFinishedWaitGroups(txn, req.Payload.Now, int(req.Payload.GcRecordsPageSize), int(req.Payload.MaxDeletedObjects)-totalDeletedObjects)
+	deletedFinished, err := c.deleteFinishedWaitGroups(txn, req.Now, int(req.Payload.GcRecordsPageSize), int(req.Payload.MaxDeletedObjects)-totalDeletedObjects)
 	if err != nil {
 		return nil, err
 	}

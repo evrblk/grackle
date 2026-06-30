@@ -617,10 +617,10 @@ func TestCore_NamespaceMetadata(t *testing.T) {
 			NamespaceId:           namespaceId,
 			Name:                  "test_namespace",
 			Description:           "test description",
-			Now:                   now.UnixNano(),
 			Metadata:              map[string]string{"team": "search", "cost-center": "1234"},
 			MaxNumberOfNamespaces: 100,
 		},
+		Now: now.UnixNano(),
 	})
 	require.NoError(t, err)
 	require.Nil(t, resp1.ApplicationError)
@@ -636,10 +636,10 @@ func TestCore_NamespaceMetadata(t *testing.T) {
 			AccountId:       accountId,
 			NamespaceName:   "test_namespace",
 			Description:     "updated description",
-			Now:             now.Add(time.Minute).UnixNano(),
 			Metadata:        map[string]string{"team": "search", "cost-center": "5678"},
 			ExpectedVersion: 1,
 		},
+		Now: now.Add(time.Minute).UnixNano(),
 	})
 	require.NoError(t, err)
 	require.Nil(t, resp2.ApplicationError)
@@ -664,9 +664,9 @@ func createNamespace(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, 
 			NamespaceId:           namespaceId,
 			Name:                  name,
 			Description:           "test description",
-			Now:                   now.UnixNano(),
 			MaxNumberOfNamespaces: maxNumberOfNamespaces,
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -686,9 +686,9 @@ func createNamespaceWithError(t *testing.T, core *Core, namespaceId *corepb.Name
 			NamespaceId:           namespaceId,
 			Name:                  name,
 			Description:           "test description",
-			Now:                   now.UnixNano(),
 			MaxNumberOfNamespaces: maxNumberOfNamespaces,
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -796,9 +796,9 @@ func updateNamespace(t *testing.T, core *Core, accountId uint64, namespaceName s
 			AccountId:       accountId,
 			NamespaceName:   namespaceName,
 			Description:     description,
-			Now:             now.UnixNano(),
 			ExpectedVersion: version,
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -818,9 +818,9 @@ func updateNamespaceWithError(t *testing.T, core *Core, accountId uint64, namesp
 			AccountId:       accountId,
 			NamespaceName:   namespaceName,
 			Description:     description,
-			Now:             now.UnixNano(),
 			ExpectedVersion: version,
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)

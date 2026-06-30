@@ -123,7 +123,7 @@ func (c *Core) GetLock(req *coreapis.GetLockRequest) (*coreapis.GetLockResponse,
 	}
 
 	// Filter out expired holders
-	updatedLock, err := c.checkLockExpiration(txn, lock, req.Payload.Now)
+	updatedLock, err := c.checkLockExpiration(txn, lock, req.Now)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +151,7 @@ func (c *Core) ListLocks(req *coreapis.ListLocksRequest) (*coreapis.ListLocksRes
 	// Check expiration
 	lockedLocks := make([]*corepb.Lock, 0, len(result.locks))
 	for _, lock := range result.locks {
-		refreshedLock, err := c.checkLockExpiration(txn, lock, req.Payload.Now)
+		refreshedLock, err := c.checkLockExpiration(txn, lock, req.Now)
 		if err != nil {
 			return nil, err
 		}
@@ -257,7 +257,7 @@ func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest) (*coreapis.AcquireL
 	}
 
 	// Check if lease has expired
-	if lease.ExpiresAt <= req.Payload.Now {
+	if lease.ExpiresAt <= req.Now {
 		// On return, the transaction will be discarded, and the expired lease will be deleted later by the garbage collector.
 		return &coreapis.AcquireLockResponse{
 			ApplicationError: mrpc.NewErrorWithContext(
@@ -309,7 +309,7 @@ func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest) (*coreapis.AcquireL
 	prevState := lock.State
 
 	// Remove expired holders
-	updatedLock, err := c.checkLockExpiration(txn, lock, req.Payload.Now)
+	updatedLock, err := c.checkLockExpiration(txn, lock, req.Now)
 	if err != nil {
 		return nil, err
 	}
@@ -333,7 +333,7 @@ func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest) (*coreapis.AcquireL
 
 	lockHolder := &corepb.LockHolder{
 		LeaseId:  req.Payload.LeaseId,
-		LockedAt: req.Payload.Now,
+		LockedAt: req.Now,
 		Metadata: req.Payload.Metadata,
 	}
 
@@ -347,7 +347,7 @@ func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest) (*coreapis.AcquireL
 			updatedLock.State = corepb.LockState_LOCK_STATE_SHARED_LOCKED
 		}
 		updatedLock.LockHolders = []*corepb.LockHolder{lockHolder}
-		updatedLock.LockedAt = req.Payload.Now
+		updatedLock.LockedAt = req.Now
 	case corepb.LockState_LOCK_STATE_SHARED_LOCKED:
 		if req.Payload.Exclusive {
 			return &coreapis.AcquireLockResponse{
@@ -368,7 +368,7 @@ func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest) (*coreapis.AcquireL
 		})
 		if ok {
 			// Update locked_at time (refresh lock acquisition time)
-			existingHolder.LockedAt = req.Payload.Now
+			existingHolder.LockedAt = req.Now
 		} else {
 			// Add the new lock holder
 			updatedLock.LockHolders = append(updatedLock.LockHolders, lockHolder)
@@ -379,7 +379,7 @@ func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest) (*coreapis.AcquireL
 			if updatedLock.LockHolders[0].LeaseId == req.Payload.LeaseId {
 				// This lease already holds the lock, repeated locks are considered successful
 				// Update locked_at time (refresh lock acquisition time)
-				updatedLock.LockHolders[0].LockedAt = req.Payload.Now
+				updatedLock.LockHolders[0].LockedAt = req.Now
 			} else {
 				return &coreapis.AcquireLockResponse{
 					Payload: &corepb.AcquireLockResponse{
@@ -409,7 +409,7 @@ func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest) (*coreapis.AcquireL
 	}
 
 	// Record the (successful) acquire.
-	updatedLock.LastActivityAt = req.Payload.Now
+	updatedLock.LastActivityAt = req.Now
 
 	// Update lock
 	err = c.locks.Update(txn, updatedLock)
@@ -491,7 +491,7 @@ func (c *Core) ReleaseLock(req *coreapis.ReleaseLockRequest) (*coreapis.ReleaseL
 	}
 
 	// Lock exists, lets check if it expired
-	updatedLock, err := c.checkLockExpiration(txn, lock, req.Payload.Now)
+	updatedLock, err := c.checkLockExpiration(txn, lock, req.Now)
 	if err != nil {
 		return nil, err
 	}
@@ -539,7 +539,7 @@ func (c *Core) ReleaseLock(req *coreapis.ReleaseLockRequest) (*coreapis.ReleaseL
 			counters.NumberOfLocks -= 1
 		} else {
 			// Record the release; the lock still has other holders.
-			updatedLock.LastActivityAt = req.Payload.Now
+			updatedLock.LastActivityAt = req.Now
 
 			// Update lock
 			err = c.locks.Update(txn, updatedLock)
@@ -652,7 +652,7 @@ func (c *Core) RunLocksGarbageCollection(req *coreapis.RunLocksGarbageCollection
 
 	if visitedLocks < req.Payload.MaxVisitedLocks {
 		// Clean up expired leases and their associated locks
-		err = c.leases.ListByExpiration(txn, 0, req.Payload.Now, func(lease *corepb.Lease) (bool, error) {
+		err = c.leases.ListByExpiration(txn, 0, req.Now, func(lease *corepb.Lease) (bool, error) {
 			// List all locks held by this expired lease
 			locksResult, err := c.locks.ListByLeaseId(txn, lease.Id, nil, 1000)
 			if err != nil {
@@ -664,7 +664,7 @@ func (c *Core) RunLocksGarbageCollection(req *coreapis.RunLocksGarbageCollection
 				visitedLocks++
 
 				// Get the lock to update it
-				updatedLock, err := c.checkLockExpiration(txn, lock, req.Payload.Now)
+				updatedLock, err := c.checkLockExpiration(txn, lock, req.Now)
 				if err != nil {
 					return false, err
 				}
@@ -825,13 +825,13 @@ func (c *Core) CreateLockLease(req *coreapis.CreateLockLeaseRequest) (*coreapis.
 	}
 
 	// Calculate expiration time
-	expiresAt := req.Payload.Now + int64(req.Payload.TtlSeconds)*1e9
+	expiresAt := req.Now + int64(req.Payload.TtlSeconds)*1e9
 
 	// Create the lease
 	lease := &corepb.Lease{
 		Id:        req.Payload.LeaseId,
 		ProcessId: req.Payload.ProcessId,
-		CreatedAt: req.Payload.Now,
+		CreatedAt: req.Now,
 		ExpiresAt: expiresAt,
 		Metadata:  req.Payload.Metadata,
 	}
@@ -882,7 +882,7 @@ func (c *Core) GetLockLease(req *coreapis.GetLockLeaseRequest) (*coreapis.GetLoc
 		return nil, err
 	}
 
-	if lease.ExpiresAt <= req.Payload.Now {
+	if lease.ExpiresAt <= req.Now {
 		return &coreapis.GetLockLeaseResponse{
 			ApplicationError: mrpc.NewErrorWithContext(
 				mrpc.NotFound,
@@ -915,7 +915,7 @@ func (c *Core) ListLockLeases(req *coreapis.ListLockLeasesRequest) (*coreapis.Li
 
 	// Filter out expired leases
 	activeLease := lo.Filter(result.Leases, func(lease *corepb.Lease, _ int) bool {
-		return lease.ExpiresAt > req.Payload.Now
+		return lease.ExpiresAt > req.Now
 	})
 
 	return &coreapis.ListLockLeasesResponse{
@@ -953,7 +953,7 @@ func (c *Core) RefreshLockLease(req *coreapis.RefreshLockLeaseRequest) (*coreapi
 	}
 
 	// If the lease has already expired, revoke it instead of refreshing
-	if lease.ExpiresAt <= req.Payload.Now {
+	if lease.ExpiresAt <= req.Now {
 		err = c.revokeLease(txn, lease)
 		if err != nil {
 			return nil, err
@@ -976,7 +976,7 @@ func (c *Core) RefreshLockLease(req *coreapis.RefreshLockLeaseRequest) (*coreapi
 	}
 
 	// Update the expiration time
-	lease.ExpiresAt = req.Payload.Now + int64(req.Payload.TtlSeconds)*1e9
+	lease.ExpiresAt = req.Now + int64(req.Payload.TtlSeconds)*1e9
 
 	// Save the updated lease
 	err = c.leases.Update(txn, lease)
@@ -1045,7 +1045,7 @@ func (c *Core) ListLockLeasesByProcessId(req *coreapis.ListLockLeasesByProcessId
 
 	// Filter out expired leases
 	activeLeases := lo.Filter(result.Leases, func(lease *corepb.Lease, _ int) bool {
-		return lease.ExpiresAt > req.Payload.Now
+		return lease.ExpiresAt > req.Now
 	})
 
 	return &coreapis.ListLockLeasesByProcessIdResponse{
@@ -1072,7 +1072,7 @@ func (c *Core) ListLocksByLeaseId(req *coreapis.ListLocksByLeaseIdRequest) (*cor
 	// Check expiration
 	lockedLocks := make([]*corepb.Lock, 0, len(result.locks))
 	for _, lock := range result.locks {
-		refreshedLock, err := c.checkLockExpiration(txn, lock, req.Payload.Now)
+		refreshedLock, err := c.checkLockExpiration(txn, lock, req.Now)
 		if err != nil {
 			return nil, err
 		}

@@ -10,14 +10,10 @@ message CreateNamespaceRequest {
   NamespaceId namespace_id = 1;
   string name = 2;
   string description = 3;
-  // Caller-supplied current time, Unix nanoseconds. The core is a deterministic
-  // replicated state machine, so the clock is passed in rather than read from the
-  // host. Recurs on most mutating requests with the same meaning.
-  sfixed64 now = 4;
-  map<string, string> metadata = 5;
+  map<string, string> metadata = 4;
   // Per-account quota enforced by the core; the create is rejected if it would be
   // exceeded.
-  int64 max_number_of_namespaces = 6;
+  int64 max_number_of_namespaces = 5;
 }
 
 message CreateNamespaceResponse {
@@ -56,7 +52,6 @@ message GetNamespaceByNameResponse {
 message DeleteNamespaceRequest {
   fixed64 account_id = 1;
   string namespace_name = 2;
-  sfixed64 now = 3;
 }
 
 message DeleteNamespaceResponse {}
@@ -69,7 +64,6 @@ message UpdateNamespaceRequest {
   // Optimistic concurrency check: must equal the namespace's current version or
   // the update is rejected.
   int64 expected_version = 5;
-  sfixed64 now = 6;
 }
 
 message UpdateNamespaceResponse {

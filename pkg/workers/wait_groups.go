@@ -59,7 +59,6 @@ func (w *GrackleWaitGroupsGCWorker) runGarbageCollection(shardId string, now tim
 	defer metrics.MeasureSince(grackleWaitGroupsGCWorkerDuration.WithLabelValues(shardId), time.Now())
 
 	_, err := w.coreApiClient.RunWaitGroupsGarbageCollection(context.TODO(), &corepb.RunWaitGroupsGarbageCollectionRequest{
-		Now:                        now.UnixNano(),
 		GcRecordsPageSize:          100,
 		GcRecordWaitGroupsPageSize: 1000,
 		MaxDeletedObjects:          1000,

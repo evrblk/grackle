@@ -59,7 +59,6 @@ func (w *GrackleBarriersGCWorker) runGarbageCollection(shardId string, now time.
 	defer metrics.MeasureSince(grackleBarriersGCWorkerDuration.WithLabelValues(shardId), time.Now())
 
 	_, err := w.coreApiClient.RunBarriersGarbageCollection(context.TODO(), &corepb.RunBarriersGarbageCollectionRequest{
-		Now:                          now.UnixNano(),
 		GcRecordsPageSize:            100,
 		GcRecordBarriersPageSize:     1000,
 		GcRecordParticipantsPageSize: 1000,

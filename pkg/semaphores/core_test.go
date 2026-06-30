@@ -1036,10 +1036,10 @@ func TestCore_SemaphoreMetadata(t *testing.T) {
 			Name:                              "test_semaphore",
 			Description:                       "test description",
 			Permits:                           5,
-			Now:                               now.UnixNano(),
 			MaxNumberOfSemaphoresPerNamespace: 10000,
 			Metadata:                          createMetadata,
 		},
+		Now: now.UnixNano(),
 	})
 	require.NoError(t, err)
 	require.Nil(t, createResp.ApplicationError)
@@ -1064,10 +1064,10 @@ func TestCore_SemaphoreMetadata(t *testing.T) {
 			SemaphoreName:   "test_semaphore",
 			Description:     "updated description",
 			Permits:         5,
-			Now:             now.Add(2 * time.Minute).UnixNano(),
 			Metadata:        updateMetadata,
 			ExpectedVersion: 1,
 		},
+		Now: now.Add(2 * time.Minute).UnixNano(),
 	})
 	require.NoError(t, err)
 	require.Nil(t, updateResp.ApplicationError)
@@ -1087,10 +1087,10 @@ func TestCore_SemaphoreMetadata(t *testing.T) {
 			NamespaceId:   namespaceId,
 			SemaphoreName: "test_semaphore",
 			Weight:        1,
-			Now:           now.Add(4 * time.Minute).UnixNano(),
 			LeaseId:       lease.Id.LeaseId,
 			Metadata:      holderMetadata,
 		},
+		Now: now.Add(4 * time.Minute).UnixNano(),
 	})
 	require.NoError(t, err)
 	require.Nil(t, acquireResp.ApplicationError)
@@ -1199,12 +1199,12 @@ func TestCore_DeleteSemaphore(t *testing.T) {
 		// Run GC to verify there are no orphaned expiration records
 		resp4, err := core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
 			Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
-				Now:                        now.Add(30 * time.Minute).UnixNano(),
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
 				GcRecordHoldersPageSize:    100,
 				MaxVisited:                 100,
 			},
+			Now: now.Add(30 * time.Minute).UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp4)
@@ -1334,9 +1334,9 @@ func TestCore_ListSemaphoreHolders(t *testing.T) {
 			Payload: &corepb.ListSemaphoreHoldersRequest{
 				NamespaceId:   namespaceId,
 				SemaphoreName: "test_semaphore",
-				Now:           now.UnixNano(),
 				Limit:         3,
 			},
+			Now: now.UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -1351,10 +1351,10 @@ func TestCore_ListSemaphoreHolders(t *testing.T) {
 			Payload: &corepb.ListSemaphoreHoldersRequest{
 				NamespaceId:     namespaceId,
 				SemaphoreName:   "test_semaphore",
-				Now:             now.UnixNano(),
 				Limit:           3,
 				PaginationToken: resp3.Payload.NextPaginationToken,
 			},
+			Now: now.UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -1410,9 +1410,9 @@ func TestCore_ListSemaphoreHolders(t *testing.T) {
 			Payload: &corepb.ListSemaphoreHoldersRequest{
 				NamespaceId:   namespaceId,
 				SemaphoreName: "non_existing_semaphore",
-				Now:           now.UnixNano(),
 				Limit:         100,
 			},
+			Now: now.UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -1581,8 +1581,8 @@ func TestCore_ListSemaphores(t *testing.T) {
 		resp3, err := core.ListSemaphores(&coreapis.ListSemaphoresRequest{
 			Payload: &corepb.ListSemaphoresRequest{
 				NamespaceId: namespaceId,
-				Now:         now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -1622,8 +1622,8 @@ func TestCore_ListSemaphores(t *testing.T) {
 		resp, err := core.ListSemaphores(&coreapis.ListSemaphoresRequest{
 			Payload: &corepb.ListSemaphoresRequest{
 				NamespaceId: namespaceId,
-				Now:         listAt.UnixNano(),
 			},
+			Now: listAt.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.Nil(t, resp.ApplicationError)
@@ -1665,8 +1665,8 @@ func TestCore_ListSemaphores(t *testing.T) {
 		resp, err := core.ListSemaphores(&coreapis.ListSemaphoresRequest{
 			Payload: &corepb.ListSemaphoresRequest{
 				NamespaceId: namespaceId,
-				Now:         now.Add(2 * time.Minute).UnixNano(),
 			},
+			Now: now.Add(2 * time.Minute).UnixNano(),
 		})
 		require.NoError(t, err)
 		require.Nil(t, resp.ApplicationError)
@@ -1778,8 +1778,8 @@ func TestCore_SemaphoresDeleteNamespace(t *testing.T) {
 		Payload: &corepb.SemaphoresDeleteNamespaceRequest{
 			RecordId:    rand.Uint64(),
 			NamespaceId: namespaceId,
-			Now:         now.UnixNano(),
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -1857,8 +1857,8 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 			Payload: &corepb.SemaphoresDeleteNamespaceRequest{
 				RecordId:    rand.Uint64(),
 				NamespaceId: namespaceId,
-				Now:         now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -1869,12 +1869,12 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		// Run garbage collection to clean up the deleted namespace
 		resp7, err := core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
 			Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
-				Now:                        now.UnixNano(),
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
 				GcRecordHoldersPageSize:    100,
 				MaxVisited:                 1000,
 			},
+			Now: now.UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -1969,12 +1969,12 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		gcTime := now.Add(31 * time.Minute)
 		resp9, err := core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
 			Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
-				Now:                        gcTime.UnixNano(),
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
 				GcRecordHoldersPageSize:    100,
 				MaxVisited:                 maxVisitedSemaphores,
 			},
+			Now: gcTime.UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -2015,12 +2015,12 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		// This should process semaphores 5-14 since semaphores 0-4 were already processed
 		resp13, err := core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
 			Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
-				Now:                        gcTime.UnixNano(),
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
 				GcRecordHoldersPageSize:    100,
 				MaxVisited:                 maxVisitedSemaphores,
 			},
+			Now: gcTime.UnixNano(),
 		})
 
 		require.NoError(t, err)
@@ -2084,12 +2084,12 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		// T+1h: Run garbage collection
 		resp6, err := core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
 			Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
-				Now:                        now.Add(1 * time.Hour).UnixNano(),
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
 				GcRecordHoldersPageSize:    100,
 				MaxVisited:                 100,
 			},
+			Now: now.Add(1 * time.Hour).UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp6)
@@ -2100,12 +2100,12 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		// The second run might encounter expiration records that are already correct
 		resp7, err := core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
 			Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
-				Now:                        now.Add(1*time.Hour + 5*time.Minute).UnixNano(),
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
 				GcRecordHoldersPageSize:    100,
 				MaxVisited:                 100,
 			},
+			Now: now.Add(1*time.Hour + 5*time.Minute).UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp7)
@@ -2153,12 +2153,12 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		// One GC pass with ample budget cleans up every leftover holder and the GC record.
 		_, err = core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
 			Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
-				Now:                        now.UnixNano(),
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
 				GcRecordHoldersPageSize:    100,
 				MaxVisited:                 100,
 			},
+			Now: now.UnixNano(),
 		})
 		require.NoError(t, err)
 
@@ -2217,12 +2217,12 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 			require.Less(t, passes, 20, "GC failed to converge")
 			_, err = core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
 				Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
-					Now:                        now.UnixNano(),
 					GcRecordsPageSize:          10,
 					GcRecordSemaphoresPageSize: 10,
 					GcRecordHoldersPageSize:    passBudget,
 					MaxVisited:                 passBudget,
 				},
+				Now: now.UnixNano(),
 			})
 			require.NoError(t, err)
 
@@ -2284,8 +2284,8 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 			Payload: &corepb.SemaphoresDeleteNamespaceRequest{
 				RecordId:    rand.Uint64(),
 				NamespaceId: namespaceId,
-				Now:         now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 		require.NoError(t, err)
 
@@ -2293,12 +2293,12 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		const passBudget = 3
 		_, err = core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
 			Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
-				Now:                        now.UnixNano(),
 				GcRecordsPageSize:          10,
 				GcRecordSemaphoresPageSize: 10,
 				GcRecordHoldersPageSize:    passBudget,
 				MaxVisited:                 passBudget,
 			},
+			Now: now.UnixNano(),
 		})
 		require.NoError(t, err)
 
@@ -2320,12 +2320,12 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 			require.Less(t, passes, 100, "GC failed to converge")
 			_, err = core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
 				Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
-					Now:                        now.UnixNano(),
 					GcRecordsPageSize:          10,
 					GcRecordSemaphoresPageSize: 10,
 					GcRecordHoldersPageSize:    passBudget,
 					MaxVisited:                 passBudget,
 				},
+				Now: now.UnixNano(),
 			})
 			require.NoError(t, err)
 
@@ -2391,12 +2391,12 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		gcTime := now.Add(2 * time.Minute)
 		_, err = core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
 			Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
-				Now:                        gcTime.UnixNano(),
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
 				GcRecordHoldersPageSize:    100,
 				MaxVisited:                 100,
 			},
+			Now: gcTime.UnixNano(),
 		})
 		require.NoError(t, err)
 
@@ -2472,12 +2472,12 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		gcTime := now.Add(2 * time.Minute)
 		_, err := core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
 			Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
-				Now:                        gcTime.UnixNano(),
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
 				GcRecordHoldersPageSize:    100,
 				MaxVisited:                 2,
 			},
+			Now: gcTime.UnixNano(),
 		})
 		require.NoError(t, err)
 
@@ -2500,12 +2500,12 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		for range 20 {
 			_, err := core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
 				Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
-					Now:                        gcTime.UnixNano(),
 					GcRecordsPageSize:          100,
 					GcRecordSemaphoresPageSize: 100,
 					GcRecordHoldersPageSize:    100,
 					MaxVisited:                 2,
 				},
+				Now: gcTime.UnixNano(),
 			})
 			require.NoError(t, err)
 		}
@@ -2558,12 +2558,12 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		// T+2m: live semaphore's holder is expired. Run GC.
 		resp, err := core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
 			Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
-				Now:                        now.Add(2 * time.Minute).UnixNano(),
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
 				GcRecordHoldersPageSize:    100,
 				MaxVisited:                 1000,
 			},
+			Now: now.Add(2 * time.Minute).UnixNano(),
 		})
 		require.NoError(t, err)
 		require.Nil(t, resp.ApplicationError)
@@ -2614,12 +2614,12 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		// The holder is also expired, so the pruned semaphore ends up with no record at all.
 		resp, err := core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
 			Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
-				Now:                        now.Add(2 * time.Minute).UnixNano(),
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
 				GcRecordHoldersPageSize:    100,
 				MaxVisited:                 1000,
 			},
+			Now: now.Add(2 * time.Minute).UnixNano(),
 		})
 		require.NoError(t, err)
 		require.Nil(t, resp.ApplicationError)
@@ -2657,12 +2657,12 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 
 		resp, err := core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
 			Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
-				Now:                        now.UnixNano(),
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
 				GcRecordHoldersPageSize:    100,
 				MaxVisited:                 1000,
 			},
+			Now: now.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.Nil(t, resp.ApplicationError)
@@ -2673,12 +2673,12 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 		// gone, not just hidden behind the iterator's snapshot.
 		resp, err = core.RunSemaphoresGarbageCollection(&coreapis.RunSemaphoresGarbageCollectionRequest{
 			Payload: &corepb.RunSemaphoresGarbageCollectionRequest{
-				Now:                        now.UnixNano(),
 				GcRecordsPageSize:          100,
 				GcRecordSemaphoresPageSize: 100,
 				GcRecordHoldersPageSize:    100,
 				MaxVisited:                 1000,
 			},
+			Now: now.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.Nil(t, resp.ApplicationError)
@@ -2717,9 +2717,9 @@ func TestCore_CreateSemaphoreLease(t *testing.T) {
 					LeaseId:                    leaseId,
 					ProcessId:                  processId,
 					TtlSeconds:                 60,
-					Now:                        now.UnixNano(),
 					MaxNumberOfSemaphoreLeases: 100,
 				},
+				Now: now.UnixNano(),
 			}
 		}
 
@@ -2780,8 +2780,8 @@ func TestCore_GetSemaphoreLease(t *testing.T) {
 		resp, err := core.GetSemaphoreLease(&coreapis.GetSemaphoreLeaseRequest{
 			Payload: &corepb.GetSemaphoreLeaseRequest{
 				LeaseId: lease.Id,
-				Now:     now.Add(30 * time.Second).UnixNano(),
 			},
+			Now: now.Add(30 * time.Second).UnixNano(),
 		})
 		require.NoError(t, err)
 		require.Nil(t, resp.ApplicationError)
@@ -2801,8 +2801,8 @@ func TestCore_GetSemaphoreLease(t *testing.T) {
 		resp, err := core.GetSemaphoreLease(&coreapis.GetSemaphoreLeaseRequest{
 			Payload: &corepb.GetSemaphoreLeaseRequest{
 				LeaseId: lease.Id,
-				Now:     now.Add(2 * time.Minute).UnixNano(),
 			},
+			Now: now.Add(2 * time.Minute).UnixNano(),
 		})
 		require.NoError(t, err)
 		require.Nil(t, resp.Payload)
@@ -2826,8 +2826,8 @@ func TestCore_GetSemaphoreLease(t *testing.T) {
 					NamespaceId: rand.Uint64(),
 					LeaseId:     rand.Uint64(),
 				},
-				Now: now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.Nil(t, resp.Payload)
@@ -2878,8 +2878,8 @@ func TestCore_RevokeSemaphoreLease(t *testing.T) {
 		resp3, err := core.RevokeSemaphoreLease(&coreapis.RevokeSemaphoreLeaseRequest{
 			Payload: &corepb.RevokeSemaphoreLeaseRequest{
 				LeaseId: lease.Id,
-				Now:     now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp3)
@@ -2903,8 +2903,8 @@ func TestCore_RevokeSemaphoreLease(t *testing.T) {
 		resp5, err := core.GetSemaphoreLease(&coreapis.GetSemaphoreLeaseRequest{
 			Payload: &corepb.GetSemaphoreLeaseRequest{
 				LeaseId: lease.Id,
-				Now:     now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp5)
@@ -2949,8 +2949,8 @@ func TestCore_RevokeSemaphoreLease(t *testing.T) {
 		resp4, err := core.RevokeSemaphoreLease(&coreapis.RevokeSemaphoreLeaseRequest{
 			Payload: &corepb.RevokeSemaphoreLeaseRequest{
 				LeaseId: lease1.Id,
-				Now:     now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp4)
@@ -2966,8 +2966,8 @@ func TestCore_RevokeSemaphoreLease(t *testing.T) {
 		resp6, err := core.RevokeSemaphoreLease(&coreapis.RevokeSemaphoreLeaseRequest{
 			Payload: &corepb.RevokeSemaphoreLeaseRequest{
 				LeaseId: lease2.Id,
-				Now:     now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp6)
@@ -2991,8 +2991,8 @@ func TestCore_RevokeSemaphoreLease(t *testing.T) {
 					NamespaceId: rand.Uint64(),
 					LeaseId:     rand.Uint64(),
 				},
-				Now: now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.Nil(t, resp.Payload)
@@ -3031,8 +3031,8 @@ func TestCore_RevokeSemaphoreLease(t *testing.T) {
 		resp, err := core.RevokeSemaphoreLease(&coreapis.RevokeSemaphoreLeaseRequest{
 			Payload: &corepb.RevokeSemaphoreLeaseRequest{
 				LeaseId: shortLease.Id,
-				Now:     now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.Nil(t, resp.ApplicationError)
@@ -3079,8 +3079,8 @@ func TestCore_RevokeSemaphoreLease(t *testing.T) {
 		resp, err := core.RevokeSemaphoreLease(&coreapis.RevokeSemaphoreLeaseRequest{
 			Payload: &corepb.RevokeSemaphoreLeaseRequest{
 				LeaseId: longLease.Id,
-				Now:     now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.Nil(t, resp.ApplicationError)
@@ -3116,8 +3116,8 @@ func TestCore_RevokeSemaphoreLease(t *testing.T) {
 		resp, err := core.RevokeSemaphoreLease(&coreapis.RevokeSemaphoreLeaseRequest{
 			Payload: &corepb.RevokeSemaphoreLeaseRequest{
 				LeaseId: lease.Id,
-				Now:     now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.Nil(t, resp.ApplicationError)
@@ -3189,8 +3189,8 @@ func TestCore_RefreshSemaphoreLease(t *testing.T) {
 			Payload: &corepb.RefreshSemaphoreLeaseRequest{
 				LeaseId:    lease.Id,
 				TtlSeconds: 60,
-				Now:        futureTime.UnixNano(),
 			},
+			Now: futureTime.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp3)
@@ -3215,8 +3215,8 @@ func TestCore_RefreshSemaphoreLease(t *testing.T) {
 		resp5, err := core.GetSemaphoreLease(&coreapis.GetSemaphoreLeaseRequest{
 			Payload: &corepb.GetSemaphoreLeaseRequest{
 				LeaseId: lease.Id,
-				Now:     futureTime.UnixNano(),
 			},
+			Now: futureTime.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp5)
@@ -3241,8 +3241,8 @@ func TestCore_RefreshSemaphoreLease(t *testing.T) {
 			Payload: &corepb.RefreshSemaphoreLeaseRequest{
 				LeaseId:    lease.Id,
 				TtlSeconds: 120, // 2 minutes
-				Now:        futureTime.UnixNano(),
 			},
+			Now: futureTime.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp1)
@@ -3259,8 +3259,8 @@ func TestCore_RefreshSemaphoreLease(t *testing.T) {
 		resp2, err := core.GetSemaphoreLease(&coreapis.GetSemaphoreLeaseRequest{
 			Payload: &corepb.GetSemaphoreLeaseRequest{
 				LeaseId: lease.Id,
-				Now:     futureTime.UnixNano(),
 			},
+			Now: futureTime.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp2)
@@ -3307,8 +3307,8 @@ func TestCore_RefreshSemaphoreLease(t *testing.T) {
 			Payload: &corepb.RefreshSemaphoreLeaseRequest{
 				LeaseId:    lease.Id,
 				TtlSeconds: 300,
-				Now:        refreshAt.UnixNano(),
 			},
+			Now: refreshAt.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.Nil(t, resp.ApplicationError)
@@ -3320,8 +3320,8 @@ func TestCore_RefreshSemaphoreLease(t *testing.T) {
 			Payload: &corepb.ListSemaphoreHoldersRequest{
 				NamespaceId:   namespaceId,
 				SemaphoreName: "solo",
-				Now:           refreshAt.UnixNano(),
 			},
+			Now: refreshAt.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.Len(t, soloHolders.Payload.Holders, 1)
@@ -3337,8 +3337,8 @@ func TestCore_RefreshSemaphoreLease(t *testing.T) {
 			Payload: &corepb.ListSemaphoreHoldersRequest{
 				NamespaceId:   namespaceId,
 				SemaphoreName: "shared",
-				Now:           refreshAt.UnixNano(),
 			},
+			Now: refreshAt.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.Len(t, sharedHolders.Payload.Holders, 2)
@@ -3373,8 +3373,8 @@ func TestCore_ListSemaphoreLeases(t *testing.T) {
 					AccountId:   accountId,
 					NamespaceId: namespaceId,
 				},
-				Now: now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp1)
@@ -3411,8 +3411,8 @@ func TestCore_ListSemaphoreLeases(t *testing.T) {
 					AccountId:   accountId,
 					NamespaceId: namespaceId,
 				},
-				Now: futureTime.UnixNano(),
 			},
+			Now: futureTime.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp1)
@@ -3442,8 +3442,8 @@ func TestCore_ListSemaphoreLeases(t *testing.T) {
 					AccountId:   accountId,
 					NamespaceId: namespaceId,
 				},
-				Now: now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp1)
@@ -3473,8 +3473,8 @@ func TestCore_ListSemaphoreLeasesByProcessId(t *testing.T) {
 					NamespaceId: namespaceId,
 				},
 				ProcessId: "process-1",
-				Now:       now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp1)
@@ -3512,8 +3512,8 @@ func TestCore_ListSemaphoreLeasesByProcessId(t *testing.T) {
 					NamespaceId: namespaceId,
 				},
 				ProcessId: "process-1",
-				Now:       futureTime.UnixNano(),
 			},
+			Now: futureTime.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp1)
@@ -3539,8 +3539,8 @@ func TestCore_ListSemaphoreLeasesByProcessId(t *testing.T) {
 					NamespaceId: namespaceId,
 				},
 				ProcessId: "process-2",
-				Now:       now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp1)
@@ -3593,8 +3593,8 @@ func TestCore_ListSemaphoresByLeaseId(t *testing.T) {
 		resp4, err := core.ListSemaphoresByLeaseId(&coreapis.ListSemaphoresByLeaseIdRequest{
 			Payload: &corepb.ListSemaphoresByLeaseIdRequest{
 				LeaseId: lease1.Id,
-				Now:     now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp4)
@@ -3626,8 +3626,8 @@ func TestCore_ListSemaphoresByLeaseId(t *testing.T) {
 		resp1, err := core.ListSemaphoresByLeaseId(&coreapis.ListSemaphoresByLeaseIdRequest{
 			Payload: &corepb.ListSemaphoresByLeaseIdRequest{
 				LeaseId: lease.Id,
-				Now:     now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp1)
@@ -3669,8 +3669,8 @@ func TestCore_ListSemaphoresByLeaseId(t *testing.T) {
 		resp4, err := core.ListSemaphoresByLeaseId(&coreapis.ListSemaphoresByLeaseIdRequest{
 			Payload: &corepb.ListSemaphoresByLeaseIdRequest{
 				LeaseId: lease1.Id,
-				Now:     now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp4)
@@ -3685,8 +3685,8 @@ func TestCore_ListSemaphoresByLeaseId(t *testing.T) {
 		resp6, err := core.ListSemaphoresByLeaseId(&coreapis.ListSemaphoresByLeaseIdRequest{
 			Payload: &corepb.ListSemaphoresByLeaseIdRequest{
 				LeaseId: lease1.Id,
-				Now:     now.UnixNano(),
 			},
+			Now: now.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp6)
@@ -3727,8 +3727,8 @@ func TestCore_ListSemaphoresByLeaseId(t *testing.T) {
 		resp, err := core.ListSemaphoresByLeaseId(&coreapis.ListSemaphoresByLeaseIdRequest{
 			Payload: &corepb.ListSemaphoresByLeaseIdRequest{
 				LeaseId: longLease.Id,
-				Now:     listAt.UnixNano(),
 			},
+			Now: listAt.UnixNano(),
 		})
 		require.NoError(t, err)
 		require.Nil(t, resp.ApplicationError)
@@ -3827,9 +3827,9 @@ func createLease(t *testing.T, core *Core, accountId uint64, namespaceId uint64,
 			},
 			ProcessId:                  processId,
 			TtlSeconds:                 int64(ttl.Seconds()),
-			Now:                        now.UnixNano(),
 			MaxNumberOfSemaphoreLeases: 100,
 		},
+		Now: now.UnixNano(),
 	})
 	require.NoError(t, err)
 	require.Nil(t, resp.ApplicationError)
@@ -3849,9 +3849,9 @@ func acquireSemaphore(t *testing.T, core *Core, namespaceId *corepb.NamespaceId,
 			NamespaceId:   namespaceId,
 			SemaphoreName: semaphoreName,
 			Weight:        weight,
-			Now:           now.UnixNano(),
 			LeaseId:       leaseId.LeaseId,
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -3869,9 +3869,9 @@ func releaseSemaphore(t *testing.T, core *Core, namespaceId *corepb.NamespaceId,
 		Payload: &corepb.ReleaseSemaphoreRequest{
 			NamespaceId:   namespaceId,
 			SemaphoreName: semaphoreName,
-			Now:           now.UnixNano(),
 			LeaseId:       leaseId.LeaseId,
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -3890,9 +3890,9 @@ func releaseSemaphoreWithError(t *testing.T, core *Core, namespaceId *corepb.Nam
 		Payload: &corepb.ReleaseSemaphoreRequest{
 			NamespaceId:   namespaceId,
 			SemaphoreName: semaphoreName,
-			Now:           now.UnixNano(),
 			LeaseId:       leaseId.LeaseId,
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -3912,9 +3912,9 @@ func createSemaphore(t *testing.T, core *Core, semaphoreId *corepb.SemaphoreId, 
 			Name:                              semaphoreName,
 			Description:                       "test description",
 			Permits:                           permits,
-			Now:                               now.UnixNano(),
 			MaxNumberOfSemaphoresPerNamespace: 10000,
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -3941,9 +3941,9 @@ func createSemaphoreWithError(t *testing.T, core *Core, semaphoreId *corepb.Sema
 			Name:                              semaphoreName,
 			Description:                       "test description",
 			Permits:                           permits,
-			Now:                               now.UnixNano(),
 			MaxNumberOfSemaphoresPerNamespace: maxNumberOfSemaphoresPerNamespace,
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -3960,8 +3960,8 @@ func getSemaphore(t *testing.T, core *Core, semaphoreId *corepb.SemaphoreId, now
 	resp, err := core.GetSemaphore(&coreapis.GetSemaphoreRequest{
 		Payload: &corepb.GetSemaphoreRequest{
 			SemaphoreId: semaphoreId,
-			Now:         now.UnixNano(),
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -3979,8 +3979,8 @@ func getSemaphoreWithError(t *testing.T, core *Core, semaphoreId *corepb.Semapho
 	resp, err := core.GetSemaphore(&coreapis.GetSemaphoreRequest{
 		Payload: &corepb.GetSemaphoreRequest{
 			SemaphoreId: semaphoreId,
-			Now:         now.UnixNano(),
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -3998,8 +3998,8 @@ func getSemaphoreByName(t *testing.T, core *Core, namespaceId *corepb.NamespaceI
 		Payload: &corepb.GetSemaphoreByNameRequest{
 			NamespaceId:   namespaceId,
 			SemaphoreName: semaphoreName,
-			Now:           now.UnixNano(),
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -4018,8 +4018,8 @@ func getSemaphoreByNameWithError(t *testing.T, core *Core, namespaceId *corepb.N
 		Payload: &corepb.GetSemaphoreByNameRequest{
 			NamespaceId:   namespaceId,
 			SemaphoreName: semaphoreName,
-			Now:           now.UnixNano(),
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -4038,9 +4038,9 @@ func acquireSemaphoreWithError(t *testing.T, core *Core, namespaceId *corepb.Nam
 			NamespaceId:   namespaceId,
 			SemaphoreName: semaphoreName,
 			Weight:        weight,
-			Now:           now.UnixNano(),
 			LeaseId:       leaseId.LeaseId,
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -4058,9 +4058,9 @@ func listSemaphoreHolders(t *testing.T, core *Core, namespaceId *corepb.Namespac
 		Payload: &corepb.ListSemaphoreHoldersRequest{
 			NamespaceId:   namespaceId,
 			SemaphoreName: semaphoreName,
-			Now:           now.UnixNano(),
 			Limit:         100,
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -4080,9 +4080,9 @@ func updateSemaphore(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, 
 			SemaphoreName:   semaphoreName,
 			Description:     description,
 			Permits:         permits,
-			Now:             now.UnixNano(),
 			ExpectedVersion: version,
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -4103,9 +4103,9 @@ func updateSemaphoreWithError(t *testing.T, core *Core, namespaceId *corepb.Name
 			SemaphoreName:   semaphoreName,
 			Description:     description,
 			Permits:         permits,
-			Now:             now.UnixNano(),
 			ExpectedVersion: version,
 		},
+		Now: now.UnixNano(),
 	})
 
 	require.NoError(t, err)
@@ -4125,9 +4125,9 @@ func createSemaphoreWithMax(t *testing.T, core *Core, semaphoreId *corepb.Semaph
 			Name:                              semaphoreName,
 			Description:                       "test description",
 			Permits:                           permits,
-			Now:                               now.UnixNano(),
 			MaxNumberOfSemaphoresPerNamespace: maxNumberOfSemaphoresPerNamespace,
 		},
+		Now: now.UnixNano(),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -4149,9 +4149,9 @@ func createLeaseWithMax(t *testing.T, core *Core, accountId uint64, namespaceId 
 			},
 			ProcessId:                  processId,
 			TtlSeconds:                 int64(ttl.Seconds()),
-			Now:                        now.UnixNano(),
 			MaxNumberOfSemaphoreLeases: maxNumberOfSemaphoreLeases,
 		},
+		Now: now.UnixNano(),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -4175,9 +4175,9 @@ func createLeaseWithError(t *testing.T, core *Core, accountId uint64, namespaceI
 			},
 			ProcessId:                  processId,
 			TtlSeconds:                 int64(ttl.Seconds()),
-			Now:                        now.UnixNano(),
 			MaxNumberOfSemaphoreLeases: maxNumberOfSemaphoreLeases,
 		},
+		Now: now.UnixNano(),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -4193,8 +4193,8 @@ func refreshSemaphoreLeaseWithError(t *testing.T, core *Core, leaseId *corepb.Le
 		Payload: &corepb.RefreshSemaphoreLeaseRequest{
 			LeaseId:    leaseId,
 			TtlSeconds: ttlSeconds,
-			Now:        now.UnixNano(),
 		},
+		Now: now.UnixNano(),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, resp)
