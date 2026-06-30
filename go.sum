@@ -32,8 +32,8 @@ github.com/evrblk/evrblk-go v0.0.0-20260626162712-8d4590eeb250 h1:9gxfCNaHrzuJaX
 github.com/evrblk/evrblk-go v0.0.0-20260626162712-8d4590eeb250/go.mod h1:oo3CFUXBs6nIGp6C2Z2/yAgbBqnicwjt+ErVB50rJKg=
 github.com/evrblk/monstera v0.0.0-20260630004959-f62edfd59775 h1:D4MH9aAotSMejMQDYG4tZ0XtjANaP0cC0B66nkskLNY=
 github.com/evrblk/monstera v0.0.0-20260630004959-f62edfd59775/go.mod h1:SbVZasx1nTxTH+Bd+jHdOtlhGggjP54O596c8YIdzeM=
-github.com/evrblk/yellowstone-common v0.0.0-20260630004209-fc48e9f3184e h1:3BnBSB1p8zF/GxeDYNbV0hzC7gfyO+od+LnnZViBTNs=
-github.com/evrblk/yellowstone-common v0.0.0-20260630004209-fc48e9f3184e/go.mod h1:6d/cX8GVHN2ep5eG+J52eP43+L/u6UZuRvJyKLJVnDA=
+github.com/evrblk/yellowstone-common v0.0.0-20260630132530-8ce20ad6cc06 h1:ytoVWB/aTf2490MvgUvaM5sdFDg3LGZl0NKGRsv7wJk=
+github.com/evrblk/yellowstone-common v0.0.0-20260630132530-8ce20ad6cc06/go.mod h1:+mo7GP3rap58li3RxS85pKeCzGrp6zUsOx3/IaRUCp8=
 github.com/fatih/color v1.13.0/go.mod h1:kLAiJbzzSOZDVNGyDpeOxJ47H46qBXwg5ILebYFFOfk=
 github.com/fatih/color v1.19.0 h1:Zp3PiM21/9Ld6FzSKyL5c/BULoe/ONr9KlbYVOfG8+w=
 github.com/fatih/color v1.19.0/go.mod h1:zNk67I0ZUT1bEGsSGyCZYZNrHuTkJJB+r6Q9VuMi0LE=
