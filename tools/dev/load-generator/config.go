@@ -110,7 +110,7 @@ func parseFlags() *Config {
 	flag.IntVar(&config.WaitGroupInitialCounter, "waitgroup-initial-counter", 100, "Initial counter for wait groups")
 	flag.IntVar(&config.WaitGroupJobBatchSize, "waitgroup-job-batch-size", 5, "Jobs to complete at once")
 	flag.DurationVar(&config.WaitGroupExpiresIn, "waitgroup-expires-in", 1*time.Hour, "How far in the future a wait group's expires_at is set")
-	flag.DurationVar(&config.WaitGroupDeleteAfterFinished, "waitgroup-delete-after-finished", 10*time.Second, "Retention of a finished wait group before GC")
+	flag.DurationVar(&config.WaitGroupDeleteAfterFinished, "waitgroup-delete-after-finished", 60*time.Second, "Retention of a finished wait group before GC")
 
 	// Barrier-specific
 	flag.IntVar(&config.BarrierExpectedProcesses, "barrier-expected-processes", 4, "Expected participants per barrier")
