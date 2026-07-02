@@ -11,3 +11,5 @@ scrape_configs:
           - node-1:2112
           - node-2:2112
           - node-3:2112
+          - worker:2112
+          - gateway:2112

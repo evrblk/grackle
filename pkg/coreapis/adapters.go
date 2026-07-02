@@ -13,18 +13,27 @@ import (
 )
 
 var (
-	monsteraCoreMethodDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Help:                            "Monstera core method duration",
-		Name:                            "monstera_core_method_duration_seconds",
+	rpcMethodDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Help:                            "Monstera RPC method duration",
+		Name:                            "monstera_rpc_method_duration_seconds",
 		NativeHistogramBucketFactor:     1.1,
 		NativeHistogramMaxBucketNumber:  100,
 		NativeHistogramMinResetDuration: time.Hour,
 	}, []string{"core", "method", "shard", "replica"})
-	monsteraCoreMethodCount = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Help: "Monstera core method count",
-		Name: "monstera_core_method_count",
+	rpcMethodsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Help: "Number of Monstera RPC method calls",
+		Name: "monstera_rpc_methods_total",
 	}, []string{"core", "method", "shard", "replica"})
 )
+
+// RegisterMetrics registers the RPC metrics emitted by the generated core
+// adapters with the given registerer. Call once at startup, e.g.
+// RegisterMetrics(prometheus.DefaultRegisterer). It panics if a metric is
+// already registered.
+func RegisterMetrics(registerer prometheus.Registerer) {
+	registerer.MustRegister(rpcMethodDuration)
+	registerer.MustRegister(rpcMethodsTotal)
+}
 
 type GrackleLocksCoreAdapter struct {
 	shardId   string
@@ -44,16 +53,10 @@ func NewGrackleLocksCoreAdapter(shardId string, replicaId string, grackleLocksCo
 }
 
 func (a *GrackleLocksCoreAdapter) Snapshot() monstera.ApplicationCoreSnapshot {
-	defer measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "Snapshot", a.shardId, a.replicaId), time.Now())
-	monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "Snapshot", a.shardId, a.replicaId).Inc()
-
 	return a.grackleLocksCore.Snapshot()
 }
 
 func (a *GrackleLocksCoreAdapter) Restore(r io.ReadCloser) error {
-	defer measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "Restore", a.shardId, a.replicaId), time.Now())
-	monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "Restore", a.shardId, a.replicaId).Inc()
-
 	return a.grackleLocksCore.Restore(r)
 }
 
@@ -61,350 +64,364 @@ func (a *GrackleLocksCoreAdapter) Close() {
 	a.grackleLocksCore.Close()
 }
 
-func (a *GrackleLocksCoreAdapter) Update(appRequestBytes []byte) (*monstera.UpdateResponse, error) {
-	response := &monstera.UpdateResponse{}
-	appResponse := &mrpc.Response{}
-	appRequest := &mrpc.Request{}
+func (a *GrackleLocksCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateResponse, error) {
+	t1 := time.Now()
 
-	err := appRequest.UnmarshalVT(appRequestBytes)
+	resp := &monstera.UpdateResponse{}
+	rpcResp := &mrpc.Response{}
+	rpcReq := &mrpc.Request{}
+
+	err := rpcReq.UnmarshalVT(rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	t1 := time.Now()
-
-	switch appRequest.MethodNumber {
+	switch rpcReq.MethodNumber {
 	case 1:
-		payload := corepb.AcquireLockRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleLocks", "AcquireLock", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "AcquireLock", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.AcquireLockRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleLocksCore.AcquireLock(&AcquireLockRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleLocksCore.AcquireLock(&AcquireLockRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "AcquireLock", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "AcquireLock", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 2:
-		payload := corepb.ReleaseLockRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleLocks", "ReleaseLock", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "ReleaseLock", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.ReleaseLockRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleLocksCore.ReleaseLock(&ReleaseLockRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleLocksCore.ReleaseLock(&ReleaseLockRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "ReleaseLock", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "ReleaseLock", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 3:
-		payload := corepb.DeleteLockRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleLocks", "DeleteLock", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "DeleteLock", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.DeleteLockRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleLocksCore.DeleteLock(&DeleteLockRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleLocksCore.DeleteLock(&DeleteLockRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "DeleteLock", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "DeleteLock", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 4:
-		payload := corepb.RunLocksGarbageCollectionRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleLocks", "RunLocksGarbageCollection", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "RunLocksGarbageCollection", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.RunLocksGarbageCollectionRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleLocksCore.RunLocksGarbageCollection(&RunLocksGarbageCollectionRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleLocksCore.RunLocksGarbageCollection(&RunLocksGarbageCollectionRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "RunLocksGarbageCollection", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "RunLocksGarbageCollection", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 5:
-		payload := corepb.LocksDeleteNamespaceRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleLocks", "LocksDeleteNamespace", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "LocksDeleteNamespace", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.LocksDeleteNamespaceRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleLocksCore.LocksDeleteNamespace(&LocksDeleteNamespaceRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleLocksCore.LocksDeleteNamespace(&LocksDeleteNamespaceRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "LocksDeleteNamespace", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "LocksDeleteNamespace", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 6:
-		payload := corepb.CreateLockLeaseRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleLocks", "CreateLockLease", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "CreateLockLease", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.CreateLockLeaseRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleLocksCore.CreateLockLease(&CreateLockLeaseRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleLocksCore.CreateLockLease(&CreateLockLeaseRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "CreateLockLease", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "CreateLockLease", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 7:
-		payload := corepb.RefreshLockLeaseRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleLocks", "RefreshLockLease", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "RefreshLockLease", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.RefreshLockLeaseRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleLocksCore.RefreshLockLease(&RefreshLockLeaseRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleLocksCore.RefreshLockLease(&RefreshLockLeaseRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "RefreshLockLease", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "RefreshLockLease", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 8:
-		payload := corepb.RevokeLockLeaseRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleLocks", "RevokeLockLease", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "RevokeLockLease", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.RevokeLockLeaseRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleLocksCore.RevokeLockLease(&RevokeLockLeaseRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleLocksCore.RevokeLockLease(&RevokeLockLeaseRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "RevokeLockLease", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "RevokeLockLease", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	default:
 		return nil, fmt.Errorf("no matching handlers")
 	}
 
-	appResponseBytes, err := appResponse.MarshalVT()
+	rpcRespBytes, err := rpcResp.MarshalVT()
 	if err != nil {
 		return nil, err
 	}
-	response.Data = appResponseBytes
+	resp.Data = rpcRespBytes
 
-	return response, nil
+	return resp, nil
 }
 
-func (a *GrackleLocksCoreAdapter) Read(appRequestBytes []byte) (*monstera.ReadResponse, error) {
-	response := &monstera.ReadResponse{}
-	appResponse := &mrpc.Response{}
-	appRequest := &mrpc.Request{}
+func (a *GrackleLocksCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadResponse, error) {
+	t1 := time.Now()
 
-	err := appRequest.UnmarshalVT(appRequestBytes)
+	resp := &monstera.ReadResponse{}
+	rpcResp := &mrpc.Response{}
+	rpcReq := &mrpc.Request{}
+
+	err := rpcReq.UnmarshalVT(rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	t1 := time.Now()
-
-	switch appRequest.MethodNumber {
+	switch rpcReq.MethodNumber {
 	case 1:
-		payload := corepb.GetLockRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleLocks", "GetLock", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "GetLock", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.GetLockRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleLocksCore.GetLock(&GetLockRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleLocksCore.GetLock(&GetLockRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "GetLock", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "GetLock", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 2:
-		payload := corepb.ListLocksRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleLocks", "ListLocks", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "ListLocks", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.ListLocksRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleLocksCore.ListLocks(&ListLocksRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleLocksCore.ListLocks(&ListLocksRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "ListLocks", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "ListLocks", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 3:
-		payload := corepb.ListLocksByLeaseIdRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleLocks", "ListLocksByLeaseId", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "ListLocksByLeaseId", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.ListLocksByLeaseIdRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleLocksCore.ListLocksByLeaseId(&ListLocksByLeaseIdRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleLocksCore.ListLocksByLeaseId(&ListLocksByLeaseIdRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "ListLocksByLeaseId", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "ListLocksByLeaseId", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 4:
-		payload := corepb.ListLockLeasesRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleLocks", "ListLockLeases", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "ListLockLeases", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.ListLockLeasesRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleLocksCore.ListLockLeases(&ListLockLeasesRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleLocksCore.ListLockLeases(&ListLockLeasesRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "ListLockLeases", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "ListLockLeases", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 5:
-		payload := corepb.ListLockLeasesByProcessIdRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleLocks", "ListLockLeasesByProcessId", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "ListLockLeasesByProcessId", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.ListLockLeasesByProcessIdRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleLocksCore.ListLockLeasesByProcessId(&ListLockLeasesByProcessIdRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleLocksCore.ListLockLeasesByProcessId(&ListLockLeasesByProcessIdRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "ListLockLeasesByProcessId", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "ListLockLeasesByProcessId", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 6:
-		payload := corepb.GetLockLeaseRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleLocks", "GetLockLease", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "GetLockLease", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.GetLockLeaseRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleLocksCore.GetLockLease(&GetLockLeaseRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleLocksCore.GetLockLease(&GetLockLeaseRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleLocks", "GetLockLease", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleLocks", "GetLockLease", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	default:
 		return nil, fmt.Errorf("no matching handlers")
 	}
 
-	appResponseBytes, err := appResponse.MarshalVT()
+	rpcRespBytes, err := rpcResp.MarshalVT()
 	if err != nil {
 		return nil, err
 	}
-	response.Data = appResponseBytes
+	resp.Data = rpcRespBytes
 
-	return response, nil
+	return resp, nil
 }
 
 type GrackleSemaphoresCoreAdapter struct {
@@ -425,16 +442,10 @@ func NewGrackleSemaphoresCoreAdapter(shardId string, replicaId string, grackleSe
 }
 
 func (a *GrackleSemaphoresCoreAdapter) Snapshot() monstera.ApplicationCoreSnapshot {
-	defer measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "Snapshot", a.shardId, a.replicaId), time.Now())
-	monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "Snapshot", a.shardId, a.replicaId).Inc()
-
 	return a.grackleSemaphoresCore.Snapshot()
 }
 
 func (a *GrackleSemaphoresCoreAdapter) Restore(r io.ReadCloser) error {
-	defer measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "Restore", a.shardId, a.replicaId), time.Now())
-	monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "Restore", a.shardId, a.replicaId).Inc()
-
 	return a.grackleSemaphoresCore.Restore(r)
 }
 
@@ -442,434 +453,452 @@ func (a *GrackleSemaphoresCoreAdapter) Close() {
 	a.grackleSemaphoresCore.Close()
 }
 
-func (a *GrackleSemaphoresCoreAdapter) Update(appRequestBytes []byte) (*monstera.UpdateResponse, error) {
-	response := &monstera.UpdateResponse{}
-	appResponse := &mrpc.Response{}
-	appRequest := &mrpc.Request{}
+func (a *GrackleSemaphoresCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateResponse, error) {
+	t1 := time.Now()
 
-	err := appRequest.UnmarshalVT(appRequestBytes)
+	resp := &monstera.UpdateResponse{}
+	rpcResp := &mrpc.Response{}
+	rpcReq := &mrpc.Request{}
+
+	err := rpcReq.UnmarshalVT(rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	t1 := time.Now()
-
-	switch appRequest.MethodNumber {
+	switch rpcReq.MethodNumber {
 	case 1:
-		payload := corepb.AcquireSemaphoreRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "AcquireSemaphore", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "AcquireSemaphore", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.AcquireSemaphoreRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleSemaphoresCore.AcquireSemaphore(&AcquireSemaphoreRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleSemaphoresCore.AcquireSemaphore(&AcquireSemaphoreRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "AcquireSemaphore", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "AcquireSemaphore", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 2:
-		payload := corepb.ReleaseSemaphoreRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "ReleaseSemaphore", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "ReleaseSemaphore", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.ReleaseSemaphoreRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleSemaphoresCore.ReleaseSemaphore(&ReleaseSemaphoreRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleSemaphoresCore.ReleaseSemaphore(&ReleaseSemaphoreRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "ReleaseSemaphore", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "ReleaseSemaphore", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 3:
-		payload := corepb.CreateSemaphoreRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "CreateSemaphore", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "CreateSemaphore", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.CreateSemaphoreRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleSemaphoresCore.CreateSemaphore(&CreateSemaphoreRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleSemaphoresCore.CreateSemaphore(&CreateSemaphoreRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "CreateSemaphore", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "CreateSemaphore", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 4:
-		payload := corepb.UpdateSemaphoreRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "UpdateSemaphore", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "UpdateSemaphore", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.UpdateSemaphoreRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleSemaphoresCore.UpdateSemaphore(&UpdateSemaphoreRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleSemaphoresCore.UpdateSemaphore(&UpdateSemaphoreRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "UpdateSemaphore", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "UpdateSemaphore", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 5:
-		payload := corepb.DeleteSemaphoreRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "DeleteSemaphore", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "DeleteSemaphore", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.DeleteSemaphoreRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleSemaphoresCore.DeleteSemaphore(&DeleteSemaphoreRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleSemaphoresCore.DeleteSemaphore(&DeleteSemaphoreRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "DeleteSemaphore", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "DeleteSemaphore", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 6:
-		payload := corepb.RunSemaphoresGarbageCollectionRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "RunSemaphoresGarbageCollection", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "RunSemaphoresGarbageCollection", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.RunSemaphoresGarbageCollectionRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleSemaphoresCore.RunSemaphoresGarbageCollection(&RunSemaphoresGarbageCollectionRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleSemaphoresCore.RunSemaphoresGarbageCollection(&RunSemaphoresGarbageCollectionRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "RunSemaphoresGarbageCollection", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "RunSemaphoresGarbageCollection", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 7:
-		payload := corepb.SemaphoresDeleteNamespaceRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "SemaphoresDeleteNamespace", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "SemaphoresDeleteNamespace", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.SemaphoresDeleteNamespaceRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleSemaphoresCore.SemaphoresDeleteNamespace(&SemaphoresDeleteNamespaceRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleSemaphoresCore.SemaphoresDeleteNamespace(&SemaphoresDeleteNamespaceRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "SemaphoresDeleteNamespace", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "SemaphoresDeleteNamespace", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 8:
-		payload := corepb.CreateSemaphoreLeaseRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "CreateSemaphoreLease", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "CreateSemaphoreLease", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.CreateSemaphoreLeaseRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleSemaphoresCore.CreateSemaphoreLease(&CreateSemaphoreLeaseRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleSemaphoresCore.CreateSemaphoreLease(&CreateSemaphoreLeaseRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "CreateSemaphoreLease", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "CreateSemaphoreLease", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 9:
-		payload := corepb.RevokeSemaphoreLeaseRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "RevokeSemaphoreLease", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "RevokeSemaphoreLease", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.RevokeSemaphoreLeaseRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleSemaphoresCore.RevokeSemaphoreLease(&RevokeSemaphoreLeaseRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleSemaphoresCore.RevokeSemaphoreLease(&RevokeSemaphoreLeaseRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "RevokeSemaphoreLease", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "RevokeSemaphoreLease", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 10:
-		payload := corepb.RefreshSemaphoreLeaseRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "RefreshSemaphoreLease", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "RefreshSemaphoreLease", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.RefreshSemaphoreLeaseRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleSemaphoresCore.RefreshSemaphoreLease(&RefreshSemaphoreLeaseRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleSemaphoresCore.RefreshSemaphoreLease(&RefreshSemaphoreLeaseRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "RefreshSemaphoreLease", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "RefreshSemaphoreLease", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	default:
 		return nil, fmt.Errorf("no matching handlers")
 	}
 
-	appResponseBytes, err := appResponse.MarshalVT()
+	rpcRespBytes, err := rpcResp.MarshalVT()
 	if err != nil {
 		return nil, err
 	}
-	response.Data = appResponseBytes
+	resp.Data = rpcRespBytes
 
-	return response, nil
+	return resp, nil
 }
 
-func (a *GrackleSemaphoresCoreAdapter) Read(appRequestBytes []byte) (*monstera.ReadResponse, error) {
-	response := &monstera.ReadResponse{}
-	appResponse := &mrpc.Response{}
-	appRequest := &mrpc.Request{}
+func (a *GrackleSemaphoresCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadResponse, error) {
+	t1 := time.Now()
 
-	err := appRequest.UnmarshalVT(appRequestBytes)
+	resp := &monstera.ReadResponse{}
+	rpcResp := &mrpc.Response{}
+	rpcReq := &mrpc.Request{}
+
+	err := rpcReq.UnmarshalVT(rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	t1 := time.Now()
-
-	switch appRequest.MethodNumber {
+	switch rpcReq.MethodNumber {
 	case 1:
-		payload := corepb.GetSemaphoreRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "GetSemaphore", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "GetSemaphore", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.GetSemaphoreRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleSemaphoresCore.GetSemaphore(&GetSemaphoreRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleSemaphoresCore.GetSemaphore(&GetSemaphoreRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "GetSemaphore", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "GetSemaphore", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 2:
-		payload := corepb.GetSemaphoreByNameRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "GetSemaphoreByName", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "GetSemaphoreByName", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.GetSemaphoreByNameRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleSemaphoresCore.GetSemaphoreByName(&GetSemaphoreByNameRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleSemaphoresCore.GetSemaphoreByName(&GetSemaphoreByNameRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "GetSemaphoreByName", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "GetSemaphoreByName", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 3:
-		payload := corepb.ListSemaphoresRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "ListSemaphores", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "ListSemaphores", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.ListSemaphoresRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleSemaphoresCore.ListSemaphores(&ListSemaphoresRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleSemaphoresCore.ListSemaphores(&ListSemaphoresRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "ListSemaphores", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "ListSemaphores", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 4:
-		payload := corepb.ListSemaphoresByLeaseIdRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "ListSemaphoresByLeaseId", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "ListSemaphoresByLeaseId", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.ListSemaphoresByLeaseIdRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleSemaphoresCore.ListSemaphoresByLeaseId(&ListSemaphoresByLeaseIdRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleSemaphoresCore.ListSemaphoresByLeaseId(&ListSemaphoresByLeaseIdRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "ListSemaphoresByLeaseId", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "ListSemaphoresByLeaseId", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 5:
-		payload := corepb.ListSemaphoreHoldersRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "ListSemaphoreHolders", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "ListSemaphoreHolders", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.ListSemaphoreHoldersRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleSemaphoresCore.ListSemaphoreHolders(&ListSemaphoreHoldersRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleSemaphoresCore.ListSemaphoreHolders(&ListSemaphoreHoldersRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "ListSemaphoreHolders", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "ListSemaphoreHolders", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 6:
-		payload := corepb.ListSemaphoreLeasesRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "ListSemaphoreLeases", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "ListSemaphoreLeases", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.ListSemaphoreLeasesRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleSemaphoresCore.ListSemaphoreLeases(&ListSemaphoreLeasesRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleSemaphoresCore.ListSemaphoreLeases(&ListSemaphoreLeasesRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "ListSemaphoreLeases", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "ListSemaphoreLeases", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 7:
-		payload := corepb.ListSemaphoreLeasesByProcessIdRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "ListSemaphoreLeasesByProcessId", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "ListSemaphoreLeasesByProcessId", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.ListSemaphoreLeasesByProcessIdRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleSemaphoresCore.ListSemaphoreLeasesByProcessId(&ListSemaphoreLeasesByProcessIdRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleSemaphoresCore.ListSemaphoreLeasesByProcessId(&ListSemaphoreLeasesByProcessIdRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "ListSemaphoreLeasesByProcessId", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "ListSemaphoreLeasesByProcessId", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 8:
-		payload := corepb.GetSemaphoreLeaseRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "GetSemaphoreLease", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "GetSemaphoreLease", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.GetSemaphoreLeaseRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleSemaphoresCore.GetSemaphoreLease(&GetSemaphoreLeaseRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleSemaphoresCore.GetSemaphoreLease(&GetSemaphoreLeaseRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleSemaphores", "GetSemaphoreLease", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleSemaphores", "GetSemaphoreLease", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	default:
 		return nil, fmt.Errorf("no matching handlers")
 	}
 
-	appResponseBytes, err := appResponse.MarshalVT()
+	rpcRespBytes, err := rpcResp.MarshalVT()
 	if err != nil {
 		return nil, err
 	}
-	response.Data = appResponseBytes
+	resp.Data = rpcRespBytes
 
-	return response, nil
+	return resp, nil
 }
 
 type GrackleNamespacesCoreAdapter struct {
@@ -890,16 +919,10 @@ func NewGrackleNamespacesCoreAdapter(shardId string, replicaId string, grackleNa
 }
 
 func (a *GrackleNamespacesCoreAdapter) Snapshot() monstera.ApplicationCoreSnapshot {
-	defer measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleNamespaces", "Snapshot", a.shardId, a.replicaId), time.Now())
-	monsteraCoreMethodCount.WithLabelValues("GrackleNamespaces", "Snapshot", a.shardId, a.replicaId).Inc()
-
 	return a.grackleNamespacesCore.Snapshot()
 }
 
 func (a *GrackleNamespacesCoreAdapter) Restore(r io.ReadCloser) error {
-	defer measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleNamespaces", "Restore", a.shardId, a.replicaId), time.Now())
-	monsteraCoreMethodCount.WithLabelValues("GrackleNamespaces", "Restore", a.shardId, a.replicaId).Inc()
-
 	return a.grackleNamespacesCore.Restore(r)
 }
 
@@ -907,182 +930,188 @@ func (a *GrackleNamespacesCoreAdapter) Close() {
 	a.grackleNamespacesCore.Close()
 }
 
-func (a *GrackleNamespacesCoreAdapter) Update(appRequestBytes []byte) (*monstera.UpdateResponse, error) {
-	response := &monstera.UpdateResponse{}
-	appResponse := &mrpc.Response{}
-	appRequest := &mrpc.Request{}
+func (a *GrackleNamespacesCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateResponse, error) {
+	t1 := time.Now()
 
-	err := appRequest.UnmarshalVT(appRequestBytes)
+	resp := &monstera.UpdateResponse{}
+	rpcResp := &mrpc.Response{}
+	rpcReq := &mrpc.Request{}
+
+	err := rpcReq.UnmarshalVT(rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	t1 := time.Now()
-
-	switch appRequest.MethodNumber {
+	switch rpcReq.MethodNumber {
 	case 1:
-		payload := corepb.CreateNamespaceRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleNamespaces", "CreateNamespace", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleNamespaces", "CreateNamespace", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.CreateNamespaceRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleNamespacesCore.CreateNamespace(&CreateNamespaceRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleNamespacesCore.CreateNamespace(&CreateNamespaceRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleNamespaces", "CreateNamespace", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleNamespaces", "CreateNamespace", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 2:
-		payload := corepb.UpdateNamespaceRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleNamespaces", "UpdateNamespace", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleNamespaces", "UpdateNamespace", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.UpdateNamespaceRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleNamespacesCore.UpdateNamespace(&UpdateNamespaceRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleNamespacesCore.UpdateNamespace(&UpdateNamespaceRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleNamespaces", "UpdateNamespace", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleNamespaces", "UpdateNamespace", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 3:
-		payload := corepb.DeleteNamespaceRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleNamespaces", "DeleteNamespace", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleNamespaces", "DeleteNamespace", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.DeleteNamespaceRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleNamespacesCore.DeleteNamespace(&DeleteNamespaceRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleNamespacesCore.DeleteNamespace(&DeleteNamespaceRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleNamespaces", "DeleteNamespace", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleNamespaces", "DeleteNamespace", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	default:
 		return nil, fmt.Errorf("no matching handlers")
 	}
 
-	appResponseBytes, err := appResponse.MarshalVT()
+	rpcRespBytes, err := rpcResp.MarshalVT()
 	if err != nil {
 		return nil, err
 	}
-	response.Data = appResponseBytes
+	resp.Data = rpcRespBytes
 
-	return response, nil
+	return resp, nil
 }
 
-func (a *GrackleNamespacesCoreAdapter) Read(appRequestBytes []byte) (*monstera.ReadResponse, error) {
-	response := &monstera.ReadResponse{}
-	appResponse := &mrpc.Response{}
-	appRequest := &mrpc.Request{}
+func (a *GrackleNamespacesCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadResponse, error) {
+	t1 := time.Now()
 
-	err := appRequest.UnmarshalVT(appRequestBytes)
+	resp := &monstera.ReadResponse{}
+	rpcResp := &mrpc.Response{}
+	rpcReq := &mrpc.Request{}
+
+	err := rpcReq.UnmarshalVT(rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	t1 := time.Now()
-
-	switch appRequest.MethodNumber {
+	switch rpcReq.MethodNumber {
 	case 1:
-		payload := corepb.GetNamespaceRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleNamespaces", "GetNamespace", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleNamespaces", "GetNamespace", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.GetNamespaceRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleNamespacesCore.GetNamespace(&GetNamespaceRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleNamespacesCore.GetNamespace(&GetNamespaceRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleNamespaces", "GetNamespace", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleNamespaces", "GetNamespace", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 2:
-		payload := corepb.GetNamespaceByNameRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleNamespaces", "GetNamespaceByName", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleNamespaces", "GetNamespaceByName", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.GetNamespaceByNameRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleNamespacesCore.GetNamespaceByName(&GetNamespaceByNameRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleNamespacesCore.GetNamespaceByName(&GetNamespaceByNameRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleNamespaces", "GetNamespaceByName", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleNamespaces", "GetNamespaceByName", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 3:
-		payload := corepb.ListNamespacesRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleNamespaces", "ListNamespaces", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleNamespaces", "ListNamespaces", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.ListNamespacesRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleNamespacesCore.ListNamespaces(&ListNamespacesRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleNamespacesCore.ListNamespaces(&ListNamespacesRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleNamespaces", "ListNamespaces", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleNamespaces", "ListNamespaces", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	default:
 		return nil, fmt.Errorf("no matching handlers")
 	}
 
-	appResponseBytes, err := appResponse.MarshalVT()
+	rpcRespBytes, err := rpcResp.MarshalVT()
 	if err != nil {
 		return nil, err
 	}
-	response.Data = appResponseBytes
+	resp.Data = rpcRespBytes
 
-	return response, nil
+	return resp, nil
 }
 
 type GrackleWaitGroupsCoreAdapter struct {
@@ -1103,16 +1132,10 @@ func NewGrackleWaitGroupsCoreAdapter(shardId string, replicaId string, grackleWa
 }
 
 func (a *GrackleWaitGroupsCoreAdapter) Snapshot() monstera.ApplicationCoreSnapshot {
-	defer measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "Snapshot", a.shardId, a.replicaId), time.Now())
-	monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "Snapshot", a.shardId, a.replicaId).Inc()
-
 	return a.grackleWaitGroupsCore.Snapshot()
 }
 
 func (a *GrackleWaitGroupsCoreAdapter) Restore(r io.ReadCloser) error {
-	defer measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "Restore", a.shardId, a.replicaId), time.Now())
-	monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "Restore", a.shardId, a.replicaId).Inc()
-
 	return a.grackleWaitGroupsCore.Restore(r)
 }
 
@@ -1120,266 +1143,276 @@ func (a *GrackleWaitGroupsCoreAdapter) Close() {
 	a.grackleWaitGroupsCore.Close()
 }
 
-func (a *GrackleWaitGroupsCoreAdapter) Update(appRequestBytes []byte) (*monstera.UpdateResponse, error) {
-	response := &monstera.UpdateResponse{}
-	appResponse := &mrpc.Response{}
-	appRequest := &mrpc.Request{}
+func (a *GrackleWaitGroupsCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateResponse, error) {
+	t1 := time.Now()
 
-	err := appRequest.UnmarshalVT(appRequestBytes)
+	resp := &monstera.UpdateResponse{}
+	rpcResp := &mrpc.Response{}
+	rpcReq := &mrpc.Request{}
+
+	err := rpcReq.UnmarshalVT(rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	t1 := time.Now()
-
-	switch appRequest.MethodNumber {
+	switch rpcReq.MethodNumber {
 	case 1:
-		payload := corepb.UpdateWaitGroupRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleWaitGroups", "UpdateWaitGroup", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleWaitGroups", "UpdateWaitGroup", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.UpdateWaitGroupRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleWaitGroupsCore.UpdateWaitGroup(&UpdateWaitGroupRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleWaitGroupsCore.UpdateWaitGroup(&UpdateWaitGroupRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "UpdateWaitGroup", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "UpdateWaitGroup", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 2:
-		payload := corepb.CompleteJobsFromWaitGroupRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleWaitGroups", "CompleteJobsFromWaitGroup", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleWaitGroups", "CompleteJobsFromWaitGroup", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.CompleteJobsFromWaitGroupRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleWaitGroupsCore.CompleteJobsFromWaitGroup(&CompleteJobsFromWaitGroupRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleWaitGroupsCore.CompleteJobsFromWaitGroup(&CompleteJobsFromWaitGroupRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "CompleteJobsFromWaitGroup", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "CompleteJobsFromWaitGroup", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 3:
-		payload := corepb.CreateWaitGroupRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleWaitGroups", "CreateWaitGroup", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleWaitGroups", "CreateWaitGroup", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.CreateWaitGroupRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleWaitGroupsCore.CreateWaitGroup(&CreateWaitGroupRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleWaitGroupsCore.CreateWaitGroup(&CreateWaitGroupRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "CreateWaitGroup", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "CreateWaitGroup", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 4:
-		payload := corepb.DeleteWaitGroupRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleWaitGroups", "DeleteWaitGroup", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleWaitGroups", "DeleteWaitGroup", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.DeleteWaitGroupRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleWaitGroupsCore.DeleteWaitGroup(&DeleteWaitGroupRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleWaitGroupsCore.DeleteWaitGroup(&DeleteWaitGroupRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "DeleteWaitGroup", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "DeleteWaitGroup", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 5:
-		payload := corepb.RunWaitGroupsGarbageCollectionRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleWaitGroups", "RunWaitGroupsGarbageCollection", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleWaitGroups", "RunWaitGroupsGarbageCollection", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.RunWaitGroupsGarbageCollectionRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleWaitGroupsCore.RunWaitGroupsGarbageCollection(&RunWaitGroupsGarbageCollectionRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleWaitGroupsCore.RunWaitGroupsGarbageCollection(&RunWaitGroupsGarbageCollectionRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "RunWaitGroupsGarbageCollection", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "RunWaitGroupsGarbageCollection", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 6:
-		payload := corepb.WaitGroupsDeleteNamespaceRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleWaitGroups", "WaitGroupsDeleteNamespace", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleWaitGroups", "WaitGroupsDeleteNamespace", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.WaitGroupsDeleteNamespaceRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleWaitGroupsCore.WaitGroupsDeleteNamespace(&WaitGroupsDeleteNamespaceRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleWaitGroupsCore.WaitGroupsDeleteNamespace(&WaitGroupsDeleteNamespaceRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "WaitGroupsDeleteNamespace", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "WaitGroupsDeleteNamespace", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	default:
 		return nil, fmt.Errorf("no matching handlers")
 	}
 
-	appResponseBytes, err := appResponse.MarshalVT()
+	rpcRespBytes, err := rpcResp.MarshalVT()
 	if err != nil {
 		return nil, err
 	}
-	response.Data = appResponseBytes
+	resp.Data = rpcRespBytes
 
-	return response, nil
+	return resp, nil
 }
 
-func (a *GrackleWaitGroupsCoreAdapter) Read(appRequestBytes []byte) (*monstera.ReadResponse, error) {
-	response := &monstera.ReadResponse{}
-	appResponse := &mrpc.Response{}
-	appRequest := &mrpc.Request{}
+func (a *GrackleWaitGroupsCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadResponse, error) {
+	t1 := time.Now()
 
-	err := appRequest.UnmarshalVT(appRequestBytes)
+	resp := &monstera.ReadResponse{}
+	rpcResp := &mrpc.Response{}
+	rpcReq := &mrpc.Request{}
+
+	err := rpcReq.UnmarshalVT(rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	t1 := time.Now()
-
-	switch appRequest.MethodNumber {
+	switch rpcReq.MethodNumber {
 	case 1:
-		payload := corepb.GetWaitGroupRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleWaitGroups", "GetWaitGroup", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleWaitGroups", "GetWaitGroup", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.GetWaitGroupRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleWaitGroupsCore.GetWaitGroup(&GetWaitGroupRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleWaitGroupsCore.GetWaitGroup(&GetWaitGroupRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "GetWaitGroup", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "GetWaitGroup", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 2:
-		payload := corepb.GetWaitGroupByNameRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleWaitGroups", "GetWaitGroupByName", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleWaitGroups", "GetWaitGroupByName", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.GetWaitGroupByNameRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleWaitGroupsCore.GetWaitGroupByName(&GetWaitGroupByNameRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleWaitGroupsCore.GetWaitGroupByName(&GetWaitGroupByNameRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "GetWaitGroupByName", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "GetWaitGroupByName", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 3:
-		payload := corepb.ListWaitGroupsRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleWaitGroups", "ListWaitGroups", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleWaitGroups", "ListWaitGroups", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.ListWaitGroupsRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleWaitGroupsCore.ListWaitGroups(&ListWaitGroupsRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleWaitGroupsCore.ListWaitGroups(&ListWaitGroupsRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "ListWaitGroups", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "ListWaitGroups", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 4:
-		payload := corepb.ListWaitGroupCompletedJobsRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleWaitGroups", "ListWaitGroupCompletedJobs", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleWaitGroups", "ListWaitGroupCompletedJobs", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.ListWaitGroupCompletedJobsRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleWaitGroupsCore.ListWaitGroupCompletedJobs(&ListWaitGroupCompletedJobsRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleWaitGroupsCore.ListWaitGroupCompletedJobs(&ListWaitGroupCompletedJobsRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleWaitGroups", "ListWaitGroupCompletedJobs", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleWaitGroups", "ListWaitGroupCompletedJobs", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	default:
 		return nil, fmt.Errorf("no matching handlers")
 	}
 
-	appResponseBytes, err := appResponse.MarshalVT()
+	rpcRespBytes, err := rpcResp.MarshalVT()
 	if err != nil {
 		return nil, err
 	}
-	response.Data = appResponseBytes
+	resp.Data = rpcRespBytes
 
-	return response, nil
+	return resp, nil
 }
 
 type GrackleBarriersCoreAdapter struct {
@@ -1400,16 +1433,10 @@ func NewGrackleBarriersCoreAdapter(shardId string, replicaId string, grackleBarr
 }
 
 func (a *GrackleBarriersCoreAdapter) Snapshot() monstera.ApplicationCoreSnapshot {
-	defer measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "Snapshot", a.shardId, a.replicaId), time.Now())
-	monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "Snapshot", a.shardId, a.replicaId).Inc()
-
 	return a.grackleBarriersCore.Snapshot()
 }
 
 func (a *GrackleBarriersCoreAdapter) Restore(r io.ReadCloser) error {
-	defer measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "Restore", a.shardId, a.replicaId), time.Now())
-	monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "Restore", a.shardId, a.replicaId).Inc()
-
 	return a.grackleBarriersCore.Restore(r)
 }
 
@@ -1417,266 +1444,276 @@ func (a *GrackleBarriersCoreAdapter) Close() {
 	a.grackleBarriersCore.Close()
 }
 
-func (a *GrackleBarriersCoreAdapter) Update(appRequestBytes []byte) (*monstera.UpdateResponse, error) {
-	response := &monstera.UpdateResponse{}
-	appResponse := &mrpc.Response{}
-	appRequest := &mrpc.Request{}
+func (a *GrackleBarriersCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateResponse, error) {
+	t1 := time.Now()
 
-	err := appRequest.UnmarshalVT(appRequestBytes)
+	resp := &monstera.UpdateResponse{}
+	rpcResp := &mrpc.Response{}
+	rpcReq := &mrpc.Request{}
+
+	err := rpcReq.UnmarshalVT(rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	t1 := time.Now()
-
-	switch appRequest.MethodNumber {
+	switch rpcReq.MethodNumber {
 	case 1:
-		payload := corepb.CreateBarrierRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleBarriers", "CreateBarrier", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleBarriers", "CreateBarrier", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.CreateBarrierRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleBarriersCore.CreateBarrier(&CreateBarrierRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleBarriersCore.CreateBarrier(&CreateBarrierRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "CreateBarrier", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "CreateBarrier", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 2:
-		payload := corepb.DeleteBarrierRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleBarriers", "DeleteBarrier", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleBarriers", "DeleteBarrier", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.DeleteBarrierRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleBarriersCore.DeleteBarrier(&DeleteBarrierRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleBarriersCore.DeleteBarrier(&DeleteBarrierRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "DeleteBarrier", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "DeleteBarrier", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 3:
-		payload := corepb.UpdateBarrierRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleBarriers", "UpdateBarrier", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleBarriers", "UpdateBarrier", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.UpdateBarrierRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleBarriersCore.UpdateBarrier(&UpdateBarrierRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleBarriersCore.UpdateBarrier(&UpdateBarrierRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "UpdateBarrier", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "UpdateBarrier", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 4:
-		payload := corepb.ArriveAtBarrierRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleBarriers", "ArriveAtBarrier", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleBarriers", "ArriveAtBarrier", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.ArriveAtBarrierRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleBarriersCore.ArriveAtBarrier(&ArriveAtBarrierRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleBarriersCore.ArriveAtBarrier(&ArriveAtBarrierRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "ArriveAtBarrier", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "ArriveAtBarrier", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 5:
-		payload := corepb.RunBarriersGarbageCollectionRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleBarriers", "RunBarriersGarbageCollection", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleBarriers", "RunBarriersGarbageCollection", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.RunBarriersGarbageCollectionRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleBarriersCore.RunBarriersGarbageCollection(&RunBarriersGarbageCollectionRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleBarriersCore.RunBarriersGarbageCollection(&RunBarriersGarbageCollectionRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "RunBarriersGarbageCollection", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "RunBarriersGarbageCollection", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 6:
-		payload := corepb.BarriersDeleteNamespaceRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleBarriers", "BarriersDeleteNamespace", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleBarriers", "BarriersDeleteNamespace", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.BarriersDeleteNamespaceRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleBarriersCore.BarriersDeleteNamespace(&BarriersDeleteNamespaceRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleBarriersCore.BarriersDeleteNamespace(&BarriersDeleteNamespaceRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "BarriersDeleteNamespace", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "BarriersDeleteNamespace", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	default:
 		return nil, fmt.Errorf("no matching handlers")
 	}
 
-	appResponseBytes, err := appResponse.MarshalVT()
+	rpcRespBytes, err := rpcResp.MarshalVT()
 	if err != nil {
 		return nil, err
 	}
-	response.Data = appResponseBytes
+	resp.Data = rpcRespBytes
 
-	return response, nil
+	return resp, nil
 }
 
-func (a *GrackleBarriersCoreAdapter) Read(appRequestBytes []byte) (*monstera.ReadResponse, error) {
-	response := &monstera.ReadResponse{}
-	appResponse := &mrpc.Response{}
-	appRequest := &mrpc.Request{}
+func (a *GrackleBarriersCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadResponse, error) {
+	t1 := time.Now()
 
-	err := appRequest.UnmarshalVT(appRequestBytes)
+	resp := &monstera.ReadResponse{}
+	rpcResp := &mrpc.Response{}
+	rpcReq := &mrpc.Request{}
+
+	err := rpcReq.UnmarshalVT(rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	t1 := time.Now()
-
-	switch appRequest.MethodNumber {
+	switch rpcReq.MethodNumber {
 	case 1:
-		payload := corepb.GetBarrierRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleBarriers", "GetBarrier", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleBarriers", "GetBarrier", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.GetBarrierRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleBarriersCore.GetBarrier(&GetBarrierRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleBarriersCore.GetBarrier(&GetBarrierRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "GetBarrier", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "GetBarrier", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 2:
-		payload := corepb.GetBarrierByNameRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleBarriers", "GetBarrierByName", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleBarriers", "GetBarrierByName", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.GetBarrierByNameRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleBarriersCore.GetBarrierByName(&GetBarrierByNameRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleBarriersCore.GetBarrierByName(&GetBarrierByNameRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "GetBarrierByName", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "GetBarrierByName", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 3:
-		payload := corepb.ListBarriersRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleBarriers", "ListBarriers", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleBarriers", "ListBarriers", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.ListBarriersRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleBarriersCore.ListBarriers(&ListBarriersRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleBarriersCore.ListBarriers(&ListBarriersRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "ListBarriers", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "ListBarriers", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	case 4:
-		payload := corepb.ListBarrierParticipantsRequest{}
-		err := payload.UnmarshalBinary(appRequest.Data)
+		rpcMethodsTotal.WithLabelValues("GrackleBarriers", "ListBarrierParticipants", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleBarriers", "ListBarrierParticipants", a.shardId, a.replicaId), t1)
+
+		methodReq := corepb.ListBarrierParticipantsRequest{}
+		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
 			return nil, err
 		}
-		methodResponse, err := a.grackleBarriersCore.ListBarrierParticipants(&ListBarrierParticipantsRequest{
-			Now:     appRequest.Now,
-			Payload: &payload,
+		methodResp, err := a.grackleBarriersCore.ListBarrierParticipants(&ListBarrierParticipantsRequest{
+			Now:     rpcReq.Now,
+			Payload: &methodReq,
 		})
 		if err != nil {
 			return nil, err
 		}
-		measureSince(monsteraCoreMethodDuration.WithLabelValues("GrackleBarriers", "ListBarrierParticipants", a.shardId, a.replicaId), t1)
-		monsteraCoreMethodCount.WithLabelValues("GrackleBarriers", "ListBarrierParticipants", a.shardId, a.replicaId).Inc()
-		appResponse.Error = methodResponse.ApplicationError
-		methodResponseBytes, err := methodResponse.Payload.MarshalBinary()
+		rpcResp.Error = methodResp.ApplicationError
+		methodRespBytes, err := methodResp.Payload.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
-		appResponse.Data = methodResponseBytes
+		rpcResp.Data = methodRespBytes
 	default:
 		return nil, fmt.Errorf("no matching handlers")
 	}
 
-	appResponseBytes, err := appResponse.MarshalVT()
+	rpcRespBytes, err := rpcResp.MarshalVT()
 	if err != nil {
 		return nil, err
 	}
-	response.Data = appResponseBytes
+	resp.Data = rpcRespBytes
 
-	return response, nil
+	return resp, nil
 }
 
 func measureSince(o prometheus.Observer, t1 time.Time) {

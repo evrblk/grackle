@@ -61,7 +61,7 @@ func newNodeRunner(nodeID string, baseDataDir string, clusterConfig *cluster.Con
 	}
 
 	// Create shared Badger store for application cores
-	dataStore, err := store.NewBadgerStore(filepath.Join(dataDir, "data"))
+	dataStore, err := store.NewBadgerStore(store.DefaultOptions(filepath.Join(dataDir, "data")))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create data store for %s: %w", nodeID, err)
 	}
@@ -209,6 +209,8 @@ func main() {
 	log.Println("Initializing Debug Cluster...")
 
 	// Metrics
+	monstera.RegisterMetrics(prometheus.DefaultRegisterer)
+	coreapis.RegisterMetrics(prometheus.DefaultRegisterer)
 	metricsSrv := metrics.NewMetricsServer(*prometheusPort)
 	metricsSrv.Start()
 	defer metricsSrv.Stop()

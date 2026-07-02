@@ -21,2034 +21,2034 @@ type GrackleMonsteraStub struct {
 
 var _ GrackleClientApi = &GrackleMonsteraStub{}
 
-func (s *GrackleMonsteraStub) GetLock(ctx context.Context, request *corepb.GetLockRequest) (*corepb.GetLockResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) GetLock(ctx context.Context, methodReq *corepb.GetLockRequest) (*corepb.GetLockResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 1,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleLocks", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleLocks", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.GetLockResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.GetLockResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) ListLocks(ctx context.Context, request *corepb.ListLocksRequest) (*corepb.ListLocksResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) ListLocks(ctx context.Context, methodReq *corepb.ListLocksRequest) (*corepb.ListLocksResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 2,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleLocks", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleLocks", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.ListLocksResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.ListLocksResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) ListLocksByLeaseId(ctx context.Context, request *corepb.ListLocksByLeaseIdRequest) (*corepb.ListLocksByLeaseIdResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) ListLocksByLeaseId(ctx context.Context, methodReq *corepb.ListLocksByLeaseIdRequest) (*corepb.ListLocksByLeaseIdResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 3,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleLocks", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleLocks", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.ListLocksByLeaseIdResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.ListLocksByLeaseIdResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) ListLockLeases(ctx context.Context, request *corepb.ListLockLeasesRequest) (*corepb.ListLockLeasesResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) ListLockLeases(ctx context.Context, methodReq *corepb.ListLockLeasesRequest) (*corepb.ListLockLeasesResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 4,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleLocks", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleLocks", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.ListLockLeasesResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.ListLockLeasesResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) ListLockLeasesByProcessId(ctx context.Context, request *corepb.ListLockLeasesByProcessIdRequest) (*corepb.ListLockLeasesByProcessIdResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) ListLockLeasesByProcessId(ctx context.Context, methodReq *corepb.ListLockLeasesByProcessIdRequest) (*corepb.ListLockLeasesByProcessIdResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 5,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleLocks", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleLocks", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.ListLockLeasesByProcessIdResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.ListLockLeasesByProcessIdResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) GetLockLease(ctx context.Context, request *corepb.GetLockLeaseRequest) (*corepb.GetLockLeaseResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) GetLockLease(ctx context.Context, methodReq *corepb.GetLockLeaseRequest) (*corepb.GetLockLeaseResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 6,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleLocks", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleLocks", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.GetLockLeaseResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.GetLockLeaseResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) AcquireLock(ctx context.Context, request *corepb.AcquireLockRequest) (*corepb.AcquireLockResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) AcquireLock(ctx context.Context, methodReq *corepb.AcquireLockRequest) (*corepb.AcquireLockResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 1,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.AcquireLockResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.AcquireLockResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) ReleaseLock(ctx context.Context, request *corepb.ReleaseLockRequest) (*corepb.ReleaseLockResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) ReleaseLock(ctx context.Context, methodReq *corepb.ReleaseLockRequest) (*corepb.ReleaseLockResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 2,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.ReleaseLockResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.ReleaseLockResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) DeleteLock(ctx context.Context, request *corepb.DeleteLockRequest) (*corepb.DeleteLockResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) DeleteLock(ctx context.Context, methodReq *corepb.DeleteLockRequest) (*corepb.DeleteLockResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 3,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.DeleteLockResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.DeleteLockResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) RunLocksGarbageCollection(ctx context.Context, request *corepb.RunLocksGarbageCollectionRequest, shardId string) (*corepb.RunLocksGarbageCollectionResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) RunLocksGarbageCollection(ctx context.Context, methodReq *corepb.RunLocksGarbageCollectionRequest, shardId string) (*corepb.RunLocksGarbageCollectionResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 4,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.UpdateShard(ctx, "GrackleLocks", shardId, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.UpdateShard(ctx, "GrackleLocks", shardId, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.RunLocksGarbageCollectionResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.RunLocksGarbageCollectionResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) LocksDeleteNamespace(ctx context.Context, request *corepb.LocksDeleteNamespaceRequest) (*corepb.LocksDeleteNamespaceResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) LocksDeleteNamespace(ctx context.Context, methodReq *corepb.LocksDeleteNamespaceRequest) (*corepb.LocksDeleteNamespaceResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 5,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.LocksDeleteNamespaceResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.LocksDeleteNamespaceResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) CreateLockLease(ctx context.Context, request *corepb.CreateLockLeaseRequest) (*corepb.CreateLockLeaseResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) CreateLockLease(ctx context.Context, methodReq *corepb.CreateLockLeaseRequest) (*corepb.CreateLockLeaseResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 6,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.CreateLockLeaseResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.CreateLockLeaseResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) RefreshLockLease(ctx context.Context, request *corepb.RefreshLockLeaseRequest) (*corepb.RefreshLockLeaseResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) RefreshLockLease(ctx context.Context, methodReq *corepb.RefreshLockLeaseRequest) (*corepb.RefreshLockLeaseResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 7,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.RefreshLockLeaseResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.RefreshLockLeaseResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) RevokeLockLease(ctx context.Context, request *corepb.RevokeLockLeaseRequest) (*corepb.RevokeLockLeaseResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) RevokeLockLease(ctx context.Context, methodReq *corepb.RevokeLockLeaseRequest) (*corepb.RevokeLockLeaseResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 8,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.RevokeLockLeaseResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.RevokeLockLeaseResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) GetSemaphore(ctx context.Context, request *corepb.GetSemaphoreRequest) (*corepb.GetSemaphoreResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) GetSemaphore(ctx context.Context, methodReq *corepb.GetSemaphoreRequest) (*corepb.GetSemaphoreResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 1,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.GetSemaphoreResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.GetSemaphoreResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) GetSemaphoreByName(ctx context.Context, request *corepb.GetSemaphoreByNameRequest) (*corepb.GetSemaphoreByNameResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) GetSemaphoreByName(ctx context.Context, methodReq *corepb.GetSemaphoreByNameRequest) (*corepb.GetSemaphoreByNameResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 2,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.GetSemaphoreByNameResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.GetSemaphoreByNameResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) ListSemaphores(ctx context.Context, request *corepb.ListSemaphoresRequest) (*corepb.ListSemaphoresResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) ListSemaphores(ctx context.Context, methodReq *corepb.ListSemaphoresRequest) (*corepb.ListSemaphoresResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 3,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.ListSemaphoresResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.ListSemaphoresResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) ListSemaphoresByLeaseId(ctx context.Context, request *corepb.ListSemaphoresByLeaseIdRequest) (*corepb.ListSemaphoresByLeaseIdResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) ListSemaphoresByLeaseId(ctx context.Context, methodReq *corepb.ListSemaphoresByLeaseIdRequest) (*corepb.ListSemaphoresByLeaseIdResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 4,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.ListSemaphoresByLeaseIdResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.ListSemaphoresByLeaseIdResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) ListSemaphoreHolders(ctx context.Context, request *corepb.ListSemaphoreHoldersRequest) (*corepb.ListSemaphoreHoldersResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) ListSemaphoreHolders(ctx context.Context, methodReq *corepb.ListSemaphoreHoldersRequest) (*corepb.ListSemaphoreHoldersResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 5,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.ListSemaphoreHoldersResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.ListSemaphoreHoldersResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) ListSemaphoreLeases(ctx context.Context, request *corepb.ListSemaphoreLeasesRequest) (*corepb.ListSemaphoreLeasesResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) ListSemaphoreLeases(ctx context.Context, methodReq *corepb.ListSemaphoreLeasesRequest) (*corepb.ListSemaphoreLeasesResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 6,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.ListSemaphoreLeasesResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.ListSemaphoreLeasesResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) ListSemaphoreLeasesByProcessId(ctx context.Context, request *corepb.ListSemaphoreLeasesByProcessIdRequest) (*corepb.ListSemaphoreLeasesByProcessIdResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) ListSemaphoreLeasesByProcessId(ctx context.Context, methodReq *corepb.ListSemaphoreLeasesByProcessIdRequest) (*corepb.ListSemaphoreLeasesByProcessIdResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 7,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.ListSemaphoreLeasesByProcessIdResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.ListSemaphoreLeasesByProcessIdResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) GetSemaphoreLease(ctx context.Context, request *corepb.GetSemaphoreLeaseRequest) (*corepb.GetSemaphoreLeaseResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) GetSemaphoreLease(ctx context.Context, methodReq *corepb.GetSemaphoreLeaseRequest) (*corepb.GetSemaphoreLeaseResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 8,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.GetSemaphoreLeaseResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.GetSemaphoreLeaseResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) AcquireSemaphore(ctx context.Context, request *corepb.AcquireSemaphoreRequest) (*corepb.AcquireSemaphoreResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) AcquireSemaphore(ctx context.Context, methodReq *corepb.AcquireSemaphoreRequest) (*corepb.AcquireSemaphoreResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 1,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.AcquireSemaphoreResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.AcquireSemaphoreResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) ReleaseSemaphore(ctx context.Context, request *corepb.ReleaseSemaphoreRequest) (*corepb.ReleaseSemaphoreResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) ReleaseSemaphore(ctx context.Context, methodReq *corepb.ReleaseSemaphoreRequest) (*corepb.ReleaseSemaphoreResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 2,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.ReleaseSemaphoreResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.ReleaseSemaphoreResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) CreateSemaphore(ctx context.Context, request *corepb.CreateSemaphoreRequest) (*corepb.CreateSemaphoreResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) CreateSemaphore(ctx context.Context, methodReq *corepb.CreateSemaphoreRequest) (*corepb.CreateSemaphoreResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 3,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.CreateSemaphoreResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.CreateSemaphoreResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) UpdateSemaphore(ctx context.Context, request *corepb.UpdateSemaphoreRequest) (*corepb.UpdateSemaphoreResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) UpdateSemaphore(ctx context.Context, methodReq *corepb.UpdateSemaphoreRequest) (*corepb.UpdateSemaphoreResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 4,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.UpdateSemaphoreResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.UpdateSemaphoreResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) DeleteSemaphore(ctx context.Context, request *corepb.DeleteSemaphoreRequest) (*corepb.DeleteSemaphoreResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) DeleteSemaphore(ctx context.Context, methodReq *corepb.DeleteSemaphoreRequest) (*corepb.DeleteSemaphoreResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 5,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.DeleteSemaphoreResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.DeleteSemaphoreResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) RunSemaphoresGarbageCollection(ctx context.Context, request *corepb.RunSemaphoresGarbageCollectionRequest, shardId string) (*corepb.RunSemaphoresGarbageCollectionResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) RunSemaphoresGarbageCollection(ctx context.Context, methodReq *corepb.RunSemaphoresGarbageCollectionRequest, shardId string) (*corepb.RunSemaphoresGarbageCollectionResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 6,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.UpdateShard(ctx, "GrackleSemaphores", shardId, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.UpdateShard(ctx, "GrackleSemaphores", shardId, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.RunSemaphoresGarbageCollectionResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.RunSemaphoresGarbageCollectionResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) SemaphoresDeleteNamespace(ctx context.Context, request *corepb.SemaphoresDeleteNamespaceRequest) (*corepb.SemaphoresDeleteNamespaceResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) SemaphoresDeleteNamespace(ctx context.Context, methodReq *corepb.SemaphoresDeleteNamespaceRequest) (*corepb.SemaphoresDeleteNamespaceResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 7,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.SemaphoresDeleteNamespaceResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.SemaphoresDeleteNamespaceResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) CreateSemaphoreLease(ctx context.Context, request *corepb.CreateSemaphoreLeaseRequest) (*corepb.CreateSemaphoreLeaseResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) CreateSemaphoreLease(ctx context.Context, methodReq *corepb.CreateSemaphoreLeaseRequest) (*corepb.CreateSemaphoreLeaseResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 8,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.CreateSemaphoreLeaseResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.CreateSemaphoreLeaseResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) RevokeSemaphoreLease(ctx context.Context, request *corepb.RevokeSemaphoreLeaseRequest) (*corepb.RevokeSemaphoreLeaseResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) RevokeSemaphoreLease(ctx context.Context, methodReq *corepb.RevokeSemaphoreLeaseRequest) (*corepb.RevokeSemaphoreLeaseResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 9,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.RevokeSemaphoreLeaseResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.RevokeSemaphoreLeaseResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) RefreshSemaphoreLease(ctx context.Context, request *corepb.RefreshSemaphoreLeaseRequest) (*corepb.RefreshSemaphoreLeaseResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) RefreshSemaphoreLease(ctx context.Context, methodReq *corepb.RefreshSemaphoreLeaseRequest) (*corepb.RefreshSemaphoreLeaseResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 10,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.RefreshSemaphoreLeaseResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.RefreshSemaphoreLeaseResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) GetNamespace(ctx context.Context, request *corepb.GetNamespaceRequest) (*corepb.GetNamespaceResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) GetNamespace(ctx context.Context, methodReq *corepb.GetNamespaceRequest) (*corepb.GetNamespaceResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 1,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleNamespaces", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleNamespaces", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.GetNamespaceResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.GetNamespaceResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) GetNamespaceByName(ctx context.Context, request *corepb.GetNamespaceByNameRequest) (*corepb.GetNamespaceByNameResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) GetNamespaceByName(ctx context.Context, methodReq *corepb.GetNamespaceByNameRequest) (*corepb.GetNamespaceByNameResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 2,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleNamespaces", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleNamespaces", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.GetNamespaceByNameResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.GetNamespaceByNameResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) ListNamespaces(ctx context.Context, request *corepb.ListNamespacesRequest) (*corepb.ListNamespacesResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) ListNamespaces(ctx context.Context, methodReq *corepb.ListNamespacesRequest) (*corepb.ListNamespacesResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 3,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleNamespaces", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleNamespaces", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.ListNamespacesResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.ListNamespacesResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) CreateNamespace(ctx context.Context, request *corepb.CreateNamespaceRequest) (*corepb.CreateNamespaceResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) CreateNamespace(ctx context.Context, methodReq *corepb.CreateNamespaceRequest) (*corepb.CreateNamespaceResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 1,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleNamespaces", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleNamespaces", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.CreateNamespaceResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.CreateNamespaceResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) UpdateNamespace(ctx context.Context, request *corepb.UpdateNamespaceRequest) (*corepb.UpdateNamespaceResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) UpdateNamespace(ctx context.Context, methodReq *corepb.UpdateNamespaceRequest) (*corepb.UpdateNamespaceResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 2,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleNamespaces", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleNamespaces", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.UpdateNamespaceResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.UpdateNamespaceResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) DeleteNamespace(ctx context.Context, request *corepb.DeleteNamespaceRequest) (*corepb.DeleteNamespaceResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) DeleteNamespace(ctx context.Context, methodReq *corepb.DeleteNamespaceRequest) (*corepb.DeleteNamespaceResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 3,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleNamespaces", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleNamespaces", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.DeleteNamespaceResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.DeleteNamespaceResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) GetWaitGroup(ctx context.Context, request *corepb.GetWaitGroupRequest) (*corepb.GetWaitGroupResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) GetWaitGroup(ctx context.Context, methodReq *corepb.GetWaitGroupRequest) (*corepb.GetWaitGroupResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 1,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleWaitGroups", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleWaitGroups", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.GetWaitGroupResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.GetWaitGroupResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) GetWaitGroupByName(ctx context.Context, request *corepb.GetWaitGroupByNameRequest) (*corepb.GetWaitGroupByNameResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) GetWaitGroupByName(ctx context.Context, methodReq *corepb.GetWaitGroupByNameRequest) (*corepb.GetWaitGroupByNameResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 2,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleWaitGroups", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleWaitGroups", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.GetWaitGroupByNameResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.GetWaitGroupByNameResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) ListWaitGroups(ctx context.Context, request *corepb.ListWaitGroupsRequest) (*corepb.ListWaitGroupsResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) ListWaitGroups(ctx context.Context, methodReq *corepb.ListWaitGroupsRequest) (*corepb.ListWaitGroupsResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 3,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleWaitGroups", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleWaitGroups", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.ListWaitGroupsResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.ListWaitGroupsResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) ListWaitGroupCompletedJobs(ctx context.Context, request *corepb.ListWaitGroupCompletedJobsRequest) (*corepb.ListWaitGroupCompletedJobsResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) ListWaitGroupCompletedJobs(ctx context.Context, methodReq *corepb.ListWaitGroupCompletedJobsRequest) (*corepb.ListWaitGroupCompletedJobsResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 4,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleWaitGroups", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleWaitGroups", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.ListWaitGroupCompletedJobsResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.ListWaitGroupCompletedJobsResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) UpdateWaitGroup(ctx context.Context, request *corepb.UpdateWaitGroupRequest) (*corepb.UpdateWaitGroupResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) UpdateWaitGroup(ctx context.Context, methodReq *corepb.UpdateWaitGroupRequest) (*corepb.UpdateWaitGroupResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 1,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleWaitGroups", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleWaitGroups", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.UpdateWaitGroupResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.UpdateWaitGroupResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) CompleteJobsFromWaitGroup(ctx context.Context, request *corepb.CompleteJobsFromWaitGroupRequest) (*corepb.CompleteJobsFromWaitGroupResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) CompleteJobsFromWaitGroup(ctx context.Context, methodReq *corepb.CompleteJobsFromWaitGroupRequest) (*corepb.CompleteJobsFromWaitGroupResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 2,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleWaitGroups", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleWaitGroups", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.CompleteJobsFromWaitGroupResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.CompleteJobsFromWaitGroupResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) CreateWaitGroup(ctx context.Context, request *corepb.CreateWaitGroupRequest) (*corepb.CreateWaitGroupResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) CreateWaitGroup(ctx context.Context, methodReq *corepb.CreateWaitGroupRequest) (*corepb.CreateWaitGroupResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 3,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleWaitGroups", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleWaitGroups", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.CreateWaitGroupResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.CreateWaitGroupResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) DeleteWaitGroup(ctx context.Context, request *corepb.DeleteWaitGroupRequest) (*corepb.DeleteWaitGroupResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) DeleteWaitGroup(ctx context.Context, methodReq *corepb.DeleteWaitGroupRequest) (*corepb.DeleteWaitGroupResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 4,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleWaitGroups", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleWaitGroups", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.DeleteWaitGroupResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.DeleteWaitGroupResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) RunWaitGroupsGarbageCollection(ctx context.Context, request *corepb.RunWaitGroupsGarbageCollectionRequest, shardId string) (*corepb.RunWaitGroupsGarbageCollectionResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) RunWaitGroupsGarbageCollection(ctx context.Context, methodReq *corepb.RunWaitGroupsGarbageCollectionRequest, shardId string) (*corepb.RunWaitGroupsGarbageCollectionResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 5,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.UpdateShard(ctx, "GrackleWaitGroups", shardId, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.UpdateShard(ctx, "GrackleWaitGroups", shardId, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.RunWaitGroupsGarbageCollectionResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.RunWaitGroupsGarbageCollectionResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) WaitGroupsDeleteNamespace(ctx context.Context, request *corepb.WaitGroupsDeleteNamespaceRequest) (*corepb.WaitGroupsDeleteNamespaceResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) WaitGroupsDeleteNamespace(ctx context.Context, methodReq *corepb.WaitGroupsDeleteNamespaceRequest) (*corepb.WaitGroupsDeleteNamespaceResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 6,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleWaitGroups", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleWaitGroups", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.WaitGroupsDeleteNamespaceResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.WaitGroupsDeleteNamespaceResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) GetBarrier(ctx context.Context, request *corepb.GetBarrierRequest) (*corepb.GetBarrierResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) GetBarrier(ctx context.Context, methodReq *corepb.GetBarrierRequest) (*corepb.GetBarrierResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 1,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleBarriers", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleBarriers", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.GetBarrierResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.GetBarrierResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) GetBarrierByName(ctx context.Context, request *corepb.GetBarrierByNameRequest) (*corepb.GetBarrierByNameResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) GetBarrierByName(ctx context.Context, methodReq *corepb.GetBarrierByNameRequest) (*corepb.GetBarrierByNameResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 2,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleBarriers", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleBarriers", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.GetBarrierByNameResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.GetBarrierByNameResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) ListBarriers(ctx context.Context, request *corepb.ListBarriersRequest) (*corepb.ListBarriersResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) ListBarriers(ctx context.Context, methodReq *corepb.ListBarriersRequest) (*corepb.ListBarriersResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 3,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleBarriers", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleBarriers", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.ListBarriersResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.ListBarriersResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) ListBarrierParticipants(ctx context.Context, request *corepb.ListBarrierParticipantsRequest) (*corepb.ListBarrierParticipantsResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) ListBarrierParticipants(ctx context.Context, methodReq *corepb.ListBarrierParticipantsRequest) (*corepb.ListBarrierParticipantsResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 4,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Read(ctx, "GrackleBarriers", request.ShardKey(), false, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleBarriers", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.ListBarrierParticipantsResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.ListBarrierParticipantsResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) CreateBarrier(ctx context.Context, request *corepb.CreateBarrierRequest) (*corepb.CreateBarrierResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) CreateBarrier(ctx context.Context, methodReq *corepb.CreateBarrierRequest) (*corepb.CreateBarrierResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 1,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleBarriers", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleBarriers", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.CreateBarrierResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.CreateBarrierResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) DeleteBarrier(ctx context.Context, request *corepb.DeleteBarrierRequest) (*corepb.DeleteBarrierResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) DeleteBarrier(ctx context.Context, methodReq *corepb.DeleteBarrierRequest) (*corepb.DeleteBarrierResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 2,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleBarriers", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleBarriers", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.DeleteBarrierResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.DeleteBarrierResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) UpdateBarrier(ctx context.Context, request *corepb.UpdateBarrierRequest) (*corepb.UpdateBarrierResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) UpdateBarrier(ctx context.Context, methodReq *corepb.UpdateBarrierRequest) (*corepb.UpdateBarrierResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 3,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleBarriers", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleBarriers", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.UpdateBarrierResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.UpdateBarrierResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) ArriveAtBarrier(ctx context.Context, request *corepb.ArriveAtBarrierRequest) (*corepb.ArriveAtBarrierResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) ArriveAtBarrier(ctx context.Context, methodReq *corepb.ArriveAtBarrierRequest) (*corepb.ArriveAtBarrierResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 4,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleBarriers", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleBarriers", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.ArriveAtBarrierResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.ArriveAtBarrierResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) RunBarriersGarbageCollection(ctx context.Context, request *corepb.RunBarriersGarbageCollectionRequest, shardId string) (*corepb.RunBarriersGarbageCollectionResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) RunBarriersGarbageCollection(ctx context.Context, methodReq *corepb.RunBarriersGarbageCollectionRequest, shardId string) (*corepb.RunBarriersGarbageCollectionResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 5,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.UpdateShard(ctx, "GrackleBarriers", shardId, requestBytes)
+	rpcRespBytes, err := s.monsteraClient.UpdateShard(ctx, "GrackleBarriers", shardId, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.RunBarriersGarbageCollectionResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.RunBarriersGarbageCollectionResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
-func (s *GrackleMonsteraStub) BarriersDeleteNamespace(ctx context.Context, request *corepb.BarriersDeleteNamespaceRequest) (*corepb.BarriersDeleteNamespaceResponse, error) {
-	data, err := request.MarshalBinary()
+func (s *GrackleMonsteraStub) BarriersDeleteNamespace(ctx context.Context, methodReq *corepb.BarriersDeleteNamespaceRequest) (*corepb.BarriersDeleteNamespaceResponse, error) {
+	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	appRequest := &mrpc.Request{
-		Data:         data,
+	rpcReq := &mrpc.Request{
+		Data:         methodReqBytes,
 		MethodNumber: 6,
 		Now:          time.Now().UnixNano(),
 	}
-	requestBytes, err := appRequest.MarshalVT()
+	rpcReqBytes, err := rpcReq.MarshalVT()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	responseBytes, err := s.monsteraClient.Update(ctx, "GrackleBarriers", request.ShardKey(), requestBytes)
+	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleBarriers", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	appResponse := &mrpc.Response{}
-	err = appResponse.UnmarshalVT(responseBytes)
+	rpcResp := &mrpc.Response{}
+	err = rpcResp.UnmarshalVT(rpcRespBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	response := &corepb.BarriersDeleteNamespaceResponse{}
-	err = response.UnmarshalVT(appResponse.Data)
+	methodResp := &corepb.BarriersDeleteNamespaceResponse{}
+	err = methodResp.UnmarshalBinary(rpcResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	return response, nilifyIfEmpty(appResponse.Error)
+	return methodResp, nilifyIfEmpty(rpcResp.Error)
 }
 
 func (s *GrackleMonsteraStub) ListShards(applicationName string) ([]string, error) {
@@ -2132,1446 +2132,1446 @@ type GrackleNonclusteredStub struct {
 
 var _ GrackleClientApi = &GrackleNonclusteredStub{}
 
-func (s *GrackleNonclusteredStub) GetLock(ctx context.Context, request *corepb.GetLockRequest) (*corepb.GetLockResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) GetLock(ctx context.Context, req *corepb.GetLockRequest) (*corepb.GetLockResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.GetLock(&mrpc.ReadRequest[*corepb.GetLockRequest]{
+			resp, err := adapter.core.GetLock(&mrpc.ReadRequest[*corepb.GetLockRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) ListLocks(ctx context.Context, request *corepb.ListLocksRequest) (*corepb.ListLocksResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) ListLocks(ctx context.Context, req *corepb.ListLocksRequest) (*corepb.ListLocksResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListLocks(&mrpc.ReadRequest[*corepb.ListLocksRequest]{
+			resp, err := adapter.core.ListLocks(&mrpc.ReadRequest[*corepb.ListLocksRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) ListLocksByLeaseId(ctx context.Context, request *corepb.ListLocksByLeaseIdRequest) (*corepb.ListLocksByLeaseIdResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) ListLocksByLeaseId(ctx context.Context, req *corepb.ListLocksByLeaseIdRequest) (*corepb.ListLocksByLeaseIdResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListLocksByLeaseId(&mrpc.ReadRequest[*corepb.ListLocksByLeaseIdRequest]{
+			resp, err := adapter.core.ListLocksByLeaseId(&mrpc.ReadRequest[*corepb.ListLocksByLeaseIdRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) ListLockLeases(ctx context.Context, request *corepb.ListLockLeasesRequest) (*corepb.ListLockLeasesResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) ListLockLeases(ctx context.Context, req *corepb.ListLockLeasesRequest) (*corepb.ListLockLeasesResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListLockLeases(&mrpc.ReadRequest[*corepb.ListLockLeasesRequest]{
+			resp, err := adapter.core.ListLockLeases(&mrpc.ReadRequest[*corepb.ListLockLeasesRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) ListLockLeasesByProcessId(ctx context.Context, request *corepb.ListLockLeasesByProcessIdRequest) (*corepb.ListLockLeasesByProcessIdResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) ListLockLeasesByProcessId(ctx context.Context, req *corepb.ListLockLeasesByProcessIdRequest) (*corepb.ListLockLeasesByProcessIdResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListLockLeasesByProcessId(&mrpc.ReadRequest[*corepb.ListLockLeasesByProcessIdRequest]{
+			resp, err := adapter.core.ListLockLeasesByProcessId(&mrpc.ReadRequest[*corepb.ListLockLeasesByProcessIdRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) GetLockLease(ctx context.Context, request *corepb.GetLockLeaseRequest) (*corepb.GetLockLeaseResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) GetLockLease(ctx context.Context, req *corepb.GetLockLeaseRequest) (*corepb.GetLockLeaseResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.GetLockLease(&mrpc.ReadRequest[*corepb.GetLockLeaseRequest]{
+			resp, err := adapter.core.GetLockLease(&mrpc.ReadRequest[*corepb.GetLockLeaseRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) AcquireLock(ctx context.Context, request *corepb.AcquireLockRequest) (*corepb.AcquireLockResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) AcquireLock(ctx context.Context, req *corepb.AcquireLockRequest) (*corepb.AcquireLockResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.AcquireLock(&mrpc.UpdateRequest[*corepb.AcquireLockRequest]{
+			resp, err := adapter.core.AcquireLock(&mrpc.UpdateRequest[*corepb.AcquireLockRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) ReleaseLock(ctx context.Context, request *corepb.ReleaseLockRequest) (*corepb.ReleaseLockResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) ReleaseLock(ctx context.Context, req *corepb.ReleaseLockRequest) (*corepb.ReleaseLockResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.ReleaseLock(&mrpc.UpdateRequest[*corepb.ReleaseLockRequest]{
+			resp, err := adapter.core.ReleaseLock(&mrpc.UpdateRequest[*corepb.ReleaseLockRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) DeleteLock(ctx context.Context, request *corepb.DeleteLockRequest) (*corepb.DeleteLockResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) DeleteLock(ctx context.Context, req *corepb.DeleteLockRequest) (*corepb.DeleteLockResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.DeleteLock(&mrpc.UpdateRequest[*corepb.DeleteLockRequest]{
+			resp, err := adapter.core.DeleteLock(&mrpc.UpdateRequest[*corepb.DeleteLockRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) RunLocksGarbageCollection(ctx context.Context, request *corepb.RunLocksGarbageCollectionRequest, shardId string) (*corepb.RunLocksGarbageCollectionResponse, error) {
+func (s *GrackleNonclusteredStub) RunLocksGarbageCollection(ctx context.Context, req *corepb.RunLocksGarbageCollectionRequest, shardId string) (*corepb.RunLocksGarbageCollectionResponse, error) {
 	for _, adapter := range s.grackleLocksCores {
 		if adapter.id == shardId {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.RunLocksGarbageCollection(&mrpc.UpdateUnshardedRequest[*corepb.RunLocksGarbageCollectionRequest]{
+			resp, err := adapter.core.RunLocksGarbageCollection(&mrpc.UpdateUnshardedRequest[*corepb.RunLocksGarbageCollectionRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardId: %s", shardId)
 }
 
-func (s *GrackleNonclusteredStub) LocksDeleteNamespace(ctx context.Context, request *corepb.LocksDeleteNamespaceRequest) (*corepb.LocksDeleteNamespaceResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) LocksDeleteNamespace(ctx context.Context, req *corepb.LocksDeleteNamespaceRequest) (*corepb.LocksDeleteNamespaceResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.LocksDeleteNamespace(&mrpc.UpdateRequest[*corepb.LocksDeleteNamespaceRequest]{
+			resp, err := adapter.core.LocksDeleteNamespace(&mrpc.UpdateRequest[*corepb.LocksDeleteNamespaceRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) CreateLockLease(ctx context.Context, request *corepb.CreateLockLeaseRequest) (*corepb.CreateLockLeaseResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) CreateLockLease(ctx context.Context, req *corepb.CreateLockLeaseRequest) (*corepb.CreateLockLeaseResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.CreateLockLease(&mrpc.UpdateRequest[*corepb.CreateLockLeaseRequest]{
+			resp, err := adapter.core.CreateLockLease(&mrpc.UpdateRequest[*corepb.CreateLockLeaseRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) RefreshLockLease(ctx context.Context, request *corepb.RefreshLockLeaseRequest) (*corepb.RefreshLockLeaseResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) RefreshLockLease(ctx context.Context, req *corepb.RefreshLockLeaseRequest) (*corepb.RefreshLockLeaseResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.RefreshLockLease(&mrpc.UpdateRequest[*corepb.RefreshLockLeaseRequest]{
+			resp, err := adapter.core.RefreshLockLease(&mrpc.UpdateRequest[*corepb.RefreshLockLeaseRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) RevokeLockLease(ctx context.Context, request *corepb.RevokeLockLeaseRequest) (*corepb.RevokeLockLeaseResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) RevokeLockLease(ctx context.Context, req *corepb.RevokeLockLeaseRequest) (*corepb.RevokeLockLeaseResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.RevokeLockLease(&mrpc.UpdateRequest[*corepb.RevokeLockLeaseRequest]{
+			resp, err := adapter.core.RevokeLockLease(&mrpc.UpdateRequest[*corepb.RevokeLockLeaseRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) GetSemaphore(ctx context.Context, request *corepb.GetSemaphoreRequest) (*corepb.GetSemaphoreResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) GetSemaphore(ctx context.Context, req *corepb.GetSemaphoreRequest) (*corepb.GetSemaphoreResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.GetSemaphore(&mrpc.ReadRequest[*corepb.GetSemaphoreRequest]{
+			resp, err := adapter.core.GetSemaphore(&mrpc.ReadRequest[*corepb.GetSemaphoreRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) GetSemaphoreByName(ctx context.Context, request *corepb.GetSemaphoreByNameRequest) (*corepb.GetSemaphoreByNameResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) GetSemaphoreByName(ctx context.Context, req *corepb.GetSemaphoreByNameRequest) (*corepb.GetSemaphoreByNameResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.GetSemaphoreByName(&mrpc.ReadRequest[*corepb.GetSemaphoreByNameRequest]{
+			resp, err := adapter.core.GetSemaphoreByName(&mrpc.ReadRequest[*corepb.GetSemaphoreByNameRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) ListSemaphores(ctx context.Context, request *corepb.ListSemaphoresRequest) (*corepb.ListSemaphoresResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) ListSemaphores(ctx context.Context, req *corepb.ListSemaphoresRequest) (*corepb.ListSemaphoresResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListSemaphores(&mrpc.ReadRequest[*corepb.ListSemaphoresRequest]{
+			resp, err := adapter.core.ListSemaphores(&mrpc.ReadRequest[*corepb.ListSemaphoresRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) ListSemaphoresByLeaseId(ctx context.Context, request *corepb.ListSemaphoresByLeaseIdRequest) (*corepb.ListSemaphoresByLeaseIdResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) ListSemaphoresByLeaseId(ctx context.Context, req *corepb.ListSemaphoresByLeaseIdRequest) (*corepb.ListSemaphoresByLeaseIdResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListSemaphoresByLeaseId(&mrpc.ReadRequest[*corepb.ListSemaphoresByLeaseIdRequest]{
+			resp, err := adapter.core.ListSemaphoresByLeaseId(&mrpc.ReadRequest[*corepb.ListSemaphoresByLeaseIdRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) ListSemaphoreHolders(ctx context.Context, request *corepb.ListSemaphoreHoldersRequest) (*corepb.ListSemaphoreHoldersResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) ListSemaphoreHolders(ctx context.Context, req *corepb.ListSemaphoreHoldersRequest) (*corepb.ListSemaphoreHoldersResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListSemaphoreHolders(&mrpc.ReadRequest[*corepb.ListSemaphoreHoldersRequest]{
+			resp, err := adapter.core.ListSemaphoreHolders(&mrpc.ReadRequest[*corepb.ListSemaphoreHoldersRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) ListSemaphoreLeases(ctx context.Context, request *corepb.ListSemaphoreLeasesRequest) (*corepb.ListSemaphoreLeasesResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) ListSemaphoreLeases(ctx context.Context, req *corepb.ListSemaphoreLeasesRequest) (*corepb.ListSemaphoreLeasesResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListSemaphoreLeases(&mrpc.ReadRequest[*corepb.ListSemaphoreLeasesRequest]{
+			resp, err := adapter.core.ListSemaphoreLeases(&mrpc.ReadRequest[*corepb.ListSemaphoreLeasesRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) ListSemaphoreLeasesByProcessId(ctx context.Context, request *corepb.ListSemaphoreLeasesByProcessIdRequest) (*corepb.ListSemaphoreLeasesByProcessIdResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) ListSemaphoreLeasesByProcessId(ctx context.Context, req *corepb.ListSemaphoreLeasesByProcessIdRequest) (*corepb.ListSemaphoreLeasesByProcessIdResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListSemaphoreLeasesByProcessId(&mrpc.ReadRequest[*corepb.ListSemaphoreLeasesByProcessIdRequest]{
+			resp, err := adapter.core.ListSemaphoreLeasesByProcessId(&mrpc.ReadRequest[*corepb.ListSemaphoreLeasesByProcessIdRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) GetSemaphoreLease(ctx context.Context, request *corepb.GetSemaphoreLeaseRequest) (*corepb.GetSemaphoreLeaseResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) GetSemaphoreLease(ctx context.Context, req *corepb.GetSemaphoreLeaseRequest) (*corepb.GetSemaphoreLeaseResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.GetSemaphoreLease(&mrpc.ReadRequest[*corepb.GetSemaphoreLeaseRequest]{
+			resp, err := adapter.core.GetSemaphoreLease(&mrpc.ReadRequest[*corepb.GetSemaphoreLeaseRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) AcquireSemaphore(ctx context.Context, request *corepb.AcquireSemaphoreRequest) (*corepb.AcquireSemaphoreResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) AcquireSemaphore(ctx context.Context, req *corepb.AcquireSemaphoreRequest) (*corepb.AcquireSemaphoreResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.AcquireSemaphore(&mrpc.UpdateRequest[*corepb.AcquireSemaphoreRequest]{
+			resp, err := adapter.core.AcquireSemaphore(&mrpc.UpdateRequest[*corepb.AcquireSemaphoreRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) ReleaseSemaphore(ctx context.Context, request *corepb.ReleaseSemaphoreRequest) (*corepb.ReleaseSemaphoreResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) ReleaseSemaphore(ctx context.Context, req *corepb.ReleaseSemaphoreRequest) (*corepb.ReleaseSemaphoreResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.ReleaseSemaphore(&mrpc.UpdateRequest[*corepb.ReleaseSemaphoreRequest]{
+			resp, err := adapter.core.ReleaseSemaphore(&mrpc.UpdateRequest[*corepb.ReleaseSemaphoreRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) CreateSemaphore(ctx context.Context, request *corepb.CreateSemaphoreRequest) (*corepb.CreateSemaphoreResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) CreateSemaphore(ctx context.Context, req *corepb.CreateSemaphoreRequest) (*corepb.CreateSemaphoreResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.CreateSemaphore(&mrpc.UpdateRequest[*corepb.CreateSemaphoreRequest]{
+			resp, err := adapter.core.CreateSemaphore(&mrpc.UpdateRequest[*corepb.CreateSemaphoreRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) UpdateSemaphore(ctx context.Context, request *corepb.UpdateSemaphoreRequest) (*corepb.UpdateSemaphoreResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) UpdateSemaphore(ctx context.Context, req *corepb.UpdateSemaphoreRequest) (*corepb.UpdateSemaphoreResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.UpdateSemaphore(&mrpc.UpdateRequest[*corepb.UpdateSemaphoreRequest]{
+			resp, err := adapter.core.UpdateSemaphore(&mrpc.UpdateRequest[*corepb.UpdateSemaphoreRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) DeleteSemaphore(ctx context.Context, request *corepb.DeleteSemaphoreRequest) (*corepb.DeleteSemaphoreResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) DeleteSemaphore(ctx context.Context, req *corepb.DeleteSemaphoreRequest) (*corepb.DeleteSemaphoreResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.DeleteSemaphore(&mrpc.UpdateRequest[*corepb.DeleteSemaphoreRequest]{
+			resp, err := adapter.core.DeleteSemaphore(&mrpc.UpdateRequest[*corepb.DeleteSemaphoreRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) RunSemaphoresGarbageCollection(ctx context.Context, request *corepb.RunSemaphoresGarbageCollectionRequest, shardId string) (*corepb.RunSemaphoresGarbageCollectionResponse, error) {
+func (s *GrackleNonclusteredStub) RunSemaphoresGarbageCollection(ctx context.Context, req *corepb.RunSemaphoresGarbageCollectionRequest, shardId string) (*corepb.RunSemaphoresGarbageCollectionResponse, error) {
 	for _, adapter := range s.grackleSemaphoresCores {
 		if adapter.id == shardId {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.RunSemaphoresGarbageCollection(&mrpc.UpdateUnshardedRequest[*corepb.RunSemaphoresGarbageCollectionRequest]{
+			resp, err := adapter.core.RunSemaphoresGarbageCollection(&mrpc.UpdateUnshardedRequest[*corepb.RunSemaphoresGarbageCollectionRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardId: %s", shardId)
 }
 
-func (s *GrackleNonclusteredStub) SemaphoresDeleteNamespace(ctx context.Context, request *corepb.SemaphoresDeleteNamespaceRequest) (*corepb.SemaphoresDeleteNamespaceResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) SemaphoresDeleteNamespace(ctx context.Context, req *corepb.SemaphoresDeleteNamespaceRequest) (*corepb.SemaphoresDeleteNamespaceResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.SemaphoresDeleteNamespace(&mrpc.UpdateRequest[*corepb.SemaphoresDeleteNamespaceRequest]{
+			resp, err := adapter.core.SemaphoresDeleteNamespace(&mrpc.UpdateRequest[*corepb.SemaphoresDeleteNamespaceRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) CreateSemaphoreLease(ctx context.Context, request *corepb.CreateSemaphoreLeaseRequest) (*corepb.CreateSemaphoreLeaseResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) CreateSemaphoreLease(ctx context.Context, req *corepb.CreateSemaphoreLeaseRequest) (*corepb.CreateSemaphoreLeaseResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.CreateSemaphoreLease(&mrpc.UpdateRequest[*corepb.CreateSemaphoreLeaseRequest]{
+			resp, err := adapter.core.CreateSemaphoreLease(&mrpc.UpdateRequest[*corepb.CreateSemaphoreLeaseRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) RevokeSemaphoreLease(ctx context.Context, request *corepb.RevokeSemaphoreLeaseRequest) (*corepb.RevokeSemaphoreLeaseResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) RevokeSemaphoreLease(ctx context.Context, req *corepb.RevokeSemaphoreLeaseRequest) (*corepb.RevokeSemaphoreLeaseResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.RevokeSemaphoreLease(&mrpc.UpdateRequest[*corepb.RevokeSemaphoreLeaseRequest]{
+			resp, err := adapter.core.RevokeSemaphoreLease(&mrpc.UpdateRequest[*corepb.RevokeSemaphoreLeaseRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) RefreshSemaphoreLease(ctx context.Context, request *corepb.RefreshSemaphoreLeaseRequest) (*corepb.RefreshSemaphoreLeaseResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) RefreshSemaphoreLease(ctx context.Context, req *corepb.RefreshSemaphoreLeaseRequest) (*corepb.RefreshSemaphoreLeaseResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.RefreshSemaphoreLease(&mrpc.UpdateRequest[*corepb.RefreshSemaphoreLeaseRequest]{
+			resp, err := adapter.core.RefreshSemaphoreLease(&mrpc.UpdateRequest[*corepb.RefreshSemaphoreLeaseRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) GetNamespace(ctx context.Context, request *corepb.GetNamespaceRequest) (*corepb.GetNamespaceResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) GetNamespace(ctx context.Context, req *corepb.GetNamespaceRequest) (*corepb.GetNamespaceResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleNamespacesCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.GetNamespace(&mrpc.ReadRequest[*corepb.GetNamespaceRequest]{
+			resp, err := adapter.core.GetNamespace(&mrpc.ReadRequest[*corepb.GetNamespaceRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) GetNamespaceByName(ctx context.Context, request *corepb.GetNamespaceByNameRequest) (*corepb.GetNamespaceByNameResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) GetNamespaceByName(ctx context.Context, req *corepb.GetNamespaceByNameRequest) (*corepb.GetNamespaceByNameResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleNamespacesCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.GetNamespaceByName(&mrpc.ReadRequest[*corepb.GetNamespaceByNameRequest]{
+			resp, err := adapter.core.GetNamespaceByName(&mrpc.ReadRequest[*corepb.GetNamespaceByNameRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) ListNamespaces(ctx context.Context, request *corepb.ListNamespacesRequest) (*corepb.ListNamespacesResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) ListNamespaces(ctx context.Context, req *corepb.ListNamespacesRequest) (*corepb.ListNamespacesResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleNamespacesCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListNamespaces(&mrpc.ReadRequest[*corepb.ListNamespacesRequest]{
+			resp, err := adapter.core.ListNamespaces(&mrpc.ReadRequest[*corepb.ListNamespacesRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) CreateNamespace(ctx context.Context, request *corepb.CreateNamespaceRequest) (*corepb.CreateNamespaceResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) CreateNamespace(ctx context.Context, req *corepb.CreateNamespaceRequest) (*corepb.CreateNamespaceResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleNamespacesCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.CreateNamespace(&mrpc.UpdateRequest[*corepb.CreateNamespaceRequest]{
+			resp, err := adapter.core.CreateNamespace(&mrpc.UpdateRequest[*corepb.CreateNamespaceRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) UpdateNamespace(ctx context.Context, request *corepb.UpdateNamespaceRequest) (*corepb.UpdateNamespaceResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) UpdateNamespace(ctx context.Context, req *corepb.UpdateNamespaceRequest) (*corepb.UpdateNamespaceResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleNamespacesCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.UpdateNamespace(&mrpc.UpdateRequest[*corepb.UpdateNamespaceRequest]{
+			resp, err := adapter.core.UpdateNamespace(&mrpc.UpdateRequest[*corepb.UpdateNamespaceRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) DeleteNamespace(ctx context.Context, request *corepb.DeleteNamespaceRequest) (*corepb.DeleteNamespaceResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) DeleteNamespace(ctx context.Context, req *corepb.DeleteNamespaceRequest) (*corepb.DeleteNamespaceResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleNamespacesCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.DeleteNamespace(&mrpc.UpdateRequest[*corepb.DeleteNamespaceRequest]{
+			resp, err := adapter.core.DeleteNamespace(&mrpc.UpdateRequest[*corepb.DeleteNamespaceRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) GetWaitGroup(ctx context.Context, request *corepb.GetWaitGroupRequest) (*corepb.GetWaitGroupResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) GetWaitGroup(ctx context.Context, req *corepb.GetWaitGroupRequest) (*corepb.GetWaitGroupResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleWaitGroupsCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.GetWaitGroup(&mrpc.ReadRequest[*corepb.GetWaitGroupRequest]{
+			resp, err := adapter.core.GetWaitGroup(&mrpc.ReadRequest[*corepb.GetWaitGroupRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) GetWaitGroupByName(ctx context.Context, request *corepb.GetWaitGroupByNameRequest) (*corepb.GetWaitGroupByNameResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) GetWaitGroupByName(ctx context.Context, req *corepb.GetWaitGroupByNameRequest) (*corepb.GetWaitGroupByNameResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleWaitGroupsCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.GetWaitGroupByName(&mrpc.ReadRequest[*corepb.GetWaitGroupByNameRequest]{
+			resp, err := adapter.core.GetWaitGroupByName(&mrpc.ReadRequest[*corepb.GetWaitGroupByNameRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) ListWaitGroups(ctx context.Context, request *corepb.ListWaitGroupsRequest) (*corepb.ListWaitGroupsResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) ListWaitGroups(ctx context.Context, req *corepb.ListWaitGroupsRequest) (*corepb.ListWaitGroupsResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleWaitGroupsCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListWaitGroups(&mrpc.ReadRequest[*corepb.ListWaitGroupsRequest]{
+			resp, err := adapter.core.ListWaitGroups(&mrpc.ReadRequest[*corepb.ListWaitGroupsRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) ListWaitGroupCompletedJobs(ctx context.Context, request *corepb.ListWaitGroupCompletedJobsRequest) (*corepb.ListWaitGroupCompletedJobsResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) ListWaitGroupCompletedJobs(ctx context.Context, req *corepb.ListWaitGroupCompletedJobsRequest) (*corepb.ListWaitGroupCompletedJobsResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleWaitGroupsCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListWaitGroupCompletedJobs(&mrpc.ReadRequest[*corepb.ListWaitGroupCompletedJobsRequest]{
+			resp, err := adapter.core.ListWaitGroupCompletedJobs(&mrpc.ReadRequest[*corepb.ListWaitGroupCompletedJobsRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) UpdateWaitGroup(ctx context.Context, request *corepb.UpdateWaitGroupRequest) (*corepb.UpdateWaitGroupResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) UpdateWaitGroup(ctx context.Context, req *corepb.UpdateWaitGroupRequest) (*corepb.UpdateWaitGroupResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleWaitGroupsCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.UpdateWaitGroup(&mrpc.UpdateRequest[*corepb.UpdateWaitGroupRequest]{
+			resp, err := adapter.core.UpdateWaitGroup(&mrpc.UpdateRequest[*corepb.UpdateWaitGroupRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) CompleteJobsFromWaitGroup(ctx context.Context, request *corepb.CompleteJobsFromWaitGroupRequest) (*corepb.CompleteJobsFromWaitGroupResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) CompleteJobsFromWaitGroup(ctx context.Context, req *corepb.CompleteJobsFromWaitGroupRequest) (*corepb.CompleteJobsFromWaitGroupResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleWaitGroupsCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.CompleteJobsFromWaitGroup(&mrpc.UpdateRequest[*corepb.CompleteJobsFromWaitGroupRequest]{
+			resp, err := adapter.core.CompleteJobsFromWaitGroup(&mrpc.UpdateRequest[*corepb.CompleteJobsFromWaitGroupRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) CreateWaitGroup(ctx context.Context, request *corepb.CreateWaitGroupRequest) (*corepb.CreateWaitGroupResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) CreateWaitGroup(ctx context.Context, req *corepb.CreateWaitGroupRequest) (*corepb.CreateWaitGroupResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleWaitGroupsCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.CreateWaitGroup(&mrpc.UpdateRequest[*corepb.CreateWaitGroupRequest]{
+			resp, err := adapter.core.CreateWaitGroup(&mrpc.UpdateRequest[*corepb.CreateWaitGroupRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) DeleteWaitGroup(ctx context.Context, request *corepb.DeleteWaitGroupRequest) (*corepb.DeleteWaitGroupResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) DeleteWaitGroup(ctx context.Context, req *corepb.DeleteWaitGroupRequest) (*corepb.DeleteWaitGroupResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleWaitGroupsCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.DeleteWaitGroup(&mrpc.UpdateRequest[*corepb.DeleteWaitGroupRequest]{
+			resp, err := adapter.core.DeleteWaitGroup(&mrpc.UpdateRequest[*corepb.DeleteWaitGroupRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) RunWaitGroupsGarbageCollection(ctx context.Context, request *corepb.RunWaitGroupsGarbageCollectionRequest, shardId string) (*corepb.RunWaitGroupsGarbageCollectionResponse, error) {
+func (s *GrackleNonclusteredStub) RunWaitGroupsGarbageCollection(ctx context.Context, req *corepb.RunWaitGroupsGarbageCollectionRequest, shardId string) (*corepb.RunWaitGroupsGarbageCollectionResponse, error) {
 	for _, adapter := range s.grackleWaitGroupsCores {
 		if adapter.id == shardId {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.RunWaitGroupsGarbageCollection(&mrpc.UpdateUnshardedRequest[*corepb.RunWaitGroupsGarbageCollectionRequest]{
+			resp, err := adapter.core.RunWaitGroupsGarbageCollection(&mrpc.UpdateUnshardedRequest[*corepb.RunWaitGroupsGarbageCollectionRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardId: %s", shardId)
 }
 
-func (s *GrackleNonclusteredStub) WaitGroupsDeleteNamespace(ctx context.Context, request *corepb.WaitGroupsDeleteNamespaceRequest) (*corepb.WaitGroupsDeleteNamespaceResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) WaitGroupsDeleteNamespace(ctx context.Context, req *corepb.WaitGroupsDeleteNamespaceRequest) (*corepb.WaitGroupsDeleteNamespaceResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleWaitGroupsCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.WaitGroupsDeleteNamespace(&mrpc.UpdateRequest[*corepb.WaitGroupsDeleteNamespaceRequest]{
+			resp, err := adapter.core.WaitGroupsDeleteNamespace(&mrpc.UpdateRequest[*corepb.WaitGroupsDeleteNamespaceRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) GetBarrier(ctx context.Context, request *corepb.GetBarrierRequest) (*corepb.GetBarrierResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) GetBarrier(ctx context.Context, req *corepb.GetBarrierRequest) (*corepb.GetBarrierResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleBarriersCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.GetBarrier(&mrpc.ReadRequest[*corepb.GetBarrierRequest]{
+			resp, err := adapter.core.GetBarrier(&mrpc.ReadRequest[*corepb.GetBarrierRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) GetBarrierByName(ctx context.Context, request *corepb.GetBarrierByNameRequest) (*corepb.GetBarrierByNameResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) GetBarrierByName(ctx context.Context, req *corepb.GetBarrierByNameRequest) (*corepb.GetBarrierByNameResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleBarriersCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.GetBarrierByName(&mrpc.ReadRequest[*corepb.GetBarrierByNameRequest]{
+			resp, err := adapter.core.GetBarrierByName(&mrpc.ReadRequest[*corepb.GetBarrierByNameRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) ListBarriers(ctx context.Context, request *corepb.ListBarriersRequest) (*corepb.ListBarriersResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) ListBarriers(ctx context.Context, req *corepb.ListBarriersRequest) (*corepb.ListBarriersResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleBarriersCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListBarriers(&mrpc.ReadRequest[*corepb.ListBarriersRequest]{
+			resp, err := adapter.core.ListBarriers(&mrpc.ReadRequest[*corepb.ListBarriersRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) ListBarrierParticipants(ctx context.Context, request *corepb.ListBarrierParticipantsRequest) (*corepb.ListBarrierParticipantsResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) ListBarrierParticipants(ctx context.Context, req *corepb.ListBarrierParticipantsRequest) (*corepb.ListBarrierParticipantsResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleBarriersCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
-			response, err := adapter.core.ListBarrierParticipants(&mrpc.ReadRequest[*corepb.ListBarrierParticipantsRequest]{
+			resp, err := adapter.core.ListBarrierParticipants(&mrpc.ReadRequest[*corepb.ListBarrierParticipantsRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) CreateBarrier(ctx context.Context, request *corepb.CreateBarrierRequest) (*corepb.CreateBarrierResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) CreateBarrier(ctx context.Context, req *corepb.CreateBarrierRequest) (*corepb.CreateBarrierResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleBarriersCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.CreateBarrier(&mrpc.UpdateRequest[*corepb.CreateBarrierRequest]{
+			resp, err := adapter.core.CreateBarrier(&mrpc.UpdateRequest[*corepb.CreateBarrierRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) DeleteBarrier(ctx context.Context, request *corepb.DeleteBarrierRequest) (*corepb.DeleteBarrierResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) DeleteBarrier(ctx context.Context, req *corepb.DeleteBarrierRequest) (*corepb.DeleteBarrierResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleBarriersCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.DeleteBarrier(&mrpc.UpdateRequest[*corepb.DeleteBarrierRequest]{
+			resp, err := adapter.core.DeleteBarrier(&mrpc.UpdateRequest[*corepb.DeleteBarrierRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) UpdateBarrier(ctx context.Context, request *corepb.UpdateBarrierRequest) (*corepb.UpdateBarrierResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) UpdateBarrier(ctx context.Context, req *corepb.UpdateBarrierRequest) (*corepb.UpdateBarrierResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleBarriersCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.UpdateBarrier(&mrpc.UpdateRequest[*corepb.UpdateBarrierRequest]{
+			resp, err := adapter.core.UpdateBarrier(&mrpc.UpdateRequest[*corepb.UpdateBarrierRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) ArriveAtBarrier(ctx context.Context, request *corepb.ArriveAtBarrierRequest) (*corepb.ArriveAtBarrierResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) ArriveAtBarrier(ctx context.Context, req *corepb.ArriveAtBarrierRequest) (*corepb.ArriveAtBarrierResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleBarriersCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.ArriveAtBarrier(&mrpc.UpdateRequest[*corepb.ArriveAtBarrierRequest]{
+			resp, err := adapter.core.ArriveAtBarrier(&mrpc.UpdateRequest[*corepb.ArriveAtBarrierRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
 }
 
-func (s *GrackleNonclusteredStub) RunBarriersGarbageCollection(ctx context.Context, request *corepb.RunBarriersGarbageCollectionRequest, shardId string) (*corepb.RunBarriersGarbageCollectionResponse, error) {
+func (s *GrackleNonclusteredStub) RunBarriersGarbageCollection(ctx context.Context, req *corepb.RunBarriersGarbageCollectionRequest, shardId string) (*corepb.RunBarriersGarbageCollectionResponse, error) {
 	for _, adapter := range s.grackleBarriersCores {
 		if adapter.id == shardId {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.RunBarriersGarbageCollection(&mrpc.UpdateUnshardedRequest[*corepb.RunBarriersGarbageCollectionRequest]{
+			resp, err := adapter.core.RunBarriersGarbageCollection(&mrpc.UpdateUnshardedRequest[*corepb.RunBarriersGarbageCollectionRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no shard found for shardId: %s", shardId)
 }
 
-func (s *GrackleNonclusteredStub) BarriersDeleteNamespace(ctx context.Context, request *corepb.BarriersDeleteNamespaceRequest) (*corepb.BarriersDeleteNamespaceResponse, error) {
-	shardKey := request.ShardKey()
+func (s *GrackleNonclusteredStub) BarriersDeleteNamespace(ctx context.Context, req *corepb.BarriersDeleteNamespaceRequest) (*corepb.BarriersDeleteNamespaceResponse, error) {
+	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleBarriersCores {
 		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
-			response, err := adapter.core.BarriersDeleteNamespace(&mrpc.UpdateRequest[*corepb.BarriersDeleteNamespaceRequest]{
+			resp, err := adapter.core.BarriersDeleteNamespace(&mrpc.UpdateRequest[*corepb.BarriersDeleteNamespaceRequest]{
 				Now:     time.Now().UnixNano(),
-				Payload: request,
+				Payload: req,
 			})
 			if err != nil {
 				return nil, err
 			}
-			err = nilifyIfEmpty(response.ApplicationError)
+			err = nilifyIfEmpty(resp.ApplicationError)
 			if err != nil {
 				return nil, err
 			}
-			return response.Payload, nil
+			return resp.Payload, nil
 		}
 	}
 

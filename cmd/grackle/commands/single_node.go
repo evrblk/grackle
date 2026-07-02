@@ -58,7 +58,7 @@ var singleNodeCmd = &cobra.Command{
 		tables.RegisterGracklePrefixes(registry)
 
 		// Create shared Badger store for application cores
-		dataStore, err := store.NewBadgerStore(filepath.Join(singleNodeCmdCfg.dataDir, "data"))
+		dataStore, err := store.NewBadgerStore(store.DefaultOptions(filepath.Join(singleNodeCmdCfg.dataDir, "data")))
 		if err != nil {
 			log.Fatalf("failed to create data store: %v", err)
 		}

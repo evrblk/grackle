@@ -42,6 +42,8 @@ var nodeCmd = &cobra.Command{
 		log.Println("Initializing Grackle Node server...")
 
 		// Metrics
+		monstera.RegisterMetrics(prometheus.DefaultRegisterer)
+		coreapis.RegisterMetrics(prometheus.DefaultRegisterer)
 		metricsSrv := metrics.NewMetricsServer(nodeCmdCfg.prometheusPort)
 		metricsSrv.Start()
 
@@ -61,7 +63,7 @@ var nodeCmd = &cobra.Command{
 		}
 
 		// Create shared Badger store for application cores
-		dataStore, err := store.NewBadgerStore(filepath.Join(nodeCmdCfg.dataDir, "data"))
+		dataStore, err := store.NewBadgerStore(store.DefaultOptions(filepath.Join(nodeCmdCfg.dataDir, "data")))
 		if err != nil {
 			log.Fatal(err)
 		}
