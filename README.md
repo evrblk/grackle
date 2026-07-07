@@ -3,18 +3,17 @@
 [![Go](https://github.com/evrblk/grackle/actions/workflows/go.yml/badge.svg)](https://github.com/evrblk/grackle/actions/workflows/go.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/evrblk/grackle)](https://goreportcard.com/report/github.com/evrblk/grackle)
 
-**Everblack Grackle is the coordination layer for your distributed system** — fundamental
-synchronization primitives, served over a clean API, in a single self-contained binary.
+**Everblack Grackle** — fundamental synchronization primitives, served over a clean API, in a single
+self-contained binary.
 
-Stop reinventing distributed locks on top of a database, or bending a key-value store into a
-semaphore. Grackle gives you the primitives directly, with the durability and safety guarantees you'd
-otherwise have to build (and debug) yourself.
+Stop reinventing distributed locks on top of a database or a key-value store. Grackle gives you the
+primitives directly, with the durability, scalability, and safety guarantees you would not get from
+a key-value store.
 
 ## The primitives
 
 * **[Hierarchical locks](/docs/locks.md)** — shared (read) or exclusive (write) locks whose names are
-  `/`-separated paths. Lock `users/123` and you've guarded its whole subtree — no need to enumerate
-  every leaf. When an acquire is blocked, Grackle tells you *who* holds the lock and *why*.
+  `/`-separated paths. When an acquire is blocked, Grackle tells you *who* holds the lock and *why*.
 * **[Weighted semaphores](/docs/semaphores.md)** — bound concurrent access to a resource pool. Each
   acquire takes a configurable *weight*, so heavy and light work can share one pool of permits.
 * **[Wait groups](/docs/wait-groups.md)** — fan-in for millions of jobs, the distributed
