@@ -58,5 +58,10 @@ func newGrackleApiServer(t *testing.T) (*v1beta.GrackleApiServer, func()) {
 
 	grackleApiGatewayServer := v1beta.NewGrackleApiServer(grackleCoreApiClient)
 
-	return grackleApiGatewayServer, dataStore.Close
+	closefunc := func() {
+		dataStore.Close()
+		grackleApiGatewayServer.Close()
+	}
+
+	return grackleApiGatewayServer, closefunc
 }

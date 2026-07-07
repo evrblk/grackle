@@ -21,7 +21,7 @@ func TestHandler_CreateNamespace(t *testing.T) {
 	t.Run("retries on IDCollision", func(t *testing.T) {
 		calls := 0
 		seenIDs := make(map[uint64]struct{})
-		handler := &GrackleApiServerHandler{grackleClient: &fakeGrackleClient{
+		handler := NewGrackleApiServerHandler(&fakeGrackleClient{
 			createNamespace: func(ctx context.Context, req *corepb.CreateNamespaceRequest) (*corepb.CreateNamespaceResponse, error) {
 				calls++
 				seenIDs[req.NamespaceId.NamespaceId] = struct{}{}
@@ -33,7 +33,7 @@ func TestHandler_CreateNamespace(t *testing.T) {
 					Namespace: &corepb.Namespace{Id: req.NamespaceId, Name: req.Name},
 				}, nil
 			},
-		}}
+		})
 
 		resp, err := handler.CreateNamespace(
 			context.Background(),
@@ -51,12 +51,12 @@ func TestHandler_CreateNamespace(t *testing.T) {
 
 	t.Run("exhausts retries", func(t *testing.T) {
 		calls := 0
-		handler := &GrackleApiServerHandler{grackleClient: &fakeGrackleClient{
+		handler := NewGrackleApiServerHandler(&fakeGrackleClient{
 			createNamespace: func(ctx context.Context, req *corepb.CreateNamespaceRequest) (*corepb.CreateNamespaceResponse, error) {
 				calls++
 				return nil, mrpc.NewError(mrpc.IDCollision, "namespace with this id already exists")
 			},
-		}}
+		})
 
 		_, err := handler.CreateNamespace(
 			context.Background(),
@@ -73,13 +73,13 @@ func TestHandler_CreateNamespace(t *testing.T) {
 
 	t.Run("non-collision error not retried", func(t *testing.T) {
 		calls := 0
-		handler := &GrackleApiServerHandler{grackleClient: &fakeGrackleClient{
+		handler := NewGrackleApiServerHandler(&fakeGrackleClient{
 			createNamespace: func(ctx context.Context, req *corepb.CreateNamespaceRequest) (*corepb.CreateNamespaceResponse, error) {
 				calls++
 				return nil, mrpc.NewErrorWithContext(mrpc.AlreadyExists, "namespace with this name already exists",
 					map[string]string{"namespace_name": req.Name})
 			},
-		}}
+		})
 
 		_, err := handler.CreateNamespace(
 			context.Background(),
@@ -100,7 +100,7 @@ func TestHandler_CreateWaitGroup(t *testing.T) {
 		now := time.Now()
 		calls := 0
 		seenIDs := make(map[uint64]struct{})
-		handler := &GrackleApiServerHandler{grackleClient: &fakeGrackleClient{
+		handler := NewGrackleApiServerHandler(&fakeGrackleClient{
 			createWaitGroup: func(ctx context.Context, req *corepb.CreateWaitGroupRequest) (*corepb.CreateWaitGroupResponse, error) {
 				calls++
 				seenIDs[req.WaitGroupId.WaitGroupId] = struct{}{}
@@ -109,7 +109,7 @@ func TestHandler_CreateWaitGroup(t *testing.T) {
 				}
 				return &corepb.CreateWaitGroupResponse{WaitGroup: &corepb.WaitGroup{Id: req.WaitGroupId, Name: req.Name}}, nil
 			},
-		}}
+		})
 
 		resp, err := handler.CreateWaitGroup(
 			context.Background(),
@@ -128,12 +128,12 @@ func TestHandler_CreateWaitGroup(t *testing.T) {
 	t.Run("exhausts retries", func(t *testing.T) {
 		now := time.Now()
 		calls := 0
-		handler := &GrackleApiServerHandler{grackleClient: &fakeGrackleClient{
+		handler := NewGrackleApiServerHandler(&fakeGrackleClient{
 			createWaitGroup: func(ctx context.Context, req *corepb.CreateWaitGroupRequest) (*corepb.CreateWaitGroupResponse, error) {
 				calls++
 				return nil, mrpc.NewError(mrpc.IDCollision, "wait group with this id already exists")
 			},
-		}}
+		})
 
 		_, err := handler.CreateWaitGroup(
 			context.Background(),
@@ -152,7 +152,7 @@ func TestHandler_CreateSemaphore(t *testing.T) {
 	t.Run("retries on IDCollision", func(t *testing.T) {
 		calls := 0
 		seenIDs := make(map[uint64]struct{})
-		handler := &GrackleApiServerHandler{grackleClient: &fakeGrackleClient{
+		handler := NewGrackleApiServerHandler(&fakeGrackleClient{
 			createSemaphore: func(ctx context.Context, req *corepb.CreateSemaphoreRequest) (*corepb.CreateSemaphoreResponse, error) {
 				calls++
 				seenIDs[req.SemaphoreId.SemaphoreId] = struct{}{}
@@ -161,7 +161,7 @@ func TestHandler_CreateSemaphore(t *testing.T) {
 				}
 				return &corepb.CreateSemaphoreResponse{Semaphore: &corepb.Semaphore{Id: req.SemaphoreId, Name: req.Name}}, nil
 			},
-		}}
+		})
 
 		resp, err := handler.CreateSemaphore(
 			context.Background(),
@@ -179,12 +179,12 @@ func TestHandler_CreateSemaphore(t *testing.T) {
 
 	t.Run("exhausts retries", func(t *testing.T) {
 		calls := 0
-		handler := &GrackleApiServerHandler{grackleClient: &fakeGrackleClient{
+		handler := NewGrackleApiServerHandler(&fakeGrackleClient{
 			createSemaphore: func(ctx context.Context, req *corepb.CreateSemaphoreRequest) (*corepb.CreateSemaphoreResponse, error) {
 				calls++
 				return nil, mrpc.NewError(mrpc.IDCollision, "semaphore with this id already exists")
 			},
-		}}
+		})
 
 		_, err := handler.CreateSemaphore(
 			context.Background(),
@@ -203,7 +203,7 @@ func TestHandler_CreateBarrier(t *testing.T) {
 	t.Run("retries on IDCollision", func(t *testing.T) {
 		calls := 0
 		seenIDs := make(map[uint64]struct{})
-		handler := &GrackleApiServerHandler{grackleClient: &fakeGrackleClient{
+		handler := NewGrackleApiServerHandler(&fakeGrackleClient{
 			createBarrier: func(ctx context.Context, req *corepb.CreateBarrierRequest) (*corepb.CreateBarrierResponse, error) {
 				calls++
 				seenIDs[req.BarrierId.BarrierId] = struct{}{}
@@ -212,7 +212,7 @@ func TestHandler_CreateBarrier(t *testing.T) {
 				}
 				return &corepb.CreateBarrierResponse{Barrier: &corepb.Barrier{Id: req.BarrierId, Name: req.Name}}, nil
 			},
-		}}
+		})
 
 		resp, err := handler.CreateBarrier(
 			context.Background(),
@@ -230,12 +230,12 @@ func TestHandler_CreateBarrier(t *testing.T) {
 
 	t.Run("exhausts retries", func(t *testing.T) {
 		calls := 0
-		handler := &GrackleApiServerHandler{grackleClient: &fakeGrackleClient{
+		handler := NewGrackleApiServerHandler(&fakeGrackleClient{
 			createBarrier: func(ctx context.Context, req *corepb.CreateBarrierRequest) (*corepb.CreateBarrierResponse, error) {
 				calls++
 				return nil, mrpc.NewError(mrpc.IDCollision, "barrier with this id already exists")
 			},
-		}}
+		})
 
 		_, err := handler.CreateBarrier(
 			context.Background(),
@@ -254,7 +254,7 @@ func TestHandler_CreateSemaphoreLease(t *testing.T) {
 	t.Run("retries on IDCollision", func(t *testing.T) {
 		calls := 0
 		seenIDs := make(map[uint64]struct{})
-		handler := &GrackleApiServerHandler{grackleClient: &fakeGrackleClient{
+		handler := NewGrackleApiServerHandler(&fakeGrackleClient{
 			createSemaphoreLease: func(ctx context.Context, req *corepb.CreateSemaphoreLeaseRequest) (*corepb.CreateSemaphoreLeaseResponse, error) {
 				calls++
 				seenIDs[req.LeaseId.LeaseId] = struct{}{}
@@ -263,7 +263,7 @@ func TestHandler_CreateSemaphoreLease(t *testing.T) {
 				}
 				return &corepb.CreateSemaphoreLeaseResponse{Lease: &corepb.Lease{Id: req.LeaseId, ProcessId: req.ProcessId}}, nil
 			},
-		}}
+		})
 
 		resp, err := handler.CreateSemaphoreLease(
 			context.Background(),
@@ -281,12 +281,12 @@ func TestHandler_CreateSemaphoreLease(t *testing.T) {
 
 	t.Run("exhausts retries", func(t *testing.T) {
 		calls := 0
-		handler := &GrackleApiServerHandler{grackleClient: &fakeGrackleClient{
+		handler := NewGrackleApiServerHandler(&fakeGrackleClient{
 			createSemaphoreLease: func(ctx context.Context, req *corepb.CreateSemaphoreLeaseRequest) (*corepb.CreateSemaphoreLeaseResponse, error) {
 				calls++
 				return nil, mrpc.NewError(mrpc.IDCollision, "lease with this id already exists")
 			},
-		}}
+		})
 
 		_, err := handler.CreateSemaphoreLease(
 			context.Background(),
@@ -305,7 +305,7 @@ func TestHandler_CreateLockLease(t *testing.T) {
 	t.Run("retries on IDCollision", func(t *testing.T) {
 		calls := 0
 		seenIDs := make(map[uint64]struct{})
-		handler := &GrackleApiServerHandler{grackleClient: &fakeGrackleClient{
+		handler := NewGrackleApiServerHandler(&fakeGrackleClient{
 			createLockLease: func(ctx context.Context, req *corepb.CreateLockLeaseRequest) (*corepb.CreateLockLeaseResponse, error) {
 				calls++
 				seenIDs[req.LeaseId.LeaseId] = struct{}{}
@@ -314,7 +314,7 @@ func TestHandler_CreateLockLease(t *testing.T) {
 				}
 				return &corepb.CreateLockLeaseResponse{Lease: &corepb.Lease{Id: req.LeaseId, ProcessId: req.ProcessId}}, nil
 			},
-		}}
+		})
 
 		resp, err := handler.CreateLockLease(
 			context.Background(),
@@ -332,12 +332,12 @@ func TestHandler_CreateLockLease(t *testing.T) {
 
 	t.Run("exhausts retries", func(t *testing.T) {
 		calls := 0
-		handler := &GrackleApiServerHandler{grackleClient: &fakeGrackleClient{
+		handler := NewGrackleApiServerHandler(&fakeGrackleClient{
 			createLockLease: func(ctx context.Context, req *corepb.CreateLockLeaseRequest) (*corepb.CreateLockLeaseResponse, error) {
 				calls++
 				return nil, mrpc.NewError(mrpc.IDCollision, "lease with this id already exists")
 			},
-		}}
+		})
 
 		_, err := handler.CreateLockLease(
 			context.Background(),
