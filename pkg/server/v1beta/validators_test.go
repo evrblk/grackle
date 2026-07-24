@@ -8,7 +8,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	gracklepb "github.com/evrblk/evrblk-go/grackle/v1beta"
+	"github.com/evrblk/grackle/pkg/ids"
 )
+
+func init() {
+	ids.DefaultEncoder = &ids.MultiTenantIDsEncoder{}
+}
 
 func TestValidateMetadata(t *testing.T) {
 	longKey := string(make([]byte, maxMetadataKeyLength+1))
