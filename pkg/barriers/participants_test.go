@@ -16,7 +16,7 @@ func TestParticipantsTable_Create(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newParticipantsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -48,7 +48,7 @@ func TestParticipantsTable_Create(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newParticipantsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -84,7 +84,7 @@ func TestParticipantsTable_Create(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newParticipantsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -117,7 +117,7 @@ func TestParticipantsTable_Create(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newParticipantsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -157,7 +157,7 @@ func TestParticipantsTable_Get(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newParticipantsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -188,7 +188,7 @@ func TestParticipantsTable_Get(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newParticipantsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		txn := badgerStore.View()
 		_, err = table.Get(txn, rand.Uint64(), rand.Uint64(), rand.Uint64(), 1, "missing")
@@ -204,7 +204,7 @@ func TestParticipantsTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newParticipantsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -238,7 +238,7 @@ func TestParticipantsTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newParticipantsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		// Delete on a never-created row is idempotent.
 		txn := badgerStore.Update()
@@ -251,7 +251,7 @@ func TestParticipantsTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newParticipantsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -292,7 +292,7 @@ func TestParticipantsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newParticipantsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -326,7 +326,7 @@ func TestParticipantsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newParticipantsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -370,7 +370,7 @@ func TestParticipantsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newParticipantsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		txn := badgerStore.View()
 		defer txn.Discard()
@@ -387,7 +387,7 @@ func TestParticipantsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newParticipantsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -434,7 +434,7 @@ func TestParticipantsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newParticipantsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -474,14 +474,5 @@ func TestParticipantsTable_List(t *testing.T) {
 		}
 		require.Equal(t, 2, gens[1])
 		require.Equal(t, 3, gens[2])
-	})
-}
-
-func TestParticipantsTable_GetTableKeyRange(t *testing.T) {
-	t.Run("get table key range", func(t *testing.T) {
-		table := newParticipantsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
-
-		keyRange := table.GetTableKeyRange()
-		require.NotNil(t, keyRange)
 	})
 }

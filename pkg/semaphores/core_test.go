@@ -11,12 +11,14 @@ import (
 
 	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
+	"github.com/evrblk/monstera/utils"
 	"github.com/evrblk/yellowstone-common/honey"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
 
 	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/corepb"
+	"github.com/evrblk/grackle/pkg/sharding"
 	"github.com/evrblk/grackle/pkg/tables"
 )
 
@@ -2172,9 +2174,9 @@ func TestCore_RunSemaphoresGarbageCollection(t *testing.T) {
 
 		// Lease-id index entries are gone too, so the deleted semaphore no longer shows up for any lease.
 		for _, lease := range leases {
-			result, err := core.semaphores.ListByLeaseId(core.badgerStore.View(), lease.Id, nil, 100)
+			result, err := core.holders.ListSemaphoreIdsByLeaseId(core.badgerStore.View(), lease.Id, nil, 100)
 			require.NoError(t, err)
-			require.Empty(t, result.semaphores)
+			require.Empty(t, result.semaphoreIds)
 		}
 	})
 
@@ -4201,4 +4203,148 @@ func refreshSemaphoreLeaseWithError(t *testing.T, core *Core, leaseId *corepb.Le
 	require.Nil(t, resp.Payload)
 	require.NotNil(t, resp.ApplicationError)
 	return resp.ApplicationError
+}
+
+// TestCore_SplitSnapshotRestore proves the portable, bounds-filtered snapshot
+// contract on the semaphores core: a parent core's snapshot is restored into
+// two child cores with disjoint bounds (sharing ONE Badger store with the
+// parent), and each child ends up with exactly its half — with every
+// secondary index (names, lease id, holder expiration, lease process
+// id/expiration) rebuilt and functional.
+func TestCore_SplitSnapshotRestore(t *testing.T) {
+	now := time.Now()
+	badgerStore, err := store.NewBadgerInMemoryStore()
+	require.NoError(t, err)
+
+	fullLower := []byte{0x00, 0x00, 0x00, 0x00}
+	fullUpper := []byte{0xff, 0xff, 0xff, 0xff}
+	splitAt := []byte{0x80, 0x00, 0x00, 0x00}
+
+	parent := NewCore(badgerStore, []byte{0xaa, 0x00, 0x00, 0x01}, fullLower, fullUpper)
+	child1 := NewCore(badgerStore, []byte{0xaa, 0x00, 0x00, 0x02}, fullLower, []byte{0x7f, 0xff, 0xff, 0xff})
+	child2 := NewCore(badgerStore, []byte{0xaa, 0x00, 0x00, 0x03}, splitAt, fullUpper)
+
+	loAccount, loNamespace := namespaceInRange(t, fullLower, []byte{0x7f, 0xff, 0xff, 0xff})
+	hiAccount, hiNamespace := namespaceInRange(t, splitAt, fullUpper)
+
+	type fixture struct {
+		accountId, namespaceId uint64
+		lease                  *corepb.Lease
+	}
+	populate := func(accountId, namespaceId uint64) fixture {
+		createSemaphore(t, parent, &corepb.SemaphoreId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			SemaphoreId: rand.Uint64(),
+		}, "sem-split", 5, now)
+		lease := createLease(t, parent, accountId, namespaceId, "proc-split", now, 60*time.Minute)
+		ok, _ := acquireSemaphore(t, parent,
+			&corepb.NamespaceId{AccountId: accountId, NamespaceId: namespaceId},
+			lease.Id, "sem-split", 2, now)
+		require.True(t, ok)
+		return fixture{accountId, namespaceId, lease}
+	}
+	lo := populate(loAccount, loNamespace)
+	hi := populate(hiAccount, hiNamespace)
+
+	// Snapshot the parent; restore into both children.
+	snapshot := parent.Snapshot()
+	buf := bytes.NewBuffer(nil)
+	require.NoError(t, snapshot.Write(buf))
+	snapshot.Release()
+	require.NoError(t, child1.Restore(io.NopCloser(bytes.NewReader(buf.Bytes()))))
+	require.NoError(t, child2.Restore(io.NopCloser(bytes.NewReader(buf.Bytes()))))
+
+	parentRows := countOwnedRows(t, parent)
+	require.Greater(t, parentRows, 0)
+	require.Equal(t, parentRows, countOwnedRows(t, child1)+countOwnedRows(t, child2),
+		"children must partition the parent's rows exactly")
+
+	for _, tc := range []struct {
+		owner *Core
+		fx    fixture
+	}{
+		{child1, lo},
+		{child2, hi},
+	} {
+		namespaceId := &corepb.NamespaceId{AccountId: tc.fx.accountId, NamespaceId: tc.fx.namespaceId}
+
+		// Names index rebuilt: lookup by name works on the owner.
+		semResp, err := tc.owner.GetSemaphoreByName(&coreapis.GetSemaphoreByNameRequest{
+			Payload: &corepb.GetSemaphoreByNameRequest{NamespaceId: namespaceId, SemaphoreName: "sem-split"},
+			Now:     now.Add(time.Minute).UnixNano(),
+		})
+		require.NoError(t, err)
+		require.Nil(t, semResp.ApplicationError)
+
+		// Holders restored: the acquisition survived with its weight.
+		holdersResp, err := tc.owner.ListSemaphoreHolders(&coreapis.ListSemaphoreHoldersRequest{
+			Payload: &corepb.ListSemaphoreHoldersRequest{NamespaceId: namespaceId, SemaphoreName: "sem-split", Limit: 10},
+			Now:     now.Add(time.Minute).UnixNano(),
+		})
+		require.NoError(t, err)
+		require.Nil(t, holdersResp.ApplicationError)
+		require.Len(t, holdersResp.Payload.Holders, 1)
+
+		// Lease id index rebuilt (from the holders): semaphores held by the
+		// lease are found.
+		byLeaseResp, err := tc.owner.ListSemaphoresByLeaseId(&coreapis.ListSemaphoresByLeaseIdRequest{
+			Payload: &corepb.ListSemaphoresByLeaseIdRequest{LeaseId: tc.fx.lease.Id},
+			Now:     now.Add(time.Minute).UnixNano(),
+		})
+		require.NoError(t, err)
+		require.Nil(t, byLeaseResp.ApplicationError)
+		require.Len(t, byLeaseResp.Payload.Semaphores, 1)
+	}
+}
+
+// ownedTableNames lists the registry names of every table the core owns —
+// the physical storage prefixes are <registry table id><shard prefix>.
+var ownedTableNames = []string{
+	"Grackle.SemaphoresCore.Semaphores.Table",
+	"Grackle.SemaphoresCore.Semaphores.NamesIndex",
+	"Grackle.SemaphoresCore.Holders.LeaseIdIndex",
+	"Grackle.SemaphoresCore.Holders.Table",
+	"Grackle.SemaphoresCore.Holders.ExpirationIndex",
+	"Grackle.SemaphoresCore.Counters.Table",
+	"Grackle.SemaphoresCore.Leases.Table",
+	"Grackle.SemaphoresCore.Leases.ProcessIdIndex",
+	"Grackle.SemaphoresCore.Leases.ExpirationIndex",
+	"Grackle.SemaphoresCore.GarbageCollectionRecords.Table",
+	"Grackle.SemaphoresCore.ExpirationRecords.Table",
+}
+
+// countOwnedRows counts the physical rows under every storage prefix the core
+// owns.
+func countOwnedRows(t *testing.T, c *Core) int {
+	t.Helper()
+	txn := c.badgerStore.View()
+	defer txn.Discard()
+
+	count := 0
+	for _, name := range ownedTableNames {
+		prefix := utils.ConcatBytes(tables.Grackle[name].Bytes(), c.shardPrefix)
+		err := txn.EachPrefixKeys(prefix, func(key []byte) (bool, error) {
+			count++
+			return true, nil
+		})
+		require.NoError(t, err)
+	}
+	return count
+}
+
+// namespaceInRange finds an (accountId, namespaceId) pair whose shard key
+// falls within [lower, upper].
+func namespaceInRange(t *testing.T, lower []byte, upper []byte) (uint64, uint64) {
+	t.Helper()
+	for i := 0; i < 100_000; i++ {
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint64()
+		sk := sharding.ByAccountAndNamespace(accountId, namespaceId)
+		if bytes.Compare(sk, lower) >= 0 && bytes.Compare(sk, upper) <= 0 {
+			return accountId, namespaceId
+		}
+	}
+	t.Fatalf("no namespace found hashing into [%x, %x]", lower, upper)
+	return 0, 0
 }

@@ -10,11 +10,13 @@ import (
 
 	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
+	"github.com/evrblk/monstera/utils"
 	"github.com/evrblk/yellowstone-common/honey"
 	"github.com/stretchr/testify/require"
 
 	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/corepb"
+	"github.com/evrblk/grackle/pkg/sharding"
 	"github.com/evrblk/grackle/pkg/tables"
 )
 
@@ -1567,4 +1569,129 @@ func runBarriersGarbageCollection(t *testing.T, core *Core, now time.Time, gcRec
 	require.NotNil(t, resp)
 	require.Nil(t, resp.ApplicationError)
 	require.NotNil(t, resp.Payload)
+}
+
+// TestCore_SplitSnapshotRestore proves the portable, bounds-filtered snapshot
+// contract on the barriers core: a parent core's snapshot is restored into
+// two child cores with disjoint bounds (sharing ONE Badger store with the
+// parent), and each child ends up with exactly its half — with the names
+// index rebuilt and participants restored (participants carry their identity
+// in the canonical key, not the value — the one key-parsing restore path).
+func TestCore_SplitSnapshotRestore(t *testing.T) {
+	now := time.Now()
+	badgerStore, err := store.NewBadgerInMemoryStore()
+	require.NoError(t, err)
+
+	fullLower := []byte{0x00, 0x00, 0x00, 0x00}
+	fullUpper := []byte{0xff, 0xff, 0xff, 0xff}
+	splitAt := []byte{0x80, 0x00, 0x00, 0x00}
+
+	parent := NewCore(badgerStore, []byte{0xaa, 0x00, 0x00, 0x01}, fullLower, fullUpper)
+	child1 := NewCore(badgerStore, []byte{0xaa, 0x00, 0x00, 0x02}, fullLower, []byte{0x7f, 0xff, 0xff, 0xff})
+	child2 := NewCore(badgerStore, []byte{0xaa, 0x00, 0x00, 0x03}, splitAt, fullUpper)
+
+	loAccount, loNamespace := namespaceInRange(t, fullLower, []byte{0x7f, 0xff, 0xff, 0xff})
+	hiAccount, hiNamespace := namespaceInRange(t, splitAt, fullUpper)
+
+	populate := func(accountId, namespaceId uint64) {
+		createBarrier(t, parent, &corepb.BarrierId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			BarrierId:   rand.Uint64(),
+		}, "barrier-split", 3, 100, now)
+		// One arrival out of three expected: the barrier does not trip, so the
+		// participant row stays.
+		_ = arriveAtBarrier(t, parent, &corepb.NamespaceId{AccountId: accountId, NamespaceId: namespaceId},
+			"barrier-split", "proc-1", 1, now)
+	}
+	populate(loAccount, loNamespace)
+	populate(hiAccount, hiNamespace)
+
+	// Snapshot the parent; restore into both children.
+	snapshot := parent.Snapshot()
+	buf := bytes.NewBuffer(nil)
+	require.NoError(t, snapshot.Write(buf))
+	snapshot.Release()
+	require.NoError(t, child1.Restore(io.NopCloser(bytes.NewReader(buf.Bytes()))))
+	require.NoError(t, child2.Restore(io.NopCloser(bytes.NewReader(buf.Bytes()))))
+
+	parentRows := countOwnedRows(t, parent)
+	require.Greater(t, parentRows, 0)
+	require.Equal(t, parentRows, countOwnedRows(t, child1)+countOwnedRows(t, child2),
+		"children must partition the parent's rows exactly")
+
+	for _, tc := range []struct {
+		owner                  *Core
+		accountId, namespaceId uint64
+	}{
+		{child1, loAccount, loNamespace},
+		{child2, hiAccount, hiNamespace},
+	} {
+		namespaceId := &corepb.NamespaceId{AccountId: tc.accountId, NamespaceId: tc.namespaceId}
+
+		// Names index rebuilt: lookup by name works on the owner, and the
+		// arrival counter carried over.
+		barrierResp, err := tc.owner.GetBarrierByName(&coreapis.GetBarrierByNameRequest{
+			Payload: &corepb.GetBarrierByNameRequest{NamespaceId: namespaceId, BarrierName: "barrier-split"},
+			Now:     now.Add(time.Minute).UnixNano(),
+		})
+		require.NoError(t, err)
+		require.Nil(t, barrierResp.ApplicationError)
+
+		// Participant restored via the key-parsing path.
+		participantsResp, err := tc.owner.ListBarrierParticipants(&coreapis.ListBarrierParticipantsRequest{
+			Payload: &corepb.ListBarrierParticipantsRequest{NamespaceId: namespaceId, BarrierName: "barrier-split"},
+			Now:     now.Add(time.Minute).UnixNano(),
+		})
+		require.NoError(t, err)
+		require.Nil(t, participantsResp.ApplicationError)
+		require.Len(t, participantsResp.Payload.Participants, 1)
+		require.Equal(t, "proc-1", participantsResp.Payload.Participants[0].ProcessId)
+	}
+}
+
+// ownedTableNames lists the registry names of every table the core owns —
+// the physical storage prefixes are <registry table id><shard prefix>.
+var ownedTableNames = []string{
+	"Grackle.BarriersCore.Barriers.Table",
+	"Grackle.BarriersCore.Barriers.NamesIndex",
+	"Grackle.BarriersCore.Participants.Table",
+	"Grackle.BarriersCore.Counters.Table",
+	"Grackle.BarriersCore.GarbageCollectionRecords.Table",
+	"Grackle.BarriersCore.DeletionRecords.Table",
+}
+
+// countOwnedRows counts the physical rows under every storage prefix the core
+// owns.
+func countOwnedRows(t *testing.T, c *Core) int {
+	t.Helper()
+	txn := c.badgerStore.View()
+	defer txn.Discard()
+
+	count := 0
+	for _, name := range ownedTableNames {
+		prefix := utils.ConcatBytes(tables.Grackle[name].Bytes(), c.shardPrefix)
+		err := txn.EachPrefixKeys(prefix, func(key []byte) (bool, error) {
+			count++
+			return true, nil
+		})
+		require.NoError(t, err)
+	}
+	return count
+}
+
+// namespaceInRange finds an (accountId, namespaceId) pair whose shard key
+// falls within [lower, upper].
+func namespaceInRange(t *testing.T, lower []byte, upper []byte) (uint64, uint64) {
+	t.Helper()
+	for i := 0; i < 100_000; i++ {
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint64()
+		sk := sharding.ByAccountAndNamespace(accountId, namespaceId)
+		if bytes.Compare(sk, lower) >= 0 && bytes.Compare(sk, upper) <= 0 {
+			return accountId, namespaceId
+		}
+	}
+	t.Fatalf("no namespace found hashing into [%x, %x]", lower, upper)
+	return 0, 0
 }

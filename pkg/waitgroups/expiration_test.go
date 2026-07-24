@@ -305,16 +305,6 @@ func TestExpirationRecordsTable_Delete(t *testing.T) {
 	})
 }
 
-func TestExpirationRecordsTable_GetTableKeyRange(t *testing.T) {
-	t.Run("get table key range", func(t *testing.T) {
-		shardPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
-		table := newExpirationRecordsTable(shardPrefix)
-
-		keyRange := table.GetTableKeyRange()
-		require.NotNil(t, keyRange)
-	})
-}
-
 func TestExpirationRecordsTable_List(t *testing.T) {
 	t.Run("list records in time range", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()

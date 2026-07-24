@@ -18,43 +18,76 @@ import (
 // barriersTable is a table of barriers indexed by barrier ID and barrier name.
 //
 // Table Primary Key:
-// 1. shard key (by account id and namespace id)
-// 2. account id
-// 3. namespace id
+// 1. account id
+// 2. namespace id
 //
 // Table Sort Key:
 // 1. barrier id
 //
 // Names Index Primary Key:
-// 1. shard key (by account id and namespace id)
-// 2. account id
-// 3. namespace id
-// 4. barrier name
+// 1. account id
+// 2. namespace id
+// 3. barrier name
 type barriersTable struct {
 	table      *honey.BinaryTable[*corepb.Barrier, corepb.Barrier]
 	namesIndex *honey.Uint64Table
 }
 
-func newBarriersTable(shardLowerBound []byte, shardUpperBound []byte) *barriersTable {
+// newBarriersTable scopes both tables under the shard-unique prefix (nested
+// under the registry table ids), so no row is shared with any other core
+// (CoreTypePersistedExclusive). Keys carry no shard key material — the prefix
+// is the isolation, so honey gets nil bounds; routing violations are rejected
+// upstream by the generated core adapter.
+func newBarriersTable(shardPrefix []byte) *barriersTable {
 	return &barriersTable{
 		table: honey.NewBinaryTable[*corepb.Barrier, corepb.Barrier](
-			tables.Grackle["Grackle.BarriersCore.Barriers.Table"].Bytes(),
-			shardLowerBound,
-			shardUpperBound,
+			utils.ConcatBytes(tables.Grackle["Grackle.BarriersCore.Barriers.Table"].Bytes(), shardPrefix),
+			nil,
+			nil,
 		),
 		namesIndex: honey.NewUint64Table(
-			tables.Grackle["Grackle.BarriersCore.Barriers.NamesIndex"].Bytes(),
-			shardLowerBound,
-			shardUpperBound,
+			utils.ConcatBytes(tables.Grackle["Grackle.BarriersCore.Barriers.NamesIndex"].Bytes(), shardPrefix),
+			nil,
+			nil,
 		),
 	}
 }
 
-func (t *barriersTable) GetTableKeyRanges() []honey.KeyRange {
-	return []honey.KeyRange{
-		t.table.GetTableKeyRange(),
-		t.namesIndex.GetTableKeyRange(),
+// Clear deletes every row this table owns: the primary barrier rows and the
+// names index.
+func (t *barriersTable) Clear(badgerStore *store.BadgerStore) error {
+	for _, prefix := range [][]byte{t.table.TableId(), t.namesIndex.TableId()} {
+		if err := badgerStore.DropPrefix(prefix); err != nil {
+			return err
+		}
 	}
+	return nil
+}
+
+// EachEntity streams every barrier as (canonical key, stored value) — the
+// primary table only; the names index is rebuilt from the barriers on
+// restore.
+func (t *barriersTable) EachEntity(txn *store.Txn, fn func(key []byte, value []byte) (bool, error)) error {
+	return t.table.EachEntry(txn, fn)
+}
+
+// RestoreEntity decodes one streamed barrier and, if owned, inserts it
+// directly (bypassing Create's uniqueness gates — the stream is
+// authoritative), rebuilding the names index from the barrier's own identity
+// fields.
+func (t *barriersTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds tables.ShardRange) (bool, error) {
+	barrier := &corepb.Barrier{}
+	if err := barrier.UnmarshalBinary(value); err != nil {
+		return false, err
+	}
+	if !bounds.Owns(sharding.ByAccountAndNamespace(barrier.Id.AccountId, barrier.Id.NamespaceId)) {
+		return false, nil
+	}
+	err := t.namesIndex.Set(txn, t.namesIndexPK(barrier.Id.AccountId, barrier.Id.NamespaceId, barrier.Name), barrier.Id.BarrierId)
+	if err != nil {
+		return false, err
+	}
+	return true, t.Update(txn, barrier)
 }
 
 func (t *barriersTable) Get(txn *store.Txn, barrierId *corepb.BarrierId) (*corepb.Barrier, error) {
@@ -172,7 +205,6 @@ func (t *barriersTable) List(txn *store.Txn, accountId uint64, namespaceId uint6
 
 func (t *barriersTable) tablePK(accountId uint64, namespaceId uint64) []byte {
 	return utils.ConcatBytes(
-		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,
 		namespaceId,
 	)
@@ -186,7 +218,6 @@ func (t *barriersTable) tableSK(barrierId uint64) []byte {
 
 func (t *barriersTable) namesIndexPK(accountId uint64, namespaceId uint64, barrierName string) []byte {
 	return utils.ConcatBytes(
-		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,
 		namespaceId,
 		barrierName,

@@ -3,6 +3,7 @@
 package coreapis
 
 import (
+	"bytes"
 	"fmt"
 	corepb "github.com/evrblk/grackle/pkg/corepb"
 	monstera "github.com/evrblk/monstera"
@@ -19,11 +20,11 @@ var (
 		NativeHistogramBucketFactor:     1.1,
 		NativeHistogramMaxBucketNumber:  100,
 		NativeHistogramMinResetDuration: time.Hour,
-	}, []string{"core", "method", "shard", "replica"})
+	}, []string{"node", "core", "method", "shard", "replica"})
 	rpcMethodsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Help: "Number of Monstera RPC method calls",
 		Name: "monstera_rpc_methods_total",
-	}, []string{"core", "method", "shard", "replica"})
+	}, []string{"node", "core", "method", "shard", "replica"})
 )
 
 // RegisterMetrics registers the RPC metrics emitted by the generated core
@@ -36,19 +37,26 @@ func RegisterMetrics(registerer prometheus.Registerer) {
 }
 
 type GrackleLocksCoreAdapter struct {
+	nodeId    string
 	shardId   string
 	replicaId string
+
+	shardLowerBound []byte
+	shardUpperBound []byte
 
 	grackleLocksCore GrackleLocksCoreApi
 }
 
 var _ monstera.ApplicationCore = &GrackleLocksCoreAdapter{}
 
-func NewGrackleLocksCoreAdapter(shardId string, replicaId string, grackleLocksCore GrackleLocksCoreApi) *GrackleLocksCoreAdapter {
+func NewGrackleLocksCoreAdapter(nodeId string, shardId string, replicaId string, shardLowerBound []byte, shardUpperBound []byte, grackleLocksCore GrackleLocksCoreApi) *GrackleLocksCoreAdapter {
 	return &GrackleLocksCoreAdapter{
 		grackleLocksCore: grackleLocksCore,
+		nodeId:           nodeId,
 		replicaId:        replicaId,
 		shardId:          shardId,
+		shardLowerBound:  shardLowerBound,
+		shardUpperBound:  shardUpperBound,
 	}
 }
 
@@ -56,8 +64,8 @@ func (a *GrackleLocksCoreAdapter) Snapshot() monstera.ApplicationCoreSnapshot {
 	return a.grackleLocksCore.Snapshot()
 }
 
-func (a *GrackleLocksCoreAdapter) Restore(r io.ReadCloser) error {
-	return a.grackleLocksCore.Restore(r)
+func (a *GrackleLocksCoreAdapter) Restore(readers ...io.ReadCloser) error {
+	return a.grackleLocksCore.Restore(readers...)
 }
 
 func (a *GrackleLocksCoreAdapter) Close() {
@@ -78,12 +86,15 @@ func (a *GrackleLocksCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateRe
 
 	switch rpcReq.MethodNumber {
 	case 1:
-		rpcMethodsTotal.WithLabelValues("GrackleLocks", "AcquireLock", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "AcquireLock", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleLocks", "AcquireLock", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleLocks", "AcquireLock", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.AcquireLockRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleLocksCore.AcquireLock(&AcquireLockRequest{
@@ -100,12 +111,15 @@ func (a *GrackleLocksCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateRe
 		}
 		rpcResp.Data = methodRespBytes
 	case 2:
-		rpcMethodsTotal.WithLabelValues("GrackleLocks", "ReleaseLock", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "ReleaseLock", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleLocks", "ReleaseLock", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleLocks", "ReleaseLock", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.ReleaseLockRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleLocksCore.ReleaseLock(&ReleaseLockRequest{
@@ -122,12 +136,15 @@ func (a *GrackleLocksCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateRe
 		}
 		rpcResp.Data = methodRespBytes
 	case 3:
-		rpcMethodsTotal.WithLabelValues("GrackleLocks", "DeleteLock", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "DeleteLock", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleLocks", "DeleteLock", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleLocks", "DeleteLock", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.DeleteLockRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleLocksCore.DeleteLock(&DeleteLockRequest{
@@ -144,8 +161,8 @@ func (a *GrackleLocksCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateRe
 		}
 		rpcResp.Data = methodRespBytes
 	case 4:
-		rpcMethodsTotal.WithLabelValues("GrackleLocks", "RunLocksGarbageCollection", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "RunLocksGarbageCollection", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleLocks", "RunLocksGarbageCollection", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleLocks", "RunLocksGarbageCollection", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.RunLocksGarbageCollectionRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
@@ -166,12 +183,15 @@ func (a *GrackleLocksCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateRe
 		}
 		rpcResp.Data = methodRespBytes
 	case 5:
-		rpcMethodsTotal.WithLabelValues("GrackleLocks", "LocksDeleteNamespace", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "LocksDeleteNamespace", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleLocks", "LocksDeleteNamespace", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleLocks", "LocksDeleteNamespace", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.LocksDeleteNamespaceRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleLocksCore.LocksDeleteNamespace(&LocksDeleteNamespaceRequest{
@@ -188,12 +208,15 @@ func (a *GrackleLocksCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateRe
 		}
 		rpcResp.Data = methodRespBytes
 	case 6:
-		rpcMethodsTotal.WithLabelValues("GrackleLocks", "CreateLockLease", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "CreateLockLease", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleLocks", "CreateLockLease", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleLocks", "CreateLockLease", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.CreateLockLeaseRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleLocksCore.CreateLockLease(&CreateLockLeaseRequest{
@@ -210,12 +233,15 @@ func (a *GrackleLocksCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateRe
 		}
 		rpcResp.Data = methodRespBytes
 	case 7:
-		rpcMethodsTotal.WithLabelValues("GrackleLocks", "RefreshLockLease", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "RefreshLockLease", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleLocks", "RefreshLockLease", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleLocks", "RefreshLockLease", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.RefreshLockLeaseRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleLocksCore.RefreshLockLease(&RefreshLockLeaseRequest{
@@ -232,12 +258,15 @@ func (a *GrackleLocksCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateRe
 		}
 		rpcResp.Data = methodRespBytes
 	case 8:
-		rpcMethodsTotal.WithLabelValues("GrackleLocks", "RevokeLockLease", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "RevokeLockLease", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleLocks", "RevokeLockLease", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleLocks", "RevokeLockLease", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.RevokeLockLeaseRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleLocksCore.RevokeLockLease(&RevokeLockLeaseRequest{
@@ -280,12 +309,15 @@ func (a *GrackleLocksCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadRespon
 
 	switch rpcReq.MethodNumber {
 	case 1:
-		rpcMethodsTotal.WithLabelValues("GrackleLocks", "GetLock", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "GetLock", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleLocks", "GetLock", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleLocks", "GetLock", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.GetLockRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleLocksCore.GetLock(&GetLockRequest{
@@ -302,12 +334,15 @@ func (a *GrackleLocksCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadRespon
 		}
 		rpcResp.Data = methodRespBytes
 	case 2:
-		rpcMethodsTotal.WithLabelValues("GrackleLocks", "ListLocks", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "ListLocks", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleLocks", "ListLocks", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleLocks", "ListLocks", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.ListLocksRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleLocksCore.ListLocks(&ListLocksRequest{
@@ -324,12 +359,15 @@ func (a *GrackleLocksCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadRespon
 		}
 		rpcResp.Data = methodRespBytes
 	case 3:
-		rpcMethodsTotal.WithLabelValues("GrackleLocks", "ListLocksByLeaseId", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "ListLocksByLeaseId", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleLocks", "ListLocksByLeaseId", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleLocks", "ListLocksByLeaseId", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.ListLocksByLeaseIdRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleLocksCore.ListLocksByLeaseId(&ListLocksByLeaseIdRequest{
@@ -346,12 +384,15 @@ func (a *GrackleLocksCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadRespon
 		}
 		rpcResp.Data = methodRespBytes
 	case 4:
-		rpcMethodsTotal.WithLabelValues("GrackleLocks", "ListLockLeases", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "ListLockLeases", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleLocks", "ListLockLeases", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleLocks", "ListLockLeases", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.ListLockLeasesRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleLocksCore.ListLockLeases(&ListLockLeasesRequest{
@@ -368,12 +409,15 @@ func (a *GrackleLocksCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadRespon
 		}
 		rpcResp.Data = methodRespBytes
 	case 5:
-		rpcMethodsTotal.WithLabelValues("GrackleLocks", "ListLockLeasesByProcessId", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "ListLockLeasesByProcessId", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleLocks", "ListLockLeasesByProcessId", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleLocks", "ListLockLeasesByProcessId", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.ListLockLeasesByProcessIdRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleLocksCore.ListLockLeasesByProcessId(&ListLockLeasesByProcessIdRequest{
@@ -390,12 +434,15 @@ func (a *GrackleLocksCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadRespon
 		}
 		rpcResp.Data = methodRespBytes
 	case 6:
-		rpcMethodsTotal.WithLabelValues("GrackleLocks", "GetLockLease", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleLocks", "GetLockLease", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleLocks", "GetLockLease", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleLocks", "GetLockLease", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.GetLockLeaseRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleLocksCore.GetLockLease(&GetLockLeaseRequest{
@@ -425,19 +472,26 @@ func (a *GrackleLocksCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadRespon
 }
 
 type GrackleSemaphoresCoreAdapter struct {
+	nodeId    string
 	shardId   string
 	replicaId string
+
+	shardLowerBound []byte
+	shardUpperBound []byte
 
 	grackleSemaphoresCore GrackleSemaphoresCoreApi
 }
 
 var _ monstera.ApplicationCore = &GrackleSemaphoresCoreAdapter{}
 
-func NewGrackleSemaphoresCoreAdapter(shardId string, replicaId string, grackleSemaphoresCore GrackleSemaphoresCoreApi) *GrackleSemaphoresCoreAdapter {
+func NewGrackleSemaphoresCoreAdapter(nodeId string, shardId string, replicaId string, shardLowerBound []byte, shardUpperBound []byte, grackleSemaphoresCore GrackleSemaphoresCoreApi) *GrackleSemaphoresCoreAdapter {
 	return &GrackleSemaphoresCoreAdapter{
 		grackleSemaphoresCore: grackleSemaphoresCore,
+		nodeId:                nodeId,
 		replicaId:             replicaId,
 		shardId:               shardId,
+		shardLowerBound:       shardLowerBound,
+		shardUpperBound:       shardUpperBound,
 	}
 }
 
@@ -445,8 +499,8 @@ func (a *GrackleSemaphoresCoreAdapter) Snapshot() monstera.ApplicationCoreSnapsh
 	return a.grackleSemaphoresCore.Snapshot()
 }
 
-func (a *GrackleSemaphoresCoreAdapter) Restore(r io.ReadCloser) error {
-	return a.grackleSemaphoresCore.Restore(r)
+func (a *GrackleSemaphoresCoreAdapter) Restore(readers ...io.ReadCloser) error {
+	return a.grackleSemaphoresCore.Restore(readers...)
 }
 
 func (a *GrackleSemaphoresCoreAdapter) Close() {
@@ -467,12 +521,15 @@ func (a *GrackleSemaphoresCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 
 	switch rpcReq.MethodNumber {
 	case 1:
-		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "AcquireSemaphore", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "AcquireSemaphore", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleSemaphores", "AcquireSemaphore", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleSemaphores", "AcquireSemaphore", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.AcquireSemaphoreRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleSemaphoresCore.AcquireSemaphore(&AcquireSemaphoreRequest{
@@ -489,12 +546,15 @@ func (a *GrackleSemaphoresCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		}
 		rpcResp.Data = methodRespBytes
 	case 2:
-		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "ReleaseSemaphore", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "ReleaseSemaphore", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleSemaphores", "ReleaseSemaphore", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleSemaphores", "ReleaseSemaphore", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.ReleaseSemaphoreRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleSemaphoresCore.ReleaseSemaphore(&ReleaseSemaphoreRequest{
@@ -511,12 +571,15 @@ func (a *GrackleSemaphoresCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		}
 		rpcResp.Data = methodRespBytes
 	case 3:
-		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "CreateSemaphore", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "CreateSemaphore", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleSemaphores", "CreateSemaphore", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleSemaphores", "CreateSemaphore", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.CreateSemaphoreRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleSemaphoresCore.CreateSemaphore(&CreateSemaphoreRequest{
@@ -533,12 +596,15 @@ func (a *GrackleSemaphoresCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		}
 		rpcResp.Data = methodRespBytes
 	case 4:
-		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "UpdateSemaphore", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "UpdateSemaphore", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleSemaphores", "UpdateSemaphore", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleSemaphores", "UpdateSemaphore", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.UpdateSemaphoreRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleSemaphoresCore.UpdateSemaphore(&UpdateSemaphoreRequest{
@@ -555,12 +621,15 @@ func (a *GrackleSemaphoresCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		}
 		rpcResp.Data = methodRespBytes
 	case 5:
-		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "DeleteSemaphore", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "DeleteSemaphore", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleSemaphores", "DeleteSemaphore", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleSemaphores", "DeleteSemaphore", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.DeleteSemaphoreRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleSemaphoresCore.DeleteSemaphore(&DeleteSemaphoreRequest{
@@ -577,8 +646,8 @@ func (a *GrackleSemaphoresCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		}
 		rpcResp.Data = methodRespBytes
 	case 6:
-		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "RunSemaphoresGarbageCollection", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "RunSemaphoresGarbageCollection", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleSemaphores", "RunSemaphoresGarbageCollection", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleSemaphores", "RunSemaphoresGarbageCollection", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.RunSemaphoresGarbageCollectionRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
@@ -599,12 +668,15 @@ func (a *GrackleSemaphoresCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		}
 		rpcResp.Data = methodRespBytes
 	case 7:
-		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "SemaphoresDeleteNamespace", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "SemaphoresDeleteNamespace", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleSemaphores", "SemaphoresDeleteNamespace", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleSemaphores", "SemaphoresDeleteNamespace", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.SemaphoresDeleteNamespaceRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleSemaphoresCore.SemaphoresDeleteNamespace(&SemaphoresDeleteNamespaceRequest{
@@ -621,12 +693,15 @@ func (a *GrackleSemaphoresCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		}
 		rpcResp.Data = methodRespBytes
 	case 8:
-		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "CreateSemaphoreLease", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "CreateSemaphoreLease", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleSemaphores", "CreateSemaphoreLease", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleSemaphores", "CreateSemaphoreLease", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.CreateSemaphoreLeaseRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleSemaphoresCore.CreateSemaphoreLease(&CreateSemaphoreLeaseRequest{
@@ -643,12 +718,15 @@ func (a *GrackleSemaphoresCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		}
 		rpcResp.Data = methodRespBytes
 	case 9:
-		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "RevokeSemaphoreLease", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "RevokeSemaphoreLease", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleSemaphores", "RevokeSemaphoreLease", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleSemaphores", "RevokeSemaphoreLease", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.RevokeSemaphoreLeaseRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleSemaphoresCore.RevokeSemaphoreLease(&RevokeSemaphoreLeaseRequest{
@@ -665,12 +743,15 @@ func (a *GrackleSemaphoresCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		}
 		rpcResp.Data = methodRespBytes
 	case 10:
-		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "RefreshSemaphoreLease", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "RefreshSemaphoreLease", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleSemaphores", "RefreshSemaphoreLease", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleSemaphores", "RefreshSemaphoreLease", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.RefreshSemaphoreLeaseRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleSemaphoresCore.RefreshSemaphoreLease(&RefreshSemaphoreLeaseRequest{
@@ -713,12 +794,15 @@ func (a *GrackleSemaphoresCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 
 	switch rpcReq.MethodNumber {
 	case 1:
-		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "GetSemaphore", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "GetSemaphore", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleSemaphores", "GetSemaphore", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleSemaphores", "GetSemaphore", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.GetSemaphoreRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleSemaphoresCore.GetSemaphore(&GetSemaphoreRequest{
@@ -735,12 +819,15 @@ func (a *GrackleSemaphoresCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		}
 		rpcResp.Data = methodRespBytes
 	case 2:
-		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "GetSemaphoreByName", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "GetSemaphoreByName", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleSemaphores", "GetSemaphoreByName", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleSemaphores", "GetSemaphoreByName", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.GetSemaphoreByNameRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleSemaphoresCore.GetSemaphoreByName(&GetSemaphoreByNameRequest{
@@ -757,12 +844,15 @@ func (a *GrackleSemaphoresCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		}
 		rpcResp.Data = methodRespBytes
 	case 3:
-		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "ListSemaphores", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "ListSemaphores", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleSemaphores", "ListSemaphores", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleSemaphores", "ListSemaphores", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.ListSemaphoresRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleSemaphoresCore.ListSemaphores(&ListSemaphoresRequest{
@@ -779,12 +869,15 @@ func (a *GrackleSemaphoresCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		}
 		rpcResp.Data = methodRespBytes
 	case 4:
-		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "ListSemaphoresByLeaseId", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "ListSemaphoresByLeaseId", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleSemaphores", "ListSemaphoresByLeaseId", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleSemaphores", "ListSemaphoresByLeaseId", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.ListSemaphoresByLeaseIdRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleSemaphoresCore.ListSemaphoresByLeaseId(&ListSemaphoresByLeaseIdRequest{
@@ -801,12 +894,15 @@ func (a *GrackleSemaphoresCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		}
 		rpcResp.Data = methodRespBytes
 	case 5:
-		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "ListSemaphoreHolders", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "ListSemaphoreHolders", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleSemaphores", "ListSemaphoreHolders", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleSemaphores", "ListSemaphoreHolders", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.ListSemaphoreHoldersRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleSemaphoresCore.ListSemaphoreHolders(&ListSemaphoreHoldersRequest{
@@ -823,12 +919,15 @@ func (a *GrackleSemaphoresCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		}
 		rpcResp.Data = methodRespBytes
 	case 6:
-		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "ListSemaphoreLeases", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "ListSemaphoreLeases", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleSemaphores", "ListSemaphoreLeases", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleSemaphores", "ListSemaphoreLeases", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.ListSemaphoreLeasesRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleSemaphoresCore.ListSemaphoreLeases(&ListSemaphoreLeasesRequest{
@@ -845,12 +944,15 @@ func (a *GrackleSemaphoresCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		}
 		rpcResp.Data = methodRespBytes
 	case 7:
-		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "ListSemaphoreLeasesByProcessId", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "ListSemaphoreLeasesByProcessId", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleSemaphores", "ListSemaphoreLeasesByProcessId", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleSemaphores", "ListSemaphoreLeasesByProcessId", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.ListSemaphoreLeasesByProcessIdRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleSemaphoresCore.ListSemaphoreLeasesByProcessId(&ListSemaphoreLeasesByProcessIdRequest{
@@ -867,12 +969,15 @@ func (a *GrackleSemaphoresCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		}
 		rpcResp.Data = methodRespBytes
 	case 8:
-		rpcMethodsTotal.WithLabelValues("GrackleSemaphores", "GetSemaphoreLease", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleSemaphores", "GetSemaphoreLease", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleSemaphores", "GetSemaphoreLease", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleSemaphores", "GetSemaphoreLease", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.GetSemaphoreLeaseRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleSemaphoresCore.GetSemaphoreLease(&GetSemaphoreLeaseRequest{
@@ -902,19 +1007,26 @@ func (a *GrackleSemaphoresCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 }
 
 type GrackleNamespacesCoreAdapter struct {
+	nodeId    string
 	shardId   string
 	replicaId string
+
+	shardLowerBound []byte
+	shardUpperBound []byte
 
 	grackleNamespacesCore GrackleNamespacesCoreApi
 }
 
 var _ monstera.ApplicationCore = &GrackleNamespacesCoreAdapter{}
 
-func NewGrackleNamespacesCoreAdapter(shardId string, replicaId string, grackleNamespacesCore GrackleNamespacesCoreApi) *GrackleNamespacesCoreAdapter {
+func NewGrackleNamespacesCoreAdapter(nodeId string, shardId string, replicaId string, shardLowerBound []byte, shardUpperBound []byte, grackleNamespacesCore GrackleNamespacesCoreApi) *GrackleNamespacesCoreAdapter {
 	return &GrackleNamespacesCoreAdapter{
 		grackleNamespacesCore: grackleNamespacesCore,
+		nodeId:                nodeId,
 		replicaId:             replicaId,
 		shardId:               shardId,
+		shardLowerBound:       shardLowerBound,
+		shardUpperBound:       shardUpperBound,
 	}
 }
 
@@ -922,8 +1034,8 @@ func (a *GrackleNamespacesCoreAdapter) Snapshot() monstera.ApplicationCoreSnapsh
 	return a.grackleNamespacesCore.Snapshot()
 }
 
-func (a *GrackleNamespacesCoreAdapter) Restore(r io.ReadCloser) error {
-	return a.grackleNamespacesCore.Restore(r)
+func (a *GrackleNamespacesCoreAdapter) Restore(readers ...io.ReadCloser) error {
+	return a.grackleNamespacesCore.Restore(readers...)
 }
 
 func (a *GrackleNamespacesCoreAdapter) Close() {
@@ -944,12 +1056,15 @@ func (a *GrackleNamespacesCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 
 	switch rpcReq.MethodNumber {
 	case 1:
-		rpcMethodsTotal.WithLabelValues("GrackleNamespaces", "CreateNamespace", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleNamespaces", "CreateNamespace", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleNamespaces", "CreateNamespace", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleNamespaces", "CreateNamespace", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.CreateNamespaceRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleNamespacesCore.CreateNamespace(&CreateNamespaceRequest{
@@ -966,12 +1081,15 @@ func (a *GrackleNamespacesCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		}
 		rpcResp.Data = methodRespBytes
 	case 2:
-		rpcMethodsTotal.WithLabelValues("GrackleNamespaces", "UpdateNamespace", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleNamespaces", "UpdateNamespace", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleNamespaces", "UpdateNamespace", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleNamespaces", "UpdateNamespace", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.UpdateNamespaceRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleNamespacesCore.UpdateNamespace(&UpdateNamespaceRequest{
@@ -988,12 +1106,15 @@ func (a *GrackleNamespacesCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		}
 		rpcResp.Data = methodRespBytes
 	case 3:
-		rpcMethodsTotal.WithLabelValues("GrackleNamespaces", "DeleteNamespace", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleNamespaces", "DeleteNamespace", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleNamespaces", "DeleteNamespace", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleNamespaces", "DeleteNamespace", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.DeleteNamespaceRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleNamespacesCore.DeleteNamespace(&DeleteNamespaceRequest{
@@ -1036,12 +1157,15 @@ func (a *GrackleNamespacesCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 
 	switch rpcReq.MethodNumber {
 	case 1:
-		rpcMethodsTotal.WithLabelValues("GrackleNamespaces", "GetNamespace", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleNamespaces", "GetNamespace", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleNamespaces", "GetNamespace", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleNamespaces", "GetNamespace", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.GetNamespaceRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleNamespacesCore.GetNamespace(&GetNamespaceRequest{
@@ -1058,12 +1182,15 @@ func (a *GrackleNamespacesCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		}
 		rpcResp.Data = methodRespBytes
 	case 2:
-		rpcMethodsTotal.WithLabelValues("GrackleNamespaces", "GetNamespaceByName", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleNamespaces", "GetNamespaceByName", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleNamespaces", "GetNamespaceByName", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleNamespaces", "GetNamespaceByName", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.GetNamespaceByNameRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleNamespacesCore.GetNamespaceByName(&GetNamespaceByNameRequest{
@@ -1080,12 +1207,15 @@ func (a *GrackleNamespacesCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		}
 		rpcResp.Data = methodRespBytes
 	case 3:
-		rpcMethodsTotal.WithLabelValues("GrackleNamespaces", "ListNamespaces", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleNamespaces", "ListNamespaces", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleNamespaces", "ListNamespaces", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleNamespaces", "ListNamespaces", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.ListNamespacesRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleNamespacesCore.ListNamespaces(&ListNamespacesRequest{
@@ -1115,19 +1245,26 @@ func (a *GrackleNamespacesCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 }
 
 type GrackleWaitGroupsCoreAdapter struct {
+	nodeId    string
 	shardId   string
 	replicaId string
+
+	shardLowerBound []byte
+	shardUpperBound []byte
 
 	grackleWaitGroupsCore GrackleWaitGroupsCoreApi
 }
 
 var _ monstera.ApplicationCore = &GrackleWaitGroupsCoreAdapter{}
 
-func NewGrackleWaitGroupsCoreAdapter(shardId string, replicaId string, grackleWaitGroupsCore GrackleWaitGroupsCoreApi) *GrackleWaitGroupsCoreAdapter {
+func NewGrackleWaitGroupsCoreAdapter(nodeId string, shardId string, replicaId string, shardLowerBound []byte, shardUpperBound []byte, grackleWaitGroupsCore GrackleWaitGroupsCoreApi) *GrackleWaitGroupsCoreAdapter {
 	return &GrackleWaitGroupsCoreAdapter{
 		grackleWaitGroupsCore: grackleWaitGroupsCore,
+		nodeId:                nodeId,
 		replicaId:             replicaId,
 		shardId:               shardId,
+		shardLowerBound:       shardLowerBound,
+		shardUpperBound:       shardUpperBound,
 	}
 }
 
@@ -1135,8 +1272,8 @@ func (a *GrackleWaitGroupsCoreAdapter) Snapshot() monstera.ApplicationCoreSnapsh
 	return a.grackleWaitGroupsCore.Snapshot()
 }
 
-func (a *GrackleWaitGroupsCoreAdapter) Restore(r io.ReadCloser) error {
-	return a.grackleWaitGroupsCore.Restore(r)
+func (a *GrackleWaitGroupsCoreAdapter) Restore(readers ...io.ReadCloser) error {
+	return a.grackleWaitGroupsCore.Restore(readers...)
 }
 
 func (a *GrackleWaitGroupsCoreAdapter) Close() {
@@ -1157,12 +1294,15 @@ func (a *GrackleWaitGroupsCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 
 	switch rpcReq.MethodNumber {
 	case 1:
-		rpcMethodsTotal.WithLabelValues("GrackleWaitGroups", "UpdateWaitGroup", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleWaitGroups", "UpdateWaitGroup", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleWaitGroups", "UpdateWaitGroup", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleWaitGroups", "UpdateWaitGroup", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.UpdateWaitGroupRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleWaitGroupsCore.UpdateWaitGroup(&UpdateWaitGroupRequest{
@@ -1179,12 +1319,15 @@ func (a *GrackleWaitGroupsCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		}
 		rpcResp.Data = methodRespBytes
 	case 2:
-		rpcMethodsTotal.WithLabelValues("GrackleWaitGroups", "CompleteJobsFromWaitGroup", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleWaitGroups", "CompleteJobsFromWaitGroup", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleWaitGroups", "CompleteJobsFromWaitGroup", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleWaitGroups", "CompleteJobsFromWaitGroup", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.CompleteJobsFromWaitGroupRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleWaitGroupsCore.CompleteJobsFromWaitGroup(&CompleteJobsFromWaitGroupRequest{
@@ -1201,12 +1344,15 @@ func (a *GrackleWaitGroupsCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		}
 		rpcResp.Data = methodRespBytes
 	case 3:
-		rpcMethodsTotal.WithLabelValues("GrackleWaitGroups", "CreateWaitGroup", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleWaitGroups", "CreateWaitGroup", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleWaitGroups", "CreateWaitGroup", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleWaitGroups", "CreateWaitGroup", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.CreateWaitGroupRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleWaitGroupsCore.CreateWaitGroup(&CreateWaitGroupRequest{
@@ -1223,12 +1369,15 @@ func (a *GrackleWaitGroupsCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		}
 		rpcResp.Data = methodRespBytes
 	case 4:
-		rpcMethodsTotal.WithLabelValues("GrackleWaitGroups", "DeleteWaitGroup", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleWaitGroups", "DeleteWaitGroup", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleWaitGroups", "DeleteWaitGroup", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleWaitGroups", "DeleteWaitGroup", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.DeleteWaitGroupRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleWaitGroupsCore.DeleteWaitGroup(&DeleteWaitGroupRequest{
@@ -1245,8 +1394,8 @@ func (a *GrackleWaitGroupsCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		}
 		rpcResp.Data = methodRespBytes
 	case 5:
-		rpcMethodsTotal.WithLabelValues("GrackleWaitGroups", "RunWaitGroupsGarbageCollection", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleWaitGroups", "RunWaitGroupsGarbageCollection", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleWaitGroups", "RunWaitGroupsGarbageCollection", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleWaitGroups", "RunWaitGroupsGarbageCollection", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.RunWaitGroupsGarbageCollectionRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
@@ -1267,12 +1416,15 @@ func (a *GrackleWaitGroupsCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		}
 		rpcResp.Data = methodRespBytes
 	case 6:
-		rpcMethodsTotal.WithLabelValues("GrackleWaitGroups", "WaitGroupsDeleteNamespace", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleWaitGroups", "WaitGroupsDeleteNamespace", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleWaitGroups", "WaitGroupsDeleteNamespace", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleWaitGroups", "WaitGroupsDeleteNamespace", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.WaitGroupsDeleteNamespaceRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleWaitGroupsCore.WaitGroupsDeleteNamespace(&WaitGroupsDeleteNamespaceRequest{
@@ -1315,12 +1467,15 @@ func (a *GrackleWaitGroupsCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 
 	switch rpcReq.MethodNumber {
 	case 1:
-		rpcMethodsTotal.WithLabelValues("GrackleWaitGroups", "GetWaitGroup", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleWaitGroups", "GetWaitGroup", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleWaitGroups", "GetWaitGroup", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleWaitGroups", "GetWaitGroup", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.GetWaitGroupRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleWaitGroupsCore.GetWaitGroup(&GetWaitGroupRequest{
@@ -1337,12 +1492,15 @@ func (a *GrackleWaitGroupsCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		}
 		rpcResp.Data = methodRespBytes
 	case 2:
-		rpcMethodsTotal.WithLabelValues("GrackleWaitGroups", "GetWaitGroupByName", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleWaitGroups", "GetWaitGroupByName", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleWaitGroups", "GetWaitGroupByName", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleWaitGroups", "GetWaitGroupByName", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.GetWaitGroupByNameRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleWaitGroupsCore.GetWaitGroupByName(&GetWaitGroupByNameRequest{
@@ -1359,12 +1517,15 @@ func (a *GrackleWaitGroupsCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		}
 		rpcResp.Data = methodRespBytes
 	case 3:
-		rpcMethodsTotal.WithLabelValues("GrackleWaitGroups", "ListWaitGroups", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleWaitGroups", "ListWaitGroups", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleWaitGroups", "ListWaitGroups", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleWaitGroups", "ListWaitGroups", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.ListWaitGroupsRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleWaitGroupsCore.ListWaitGroups(&ListWaitGroupsRequest{
@@ -1381,12 +1542,15 @@ func (a *GrackleWaitGroupsCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		}
 		rpcResp.Data = methodRespBytes
 	case 4:
-		rpcMethodsTotal.WithLabelValues("GrackleWaitGroups", "ListWaitGroupCompletedJobs", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleWaitGroups", "ListWaitGroupCompletedJobs", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleWaitGroups", "ListWaitGroupCompletedJobs", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleWaitGroups", "ListWaitGroupCompletedJobs", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.ListWaitGroupCompletedJobsRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleWaitGroupsCore.ListWaitGroupCompletedJobs(&ListWaitGroupCompletedJobsRequest{
@@ -1416,19 +1580,26 @@ func (a *GrackleWaitGroupsCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 }
 
 type GrackleBarriersCoreAdapter struct {
+	nodeId    string
 	shardId   string
 	replicaId string
+
+	shardLowerBound []byte
+	shardUpperBound []byte
 
 	grackleBarriersCore GrackleBarriersCoreApi
 }
 
 var _ monstera.ApplicationCore = &GrackleBarriersCoreAdapter{}
 
-func NewGrackleBarriersCoreAdapter(shardId string, replicaId string, grackleBarriersCore GrackleBarriersCoreApi) *GrackleBarriersCoreAdapter {
+func NewGrackleBarriersCoreAdapter(nodeId string, shardId string, replicaId string, shardLowerBound []byte, shardUpperBound []byte, grackleBarriersCore GrackleBarriersCoreApi) *GrackleBarriersCoreAdapter {
 	return &GrackleBarriersCoreAdapter{
 		grackleBarriersCore: grackleBarriersCore,
+		nodeId:              nodeId,
 		replicaId:           replicaId,
 		shardId:             shardId,
+		shardLowerBound:     shardLowerBound,
+		shardUpperBound:     shardUpperBound,
 	}
 }
 
@@ -1436,8 +1607,8 @@ func (a *GrackleBarriersCoreAdapter) Snapshot() monstera.ApplicationCoreSnapshot
 	return a.grackleBarriersCore.Snapshot()
 }
 
-func (a *GrackleBarriersCoreAdapter) Restore(r io.ReadCloser) error {
-	return a.grackleBarriersCore.Restore(r)
+func (a *GrackleBarriersCoreAdapter) Restore(readers ...io.ReadCloser) error {
+	return a.grackleBarriersCore.Restore(readers...)
 }
 
 func (a *GrackleBarriersCoreAdapter) Close() {
@@ -1458,12 +1629,15 @@ func (a *GrackleBarriersCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Updat
 
 	switch rpcReq.MethodNumber {
 	case 1:
-		rpcMethodsTotal.WithLabelValues("GrackleBarriers", "CreateBarrier", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleBarriers", "CreateBarrier", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleBarriers", "CreateBarrier", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleBarriers", "CreateBarrier", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.CreateBarrierRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleBarriersCore.CreateBarrier(&CreateBarrierRequest{
@@ -1480,12 +1654,15 @@ func (a *GrackleBarriersCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Updat
 		}
 		rpcResp.Data = methodRespBytes
 	case 2:
-		rpcMethodsTotal.WithLabelValues("GrackleBarriers", "DeleteBarrier", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleBarriers", "DeleteBarrier", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleBarriers", "DeleteBarrier", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleBarriers", "DeleteBarrier", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.DeleteBarrierRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleBarriersCore.DeleteBarrier(&DeleteBarrierRequest{
@@ -1502,12 +1679,15 @@ func (a *GrackleBarriersCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Updat
 		}
 		rpcResp.Data = methodRespBytes
 	case 3:
-		rpcMethodsTotal.WithLabelValues("GrackleBarriers", "UpdateBarrier", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleBarriers", "UpdateBarrier", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleBarriers", "UpdateBarrier", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleBarriers", "UpdateBarrier", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.UpdateBarrierRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleBarriersCore.UpdateBarrier(&UpdateBarrierRequest{
@@ -1524,12 +1704,15 @@ func (a *GrackleBarriersCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Updat
 		}
 		rpcResp.Data = methodRespBytes
 	case 4:
-		rpcMethodsTotal.WithLabelValues("GrackleBarriers", "ArriveAtBarrier", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleBarriers", "ArriveAtBarrier", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleBarriers", "ArriveAtBarrier", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleBarriers", "ArriveAtBarrier", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.ArriveAtBarrierRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleBarriersCore.ArriveAtBarrier(&ArriveAtBarrierRequest{
@@ -1546,8 +1729,8 @@ func (a *GrackleBarriersCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Updat
 		}
 		rpcResp.Data = methodRespBytes
 	case 5:
-		rpcMethodsTotal.WithLabelValues("GrackleBarriers", "RunBarriersGarbageCollection", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleBarriers", "RunBarriersGarbageCollection", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleBarriers", "RunBarriersGarbageCollection", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleBarriers", "RunBarriersGarbageCollection", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.RunBarriersGarbageCollectionRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
@@ -1568,12 +1751,15 @@ func (a *GrackleBarriersCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Updat
 		}
 		rpcResp.Data = methodRespBytes
 	case 6:
-		rpcMethodsTotal.WithLabelValues("GrackleBarriers", "BarriersDeleteNamespace", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleBarriers", "BarriersDeleteNamespace", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleBarriers", "BarriersDeleteNamespace", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleBarriers", "BarriersDeleteNamespace", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.BarriersDeleteNamespaceRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleBarriersCore.BarriersDeleteNamespace(&BarriersDeleteNamespaceRequest{
@@ -1616,12 +1802,15 @@ func (a *GrackleBarriersCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadRes
 
 	switch rpcReq.MethodNumber {
 	case 1:
-		rpcMethodsTotal.WithLabelValues("GrackleBarriers", "GetBarrier", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleBarriers", "GetBarrier", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleBarriers", "GetBarrier", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleBarriers", "GetBarrier", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.GetBarrierRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleBarriersCore.GetBarrier(&GetBarrierRequest{
@@ -1638,12 +1827,15 @@ func (a *GrackleBarriersCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadRes
 		}
 		rpcResp.Data = methodRespBytes
 	case 2:
-		rpcMethodsTotal.WithLabelValues("GrackleBarriers", "GetBarrierByName", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleBarriers", "GetBarrierByName", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleBarriers", "GetBarrierByName", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleBarriers", "GetBarrierByName", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.GetBarrierByNameRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleBarriersCore.GetBarrierByName(&GetBarrierByNameRequest{
@@ -1660,12 +1852,15 @@ func (a *GrackleBarriersCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadRes
 		}
 		rpcResp.Data = methodRespBytes
 	case 3:
-		rpcMethodsTotal.WithLabelValues("GrackleBarriers", "ListBarriers", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleBarriers", "ListBarriers", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleBarriers", "ListBarriers", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleBarriers", "ListBarriers", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.ListBarriersRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleBarriersCore.ListBarriers(&ListBarriersRequest{
@@ -1682,12 +1877,15 @@ func (a *GrackleBarriersCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadRes
 		}
 		rpcResp.Data = methodRespBytes
 	case 4:
-		rpcMethodsTotal.WithLabelValues("GrackleBarriers", "ListBarrierParticipants", a.shardId, a.replicaId).Inc()
-		defer measureSince(rpcMethodDuration.WithLabelValues("GrackleBarriers", "ListBarrierParticipants", a.shardId, a.replicaId), t1)
+		rpcMethodsTotal.WithLabelValues(a.nodeId, "GrackleBarriers", "ListBarrierParticipants", a.shardId, a.replicaId).Inc()
+		defer measureSince(rpcMethodDuration.WithLabelValues(a.nodeId, "GrackleBarriers", "ListBarrierParticipants", a.shardId, a.replicaId), t1)
 
 		methodReq := corepb.ListBarrierParticipantsRequest{}
 		err := methodReq.UnmarshalBinary(rpcReq.Data)
 		if err != nil {
+			return nil, err
+		}
+		if err := checkShardBounds(methodReq.ShardKey(), a.shardLowerBound, a.shardUpperBound); err != nil {
 			return nil, err
 		}
 		methodResp, err := a.grackleBarriersCore.ListBarrierParticipants(&ListBarrierParticipantsRequest{
@@ -1718,4 +1916,11 @@ func (a *GrackleBarriersCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadRes
 
 func measureSince(o prometheus.Observer, t1 time.Time) {
 	o.Observe(time.Since(t1).Seconds())
+}
+
+func checkShardBounds(shardKey []byte, lowerBound []byte, upperBound []byte) error {
+	if bytes.Compare(shardKey, lowerBound) < 0 || bytes.Compare(shardKey, upperBound) > 0 {
+		return fmt.Errorf("routing violation: shard key %x is outside shard bounds [%x, %x]", shardKey, lowerBound, upperBound)
+	}
+	return nil
 }

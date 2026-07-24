@@ -15,7 +15,7 @@ func TestExpirationRecordsTable_Add(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newExpirationRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -55,7 +55,7 @@ func TestExpirationRecordsTable_Add(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newExpirationRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -94,7 +94,7 @@ func TestExpirationRecordsTable_Add(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newExpirationRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -138,7 +138,7 @@ func TestExpirationRecordsTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newExpirationRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -180,7 +180,7 @@ func TestExpirationRecordsTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newExpirationRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -216,7 +216,7 @@ func TestExpirationRecordsTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newExpirationRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -262,7 +262,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newExpirationRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		// List from empty table
 		txn := badgerStore.View()
@@ -281,7 +281,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newExpirationRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -321,7 +321,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newExpirationRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -360,7 +360,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newExpirationRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -397,7 +397,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newExpirationRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -434,7 +434,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newExpirationRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -473,7 +473,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newExpirationRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		namespaceId := rand.Uint64()
 		semaphoreId := rand.Uint64()
@@ -514,7 +514,7 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newExpirationRecordsTable([]byte{0x01})
+		table := newExpirationRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()

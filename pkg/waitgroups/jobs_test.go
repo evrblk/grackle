@@ -16,7 +16,7 @@ func TestJobsTable_Create(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newJobsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newJobsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		waitGroupJob := &corepb.WaitGroupJob{
 			Id: &corepb.WaitGroupJobId{
@@ -50,7 +50,7 @@ func TestJobsTable_Create(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newJobsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newJobsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -101,7 +101,7 @@ func TestJobsTable_Get(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newJobsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newJobsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		waitGroupJob := &corepb.WaitGroupJob{
 			Id: &corepb.WaitGroupJobId{
@@ -137,7 +137,7 @@ func TestJobsTable_Get(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newJobsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newJobsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		txn := badgerStore.View()
 		defer txn.Discard()
@@ -161,7 +161,7 @@ func TestJobsTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newJobsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newJobsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		waitGroupJob := &corepb.WaitGroupJob{
 			Id: &corepb.WaitGroupJobId{
@@ -200,7 +200,7 @@ func TestJobsTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newJobsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newJobsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		jobId := &corepb.WaitGroupJobId{
 			AccountId:   rand.Uint64(),
@@ -220,7 +220,7 @@ func TestJobsTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newJobsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newJobsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -283,7 +283,7 @@ func TestJobsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newJobsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newJobsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -325,7 +325,7 @@ func TestJobsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newJobsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newJobsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -378,7 +378,7 @@ func TestJobsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newJobsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newJobsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		txn := badgerStore.View()
 		defer txn.Discard()
@@ -395,7 +395,7 @@ func TestJobsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newJobsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newJobsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -452,14 +452,5 @@ func TestJobsTable_List(t *testing.T) {
 		result2, err := table.List(txn, accountId, namespaceId, waitGroupId2, nil, 100)
 		require.NoError(t, err)
 		require.Len(t, result2.jobs, 5)
-	})
-}
-
-func TestJobsTable_GetTableKeyRange(t *testing.T) {
-	t.Run("get table key range", func(t *testing.T) {
-		table := newJobsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
-
-		keyRange := table.GetTableKeyRange()
-		require.NotNil(t, keyRange)
 	})
 }

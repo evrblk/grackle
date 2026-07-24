@@ -16,7 +16,7 @@ func TestCountersTable_Get(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newCountersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newCountersTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 
@@ -44,7 +44,7 @@ func TestCountersTable_Get(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newCountersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newCountersTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 
@@ -63,7 +63,7 @@ func TestCountersTable_Set(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newCountersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newCountersTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 
@@ -91,7 +91,7 @@ func TestCountersTable_Set(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newCountersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newCountersTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 
@@ -130,7 +130,7 @@ func TestCountersTable_Set(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newCountersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newCountersTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId1 := rand.Uint64()
 		accountId2 := rand.Uint64()
@@ -162,14 +162,5 @@ func TestCountersTable_Set(t *testing.T) {
 		retrieved2, err := table.Get(txn, accountId2)
 		require.NoError(t, err)
 		require.EqualValues(t, 20, retrieved2.NumberOfNamespaces)
-	})
-}
-
-func TestCountersTable_GetTableKeyRange(t *testing.T) {
-	t.Run("get table key range", func(t *testing.T) {
-		table := newCountersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
-
-		keyRange := table.GetTableKeyRange()
-		require.NotNil(t, keyRange)
 	})
 }

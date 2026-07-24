@@ -16,7 +16,7 @@ func TestNamespacesTable_Create(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newNamespacesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newNamespacesTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		namespace := &corepb.Namespace{
 			Id: &corepb.NamespaceId{
@@ -53,7 +53,7 @@ func TestNamespacesTable_Create(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newNamespacesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newNamespacesTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		namespace := &corepb.Namespace{
 			Id: &corepb.NamespaceId{
@@ -90,7 +90,7 @@ func TestNamespacesTable_Get(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newNamespacesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newNamespacesTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		namespace := &corepb.Namespace{
 			Id: &corepb.NamespaceId{
@@ -128,7 +128,7 @@ func TestNamespacesTable_Get(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newNamespacesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newNamespacesTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		txn := badgerStore.View()
 		defer txn.Discard()
@@ -150,7 +150,7 @@ func TestNamespacesTable_GetByName(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newNamespacesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newNamespacesTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		namespace := &corepb.Namespace{
 			Id: &corepb.NamespaceId{
@@ -185,7 +185,7 @@ func TestNamespacesTable_GetByName(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newNamespacesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newNamespacesTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		txn := badgerStore.View()
 		defer txn.Discard()
@@ -200,7 +200,7 @@ func TestNamespacesTable_GetByName(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newNamespacesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newNamespacesTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId1 := rand.Uint64()
 		accountId2 := rand.Uint64()
@@ -238,7 +238,7 @@ func TestNamespacesTable_Update(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newNamespacesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newNamespacesTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		namespace := &corepb.Namespace{
 			Id: &corepb.NamespaceId{
@@ -286,7 +286,7 @@ func TestNamespacesTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newNamespacesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newNamespacesTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		namespace := &corepb.Namespace{
 			Id: &corepb.NamespaceId{
@@ -331,7 +331,7 @@ func TestNamespacesTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newNamespacesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newNamespacesTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		namespace := &corepb.Namespace{
 			Id: &corepb.NamespaceId{
@@ -357,7 +357,7 @@ func TestNamespacesTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newNamespacesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newNamespacesTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 
@@ -398,7 +398,7 @@ func TestNamespacesTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newNamespacesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newNamespacesTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 
@@ -450,7 +450,7 @@ func TestNamespacesTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newNamespacesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newNamespacesTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		txn := badgerStore.View()
 		defer txn.Discard()
@@ -467,7 +467,7 @@ func TestNamespacesTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newNamespacesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newNamespacesTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId1 := rand.Uint64()
 		accountId2 := rand.Uint64()
@@ -524,15 +524,5 @@ func TestNamespacesTable_List(t *testing.T) {
 		result2, err := table.List(txn, accountId2, nil, 100)
 		require.NoError(t, err)
 		require.Len(t, result2.Namespaces, 5)
-	})
-}
-
-func TestNamespacesTable_GetTableKeyRanges(t *testing.T) {
-	t.Run("get table key ranges", func(t *testing.T) {
-		table := newNamespacesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
-
-		keyRanges := table.GetTableKeyRanges()
-		require.NotNil(t, keyRanges)
-		require.Len(t, keyRanges, 2)
 	})
 }

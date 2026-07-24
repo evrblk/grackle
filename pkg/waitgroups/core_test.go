@@ -10,11 +10,13 @@ import (
 
 	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
+	"github.com/evrblk/monstera/utils"
 	"github.com/evrblk/yellowstone-common/honey"
 	"github.com/stretchr/testify/require"
 
 	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/corepb"
+	"github.com/evrblk/grackle/pkg/sharding"
 	"github.com/evrblk/grackle/pkg/tables"
 )
 
@@ -1878,4 +1880,139 @@ func ListWaitGroupCompletedJobs(t *testing.T, core *Core, namespaceId *corepb.Na
 	require.Nil(t, resp.ApplicationError)
 	require.NotNil(t, resp.Payload)
 	return resp.Payload
+}
+
+// TestCore_SplitSnapshotRestore proves the portable, bounds-filtered snapshot
+// contract on the wait-groups core: a parent core's snapshot is restored into
+// two child cores with disjoint bounds (sharing ONE Badger store with the
+// parent), and each child ends up with exactly its half — with the names
+// index rebuilt and jobs/expiration records restored.
+func TestCore_SplitSnapshotRestore(t *testing.T) {
+	now := time.Now()
+	badgerStore, err := store.NewBadgerInMemoryStore()
+	require.NoError(t, err)
+
+	fullLower := []byte{0x00, 0x00, 0x00, 0x00}
+	fullUpper := []byte{0xff, 0xff, 0xff, 0xff}
+	splitAt := []byte{0x80, 0x00, 0x00, 0x00}
+
+	parent := NewCore(badgerStore, []byte{0xaa, 0x00, 0x00, 0x01}, fullLower, fullUpper)
+	child1 := NewCore(badgerStore, []byte{0xaa, 0x00, 0x00, 0x02}, fullLower, []byte{0x7f, 0xff, 0xff, 0xff})
+	child2 := NewCore(badgerStore, []byte{0xaa, 0x00, 0x00, 0x03}, splitAt, fullUpper)
+
+	loAccount, loNamespace := namespaceInRange(t, fullLower, []byte{0x7f, 0xff, 0xff, 0xff})
+	hiAccount, hiNamespace := namespaceInRange(t, splitAt, fullUpper)
+
+	populate := func(accountId, namespaceId uint64) {
+		createWaitGroup(t, parent, &corepb.WaitGroupId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			WaitGroupId: rand.Uint64(),
+		}, "wg-split", 5, 100, now.Add(time.Hour), now)
+		resp, err := parent.CompleteJobsFromWaitGroup(&coreapis.CompleteJobsFromWaitGroupRequest{
+			Payload: &corepb.CompleteJobsFromWaitGroupRequest{
+				NamespaceId:   &corepb.NamespaceId{AccountId: accountId, NamespaceId: namespaceId},
+				WaitGroupName: "wg-split",
+				Jobs:          completeJobRequests([]string{"job-1", "job-2"}),
+			},
+			Now: now.UnixNano(),
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp.ApplicationError)
+	}
+	populate(loAccount, loNamespace)
+	populate(hiAccount, hiNamespace)
+
+	// Snapshot the parent; restore into both children.
+	snapshot := parent.Snapshot()
+	buf := bytes.NewBuffer(nil)
+	require.NoError(t, snapshot.Write(buf))
+	snapshot.Release()
+	require.NoError(t, child1.Restore(io.NopCloser(bytes.NewReader(buf.Bytes()))))
+	require.NoError(t, child2.Restore(io.NopCloser(bytes.NewReader(buf.Bytes()))))
+
+	parentRows := countOwnedRows(t, parent)
+	require.Greater(t, parentRows, 0)
+	require.Equal(t, parentRows, countOwnedRows(t, child1)+countOwnedRows(t, child2),
+		"children must partition the parent's rows exactly")
+
+	for _, tc := range []struct {
+		owner                  *Core
+		accountId, namespaceId uint64
+	}{
+		{child1, loAccount, loNamespace},
+		{child2, hiAccount, hiNamespace},
+	} {
+		namespaceId := &corepb.NamespaceId{AccountId: tc.accountId, NamespaceId: tc.namespaceId}
+
+		// Names index rebuilt: lookup by name works on the owner, and the
+		// completed-jobs counter carried over.
+		wgResp, err := tc.owner.GetWaitGroupByName(&coreapis.GetWaitGroupByNameRequest{
+			Payload: &corepb.GetWaitGroupByNameRequest{NamespaceId: namespaceId, WaitGroupName: "wg-split"},
+			Now:     now.Add(time.Minute).UnixNano(),
+		})
+		require.NoError(t, err)
+		require.Nil(t, wgResp.ApplicationError)
+		require.EqualValues(t, 2, wgResp.Payload.WaitGroup.CompletedJobs)
+
+		// Job rows restored: the completed jobs are listed on the owner.
+		jobsResp, err := tc.owner.ListWaitGroupCompletedJobs(&coreapis.ListWaitGroupCompletedJobsRequest{
+			Payload: &corepb.ListWaitGroupCompletedJobsRequest{
+				NamespaceId:   namespaceId,
+				WaitGroupName: "wg-split",
+				Limit:         10,
+			},
+			Now: now.Add(time.Minute).UnixNano(),
+		})
+		require.NoError(t, err)
+		require.Nil(t, jobsResp.ApplicationError)
+		require.Len(t, jobsResp.Payload.Jobs, 2)
+	}
+}
+
+// ownedTableNames lists the registry names of every table the core owns —
+// the physical storage prefixes are <registry table id><shard prefix>.
+var ownedTableNames = []string{
+	"Grackle.WaitGroupsCore.WaitGroups.Table",
+	"Grackle.WaitGroupsCore.WaitGroups.NamesIndex",
+	"Grackle.WaitGroupsCore.Jobs.Table",
+	"Grackle.WaitGroupsCore.Counters.Table",
+	"Grackle.WaitGroupsCore.GarbageCollectionRecords.Table",
+	"Grackle.WaitGroupsCore.ExpirationRecords.Table",
+	"Grackle.WaitGroupsCore.DeletionRecords.Table",
+}
+
+// countOwnedRows counts the physical rows under every storage prefix the core
+// owns.
+func countOwnedRows(t *testing.T, c *Core) int {
+	t.Helper()
+	txn := c.badgerStore.View()
+	defer txn.Discard()
+
+	count := 0
+	for _, name := range ownedTableNames {
+		prefix := utils.ConcatBytes(tables.Grackle[name].Bytes(), c.shardPrefix)
+		err := txn.EachPrefixKeys(prefix, func(key []byte) (bool, error) {
+			count++
+			return true, nil
+		})
+		require.NoError(t, err)
+	}
+	return count
+}
+
+// namespaceInRange finds an (accountId, namespaceId) pair whose shard key
+// falls within [lower, upper].
+func namespaceInRange(t *testing.T, lower []byte, upper []byte) (uint64, uint64) {
+	t.Helper()
+	for i := 0; i < 100_000; i++ {
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint64()
+		sk := sharding.ByAccountAndNamespace(accountId, namespaceId)
+		if bytes.Compare(sk, lower) >= 0 && bytes.Compare(sk, upper) <= 0 {
+			return accountId, namespaceId
+		}
+	}
+	t.Fatalf("no namespace found hashing into [%x, %x]", lower, upper)
+	return 0, 0
 }

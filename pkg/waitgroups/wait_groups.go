@@ -16,43 +16,71 @@ import (
 // waitGroupsTable is a table of wait groups indexed by wait group ID and wait group name.
 //
 // Table Primary Key:
-// 1. shard key (by account id and namespace id)
-// 2. account id
-// 3. namespace id
+// 1. account id
+// 2. namespace id
 //
 // Table Sort Key:
 // 1. wait group id
 //
 // Names Index Primary Key:
-// 1. shard key (by account id and namespace id)
-// 2. account id
-// 3. namespace id
-// 4. wait group name
+// 1. account id
+// 2. namespace id
+// 3. wait group name
 type waitGroupsTable struct {
 	table      *honey.BinaryTable[*corepb.WaitGroup, corepb.WaitGroup]
 	namesIndex *honey.Uint64Table
 }
 
-func newWaitGroupsTable(shardLowerBound []byte, shardUpperBound []byte) *waitGroupsTable {
+// newWaitGroupsTable scopes both tables under the shard-unique prefix
+// (nested under the registry table ids), so no row is shared with any other
+// core (CoreTypePersistedExclusive). Keys carry no shard key material — the
+// prefix is the isolation, so honey gets nil bounds; routing violations are
+// rejected upstream by the generated core adapter.
+func newWaitGroupsTable(shardPrefix []byte) *waitGroupsTable {
 	return &waitGroupsTable{
 		table: honey.NewBinaryTable[*corepb.WaitGroup, corepb.WaitGroup](
-			tables.Grackle["Grackle.WaitGroupsCore.WaitGroups.Table"].Bytes(),
-			shardLowerBound,
-			shardUpperBound,
+			utils.ConcatBytes(tables.Grackle["Grackle.WaitGroupsCore.WaitGroups.Table"].Bytes(), shardPrefix),
+			nil,
+			nil,
 		),
 		namesIndex: honey.NewUint64Table(
-			tables.Grackle["Grackle.WaitGroupsCore.WaitGroups.NamesIndex"].Bytes(),
-			shardLowerBound,
-			shardUpperBound,
+			utils.ConcatBytes(tables.Grackle["Grackle.WaitGroupsCore.WaitGroups.NamesIndex"].Bytes(), shardPrefix),
+			nil,
+			nil,
 		),
 	}
 }
 
-func (t *waitGroupsTable) GetTableKeyRanges() []honey.KeyRange {
-	return []honey.KeyRange{
-		t.table.GetTableKeyRange(),
-		t.namesIndex.GetTableKeyRange(),
+// Clear deletes every row this table owns: the primary wait group rows and
+// the names index.
+func (t *waitGroupsTable) Clear(badgerStore *store.BadgerStore) error {
+	for _, prefix := range [][]byte{t.table.TableId(), t.namesIndex.TableId()} {
+		if err := badgerStore.DropPrefix(prefix); err != nil {
+			return err
+		}
 	}
+	return nil
+}
+
+// EachEntity streams every wait group as (canonical key, stored value) — the
+// primary table only; the names index is rebuilt from the wait groups on
+// restore.
+func (t *waitGroupsTable) EachEntity(txn *store.Txn, fn func(key []byte, value []byte) (bool, error)) error {
+	return t.table.EachEntry(txn, fn)
+}
+
+// RestoreEntity decodes one streamed wait group and, if owned, inserts it
+// through Create — re-deriving its keys and rebuilding the names index from
+// the wait group's own identity fields.
+func (t *waitGroupsTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds tables.ShardRange) (bool, error) {
+	waitGroup := &corepb.WaitGroup{}
+	if err := waitGroup.UnmarshalBinary(value); err != nil {
+		return false, err
+	}
+	if !bounds.Owns(sharding.ByAccountAndNamespace(waitGroup.Id.AccountId, waitGroup.Id.NamespaceId)) {
+		return false, nil
+	}
+	return true, t.Create(txn, waitGroup)
 }
 
 func (t *waitGroupsTable) Get(txn *store.Txn, waitGroupId *corepb.WaitGroupId) (*corepb.WaitGroup, error) {
@@ -138,7 +166,6 @@ func (t *waitGroupsTable) Delete(txn *store.Txn, waitGroupId *corepb.WaitGroupId
 
 func (t *waitGroupsTable) tablePK(accountId uint64, namespaceId uint64) []byte {
 	return utils.ConcatBytes(
-		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,
 		namespaceId,
 	)
@@ -152,7 +179,6 @@ func (t *waitGroupsTable) tableSK(waitGroupId uint64) []byte {
 
 func (t *waitGroupsTable) namesIndexPK(accountId uint64, namespaceId uint64, waitGroupName string) []byte {
 	return utils.ConcatBytes(
-		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,
 		namespaceId,
 		waitGroupName,

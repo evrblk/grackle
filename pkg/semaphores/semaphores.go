@@ -18,60 +18,76 @@ import (
 // semaphoresTable is a table of semaphores indexed by semaphore ID and semaphore name.
 //
 // Table Primary Key:
-// 1. shard key (by account id and namespace id)
-// 2. account id
-// 3. namespace id
+// 1. account id
+// 2. namespace id
 //
 // Table Sort Key:
 // 1. semaphore id
 //
 // Names Index Primary Key:
-// 1. shard key (by account id and namespace id)
-// 2. account id
-// 3. namespace id
-// 4. semaphore name
-//
-// Lease Id Index Primary Key:
-// 1. shard key (by account id and namespace id)
-// 2. account id
-// 3. namespace id
-// 4. lease id
-//
-// Lease Id Index Sort Key:
-// 1. semaphore id
+// 1. account id
+// 2. namespace id
+// 3. semaphore name
 type semaphoresTable struct {
-	table        *honey.BinaryTable[*corepb.Semaphore, corepb.Semaphore]
-	namesIndex   *honey.Uint64Table
-	leaseIdIndex *honey.OneToManySortedIndex
-	// TODO: does leaseIdIndex belong here?
+	table      *honey.BinaryTable[*corepb.Semaphore, corepb.Semaphore]
+	namesIndex *honey.Uint64Table
 }
 
-func newSemaphoresTable(shardLowerBound []byte, shardUpperBound []byte) *semaphoresTable {
+// newSemaphoresTable scopes both tables under the shard-unique prefix
+// (nested under the registry table ids), so no row is shared with any other
+// core (CoreTypePersistedExclusive). Keys carry no shard key material — the
+// prefix is the isolation, so honey gets nil bounds; routing violations are
+// rejected upstream by the generated core adapter.
+func newSemaphoresTable(shardPrefix []byte) *semaphoresTable {
 	return &semaphoresTable{
 		table: honey.NewBinaryTable[*corepb.Semaphore, corepb.Semaphore](
-			tables.Grackle["Grackle.SemaphoresCore.Semaphores.Table"].Bytes(),
-			shardLowerBound,
-			shardUpperBound,
+			utils.ConcatBytes(tables.Grackle["Grackle.SemaphoresCore.Semaphores.Table"].Bytes(), shardPrefix),
+			nil,
+			nil,
 		),
 		namesIndex: honey.NewUint64Table(
-			tables.Grackle["Grackle.SemaphoresCore.Semaphores.NamesIndex"].Bytes(),
-			shardLowerBound,
-			shardUpperBound,
-		),
-		leaseIdIndex: honey.NewOneToManySortedIndex(
-			tables.Grackle["Grackle.SemaphoresCore.Semaphores.LeaseIdIndex"].Bytes(),
-			shardLowerBound,
-			shardUpperBound,
+			utils.ConcatBytes(tables.Grackle["Grackle.SemaphoresCore.Semaphores.NamesIndex"].Bytes(), shardPrefix),
+			nil,
+			nil,
 		),
 	}
 }
 
-func (t *semaphoresTable) GetTableKeyRanges() []honey.KeyRange {
-	return []honey.KeyRange{
-		t.table.GetTableKeyRange(),
-		t.namesIndex.GetTableKeyRange(),
-		t.leaseIdIndex.GetTableKeyRange(),
+// Clear deletes every row this table owns: the primary semaphore rows and
+// the names index.
+func (t *semaphoresTable) Clear(badgerStore *store.BadgerStore) error {
+	for _, prefix := range [][]byte{t.table.TableId(), t.namesIndex.TableId()} {
+		if err := badgerStore.DropPrefix(prefix); err != nil {
+			return err
+		}
 	}
+	return nil
+}
+
+// EachEntity streams every semaphore as (canonical key, stored value) — the
+// primary table only; the names index is rebuilt from the semaphores on
+// restore.
+func (t *semaphoresTable) EachEntity(txn *store.Txn, fn func(key []byte, value []byte) (bool, error)) error {
+	return t.table.EachEntry(txn, fn)
+}
+
+// RestoreEntity decodes one streamed semaphore and, if owned, inserts it
+// directly (bypassing Create's uniqueness gates — the stream is
+// authoritative), rebuilding the names index from the semaphore's own
+// identity fields.
+func (t *semaphoresTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds tables.ShardRange) (bool, error) {
+	semaphore := &corepb.Semaphore{}
+	if err := semaphore.UnmarshalBinary(value); err != nil {
+		return false, err
+	}
+	if !bounds.Owns(sharding.ByAccountAndNamespace(semaphore.Id.AccountId, semaphore.Id.NamespaceId)) {
+		return false, nil
+	}
+	err := t.namesIndex.Set(txn, t.namesIndexPK(semaphore.Id.AccountId, semaphore.Id.NamespaceId, semaphore.Name), semaphore.Id.SemaphoreId)
+	if err != nil {
+		return false, err
+	}
+	return true, t.Update(txn, semaphore)
 }
 
 func (t *semaphoresTable) Get(txn *store.Txn, semaphoreId *corepb.SemaphoreId) (*corepb.Semaphore, error) {
@@ -188,7 +204,6 @@ func (t *semaphoresTable) List(txn *store.Txn, accountId uint64, namespaceId uin
 
 func (t *semaphoresTable) tablePK(accountId uint64, namespaceId uint64) []byte {
 	return utils.ConcatBytes(
-		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,
 		namespaceId,
 	)
@@ -202,62 +217,8 @@ func (t *semaphoresTable) tableSK(semaphoreId uint64) []byte {
 
 func (t *semaphoresTable) namesIndexPK(accountId uint64, namespaceId uint64, semaphoreName string) []byte {
 	return utils.ConcatBytes(
-		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,
 		namespaceId,
 		semaphoreName,
-	)
-}
-
-func (t *semaphoresTable) leaseIdIndexPK(accountId uint64, namespaceId uint64, leaseId uint64) []byte {
-	return utils.ConcatBytes(
-		sharding.ByAccountAndNamespace(accountId, namespaceId),
-		accountId,
-		namespaceId,
-		leaseId,
-	)
-}
-
-func (t *semaphoresTable) ListByLeaseId(txn *store.Txn, leaseId *corepb.LeaseId, paginationToken *corepb.PaginationToken, limit int) (*listSemaphoresResult, error) {
-	result, err := t.leaseIdIndex.ListPaginated(txn,
-		t.leaseIdIndexPK(leaseId.AccountId, leaseId.NamespaceId, leaseId.LeaseId), pagination.CoreToMonstera(paginationToken), limit)
-	if err != nil {
-		return nil, err
-	}
-
-	semaphores := make([]*corepb.Semaphore, len(result.Items))
-	for i, semaphoreIdBytes := range result.Items {
-		semaphoreId := utils.BytesToUint64(semaphoreIdBytes)
-		semaphore, err := t.Get(txn, &corepb.SemaphoreId{
-			AccountId:   leaseId.AccountId,
-			NamespaceId: leaseId.NamespaceId,
-			SemaphoreId: semaphoreId,
-		})
-		if err != nil {
-			return nil, err
-		}
-		semaphores[i] = semaphore
-	}
-
-	return &listSemaphoresResult{
-		semaphores:              semaphores,
-		nextPaginationToken:     pagination.MonsteraToCore(result.NextPaginationToken),
-		previousPaginationToken: pagination.MonsteraToCore(result.PreviousPaginationToken),
-	}, nil
-}
-
-// AddLeaseToIndex adds a lease ID to the semaphore's lease index
-func (t *semaphoresTable) AddLeaseToIndex(txn *store.Txn, semaphoreId *corepb.SemaphoreId, leaseId uint64) error {
-	return t.leaseIdIndex.Add(txn,
-		t.leaseIdIndexPK(semaphoreId.AccountId, semaphoreId.NamespaceId, leaseId),
-		utils.Uint64ToBytes(semaphoreId.SemaphoreId),
-	)
-}
-
-// RemoveLeaseFromIndex removes a lease ID from the semaphore's lease index
-func (t *semaphoresTable) RemoveLeaseFromIndex(txn *store.Txn, semaphoreId *corepb.SemaphoreId, leaseId uint64) error {
-	return t.leaseIdIndex.Delete(txn,
-		t.leaseIdIndexPK(semaphoreId.AccountId, semaphoreId.NamespaceId, leaseId),
-		utils.Uint64ToBytes(semaphoreId.SemaphoreId),
 	)
 }

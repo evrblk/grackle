@@ -12,7 +12,7 @@ import (
 	"github.com/evrblk/monstera"
 	"github.com/evrblk/monstera/cluster"
 	"github.com/evrblk/monstera/store"
-	"github.com/evrblk/monstera/transport/grpc"
+	monstrea_grpc "github.com/evrblk/monstera/transport/grpc"
 	"github.com/evrblk/monstera/utils"
 	"github.com/evrblk/yellowstone-common/honey"
 	"github.com/evrblk/yellowstone-common/metrics"
@@ -29,10 +29,9 @@ import (
 )
 
 var nodeCmdCfg struct {
-	prometheusPort     int
-	dataDir            string
-	monsteraConfigPath string
-	nodeId             string
+	prometheusPort int
+	dataDir        string
+	listenAddress  string
 }
 
 var nodeCmd = &cobra.Command{
@@ -51,100 +50,70 @@ var nodeCmd = &cobra.Command{
 		registry := honey.NewBaseTableRegistry(1)
 		tables.RegisterGracklePrefixes(registry)
 
-		// Load monstera cluster config
-		clusterConfig, err := cluster.LoadConfigFromFile(nodeCmdCfg.monsteraConfigPath)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		node, err := clusterConfig.GetNode(nodeCmdCfg.nodeId)
-		if err != nil {
-			log.Fatal(err)
-		}
-
 		// Create shared Badger store for application cores
-		dataStore, err := store.NewBadgerStore(store.DefaultOptions(filepath.Join(nodeCmdCfg.dataDir, "data")))
+		dataStore, err := store.NewBadgerStore(store.DefaultOptions(filepath.Join(nodeCmdCfg.dataDir, "cores")))
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		// TODO set timeouts
-		monsteraNodeConfig := monstera.DefaultMonsteraNodeConfig
-		monsteraNodeConfig.UseInMemoryRaftStore = true
 
 		applicationDescriptors := monstera.ApplicationCoreDescriptors{
+			// All grackle cores are fully re-keyed under shard-unique prefixes
+			// with a portable, bounds-filtered Restore (fenestra): split-ready.
 			"GrackleLocks": {
-				RestoreSnapshotOnStart: false,
+				CoreType: monstera.CoreTypePersistedExclusive,
 				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 					return coreapis.NewGrackleLocksCoreAdapter(
-						shard.Id, replica.Id,
+						replica.NodeId, shard.Id, replica.Id, shard.LowerBound, shard.UpperBound,
 						locks.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
 				},
 			},
 			"GrackleNamespaces": {
-				RestoreSnapshotOnStart: false,
+				CoreType: monstera.CoreTypePersistedExclusive,
 				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 					return coreapis.NewGrackleNamespacesCoreAdapter(
-						shard.Id, replica.Id,
-						namespaces.NewCore(dataStore, shard.LowerBound, shard.UpperBound))
+						replica.NodeId, shard.Id, replica.Id, shard.LowerBound, shard.UpperBound,
+						namespaces.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
 				},
 			},
 			"GrackleWaitGroups": {
-				RestoreSnapshotOnStart: false,
+				CoreType: monstera.CoreTypePersistedExclusive,
 				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 					return coreapis.NewGrackleWaitGroupsCoreAdapter(
-						shard.Id, replica.Id,
+						replica.NodeId, shard.Id, replica.Id, shard.LowerBound, shard.UpperBound,
 						waitgroups.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
 				},
 			},
 			"GrackleBarriers": {
-				RestoreSnapshotOnStart: false,
+				CoreType: monstera.CoreTypePersistedExclusive,
 				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 					return coreapis.NewGrackleBarriersCoreAdapter(
-						shard.Id, replica.Id,
+						replica.NodeId, shard.Id, replica.Id, shard.LowerBound, shard.UpperBound,
 						barriers.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
 				},
 			},
 			"GrackleSemaphores": {
-				RestoreSnapshotOnStart: false,
+				CoreType: monstera.CoreTypePersistedExclusive,
 				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 					return coreapis.NewGrackleSemaphoresCoreAdapter(
-						shard.Id, replica.Id,
+						replica.NodeId, shard.Id, replica.Id, shard.LowerBound, shard.UpperBound,
 						semaphores.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
 				},
 			},
 		}
 
-		transport := grpc.NewGrpcTransport(clusterConfig)
+		transport := monstrea_grpc.NewDataPlaneClient()
 
-		monsteraNode, err := monstera.NewNode(nodeCmdCfg.dataDir, nodeCmdCfg.nodeId, clusterConfig, applicationDescriptors, monsteraNodeConfig, transport)
+		// TODO set timeouts
+		monsteraNodeConfig := monstera.DefaultMonsteraNodeConfig
+
+		monsteraNode, err := monstera.NewNode(nodeCmdCfg.dataDir, applicationDescriptors, monsteraNodeConfig, transport)
 		if err != nil {
 			log.Fatalf("failed to create Monstera node: %v", err)
 		}
 
-		// Starting Monstera node
 		monsteraNode.Start()
 
-		// Register node metrics
-		err = prometheus.Register(prometheus.NewGaugeFunc(
-			prometheus.GaugeOpts{
-				Name:        "monstera_node_ready",
-				Help:        "Monstera node is ready",
-				ConstLabels: prometheus.Labels{"node": nodeCmdCfg.nodeId},
-			},
-			func() float64 {
-				if monsteraNode.NodeState() == monstera.READY {
-					return 1
-				} else {
-					return 0
-				}
-			},
-		))
-		if err != nil {
-			log.Fatalf("failed to register node metrics: %v", err)
-		}
-
-		monsteraServer := grpc.NewGrpcServer(monsteraNode)
+		monsteraServer := monstrea_grpc.NewGrpcServer(monsteraNode)
 
 		cleanupDone := &sync.WaitGroup{}
 		cleanupDone.Add(1)
@@ -171,7 +140,7 @@ var nodeCmd = &cobra.Command{
 			cancel()
 		}()
 
-		err = monsteraServer.Serve(node.GrpcAddress)
+		err = monsteraServer.Serve(nodeCmdCfg.listenAddress)
 		if err != nil {
 			log.Printf("Monstera server stopped: %s", err)
 		} else {
@@ -189,18 +158,13 @@ func init() {
 
 	nodeCmd.PersistentFlags().IntVarP(&nodeCmdCfg.prometheusPort, "prometheus-port", "", 2112, "Prometheus metrics port")
 
-	nodeCmd.PersistentFlags().StringVarP(&nodeCmdCfg.monsteraConfigPath, "monstera-config", "", "", "Monstera cluster config path")
-	err := nodeCmd.MarkPersistentFlagRequired("monstera-config")
-	if err != nil {
-		panic(err)
-	}
 	nodeCmd.PersistentFlags().StringVarP(&nodeCmdCfg.dataDir, "data-dir", "", "", "Base directory for data")
-	err = nodeCmd.MarkPersistentFlagRequired("data-dir")
+	err := nodeCmd.MarkPersistentFlagRequired("data-dir")
 	if err != nil {
 		panic(err)
 	}
-	nodeCmd.PersistentFlags().StringVarP(&nodeCmdCfg.nodeId, "node-id", "", "", "Monstera node ID")
-	err = nodeCmd.MarkPersistentFlagRequired("node-id")
+	nodeCmd.PersistentFlags().StringVarP(&nodeCmdCfg.listenAddress, "listen", "", "", "gRPC bind address")
+	err = nodeCmd.MarkPersistentFlagRequired("listen")
 	if err != nil {
 		panic(err)
 	}

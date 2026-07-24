@@ -9,11 +9,13 @@ import (
 
 	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
+	"github.com/evrblk/monstera/utils"
 	"github.com/evrblk/yellowstone-common/honey"
 	"github.com/stretchr/testify/require"
 
 	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/corepb"
+	"github.com/evrblk/grackle/pkg/sharding"
 	"github.com/evrblk/grackle/pkg/tables"
 )
 
@@ -653,7 +655,7 @@ func TestCore_NamespaceMetadata(t *testing.T) {
 func newNamespacesCore(t *testing.T) *Core {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
-	return NewCore(store, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+	return NewCore(store, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
 }
 
 func createNamespace(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, name string, maxNumberOfNamespaces int64, now time.Time) *corepb.Namespace {
@@ -847,4 +849,115 @@ func deleteNamespace(t *testing.T, core *Core, accountId uint64, namespaceName s
 	require.NotNil(t, resp.Payload)
 
 	return resp.Payload
+}
+
+// TestCore_SplitSnapshotRestore proves the portable, bounds-filtered snapshot
+// contract on the namespaces core: a parent core's snapshot is restored into
+// two child cores with disjoint bounds (sharing ONE Badger store with the
+// parent), and each child ends up with exactly its half — with the names
+// index rebuilt and functional. The namespaces keyspace is sharded BY
+// ACCOUNT.
+func TestCore_SplitSnapshotRestore(t *testing.T) {
+	now := time.Now()
+	badgerStore, err := store.NewBadgerInMemoryStore()
+	require.NoError(t, err)
+
+	fullLower := []byte{0x00, 0x00, 0x00, 0x00}
+	fullUpper := []byte{0xff, 0xff, 0xff, 0xff}
+	splitAt := []byte{0x80, 0x00, 0x00, 0x00}
+
+	parent := NewCore(badgerStore, []byte{0xaa, 0x00, 0x00, 0x01}, fullLower, fullUpper)
+	child1 := NewCore(badgerStore, []byte{0xaa, 0x00, 0x00, 0x02}, fullLower, []byte{0x7f, 0xff, 0xff, 0xff})
+	child2 := NewCore(badgerStore, []byte{0xaa, 0x00, 0x00, 0x03}, splitAt, fullUpper)
+
+	loAccount := accountInRange(t, fullLower, []byte{0x7f, 0xff, 0xff, 0xff})
+	hiAccount := accountInRange(t, splitAt, fullUpper)
+
+	for _, accountId := range []uint64{loAccount, hiAccount} {
+		createNamespace(t, parent, &corepb.NamespaceId{AccountId: accountId, NamespaceId: rand.Uint64()}, "ns-one", 100, now)
+		createNamespace(t, parent, &corepb.NamespaceId{AccountId: accountId, NamespaceId: rand.Uint64()}, "ns-two", 100, now)
+	}
+
+	snapshotAndRestore(t, parent, child1, child2)
+
+	parentRows := countOwnedRows(t, parent)
+	require.Greater(t, parentRows, 0)
+	require.Equal(t, parentRows, countOwnedRows(t, child1)+countOwnedRows(t, child2),
+		"children must partition the parent's rows exactly")
+
+	for _, tc := range []struct {
+		owner     *Core
+		accountId uint64
+	}{
+		{child1, loAccount},
+		{child2, hiAccount},
+	} {
+		// Names index rebuilt: lookup by name works on the owner.
+		resp, err := tc.owner.GetNamespaceByName(&coreapis.GetNamespaceByNameRequest{
+			Payload: &corepb.GetNamespaceByNameRequest{AccountId: tc.accountId, NamespaceName: "ns-one"},
+		})
+		require.NoError(t, err)
+		require.Nil(t, resp.ApplicationError)
+		require.Equal(t, "ns-one", resp.Payload.Namespace.Name)
+
+		// Both namespaces landed on the owner.
+		listResp, err := tc.owner.ListNamespaces(&coreapis.ListNamespacesRequest{
+			Payload: &corepb.ListNamespacesRequest{AccountId: tc.accountId},
+		})
+		require.NoError(t, err)
+		require.Len(t, listResp.Payload.Namespaces, 2)
+	}
+}
+
+func snapshotAndRestore(t *testing.T, parent *Core, children ...*Core) {
+	t.Helper()
+	snapshot := parent.Snapshot()
+	buf := bytes.NewBuffer(nil)
+	require.NoError(t, snapshot.Write(buf))
+	snapshot.Release()
+	for _, child := range children {
+		require.NoError(t, child.Restore(io.NopCloser(bytes.NewReader(buf.Bytes()))))
+	}
+}
+
+// ownedTableNames lists the registry names of every table the core owns —
+// the physical storage prefixes are <registry table id><shard prefix>.
+var ownedTableNames = []string{
+	"Grackle.NamespacesCore.Namespaces.Table",
+	"Grackle.NamespacesCore.Namespaces.NamesIndex",
+	"Grackle.NamespacesCore.Counters.Table",
+}
+
+// countOwnedRows counts the physical rows under every storage prefix the core
+// owns.
+func countOwnedRows(t *testing.T, c *Core) int {
+	t.Helper()
+	txn := c.badgerStore.View()
+	defer txn.Discard()
+
+	count := 0
+	for _, name := range ownedTableNames {
+		prefix := utils.ConcatBytes(tables.Grackle[name].Bytes(), c.shardPrefix)
+		err := txn.EachPrefixKeys(prefix, func(key []byte) (bool, error) {
+			count++
+			return true, nil
+		})
+		require.NoError(t, err)
+	}
+	return count
+}
+
+// accountInRange finds an account id whose shard key falls within
+// [lower, upper].
+func accountInRange(t *testing.T, lower []byte, upper []byte) uint64 {
+	t.Helper()
+	for i := 0; i < 100_000; i++ {
+		accountId := rand.Uint64()
+		sk := sharding.ByAccount(accountId)
+		if bytes.Compare(sk, lower) >= 0 && bytes.Compare(sk, upper) <= 0 {
+			return accountId
+		}
+	}
+	t.Fatalf("no account found hashing into [%x, %x]", lower, upper)
+	return 0
 }

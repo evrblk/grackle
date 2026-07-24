@@ -9,7 +9,7 @@ import (
 	"github.com/evrblk/monstera"
 	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
-	"github.com/evrblk/yellowstone-common/honey"
+	"github.com/evrblk/monstera/utils"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
 
@@ -26,6 +26,10 @@ import (
 type Core struct {
 	badgerStore *store.BadgerStore
 
+	shardPrefix     []byte
+	shardLowerBound []byte
+	shardUpperBound []byte
+
 	semaphores        *semaphoresTable
 	holders           *holdersTable
 	counters          *tables.CountersTable[*corepb.SemaphoresCounter, corepb.SemaphoresCounter]
@@ -36,66 +40,74 @@ type Core struct {
 
 var _ coreapis.GrackleSemaphoresCoreApi = &Core{}
 
-// NewCore constructs a Core bound to a single Monstera shard.
-// shardLowerBound/shardUpperBound delimit per-shard tables; shardGlobalIndexPrefix is used for
-// global (non-sharded) secondary indexes such as the lease expiration index.
-func NewCore(badgerStore *store.BadgerStore, shardGlobalIndexPrefix []byte, shardLowerBound []byte, shardUpperBound []byte) *Core {
+// NewCore constructs a Core bound to a single Monstera shard. shardPrefix is
+// a shard-unique prefix (derived from the shard id) nested under every table
+// id, making all rows exclusively owned by this core
+// (CoreTypePersistedExclusive); the lower/upper bounds delimit the shard's
+// key range and drive the bounds-filtered portable Restore.
+func NewCore(badgerStore *store.BadgerStore, shardPrefix []byte, shardLowerBound []byte, shardUpperBound []byte) *Core {
+	scoped := func(name string) []byte {
+		return utils.ConcatBytes(tables.Grackle[name].Bytes(), shardPrefix)
+	}
+
 	return &Core{
 		badgerStore: badgerStore,
 
-		semaphores: newSemaphoresTable(shardLowerBound, shardUpperBound),
-		holders:    newHoldersTable(shardLowerBound, shardUpperBound),
+		shardPrefix:     shardPrefix,
+		shardLowerBound: shardLowerBound,
+		shardUpperBound: shardUpperBound,
+
+		semaphores: newSemaphoresTable(shardPrefix),
+		holders:    newHoldersTable(shardPrefix),
 		counters: tables.NewCountersTable[*corepb.SemaphoresCounter, corepb.SemaphoresCounter](
-			tables.Grackle["Grackle.SemaphoresCore.Counters.Table"].Bytes(),
-			shardLowerBound,
-			shardUpperBound,
+			scoped("Grackle.SemaphoresCore.Counters.Table"),
 		),
 		gcRecords: tables.NewGCRecordsTable[*corepb.SemaphoresGarbageCollectionRecord, corepb.SemaphoresGarbageCollectionRecord](
 			tables.Grackle["Grackle.SemaphoresCore.GarbageCollectionRecords.Table"].Bytes(),
-			shardGlobalIndexPrefix,
+			shardPrefix,
 		),
-		expirationRecords: newExpirationRecordsTable(shardGlobalIndexPrefix),
+		expirationRecords: newExpirationRecordsTable(shardPrefix),
 		leases: tables.NewLeasesTable(
-			shardLowerBound,
-			shardUpperBound,
-			shardGlobalIndexPrefix,
-			tables.Grackle["Grackle.SemaphoresCore.Leases.Table"].Bytes(),
-			tables.Grackle["Grackle.SemaphoresCore.Leases.ProcessIdIndex"].Bytes(),
+			shardPrefix,
+			scoped("Grackle.SemaphoresCore.Leases.Table"),
+			scoped("Grackle.SemaphoresCore.Leases.ProcessIdIndex"),
 			tables.Grackle["Grackle.SemaphoresCore.Leases.ExpirationIndex"].Bytes(),
 		),
 	}
-}
-
-func (c *Core) ranges() []honey.KeyRange {
-	ranges := []honey.KeyRange{
-		c.counters.GetTableKeyRange(),
-		c.gcRecords.GetTableKeyRange(),
-		c.expirationRecords.GetTableKeyRange(),
-	}
-
-	ranges = append(ranges, c.semaphores.GetTableKeyRanges()...)
-	ranges = append(ranges, c.holders.GetTableKeyRanges()...)
-	ranges = append(ranges, c.leases.GetTableKeyRanges()...)
-
-	return ranges
-}
-
-// Snapshot returns a Monstera snapshot of all key ranges owned by this core, suitable for
-// Raft log compaction or transfer to a new replica.
-func (c *Core) Snapshot() monstera.ApplicationCoreSnapshot {
-	return honey.Snapshot(c.badgerStore, c.ranges())
-}
-
-// Restore replaces the contents of this core's key ranges with the snapshot read from reader.
-// Existing data in those ranges is removed.
-func (c *Core) Restore(reader io.ReadCloser) error {
-	return honey.Restore(c.badgerStore, c.ranges(), reader)
 }
 
 // Close releases resources held by the core. Currently, a no-op; the underlying BadgerStore is
 // owned by the caller.
 func (c *Core) Close() {
 
+}
+
+func (c *Core) snapshotSections() []tables.Section {
+	return []tables.Section{
+		{Name: "Grackle.SemaphoresCore.Semaphores", Table: c.semaphores},
+		{Name: "Grackle.SemaphoresCore.Holders", Table: c.holders},
+		{Name: "Grackle.SemaphoresCore.Counters", Table: c.counters},
+		{Name: "Grackle.SemaphoresCore.Leases", Table: c.leases},
+		{Name: "Grackle.SemaphoresCore.GarbageCollectionRecords", Table: c.gcRecords},
+		{Name: "Grackle.SemaphoresCore.ExpirationRecords", Table: c.expirationRecords},
+	}
+}
+
+// Snapshot returns a consistent, portable snapshot of this core's primary
+// entities (a pinned view; Write streams from it concurrently with subsequent
+// updates).
+func (c *Core) Snapshot() monstera.ApplicationCoreSnapshot {
+	return tables.NewSnapshot(c.badgerStore, "GrackleSemaphores", c.snapshotSections())
+}
+
+// Restore replaces this core's state with the union of the entities from the
+// given streams that belong to this core's shard bounds (one stream for a
+// Raft restore or split seed, two for a merge seed), inserting them through
+// the tables' own methods (which rebuild all secondary indexes under this
+// core's prefix).
+func (c *Core) Restore(readers ...io.ReadCloser) error {
+	return tables.RestoreSnapshot(c.badgerStore, c.snapshotSections(),
+		tables.ShardRange{Lower: c.shardLowerBound, Upper: c.shardUpperBound}, readers...)
 }
 
 // CreateSemaphore creates a new semaphore in the target namespace.
@@ -639,12 +651,6 @@ func (c *Core) AcquireSemaphore(req *coreapis.AcquireSemaphoreRequest) (*coreapi
 					return nil, err
 				}
 
-				// Add to lease ID index
-				err = c.semaphores.AddLeaseToIndex(txn, semaphore.Id, lease.Id.LeaseId)
-				if err != nil {
-					return nil, err
-				}
-
 				updatedSemaphore.ActiveHoldersCount += 1
 				updatedSemaphore.ActiveHolds += req.Payload.Weight
 
@@ -814,12 +820,6 @@ func (c *Core) ReleaseSemaphore(req *coreapis.ReleaseSemaphoreRequest) (*coreapi
 	}
 
 	err = c.holders.Delete(txn, existingHolder)
-	if err != nil {
-		return nil, err
-	}
-
-	// Remove from lease ID index
-	err = c.semaphores.RemoveLeaseFromIndex(txn, semaphore.Id, lease.Id.LeaseId)
 	if err != nil {
 		return nil, err
 	}
@@ -1386,13 +1386,21 @@ func (c *Core) ListSemaphoresByLeaseId(req *coreapis.ListSemaphoresByLeaseIdRequ
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
-	result, err := c.semaphores.ListByLeaseId(txn, req.Payload.LeaseId, req.Payload.PaginationToken, pagination.GetLimitWithDefaults(int(req.Payload.Limit)))
+	result, err := c.holders.ListSemaphoreIdsByLeaseId(txn, req.Payload.LeaseId, req.Payload.PaginationToken, pagination.GetLimitWithDefaults(int(req.Payload.Limit)))
 	if err != nil {
 		return nil, err
 	}
 
-	semaphores := make([]*corepb.Semaphore, 0, len(result.semaphores))
-	for _, semaphore := range result.semaphores {
+	semaphores := make([]*corepb.Semaphore, 0, len(result.semaphoreIds))
+	for _, semaphoreId := range result.semaphoreIds {
+		semaphore, err := c.semaphores.Get(txn, &corepb.SemaphoreId{
+			AccountId:   req.Payload.LeaseId.AccountId,
+			NamespaceId: req.Payload.LeaseId.NamespaceId,
+			SemaphoreId: semaphoreId,
+		})
+		if err != nil {
+			return nil, err
+		}
 		updatedSemaphore, _, err := c.computeExpiredSemaphoreHolders(txn, semaphore, req.Now)
 		if err != nil {
 			return nil, err
@@ -1420,12 +1428,8 @@ func (c *Core) gcDeleteSemaphoreHolders(txn *store.Txn, semaphoreId *corepb.Sema
 	}
 
 	for _, holder := range result.holders {
-		// Remove from lease ID index so ListSemaphoresByLeaseId does not return a stale pointer.
-		err = c.semaphores.RemoveLeaseFromIndex(txn, semaphoreId, holder.Id.LeaseId)
-		if err != nil {
-			return false, err
-		}
-		// Delete the holder record (also removes its expiration-index entry).
+		// Delete the holder record (also removes its expiration and lease id
+		// index entries).
 		err = c.holders.Delete(txn, holder)
 		if err != nil {
 			return false, err
@@ -1445,29 +1449,35 @@ func (c *Core) gcDeleteSemaphoreHolders(txn *store.Txn, semaphoreId *corepb.Sema
 func (c *Core) refreshLeaseHolders(txn *store.Txn, lease *corepb.Lease) error {
 	var paginationToken *corepb.PaginationToken
 	for {
-		semaphoresResult, err := c.semaphores.ListByLeaseId(txn, lease.Id, paginationToken, 1000)
+		idsResult, err := c.holders.ListSemaphoreIdsByLeaseId(txn, lease.Id, paginationToken, 1000)
 		if err != nil {
 			return err
 		}
 
-		for _, semaphore := range semaphoresResult.semaphores {
+		for _, semaphoreId := range idsResult.semaphoreIds {
 			holderId := &corepb.SemaphoreHolderId{
 				AccountId:   lease.Id.AccountId,
 				NamespaceId: lease.Id.NamespaceId,
-				SemaphoreId: semaphore.Id.SemaphoreId,
+				SemaphoreId: semaphoreId,
 				LeaseId:     lease.Id.LeaseId,
 			}
 
 			holder, err := c.holders.Get(txn, holderId)
 			if err != nil {
 				if errors.Is(err, store.ErrNotFound) {
-					// Stale lease index entry — clean it up and continue.
-					err = c.semaphores.RemoveLeaseFromIndex(txn, semaphore.Id, lease.Id.LeaseId)
-					if err != nil {
-						return err
-					}
+					// Impossible by construction: holdersTable maintains the lease
+					// id index atomically with the holder rows. Skip defensively.
 					continue
 				}
+				return err
+			}
+
+			semaphore, err := c.semaphores.Get(txn, &corepb.SemaphoreId{
+				AccountId:   lease.Id.AccountId,
+				NamespaceId: lease.Id.NamespaceId,
+				SemaphoreId: semaphoreId,
+			})
+			if err != nil {
 				return err
 			}
 
@@ -1516,10 +1526,10 @@ func (c *Core) refreshLeaseHolders(txn *store.Txn, lease *corepb.Lease) error {
 			}
 		}
 
-		if semaphoresResult.nextPaginationToken == nil {
+		if idsResult.nextPaginationToken == nil {
 			break
 		}
-		paginationToken = semaphoresResult.nextPaginationToken
+		paginationToken = idsResult.nextPaginationToken
 	}
 	return nil
 }
@@ -1543,38 +1553,39 @@ func (c *Core) revokeLeaseInTransaction(txn *store.Txn, lease *corepb.Lease, now
 func (c *Core) revokeLeaseInTransactionBounded(txn *store.Txn, lease *corepb.Lease, now int64, visited *int64, maxVisited int64) (bool, error) {
 	var paginationToken *corepb.PaginationToken
 	for {
-		semaphoresResult, err := c.semaphores.ListByLeaseId(txn, lease.Id, paginationToken, 1000)
+		idsResult, err := c.holders.ListSemaphoreIdsByLeaseId(txn, lease.Id, paginationToken, 1000)
 		if err != nil {
 			return false, err
 		}
 
-		for _, semaphore := range semaphoresResult.semaphores {
+		for _, semaphoreId := range idsResult.semaphoreIds {
 			holderId := &corepb.SemaphoreHolderId{
 				AccountId:   lease.Id.AccountId,
 				NamespaceId: lease.Id.NamespaceId,
-				SemaphoreId: semaphore.Id.SemaphoreId,
+				SemaphoreId: semaphoreId,
 				LeaseId:     lease.Id.LeaseId,
 			}
 
 			holder, err := c.holders.Get(txn, holderId)
 			if err != nil {
 				if errors.Is(err, store.ErrNotFound) {
-					// Stale lease index entry — clean it up and continue.
-					err = c.semaphores.RemoveLeaseFromIndex(txn, semaphore.Id, lease.Id.LeaseId)
-					if err != nil {
-						return false, err
-					}
+					// Impossible by construction: holdersTable maintains the lease
+					// id index atomically with the holder rows. Skip defensively.
 					continue
 				}
 				return false, err
 			}
 
-			err = c.holders.Delete(txn, holder)
+			semaphore, err := c.semaphores.Get(txn, &corepb.SemaphoreId{
+				AccountId:   lease.Id.AccountId,
+				NamespaceId: lease.Id.NamespaceId,
+				SemaphoreId: semaphoreId,
+			})
 			if err != nil {
 				return false, err
 			}
 
-			err = c.semaphores.RemoveLeaseFromIndex(txn, semaphore.Id, lease.Id.LeaseId)
+			err = c.holders.Delete(txn, holder)
 			if err != nil {
 				return false, err
 			}
@@ -1631,10 +1642,10 @@ func (c *Core) revokeLeaseInTransactionBounded(txn *store.Txn, lease *corepb.Lea
 			}
 		}
 
-		if semaphoresResult.nextPaginationToken == nil {
+		if idsResult.nextPaginationToken == nil {
 			break
 		}
-		paginationToken = semaphoresResult.nextPaginationToken
+		paginationToken = idsResult.nextPaginationToken
 	}
 
 	// Drained: delete the lease itself and decrement the namespace counter. The lease row
@@ -1704,12 +1715,6 @@ func (c *Core) deleteExpiredSemaphoreHolders(txn *store.Txn, semaphore *corepb.S
 
 	for _, holder := range expired {
 		err = c.holders.Delete(txn, holder)
-		if err != nil {
-			return nil, 0, err
-		}
-
-		// Remove from lease ID index
-		err = c.semaphores.RemoveLeaseFromIndex(txn, semaphore.Id, holder.Id.LeaseId)
 		if err != nil {
 			return nil, 0, err
 		}

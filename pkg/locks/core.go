@@ -12,7 +12,7 @@ import (
 	"github.com/evrblk/monstera"
 	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
-	"github.com/evrblk/yellowstone-common/honey"
+	"github.com/evrblk/monstera/utils"
 
 	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/corepb"
@@ -24,6 +24,10 @@ import (
 type Core struct {
 	badgerStore *store.BadgerStore
 
+	shardPrefix     []byte
+	shardLowerBound []byte
+	shardUpperBound []byte
+
 	locks     *locksTable
 	ancestors *lockAncestorsTable
 	counters  *tables.CountersTable[*corepb.LocksCounter, corepb.LocksCounter]
@@ -34,64 +38,74 @@ type Core struct {
 var _ coreapis.GrackleLocksCoreApi = &Core{}
 
 // NewCore constructs a Core bound to a single shard of the locks keyspace.
-// The given lower/upper bounds delimit the shard's local key range (used for
-// Snapshot/Restore), while shardGlobalIndexPrefix scopes cross-shard global
-// indexes such as lease secondary indexes and GC records.
-func NewCore(badgerStore *store.BadgerStore, shardGlobalIndexPrefix []byte, shardLowerBound []byte, shardUpperBound []byte) *Core {
+// shardPrefix is a shard-unique prefix (derived from the shard id, e.g.
+// utils.GetTruncatedHash(shardId, 4)) nested under every table id, making all
+// rows exclusively owned by this core. Record keys carry no shard key
+// material (exclusive layout — the prefix is the isolation; routing
+// violations are rejected upstream by the generated core adapter's shard
+// bounds check); the lower/upper bounds delimit the shard's key range and
+// drive the bounds-filtered portable Restore.
+func NewCore(badgerStore *store.BadgerStore, shardPrefix []byte, shardLowerBound []byte, shardUpperBound []byte) *Core {
+	scoped := func(name string) []byte {
+		return utils.ConcatBytes(tables.Grackle[name].Bytes(), shardPrefix)
+	}
+
 	return &Core{
 		badgerStore: badgerStore,
 
-		locks:     newLocksTable(shardLowerBound, shardUpperBound),
-		ancestors: newLockAncestorsTable(shardLowerBound, shardUpperBound),
+		shardPrefix:     shardPrefix,
+		shardLowerBound: shardLowerBound,
+		shardUpperBound: shardUpperBound,
+
+		locks:     newLocksTable(shardPrefix),
+		ancestors: newLockAncestorsTable(shardPrefix),
 		counters: tables.NewCountersTable[*corepb.LocksCounter, corepb.LocksCounter](
-			tables.Grackle["Grackle.LocksCore.Counters.Table"].Bytes(),
-			shardLowerBound,
-			shardUpperBound,
+			scoped("Grackle.LocksCore.Counters.Table"),
 		),
 		gcRecords: tables.NewGCRecordsTable[*corepb.LocksGarbageCollectionRecord, corepb.LocksGarbageCollectionRecord](
 			tables.Grackle["Grackle.LocksCore.GarbageCollectionRecords.Table"].Bytes(),
-			shardGlobalIndexPrefix,
+			shardPrefix,
 		),
 		leases: tables.NewLeasesTable(
-			shardLowerBound,
-			shardUpperBound,
-			shardGlobalIndexPrefix,
-			tables.Grackle["Grackle.LocksCore.Leases.Table"].Bytes(),
-			tables.Grackle["Grackle.LocksCore.Leases.ProcessIdIndex"].Bytes(),
+			shardPrefix,
+			scoped("Grackle.LocksCore.Leases.Table"),
+			scoped("Grackle.LocksCore.Leases.ProcessIdIndex"),
 			tables.Grackle["Grackle.LocksCore.Leases.ExpirationIndex"].Bytes(),
 		),
 	}
-}
-
-func (c *Core) ranges() []honey.KeyRange {
-	ranges := []honey.KeyRange{
-		c.counters.GetTableKeyRange(),
-		c.ancestors.GetTableKeyRange(),
-		c.gcRecords.GetTableKeyRange(),
-	}
-
-	ranges = append(ranges, c.locks.GetTableKeyRanges()...)
-	ranges = append(ranges, c.leases.GetTableKeyRanges()...)
-
-	return ranges
-}
-
-// Snapshot returns a consistent snapshot of every key range owned by this
-// shard's locks Core, suitable for Raft snapshot transfer.
-func (c *Core) Snapshot() monstera.ApplicationCoreSnapshot {
-	return honey.Snapshot(c.badgerStore, c.ranges())
-}
-
-// Restore replaces the contents of this shard's key ranges with the data read
-// from reader. Any existing keys in those ranges are removed first.
-func (c *Core) Restore(reader io.ReadCloser) error {
-	return honey.Restore(c.badgerStore, c.ranges(), reader)
 }
 
 // Close releases any Core-owned resources. The underlying Badger store is
 // shared across cores and is not closed here.
 func (c *Core) Close() {
 
+}
+
+func (c *Core) snapshotSections() []tables.Section {
+	return []tables.Section{
+		{Name: "Grackle.LocksCore.Locks", Table: c.locks},
+		{Name: "Grackle.LocksCore.Ancestors", Table: c.ancestors},
+		{Name: "Grackle.LocksCore.Counters", Table: c.counters},
+		{Name: "Grackle.LocksCore.Leases", Table: c.leases},
+		{Name: "Grackle.LocksCore.GarbageCollectionRecords", Table: c.gcRecords},
+	}
+}
+
+// Snapshot returns a consistent, portable snapshot of this core's primary
+// entities (a pinned view; Write streams from it concurrently with subsequent
+// updates).
+func (c *Core) Snapshot() monstera.ApplicationCoreSnapshot {
+	return tables.NewSnapshot(c.badgerStore, "GrackleLocks", c.snapshotSections())
+}
+
+// Restore replaces this core's state with the union of the entities from the
+// given streams that belong to this core's shard bounds (one stream for a
+// Raft restore or split seed, two for a merge seed), inserting them through
+// the tables' own methods (which rebuild all secondary indexes under this
+// core's prefix).
+func (c *Core) Restore(readers ...io.ReadCloser) error {
+	return tables.RestoreSnapshot(c.badgerStore, c.snapshotSections(),
+		tables.ShardRange{Lower: c.shardLowerBound, Upper: c.shardUpperBound}, readers...)
 }
 
 // GetLock returns the current state of the named lock. If no record exists,

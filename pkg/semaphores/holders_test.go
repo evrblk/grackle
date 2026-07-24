@@ -16,7 +16,7 @@ func TestHoldersTable_Get(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+	table := newHoldersTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -62,7 +62,7 @@ func TestHoldersTable_GetNonExistent(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+	table := newHoldersTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -88,7 +88,7 @@ func TestHoldersTable_Create(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+	table := newHoldersTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -138,7 +138,7 @@ func TestHoldersTable_Update(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+	table := newHoldersTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -210,7 +210,7 @@ func TestHoldersTable_UpdateSameExpiration(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+	table := newHoldersTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -273,7 +273,7 @@ func TestHoldersTable_UpdateNonExistent(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+	table := newHoldersTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -305,7 +305,7 @@ func TestHoldersTable_Delete(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+	table := newHoldersTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -359,7 +359,7 @@ func TestHoldersTable_List(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+	table := newHoldersTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -409,7 +409,7 @@ func TestHoldersTable_ListWithPagination(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+	table := newHoldersTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -489,7 +489,7 @@ func TestHoldersTable_ListEmpty(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+	table := newHoldersTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -508,7 +508,7 @@ func TestHoldersTable_ListByExpiration(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+	table := newHoldersTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -597,7 +597,7 @@ func TestHoldersTable_ListByExpirationStopEarly(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+	table := newHoldersTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -648,7 +648,7 @@ func TestHoldersTable_ListByExpirationEmpty(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+	table := newHoldersTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -698,7 +698,7 @@ func TestHoldersTable_MultipleSemaphores(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := newHoldersTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+	table := newHoldersTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()

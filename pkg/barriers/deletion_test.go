@@ -15,7 +15,7 @@ func TestDeletionRecordsTable_Add(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newDeletionRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		deleteAt := int64(1000)
 		barrierId := &corepb.BarrierId{
@@ -49,7 +49,7 @@ func TestDeletionRecordsTable_Add(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newDeletionRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -88,7 +88,7 @@ func TestDeletionRecordsTable_Add(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newDeletionRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -130,7 +130,7 @@ func TestDeletionRecordsTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newDeletionRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		barrierId := &corepb.BarrierId{
 			AccountId:   rand.Uint64(),
@@ -168,7 +168,7 @@ func TestDeletionRecordsTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newDeletionRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		barrierId := &corepb.BarrierId{
 			AccountId:   rand.Uint64(),
@@ -199,7 +199,7 @@ func TestDeletionRecordsTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newDeletionRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -245,7 +245,7 @@ func TestDeletionRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newDeletionRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		txn := badgerStore.View()
 		var records []*corepb.BarriersDeletionRecord
@@ -263,7 +263,7 @@ func TestDeletionRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newDeletionRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -297,7 +297,7 @@ func TestDeletionRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newDeletionRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -333,7 +333,7 @@ func TestDeletionRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newDeletionRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -370,7 +370,7 @@ func TestDeletionRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newDeletionRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -406,7 +406,7 @@ func TestDeletionRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newDeletionRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -443,7 +443,7 @@ func TestDeletionRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newDeletionRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		namespaceId := rand.Uint64()
 		barrierId := rand.Uint64()
@@ -482,7 +482,7 @@ func TestDeletionRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newDeletionRecordsTable([]byte{0x01})
+		table := newDeletionRecordsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		barrierId := &corepb.BarrierId{
 			AccountId:   rand.Uint64(),
@@ -507,14 +507,5 @@ func TestDeletionRecordsTable_List(t *testing.T) {
 
 		require.NoError(t, err)
 		require.Empty(t, records)
-	})
-}
-
-func TestDeletionRecordsTable_GetTableKeyRange(t *testing.T) {
-	t.Run("get table key range", func(t *testing.T) {
-		table := newDeletionRecordsTable([]byte{0x01})
-
-		keyRange := table.GetTableKeyRange()
-		require.NotNil(t, keyRange)
 	})
 }

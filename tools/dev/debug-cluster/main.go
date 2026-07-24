@@ -61,7 +61,7 @@ func newNodeRunner(nodeID string, baseDataDir string, clusterConfig *cluster.Con
 	}
 
 	// Create shared Badger store for application cores
-	dataStore, err := store.NewBadgerStore(store.DefaultOptions(filepath.Join(dataDir, "data")))
+	dataStore, err := store.NewBadgerStore(store.DefaultOptions(filepath.Join(dataDir, "cores")))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create data store for %s: %w", nodeID, err)
 	}
@@ -74,7 +74,7 @@ func newNodeRunner(nodeID string, baseDataDir string, clusterConfig *cluster.Con
 	}, nil
 }
 
-func (nr *nodeRunner) start(transport transport.Transport, useGrpc bool) error {
+func (nr *nodeRunner) start(transport transport.DataPlane, useGrpc bool) error {
 	log.Printf("Starting node %s...", nr.nodeID)
 
 	node, err := nr.clusterConfig.GetNode(nr.nodeID)
@@ -87,75 +87,65 @@ func (nr *nodeRunner) start(transport transport.Transport, useGrpc bool) error {
 
 	applicationDescriptors := monstera.ApplicationCoreDescriptors{
 		"GrackleLocks": {
-			RestoreSnapshotOnStart: false,
+			CoreType: monstera.CoreTypePersistedExclusive,
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 				return coreapis.NewGrackleLocksCoreAdapter(
-					shard.Id, replica.Id,
+					replica.NodeId, shard.Id, replica.Id, shard.LowerBound, shard.UpperBound,
 					locks.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
 			},
 		},
 		"GrackleNamespaces": {
-			RestoreSnapshotOnStart: false,
+			CoreType: monstera.CoreTypePersistedExclusive,
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 				return coreapis.NewGrackleNamespacesCoreAdapter(
-					shard.Id, replica.Id,
-					namespaces.NewCore(nr.dataStore, shard.LowerBound, shard.UpperBound))
+					replica.NodeId, shard.Id, replica.Id, shard.LowerBound, shard.UpperBound,
+					namespaces.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
 			},
 		},
 		"GrackleWaitGroups": {
-			RestoreSnapshotOnStart: false,
+			CoreType: monstera.CoreTypePersistedExclusive,
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 				return coreapis.NewGrackleWaitGroupsCoreAdapter(
-					shard.Id, replica.Id,
+					replica.NodeId, shard.Id, replica.Id, shard.LowerBound, shard.UpperBound,
 					waitgroups.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
 			},
 		},
 		"GrackleBarriers": {
-			RestoreSnapshotOnStart: false,
+			CoreType: monstera.CoreTypePersistedExclusive,
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 				return coreapis.NewGrackleBarriersCoreAdapter(
-					shard.Id, replica.Id,
+					replica.NodeId, shard.Id, replica.Id, shard.LowerBound, shard.UpperBound,
 					barriers.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
 			},
 		},
 		"GrackleSemaphores": {
-			RestoreSnapshotOnStart: false,
+			CoreType: monstera.CoreTypePersistedExclusive,
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 				return coreapis.NewGrackleSemaphoresCoreAdapter(
-					shard.Id, replica.Id,
+					replica.NodeId, shard.Id, replica.Id, shard.LowerBound, shard.UpperBound,
 					semaphores.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
 			},
 		},
 	}
 
-	monsteraNode, err := monstera.NewNode(nr.dataDir, nr.nodeID, nr.clusterConfig, applicationDescriptors, monsteraNodeConfig, transport)
+	monsteraNode, err := monstera.NewNode(nr.dataDir, applicationDescriptors, monsteraNodeConfig, transport)
 	if err != nil {
 		return fmt.Errorf("failed to create Monstera node %s: %w", nr.nodeID, err)
 	}
 
 	nr.monsteraNode = monsteraNode
 
-	// Starting Monstera node
+	// Starting Monstera node. A fresh data dir comes up UNPROVISIONED; bootstrap it
+	// in-process with the cluster config (mirrors an admin Bootstrap over the wire).
 	monsteraNode.Start()
-
-	// Register node metrics
-	err = prometheus.Register(prometheus.NewGaugeFunc(
-		prometheus.GaugeOpts{
-			Name:        "monstera_node_ready",
-			Help:        "Monstera node is ready",
-			ConstLabels: prometheus.Labels{"node": nr.nodeID},
-		},
-		func() float64 {
-			if monsteraNode.NodeState() == monstera.READY {
-				return 1
-			} else {
-				return 0
-			}
-		},
-	))
-	if err != nil {
-		log.Printf("Warning: failed to register node metrics for %s: %v", nr.nodeID, err)
+	if monsteraNode.NodeState() == monstera.UNPROVISIONED {
+		if err := monsteraNode.Bootstrap(context.Background(), nr.nodeID, nr.clusterConfig); err != nil {
+			return fmt.Errorf("failed to bootstrap Monstera node %s: %w", nr.nodeID, err)
+		}
 	}
+
+	// The monstera_node_ready gauge is emitted by the node itself (registered via
+	// monstera.RegisterMetrics in main).
 
 	// Only start gRPC server when using gRPC transport
 	if useGrpc {
@@ -221,7 +211,7 @@ func main() {
 
 	// Validate and configure transport
 	useGrpc := true
-	var nodeTransport transport.Transport
+	var nodeTransport transport.DataPlane
 
 	switch *transportType {
 	case "grpc":
@@ -260,9 +250,9 @@ func main() {
 	// Start all nodes
 	for _, runner := range runners {
 		// Create per-node transport for gRPC, or use shared local transport
-		var trans transport.Transport
+		var trans transport.DataPlane
 		if useGrpc {
-			trans = grpc.NewGrpcTransport(clusterConfig)
+			trans = grpc.NewDataPlaneClient()
 		} else {
 			trans = nodeTransport
 		}
@@ -298,16 +288,19 @@ func main() {
 		}
 
 		// Create transport for the client (reuse the same type as nodes)
-		var clientTransport transport.Transport
+		var clientTransport transport.DataPlane
 		if useGrpc {
-			clientTransport = grpc.NewGrpcTransport(clusterConfig)
+			clientTransport = grpc.NewDataPlaneClient()
 		} else {
 			clientTransport = nodeTransport
 		}
 
-		// Create Monstera client
-		monsteraClient = monstera.NewMonsteraClient(clusterConfig, clientTransport, monstera.DefaultClientConfig())
-		monsteraClient.Start()
+		// Create Monstera client. The debug cluster runs in-process and already has
+		// the config, so feed it a static provider (no polling needed).
+		monsteraClient = monstera.NewMonsteraClient(monstera.NewStaticClusterConfigProvider(clusterConfig), clientTransport, monstera.DefaultClientConfig())
+		if err := monsteraClient.Start(context.Background()); err != nil {
+			log.Fatalf("Failed to start monstera client: %v", err)
+		}
 
 		// Create gRPC server
 		grpcServer = grpc_server.NewServer()

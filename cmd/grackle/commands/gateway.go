@@ -10,7 +10,6 @@ import (
 	"syscall"
 
 	"github.com/evrblk/monstera"
-	"github.com/evrblk/monstera/cluster"
 	monstrea_grpc "github.com/evrblk/monstera/transport/grpc"
 	"github.com/evrblk/yellowstone-common/metrics"
 	"github.com/spf13/cobra"
@@ -22,10 +21,10 @@ import (
 )
 
 var gatewayCmdCfg struct {
-	port               int
-	prometheusPort     int
-	monsteraConfigPath string
-	authKeysPath       string
+	port           int
+	prometheusPort int
+	nodes          monsteraNodesFlags
+	authKeysPath   string
 }
 
 var gatewayCmd = &cobra.Command{
@@ -44,18 +43,23 @@ var gatewayCmd = &cobra.Command{
 		metricsSrv := metrics.NewMetricsServer(gatewayCmdCfg.prometheusPort)
 		metricsSrv.Start()
 
-		// Load monstera cluster config
-		clusterConfig, err := cluster.LoadConfigFromFile(gatewayCmdCfg.monsteraConfigPath)
+		// Node discovery + polling config provider: the gateway learns the cluster
+		// config from the cluster itself and refreshes as the topology changes.
+		discovery, err := buildNodeDiscovery(gatewayCmdCfg.nodes)
 		if err != nil {
 			log.Fatal(err)
 		}
+		adminClient := monstrea_grpc.NewAdminClient()
+		provider := monstera.NewPollingClusterConfigProvider(discovery, adminClient, monstera.PollingOptions{})
 
-		// Create transport
-		transport := monstrea_grpc.NewGrpcTransport(clusterConfig)
+		// Data plane + Monstera client
+		transport := monstrea_grpc.NewDataPlaneClient()
+		monsteraClient := monstera.NewMonsteraClient(provider, transport, monstera.DefaultClientConfig())
 
-		// Create Monstera client
-		monsteraClient := monstera.NewMonsteraClient(clusterConfig, transport, monstera.DefaultClientConfig())
-		monsteraClient.Start()
+		ctx, cancel := context.WithCancel(context.Background())
+		if err := monsteraClient.Start(ctx); err != nil {
+			log.Fatalf("failed to start monstera client: %v", err)
+		}
 
 		// Middleware
 		unaryInterceptors := make([]grpc.UnaryServerInterceptor, 0)
@@ -67,7 +71,6 @@ var gatewayCmd = &cobra.Command{
 			grpc.ChainUnaryInterceptor(unaryInterceptors...),
 		)
 
-		ctx, cancel := context.WithCancel(context.Background())
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 		go func() {
@@ -77,6 +80,7 @@ var gatewayCmd = &cobra.Command{
 				cancel()
 				grpcServer.GracefulStop()
 				monsteraClient.Stop()
+				adminClient.Close()
 				metricsSrv.Stop()
 			case <-ctx.Done():
 			}
@@ -108,11 +112,7 @@ func init() {
 
 	gatewayCmd.PersistentFlags().IntVarP(&gatewayCmdCfg.prometheusPort, "prometheus-port", "", 2112, "Prometheus metrics port")
 
-	gatewayCmd.PersistentFlags().StringVarP(&gatewayCmdCfg.monsteraConfigPath, "monstera-config", "", "", "Monstera cluster config path")
-	err = gatewayCmd.MarkPersistentFlagRequired("monstera-config")
-	if err != nil {
-		panic(err)
-	}
+	addMonsteraNodesFlags(gatewayCmd, &gatewayCmdCfg.nodes)
 
 	gatewayCmd.PersistentFlags().StringVarP(&gatewayCmdCfg.authKeysPath, "auth-keys-path", "", "", "Path to the directory with auth keys. No authn if empty.")
 }

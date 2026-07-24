@@ -18,7 +18,7 @@ func TestSemaphoresTable_Get(t *testing.T) {
 		store, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newSemaphoresTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -67,7 +67,7 @@ func TestSemaphoresTable_Get(t *testing.T) {
 		store, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newSemaphoresTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -92,7 +92,7 @@ func TestSemaphoresTable_GetByName(t *testing.T) {
 		store, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newSemaphoresTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -137,7 +137,7 @@ func TestSemaphoresTable_GetByName(t *testing.T) {
 		store, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newSemaphoresTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -156,7 +156,7 @@ func TestSemaphoresTable_Create(t *testing.T) {
 		store, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newSemaphoresTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -204,7 +204,7 @@ func TestSemaphoresTable_Create(t *testing.T) {
 		store, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newSemaphoresTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -263,7 +263,7 @@ func TestSemaphoresTable_Update(t *testing.T) {
 		store, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newSemaphoresTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -332,7 +332,7 @@ func TestSemaphoresTable_Delete(t *testing.T) {
 		store, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newSemaphoresTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -380,7 +380,7 @@ func TestSemaphoresTable_Delete(t *testing.T) {
 		store, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newSemaphoresTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -435,7 +435,7 @@ func TestSemaphoresTable_Delete(t *testing.T) {
 		store, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newSemaphoresTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -501,7 +501,7 @@ func TestSemaphoresTable_Delete(t *testing.T) {
 		store, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newSemaphoresTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -526,7 +526,7 @@ func TestSemaphoresTable_List(t *testing.T) {
 		store, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newSemaphoresTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -580,7 +580,7 @@ func TestSemaphoresTable_List(t *testing.T) {
 		store, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newSemaphoresTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -663,7 +663,7 @@ func TestSemaphoresTable_List(t *testing.T) {
 		store, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newSemaphoresTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -680,7 +680,7 @@ func TestSemaphoresTable_List(t *testing.T) {
 		store, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newSemaphoresTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId1 := rand.Uint64()
@@ -748,7 +748,7 @@ func TestSemaphoresTable_SameNameDifferentNamespaces(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+	table := newSemaphoresTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 	accountId := rand.Uint64()
 	namespaceId1 := rand.Uint64()
@@ -812,24 +812,11 @@ func TestSemaphoresTable_SameNameDifferentNamespaces(t *testing.T) {
 	require.Equal(t, "namespace 2 semaphore", retrieved2.Description)
 }
 
-func TestSemaphoresTable_GetTableKeyRanges(t *testing.T) {
-	shardLower := []byte{0x00, 0x00, 0x00, 0x00}
-	shardUpper := []byte{0xff, 0xff, 0xff, 0xff}
-	table := newSemaphoresTable(shardLower, shardUpper)
-
-	keyRanges := table.GetTableKeyRanges()
-
-	require.Len(t, keyRanges, 3)
-	require.NotNil(t, keyRanges[0])
-	require.NotNil(t, keyRanges[1])
-	require.NotNil(t, keyRanges[2])
-}
-
 func TestSemaphoresTable_NameIndexConsistency(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := newSemaphoresTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+	table := newSemaphoresTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()

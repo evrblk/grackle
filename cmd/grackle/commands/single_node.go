@@ -58,7 +58,7 @@ var singleNodeCmd = &cobra.Command{
 		tables.RegisterGracklePrefixes(registry)
 
 		// Create shared Badger store for application cores
-		dataStore, err := store.NewBadgerStore(store.DefaultOptions(filepath.Join(singleNodeCmdCfg.dataDir, "data")))
+		dataStore, err := store.NewBadgerStore(store.DefaultOptions(filepath.Join(singleNodeCmdCfg.dataDir, "cores")))
 		if err != nil {
 			log.Fatalf("failed to create data store: %v", err)
 		}
@@ -75,7 +75,7 @@ var singleNodeCmd = &cobra.Command{
 				return locks.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
 			},
 			GrackleNamespacesCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) coreapis.GrackleNamespacesCoreApi {
-				return namespaces.NewCore(dataStore, lowerBound, upperBound)
+				return namespaces.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
 			},
 			GrackleSemaphoresCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) coreapis.GrackleSemaphoresCoreApi {
 				return semaphores.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)

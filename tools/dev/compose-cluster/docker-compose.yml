@@ -1,10 +1,25 @@
 services:
+  # Each node self-provisions from its data dir: on first boot we stage
+  # config/cluster.json (the cluster config) and config/node.json (its identity)
+  # so the node starts already provisioned (READY), with no Bootstrap RPC. On
+  # restart the staged files are left untouched — the node owns config/cluster.json
+  # and rewrites it on config changes, so we must not clobber it with the seed.
+  # --listen binds the gRPC port; peers reach the node via its advertised
+  # GrpcAddress (node-N:800N) from the cluster config.
   node-1:
     build:
       context: .
       dockerfile: dev.dockerfile
     image: grackle
-    command: ["sh", "-c", "exec ./grackle run node --node-id=node-1 --data-dir=./data --monstera-config=./cluster_config.json"]
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        mkdir -p ./data/config
+        [ -f ./data/config/cluster.json ] || cp cluster_config.json ./data/config/cluster.json
+        [ -f ./data/config/node.json ] || printf '{"node_id":"node-1","version":1}' > ./data/config/node.json
+        exec ./grackle run node --data-dir=./data --listen=:8001
     ports:
       - 8001:8001
     volumes:
@@ -15,7 +30,15 @@ services:
       context: .
       dockerfile: dev.dockerfile
     image: grackle
-    command: ["sh", "-c", "exec ./grackle run node --node-id=node-2 --data-dir=./data --monstera-config=./cluster_config.json"]
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        mkdir -p ./data/config
+        [ -f ./data/config/cluster.json ] || cp cluster_config.json ./data/config/cluster.json
+        [ -f ./data/config/node.json ] || printf '{"node_id":"node-2","version":1}' > ./data/config/node.json
+        exec ./grackle run node --data-dir=./data --listen=:8002
     ports:
       - 8002:8002
     volumes:
@@ -26,18 +49,43 @@ services:
       context: .
       dockerfile: dev.dockerfile
     image: grackle
-    command: ["sh", "-c", "exec ./grackle run node --node-id=node-3 --data-dir=./data --monstera-config=./cluster_config.json"]
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        mkdir -p ./data/config
+        [ -f ./data/config/cluster.json ] || cp cluster_config.json ./data/config/cluster.json
+        [ -f ./data/config/node.json ] || printf '{"node_id":"node-3","version":1}' > ./data/config/node.json
+        exec ./grackle run node --data-dir=./data --listen=:8003
     ports:
       - 8003:8003
     volumes:
       - .data/node-3:/grackle/data:delegated
+
+  # node-4 starts UNPROVISIONED: it stages no config, so it comes up with an empty
+  # data dir and serves only Bootstrap until provisioned. It is not in
+  # cluster_config.json. Provision it into the cluster with (run inside the compose
+  # network, e.g. `docker compose run --rm gateway <cmd>`, so node-N DNS resolves):
+  #   monstera cluster add-node --config cluster_config.json \
+  #     --node-id node-4 --node-address node-4:8004
+  node-4:
+    build:
+      context: .
+      dockerfile: dev.dockerfile
+    image: grackle
+    command: ["sh", "-c", "exec ./grackle run node --data-dir=./data --listen=:8004"]
+    ports:
+      - 8004:8004
+    volumes:
+      - .data/node-4:/grackle/data:delegated
 
   gateway:
     build:
       context: .
       dockerfile: dev.dockerfile
     image: grackle
-    command: ["sh", "-c", "exec ./grackle run gateway --port=9000 --monstera-config=./cluster_config.json"]
+    command: ["sh", "-c", "exec ./grackle run gateway --port=9000 --monstera-nodes=node-1:8001,node-2:8002,node-3:8003"]
     ports:
       - 9000:9000
 
@@ -46,7 +94,7 @@ services:
       context: .
       dockerfile: dev.dockerfile
     image: grackle
-    command: ["sh", "-c", "exec ./grackle run worker --monstera-config=./cluster_config.json"]
+    command: ["sh", "-c", "exec ./grackle run worker --monstera-nodes=node-1:8001,node-2:8002,node-3:8003"]
 
   prometheus:
     image: prom/prometheus:latest

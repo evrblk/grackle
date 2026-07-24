@@ -14,10 +14,9 @@ import (
 // jobsTable stores completed jobs for wait groups indexed by job ID.
 //
 // Table Primary Key:
-// 1. shard key (by account id and namespace id)
-// 2. account id
-// 3. namespace id
-// 4. wait group id
+// 1. account id
+// 2. namespace id
+// 3. wait group id
 //
 // Table Sort Key:
 // 1. job id
@@ -25,18 +24,39 @@ type jobsTable struct {
 	table *honey.BinaryTable[*corepb.WaitGroupJob, corepb.WaitGroupJob]
 }
 
-func newJobsTable(shardLowerBound []byte, shardUpperBound []byte) *jobsTable {
+// newJobsTable scopes the table under the shard-unique prefix; see
+// newWaitGroupsTable.
+func newJobsTable(shardPrefix []byte) *jobsTable {
 	return &jobsTable{
 		table: honey.NewBinaryTable[*corepb.WaitGroupJob, corepb.WaitGroupJob](
-			tables.Grackle["Grackle.WaitGroupsCore.Jobs.Table"].Bytes(),
-			shardLowerBound,
-			shardUpperBound,
+			utils.ConcatBytes(tables.Grackle["Grackle.WaitGroupsCore.Jobs.Table"].Bytes(), shardPrefix),
+			nil,
+			nil,
 		),
 	}
 }
 
-func (t *jobsTable) GetTableKeyRange() honey.KeyRange {
-	return t.table.GetTableKeyRange()
+// Clear deletes every job row.
+func (t *jobsTable) Clear(badgerStore *store.BadgerStore) error {
+	return badgerStore.DropPrefix(t.table.TableId())
+}
+
+// EachEntity streams every job as (canonical key, stored value).
+func (t *jobsTable) EachEntity(txn *store.Txn, fn func(key []byte, value []byte) (bool, error)) error {
+	return t.table.EachEntry(txn, fn)
+}
+
+// RestoreEntity decodes one streamed job and, if owned, inserts it through
+// Create — re-deriving its key from the job's own identity fields.
+func (t *jobsTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds tables.ShardRange) (bool, error) {
+	job := &corepb.WaitGroupJob{}
+	if err := job.UnmarshalBinary(value); err != nil {
+		return false, err
+	}
+	if !bounds.Owns(sharding.ByAccountAndNamespace(job.Id.AccountId, job.Id.NamespaceId)) {
+		return false, nil
+	}
+	return true, t.Create(txn, job)
 }
 
 type listWaitGroupJobsResult struct {
@@ -82,7 +102,6 @@ func (t *jobsTable) Delete(txn *store.Txn, waitGroupJobId *corepb.WaitGroupJobId
 
 func tablePK(accountId uint64, namespaceId uint64, waitGroupId uint64) []byte {
 	return utils.ConcatBytes(
-		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,
 		namespaceId,
 		waitGroupId,

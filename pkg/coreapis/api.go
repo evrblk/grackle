@@ -195,7 +195,7 @@ type GrackleClientApi interface {
 }
 type GrackleLocksCoreApi interface {
 	Snapshot() monstera.ApplicationCoreSnapshot
-	Restore(reader io.ReadCloser) error
+	Restore(readers ...io.ReadCloser) error
 	Close()
 	GetLock(req *GetLockRequest) (*GetLockResponse, error)
 	ListLocks(req *ListLocksRequest) (*ListLocksResponse, error)
@@ -215,7 +215,7 @@ type GrackleLocksCoreApi interface {
 
 type GrackleSemaphoresCoreApi interface {
 	Snapshot() monstera.ApplicationCoreSnapshot
-	Restore(reader io.ReadCloser) error
+	Restore(readers ...io.ReadCloser) error
 	Close()
 	GetSemaphore(req *GetSemaphoreRequest) (*GetSemaphoreResponse, error)
 	GetSemaphoreByName(req *GetSemaphoreByNameRequest) (*GetSemaphoreByNameResponse, error)
@@ -239,7 +239,7 @@ type GrackleSemaphoresCoreApi interface {
 
 type GrackleNamespacesCoreApi interface {
 	Snapshot() monstera.ApplicationCoreSnapshot
-	Restore(reader io.ReadCloser) error
+	Restore(readers ...io.ReadCloser) error
 	Close()
 	GetNamespace(req *GetNamespaceRequest) (*GetNamespaceResponse, error)
 	GetNamespaceByName(req *GetNamespaceByNameRequest) (*GetNamespaceByNameResponse, error)
@@ -251,7 +251,7 @@ type GrackleNamespacesCoreApi interface {
 
 type GrackleWaitGroupsCoreApi interface {
 	Snapshot() monstera.ApplicationCoreSnapshot
-	Restore(reader io.ReadCloser) error
+	Restore(readers ...io.ReadCloser) error
 	Close()
 	GetWaitGroup(req *GetWaitGroupRequest) (*GetWaitGroupResponse, error)
 	GetWaitGroupByName(req *GetWaitGroupByNameRequest) (*GetWaitGroupByNameResponse, error)
@@ -267,7 +267,7 @@ type GrackleWaitGroupsCoreApi interface {
 
 type GrackleBarriersCoreApi interface {
 	Snapshot() monstera.ApplicationCoreSnapshot
-	Restore(reader io.ReadCloser) error
+	Restore(readers ...io.ReadCloser) error
 	Close()
 	GetBarrier(req *GetBarrierRequest) (*GetBarrierResponse, error)
 	GetBarrierByName(req *GetBarrierByNameRequest) (*GetBarrierByNameResponse, error)

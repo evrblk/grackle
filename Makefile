@@ -47,6 +47,7 @@ clean:
 	rm -rf ./tools/dev/debug-cluster/.data
 	rm -rf ./tools/dev/compose-cluster/.data
 	rm -rf ./tools/dev/compose-cluster/grackle
+	rm -rf ./tools/dev/compose-cluster/monstera
 	rm -rf ./tools/dev/load-generator/load-generator
 	go clean ./...
 

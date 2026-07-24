@@ -10,11 +10,13 @@ import (
 
 	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
+	"github.com/evrblk/monstera/utils"
 	"github.com/evrblk/yellowstone-common/honey"
 	"github.com/stretchr/testify/require"
 
 	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/corepb"
+	"github.com/evrblk/grackle/pkg/sharding"
 	"github.com/evrblk/grackle/pkg/tables"
 )
 
@@ -3072,4 +3074,264 @@ func listLocksByLeaseId(t *testing.T, core *Core, leaseId *corepb.LeaseId, now t
 	require.Nil(t, resp.ApplicationError)
 	require.NotNil(t, resp.Payload)
 	return resp.Payload
+}
+
+// TestCore_SplitSnapshotRestore proves the portable, bounds-filtered snapshot
+// contract on the locks core: a parent core's snapshot is restored into two
+// child cores with disjoint bounds (sharing ONE Badger store with the parent,
+// which also proves row exclusivity under the shard-prefix re-key), and each
+// child ends up with exactly its half — with every secondary index rebuilt
+// and functional, verified by running real operations (acquire, GC-driven
+// lease expiration) against the children.
+func TestCore_SplitSnapshotRestore(t *testing.T) {
+	now := time.Now()
+	badgerStore, err := store.NewBadgerInMemoryStore()
+	require.NoError(t, err)
+
+	fullLower := []byte{0x00, 0x00, 0x00, 0x00}
+	fullUpper := []byte{0xff, 0xff, 0xff, 0xff}
+	splitAt := []byte{0x80, 0x00, 0x00, 0x00}
+
+	// Parent and both children share the same physical store: the shard
+	// prefixes are what keep their rows disjoint.
+	parent := NewCore(badgerStore, []byte{0xaa, 0x00, 0x00, 0x01}, fullLower, fullUpper)
+	child1 := NewCore(badgerStore, []byte{0xaa, 0x00, 0x00, 0x02}, fullLower, []byte{0x7f, 0xff, 0xff, 0xff})
+	child2 := NewCore(badgerStore, []byte{0xaa, 0x00, 0x00, 0x03}, splitAt, fullUpper)
+
+	// Two namespaces, one hashing into each half of the keyspace.
+	loAccount, loNamespace := namespaceInRange(t, fullLower, []byte{0x7f, 0xff, 0xff, 0xff})
+	hiAccount, hiNamespace := namespaceInRange(t, splitAt, fullUpper)
+
+	type fixture struct {
+		accountId, namespaceId uint64
+		lease                  *corepb.Lease
+		plainLock              *corepb.LockId
+		deepLock               *corepb.LockId
+	}
+	populate := func(accountId, namespaceId uint64) fixture {
+		lease := createLease(t, parent, accountId, namespaceId, "proc-split", now, 60*time.Minute)
+		plain := &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "plain"}
+		deep := &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a/b/deep"}
+		ok, _ := acquireLock(t, parent, plain, lease.Id, true, now)
+		require.True(t, ok)
+		ok, _ = acquireLock(t, parent, deep, lease.Id, true, now) // creates ancestor rollups for "a" and "a/b"
+		require.True(t, ok)
+		return fixture{accountId, namespaceId, lease, plain, deep}
+	}
+	lo := populate(loAccount, loNamespace)
+	hi := populate(hiAccount, hiNamespace)
+
+	// A GC record per half (namespace deletion queued, not executed).
+	_, err = parent.LocksDeleteNamespace(&coreapis.LocksDeleteNamespaceRequest{
+		Payload: &corepb.LocksDeleteNamespaceRequest{
+			RecordId:    rand.Uint64(),
+			NamespaceId: &corepb.NamespaceId{AccountId: lo.accountId, NamespaceId: lo.namespaceId + 1},
+		},
+		Now: now.UnixNano(),
+	})
+	require.NoError(t, err)
+
+	// Snapshot the parent; restore into both children.
+	snapshot := parent.Snapshot()
+	buf := bytes.NewBuffer(nil)
+	require.NoError(t, snapshot.Write(buf))
+	snapshot.Release()
+	streamBytes := buf.Bytes()
+
+	require.NoError(t, child1.Restore(io.NopCloser(bytes.NewReader(streamBytes))))
+	require.NoError(t, child2.Restore(io.NopCloser(bytes.NewReader(streamBytes))))
+
+	// Bounds-filtered partition: every parent row landed in exactly one child
+	// (primary rows split by namespace hash; index rows rebuilt accordingly;
+	// the GC record went to the child owning its namespace).
+	parentRows := countOwnedRows(t, parent)
+	require.Greater(t, parentRows, 0)
+	require.Equal(t, parentRows, countOwnedRows(t, child1)+countOwnedRows(t, child2),
+		"children must partition the parent's rows exactly")
+
+	// Each child serves its half. (Routing violations — asking a shard for a
+	// key outside its bounds — are rejected upstream by the generated core
+	// adapter's shard bounds check; this test calls cores directly, so absence
+	// on the sibling is asserted by the row-count partition above, not by
+	// queries.)
+	for _, tc := range []struct {
+		owner *Core
+		fx    fixture
+	}{
+		{child1, lo},
+		{child2, hi},
+	} {
+		// Locks (and their state) present on the owner.
+		lock := getLock(t, tc.owner, tc.fx.plainLock, now.Add(time.Minute))
+		require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
+		lock = getLock(t, tc.owner, tc.fx.deepLock, now.Add(time.Minute))
+		require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
+
+		// The lease survived on the owner (primary table).
+		leaseResp, err := tc.owner.GetLockLease(&coreapis.GetLockLeaseRequest{
+			Payload: &corepb.GetLockLeaseRequest{LeaseId: tc.fx.lease.Id},
+			Now:     now.Add(time.Minute).UnixNano(),
+		})
+		require.NoError(t, err)
+		require.Nil(t, leaseResp.ApplicationError)
+
+		// Ancestor rollups were restored: an exclusive lock on the ancestor
+		// path "a" must conflict with the held descendant "a/b/deep".
+		blockerLease := createLease(t, tc.owner, tc.fx.accountId, tc.fx.namespaceId, "proc-check", now, 60*time.Minute)
+		ancestorLock := &corepb.LockId{AccountId: tc.fx.accountId, NamespaceId: tc.fx.namespaceId, LockName: "a"}
+		ok, _ := acquireLock(t, tc.owner, ancestorLock, blockerLease.Id, true, now.Add(time.Minute))
+		require.False(t, ok, "ancestor conflict must be detected from restored rollups")
+
+		// Counters were restored: the namespace lock count carried over
+		// (acquiring an unrelated lock still works and counts on top of it).
+		otherLock := &corepb.LockId{AccountId: tc.fx.accountId, NamespaceId: tc.fx.namespaceId, LockName: "other"}
+		ok, _ = acquireLock(t, tc.owner, otherLock, blockerLease.Id, true, now.Add(time.Minute))
+		require.True(t, ok)
+	}
+
+	// The GC record landed on child1 (its namespace hashes low) and only there.
+	// Running GC executes it; on child2 there is nothing to collect.
+	gcResp, err := child1.RunLocksGarbageCollection(&coreapis.RunLocksGarbageCollectionRequest{
+		Payload: &corepb.RunLocksGarbageCollectionRequest{
+			GcRecordsPageSize:     100,
+			GcRecordLocksPageSize: 100,
+			MaxVisitedLocks:       100,
+		},
+		Now: now.Add(2 * time.Minute).UnixNano(),
+	})
+	require.NoError(t, err)
+	require.NotNil(t, gcResp)
+
+	// The rebuilt expiration index works end to end: GC far past the lease
+	// TTL expires the restored lease and releases its locks.
+	_, err = child2.RunLocksGarbageCollection(&coreapis.RunLocksGarbageCollectionRequest{
+		Payload: &corepb.RunLocksGarbageCollectionRequest{
+			GcRecordsPageSize:     100,
+			GcRecordLocksPageSize: 100,
+			MaxVisitedLocks:       100,
+		},
+		Now: now.Add(2 * time.Hour).UnixNano(),
+	})
+	require.NoError(t, err)
+	lock := getLock(t, child2, hi.plainLock, now.Add(2*time.Hour))
+	require.Equal(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State, "expired lease must release its locks via the rebuilt indexes")
+
+	// The parent's rows were untouched by the children's restores (row
+	// exclusivity in the shared store).
+	lock = getLock(t, parent, lo.plainLock, now.Add(time.Minute))
+	require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
+	lock = getLock(t, parent, hi.plainLock, now.Add(time.Minute))
+	require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
+}
+
+// ownedTableNames lists the registry names of every table the core owns —
+// the physical storage prefixes are <registry table id><shard prefix>.
+var ownedTableNames = []string{
+	"Grackle.LocksCore.Locks.Table",
+	"Grackle.LocksCore.Locks.LeaseIdIndex",
+	"Grackle.LocksCore.Ancestors.Table",
+	"Grackle.LocksCore.Counters.Table",
+	"Grackle.LocksCore.Leases.Table",
+	"Grackle.LocksCore.Leases.ProcessIdIndex",
+	"Grackle.LocksCore.Leases.ExpirationIndex",
+	"Grackle.LocksCore.GarbageCollectionRecords.Table",
+}
+
+// countOwnedRows counts the physical rows under every storage prefix the core
+// owns.
+func countOwnedRows(t *testing.T, c *Core) int {
+	t.Helper()
+	txn := c.badgerStore.View()
+	defer txn.Discard()
+
+	count := 0
+	for _, name := range ownedTableNames {
+		prefix := utils.ConcatBytes(tables.Grackle[name].Bytes(), c.shardPrefix)
+		err := txn.EachPrefixKeys(prefix, func(key []byte) (bool, error) {
+			count++
+			return true, nil
+		})
+		require.NoError(t, err)
+	}
+	return count
+}
+
+// namespaceInRange finds an (accountId, namespaceId) pair whose shard key
+// falls within [lower, upper].
+func namespaceInRange(t *testing.T, lower []byte, upper []byte) (uint64, uint64) {
+	t.Helper()
+	for i := 0; i < 100_000; i++ {
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint64()
+		sk := sharding.ByAccountAndNamespace(accountId, namespaceId)
+		if bytes.Compare(sk, lower) >= 0 && bytes.Compare(sk, upper) <= 0 {
+			return accountId, namespaceId
+		}
+	}
+	t.Fatalf("no namespace found hashing into [%x, %x]", lower, upper)
+	return 0, 0
+}
+
+// TestCore_MergeSnapshotRestore proves the variadic Restore contract
+// ("replace with the union of these streams") — the merge-seeding shape from
+// monstera notes/merge-design.md: two adjacent parents' snapshots are
+// restored into one full-range child in a single Restore call, and the child
+// ends up with exactly the union of both parents' rows, fully functional.
+func TestCore_MergeSnapshotRestore(t *testing.T) {
+	now := time.Now()
+	badgerStore, err := store.NewBadgerInMemoryStore()
+	require.NoError(t, err)
+
+	fullLower := []byte{0x00, 0x00, 0x00, 0x00}
+	fullUpper := []byte{0xff, 0xff, 0xff, 0xff}
+	splitAt := []byte{0x80, 0x00, 0x00, 0x00}
+
+	// Two adjacent parents and the merged child share one physical store.
+	parentA := NewCore(badgerStore, []byte{0xbb, 0x00, 0x00, 0x01}, fullLower, []byte{0x7f, 0xff, 0xff, 0xff})
+	parentB := NewCore(badgerStore, []byte{0xbb, 0x00, 0x00, 0x02}, splitAt, fullUpper)
+	child := NewCore(badgerStore, []byte{0xbb, 0x00, 0x00, 0x03}, fullLower, fullUpper)
+
+	loAccount, loNamespace := namespaceInRange(t, fullLower, []byte{0x7f, 0xff, 0xff, 0xff})
+	hiAccount, hiNamespace := namespaceInRange(t, splitAt, fullUpper)
+
+	populate := func(parent *Core, accountId, namespaceId uint64) *corepb.LockId {
+		lease := createLease(t, parent, accountId, namespaceId, "proc-merge", now, 60*time.Minute)
+		lockId := &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "merged"}
+		ok, _ := acquireLock(t, parent, lockId, lease.Id, true, now)
+		require.True(t, ok)
+		return lockId
+	}
+	loLock := populate(parentA, loAccount, loNamespace)
+	hiLock := populate(parentB, hiAccount, hiNamespace)
+
+	writeSnapshot := func(parent *Core) []byte {
+		snapshot := parent.Snapshot()
+		buf := bytes.NewBuffer(nil)
+		require.NoError(t, snapshot.Write(buf))
+		snapshot.Release()
+		return buf.Bytes()
+	}
+	snapA := writeSnapshot(parentA)
+	snapB := writeSnapshot(parentB)
+
+	// One Restore call, two streams: the merge-seeding path.
+	require.NoError(t, child.Restore(
+		io.NopCloser(bytes.NewReader(snapA)),
+		io.NopCloser(bytes.NewReader(snapB)),
+	))
+
+	// The child holds exactly the union of both parents' rows.
+	require.Equal(t, countOwnedRows(t, parentA)+countOwnedRows(t, parentB), countOwnedRows(t, child),
+		"child must hold the union of both parents' rows")
+
+	// Both halves are served by the child, indexes rebuilt.
+	for _, lockId := range []*corepb.LockId{loLock, hiLock} {
+		lock := getLock(t, child, lockId, now.Add(time.Minute))
+		require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
+	}
+
+	// Restore keeps replace semantics across calls: a second, single-stream
+	// Restore replaces the union with just parent A's half.
+	require.NoError(t, child.Restore(io.NopCloser(bytes.NewReader(snapA))))
+	require.Equal(t, countOwnedRows(t, parentA), countOwnedRows(t, child))
 }

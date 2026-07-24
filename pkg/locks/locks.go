@@ -16,17 +16,15 @@ import (
 // locksTable
 //
 // Table Primary Key:
-// 1. shard key (by account id and namespace id)
-// 2. account id
-// 3. namespace id
+// 1. account id
+// 2. namespace id
 //
 // Table Sort Key:
 // 1. lock name
 //
 // Lease Id Index Primary Key:
-// 1. shard key (by account id and namespace id)
-// 2. account id
-// 3. namespace id
+// 1. account id
+// 2. namespace id
 // 3. lease id
 //
 // Lease Id Index Sort Key:
@@ -36,26 +34,55 @@ type locksTable struct {
 	leaseIdIndex *honey.OneToManySortedIndex
 }
 
-func newLocksTable(shardLowerBound []byte, shardUpperBound []byte) *locksTable {
+// newLocksTable scopes both the table and the lease id index under the
+// shard-unique prefix (nested under the registry table ids), so no row is
+// shared with any other core (CoreTypePersistedExclusive). Keys carry no
+// shard key material — the prefix is the isolation, so honey gets nil bounds;
+// routing violations are rejected upstream by the generated core adapter.
+func newLocksTable(shardPrefix []byte) *locksTable {
 	return &locksTable{
 		table: honey.NewBinaryTable[*corepb.Lock, corepb.Lock](
-			tables.Grackle["Grackle.LocksCore.Locks.Table"].Bytes(),
-			shardLowerBound,
-			shardUpperBound,
+			utils.ConcatBytes(tables.Grackle["Grackle.LocksCore.Locks.Table"].Bytes(), shardPrefix),
+			nil,
+			nil,
 		),
 		leaseIdIndex: honey.NewOneToManySortedIndex(
-			tables.Grackle["Grackle.LocksCore.Locks.LeaseIdIndex"].Bytes(),
-			shardLowerBound,
-			shardUpperBound,
+			utils.ConcatBytes(tables.Grackle["Grackle.LocksCore.Locks.LeaseIdIndex"].Bytes(), shardPrefix),
+			nil,
+			nil,
 		),
 	}
 }
 
-func (t *locksTable) GetTableKeyRanges() []honey.KeyRange {
-	return []honey.KeyRange{
-		t.table.GetTableKeyRange(),
-		t.leaseIdIndex.GetTableKeyRange(),
+// Clear deletes every row this table owns: the primary lock rows and the
+// lease id index.
+func (t *locksTable) Clear(badgerStore *store.BadgerStore) error {
+	for _, prefix := range [][]byte{t.table.TableId(), t.leaseIdIndex.TableId()} {
+		if err := badgerStore.DropPrefix(prefix); err != nil {
+			return err
+		}
 	}
+	return nil
+}
+
+// EachEntity streams every lock as (canonical key, stored value) — the
+// primary table only; the lease id index is rebuilt from the locks on restore.
+func (t *locksTable) EachEntity(txn *store.Txn, fn func(key []byte, value []byte) (bool, error)) error {
+	return t.table.EachEntry(txn, fn)
+}
+
+// RestoreEntity decodes one streamed lock and, if owned, inserts it through
+// Update — re-deriving its keys and rebuilding the lease id index from the
+// lock's own identity fields.
+func (t *locksTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds tables.ShardRange) (bool, error) {
+	lock := &corepb.Lock{}
+	if err := lock.UnmarshalBinary(value); err != nil {
+		return false, err
+	}
+	if !bounds.Owns(sharding.ByAccountAndNamespace(lock.Id.AccountId, lock.Id.NamespaceId)) {
+		return false, nil
+	}
+	return true, t.Update(txn, lock)
 }
 
 type listLocksResult struct {
@@ -217,7 +244,6 @@ func (t *locksTable) Delete(txn *store.Txn, lockId *corepb.LockId) error {
 
 func (t *locksTable) tablePK(accountId uint64, namespaceId uint64) []byte {
 	return utils.ConcatBytes(
-		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,
 		namespaceId,
 	)
@@ -231,7 +257,6 @@ func (t *locksTable) tableSK(lockName string) []byte {
 
 func (t *locksTable) leaseIdIndexPK(accountId uint64, namespaceId uint64, leaseId uint64) []byte {
 	return utils.ConcatBytes(
-		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,
 		namespaceId,
 		leaseId,

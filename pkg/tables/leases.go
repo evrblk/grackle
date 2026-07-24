@@ -5,62 +5,105 @@ import (
 	"github.com/evrblk/monstera/utils"
 	"github.com/evrblk/yellowstone-common/honey"
 
+	"github.com/evrblk/grackle/pkg/sharding"
+
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/pagination"
-	"github.com/evrblk/grackle/pkg/sharding"
 )
 
 // LeasesTable is a table that stores leases for accounts and namespaces. This is a
-// common implementation that is shared by both locks and semaphores.
+// common implementation that is shared by locks and semaphores.
+//
+// Exclusive-store layout (CoreTypePersistedExclusive): the table ids embed
+// the shard-unique prefix, keys carry no shard key material, and bounds
+// checking is the owning core's job — honey gets nil bounds.
 //
 // Table Primary Key:
-// 1. shard key (by account id and namespace id)
-// 2. account id
-// 3. namespace id
+// 1. account id
+// 2. namespace id
 //
 // Table Sort Key:
 // 1. lease id
 //
 // Process Id Index Primary Key:
-// 1. shard key (by account id and namespace id)
-// 2. account id
-// 3. namespace id
-// 4. process id
+// 1. account id
+// 2. namespace id
+// 3. process id
 //
-// Expiration Global Index Primary Key:
-// 1. shard id
+// Expiration Index Primary Key:
+// 1. shard prefix
 // 2. timestamp
 // 3. account id
 // 4. namespace Id
 // 5. lease id
 type LeasesTable struct {
-	shardGlobalIndexPrefix []byte
+	// shardPrefix scopes the expiration index rows, whose keys are ordered by
+	// time (not by identity) and so carry the prefix in-key instead of in the
+	// table id.
+	shardPrefix []byte
 
 	table           *honey.BinaryTable[*corepb.Lease, corepb.Lease]
 	processIdIndex  *honey.OneToManyUint64Index
 	expirationIndex *honey.SortedIndex
 }
 
-func NewLeasesTable(shardLowerBound []byte, shardUpperBound []byte, shardGlobalIndexPrefix []byte, tableId []byte, processIdIndexId []byte, expirationIndexId []byte) *LeasesTable {
+func NewLeasesTable(shardPrefix []byte, tableId []byte, processIdIndexId []byte, expirationIndexId []byte) *LeasesTable {
 	return &LeasesTable{
-		shardGlobalIndexPrefix: shardGlobalIndexPrefix,
+		shardPrefix: shardPrefix,
 
 		table: honey.NewBinaryTable[*corepb.Lease, corepb.Lease](
 			tableId,
-			shardLowerBound,
-			shardUpperBound,
+			nil,
+			nil,
 		),
 		processIdIndex: honey.NewOneToManyUint64Index(
 			processIdIndexId,
-			shardLowerBound,
-			shardUpperBound,
+			nil,
+			nil,
 		),
 		expirationIndex: honey.NewSortedIndex(
 			expirationIndexId,
-			shardGlobalIndexPrefix,
-			shardGlobalIndexPrefix,
+			shardPrefix,
+			shardPrefix,
 		),
 	}
+}
+
+// Clear deletes every row this table owns: the primary lease rows, both
+// index tables, and this shard's slice of the expiration index (whose keys
+// carry the shard prefix in-key).
+func (t *LeasesTable) Clear(badgerStore *store.BadgerStore) error {
+	for _, prefix := range [][]byte{
+		t.table.TableId(),
+		t.processIdIndex.TableId(),
+		utils.ConcatBytes(t.expirationIndex.TableId(), t.shardPrefix),
+	} {
+		if err := badgerStore.DropPrefix(prefix); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// EachEntity streams every lease as (canonical key, stored value) — the
+// primary table only; the process id and expiration indexes are rebuilt from
+// the leases on restore.
+func (t *LeasesTable) EachEntity(txn *store.Txn, fn func(key []byte, value []byte) (bool, error)) error {
+	return t.table.EachEntry(txn, fn)
+}
+
+// RestoreEntity decodes one streamed lease and, if owned, inserts it through
+// Create — re-deriving its keys and rebuilding both indexes from the lease's
+// own identity fields.
+func (t *LeasesTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds ShardRange) (bool, error) {
+	lease := &corepb.Lease{}
+	if err := lease.UnmarshalBinary(value); err != nil {
+		return false, err
+	}
+	if !bounds.Owns(sharding.ByAccountAndNamespace(lease.Id.AccountId, lease.Id.NamespaceId)) {
+		return false, nil
+	}
+	return true, t.Create(txn, lease)
 }
 
 func (t *LeasesTable) GetTableKeyRanges() []honey.KeyRange {
@@ -93,10 +136,10 @@ func (t *LeasesTable) List(txn *store.Txn, namespaceId *corepb.NamespaceId, pagi
 
 func (t *LeasesTable) ListByExpiration(txn *store.Txn, from int64, to int64, fn func(lease *corepb.Lease) (bool, error)) error {
 	return t.expirationIndex.ListInRange(txn, t.expirationIndexPrefix(from), t.expirationIndexPrefix(to), func(key []byte) (bool, error) {
-		// time := utils.BytesToUint64(key[len(t.shardGlobalIndexPrefix) : len(t.shardGlobalIndexPrefix)+8])
-		accountId := utils.BytesToUint64(key[len(t.shardGlobalIndexPrefix)+8 : len(t.shardGlobalIndexPrefix)+8+8])
-		namespaceId := utils.BytesToUint64(key[len(t.shardGlobalIndexPrefix)+8+8 : len(t.shardGlobalIndexPrefix)+8+8+8])
-		leaseId := utils.BytesToUint64(key[len(t.shardGlobalIndexPrefix)+8+8+8 : len(t.shardGlobalIndexPrefix)+8+8+8+8])
+		// time := utils.BytesToUint64(key[len(t.shardPrefix) : len(t.shardPrefix)+8])
+		accountId := utils.BytesToUint64(key[len(t.shardPrefix)+8 : len(t.shardPrefix)+8+8])
+		namespaceId := utils.BytesToUint64(key[len(t.shardPrefix)+8+8 : len(t.shardPrefix)+8+8+8])
+		leaseId := utils.BytesToUint64(key[len(t.shardPrefix)+8+8+8 : len(t.shardPrefix)+8+8+8+8])
 
 		lease, err := t.table.Get(txn,
 			utils.ConcatBytes(
@@ -214,7 +257,6 @@ func (t *LeasesTable) Delete(txn *store.Txn, lease *corepb.Lease) error {
 
 func (t *LeasesTable) tablePK(accountId uint64, namespaceId uint64) []byte {
 	return utils.ConcatBytes(
-		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,
 		namespaceId,
 	)
@@ -228,7 +270,6 @@ func (t *LeasesTable) tableSK(leaseId uint64) []byte {
 
 func (t *LeasesTable) processIdIndexPK(accountId uint64, namespaceId uint64, processId string) []byte {
 	return utils.ConcatBytes(
-		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,
 		namespaceId,
 		processId,
@@ -237,7 +278,7 @@ func (t *LeasesTable) processIdIndexPK(accountId uint64, namespaceId uint64, pro
 
 func (t *LeasesTable) expirationIndexPK(time int64, accountId uint64, namespaceId uint64, leaseId uint64) []byte {
 	return utils.ConcatBytes(
-		t.shardGlobalIndexPrefix,
+		t.shardPrefix,
 		time,
 		accountId,
 		namespaceId,
@@ -247,7 +288,7 @@ func (t *LeasesTable) expirationIndexPK(time int64, accountId uint64, namespaceI
 
 func (t *LeasesTable) expirationIndexPrefix(time int64) []byte {
 	return utils.ConcatBytes(
-		t.shardGlobalIndexPrefix,
+		t.shardPrefix,
 		time,
 	)
 }

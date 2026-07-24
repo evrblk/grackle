@@ -11,8 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/evrblk/monstera"
-	"github.com/evrblk/monstera/cluster"
-	"github.com/evrblk/monstera/transport/grpc"
+	monstrea_grpc "github.com/evrblk/monstera/transport/grpc"
 	"github.com/evrblk/yellowstone-common/metrics"
 
 	"github.com/evrblk/grackle/pkg/coreapis"
@@ -20,8 +19,8 @@ import (
 )
 
 var workerCmdCfg struct {
-	prometheusPort     int
-	monsteraConfigPath string
+	prometheusPort int
+	nodes          monsteraNodesFlags
 }
 
 var workerCmd = &cobra.Command{
@@ -34,19 +33,24 @@ var workerCmd = &cobra.Command{
 		metricsSrv := metrics.NewMetricsServer(workerCmdCfg.prometheusPort)
 		metricsSrv.Start()
 
-		// Monstera cluster config
-		clusterConfig, err := cluster.LoadConfigFromFile(workerCmdCfg.monsteraConfigPath)
+		// Node discovery + polling config provider.
+		discovery, err := buildNodeDiscovery(workerCmdCfg.nodes)
 		if err != nil {
 			log.Fatal(err)
 		}
+		adminClient := monstrea_grpc.NewAdminClient()
+		provider := monstera.NewPollingClusterConfigProvider(discovery, adminClient, monstera.PollingOptions{})
 
-		// Monstera transport
-		transport := grpc.NewGrpcTransport(clusterConfig)
+		// Data plane + Monstera client
+		transport := monstrea_grpc.NewDataPlaneClient()
+		monsteraClient := monstera.NewMonsteraClient(provider, transport, monstera.DefaultClientConfig())
 
-		// Create Monstera client
-		monsteraClient := monstera.NewMonsteraClient(clusterConfig, transport, monstera.DefaultClientConfig())
-		monsteraClient.Start()
+		ctx, cancel := context.WithCancel(context.Background())
+		if err := monsteraClient.Start(ctx); err != nil {
+			log.Fatalf("failed to start monstera client: %v", err)
+		}
 		defer monsteraClient.Stop()
+		defer adminClient.Close()
 
 		// Grackle client
 		grackleCoreApiClient := coreapis.NewGrackleMonsteraStub(monsteraClient)
@@ -63,7 +67,6 @@ var workerCmd = &cobra.Command{
 
 		wg := sync.WaitGroup{}
 		wg.Add(1)
-		ctx, cancel := context.WithCancel(context.Background())
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 		go func() {
@@ -94,9 +97,5 @@ func init() {
 
 	workerCmd.PersistentFlags().IntVarP(&workerCmdCfg.prometheusPort, "prometheus-port", "", 2112, "Prometheus metrics port")
 
-	workerCmd.PersistentFlags().StringVarP(&workerCmdCfg.monsteraConfigPath, "monstera-config", "", "", "Monstera cluster config path")
-	err := workerCmd.MarkPersistentFlagRequired("monstera-config")
-	if err != nil {
-		panic(err)
-	}
+	addMonsteraNodesFlags(workerCmd, &workerCmdCfg.nodes)
 }

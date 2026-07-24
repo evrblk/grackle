@@ -8,12 +8,12 @@ import (
 	"github.com/evrblk/monstera"
 	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
-	"github.com/evrblk/yellowstone-common/honey"
 
 	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/ids"
 	"github.com/evrblk/grackle/pkg/pagination"
+	"github.com/evrblk/grackle/pkg/tables"
 )
 
 // Core implements the per-shard namespaces state machine on top of a Badger store.
@@ -22,6 +22,10 @@ import (
 type Core struct {
 	badgerStore *store.BadgerStore
 
+	shardPrefix     []byte
+	shardLowerBound []byte
+	shardUpperBound []byte
+
 	namespaces *namespacesTable
 	counters   *countersTable
 }
@@ -29,41 +33,50 @@ type Core struct {
 var _ coreapis.GrackleNamespacesCoreApi = &Core{}
 
 // NewCore constructs a Core bound to a single shard of the namespaces keyspace.
-// The given lower/upper bounds delimit the shard's local key range (used for
-// Snapshot/Restore).
-func NewCore(badgerStore *store.BadgerStore, shardLowerBound []byte, shardUpperBound []byte) *Core {
+// shardPrefix is a shard-unique prefix (derived from the shard id) nested
+// under every table id; the lower/upper bounds delimit the shard's key range
+// and drive the bounds-filtered portable Restore.
+func NewCore(badgerStore *store.BadgerStore, shardPrefix []byte, shardLowerBound []byte, shardUpperBound []byte) *Core {
 	return &Core{
 		badgerStore: badgerStore,
 
-		namespaces: newNamespacesTable(shardLowerBound, shardUpperBound),
-		counters:   newCountersTable(shardLowerBound, shardUpperBound),
+		shardPrefix:     shardPrefix,
+		shardLowerBound: shardLowerBound,
+		shardUpperBound: shardUpperBound,
+
+		namespaces: newNamespacesTable(shardPrefix),
+		counters:   newCountersTable(shardPrefix),
 	}
-}
-
-func (c *Core) ranges() []honey.KeyRange {
-	ranges := []honey.KeyRange{
-		c.counters.GetTableKeyRange(),
-	}
-	ranges = append(ranges, c.namespaces.GetTableKeyRanges()...)
-	return ranges
-}
-
-// Snapshot returns a consistent snapshot of every key range owned by this
-// shard's namespaces Core, suitable for Raft snapshot transfer.
-func (c *Core) Snapshot() monstera.ApplicationCoreSnapshot {
-	return honey.Snapshot(c.badgerStore, c.ranges())
-}
-
-// Restore replaces the contents of this shard's key ranges with the data read
-// from reader. Any existing keys in those ranges are removed first.
-func (c *Core) Restore(reader io.ReadCloser) error {
-	return honey.Restore(c.badgerStore, c.ranges(), reader)
 }
 
 // Close releases any Core-owned resources. The underlying Badger store is
 // shared across cores and is not closed here.
 func (c *Core) Close() {
 
+}
+
+func (c *Core) snapshotSections() []tables.Section {
+	return []tables.Section{
+		{Name: "Grackle.NamespacesCore.Namespaces", Table: c.namespaces},
+		{Name: "Grackle.NamespacesCore.Counters", Table: c.counters},
+	}
+}
+
+// Snapshot returns a consistent, portable snapshot of this core's primary
+// entities (a pinned view; Write streams from it concurrently with subsequent
+// updates).
+func (c *Core) Snapshot() monstera.ApplicationCoreSnapshot {
+	return tables.NewSnapshot(c.badgerStore, "GrackleNamespaces", c.snapshotSections())
+}
+
+// Restore replaces this core's state with the union of the entities from the
+// given streams that belong to this core's shard bounds (one stream for a
+// Raft restore or split seed, two for a merge seed), inserting them through
+// the tables' own methods (which rebuild all secondary indexes under this
+// core's prefix).
+func (c *Core) Restore(readers ...io.ReadCloser) error {
+	return tables.RestoreSnapshot(c.badgerStore, c.snapshotSections(),
+		tables.ShardRange{Lower: c.shardLowerBound, Upper: c.shardUpperBound}, readers...)
 }
 
 // CreateNamespace creates a new namespace and bumps the per-account namespace

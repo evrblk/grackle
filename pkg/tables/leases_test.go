@@ -16,7 +16,7 @@ func TestLeasesTable_Get(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
+	table := NewLeasesTable([]byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -60,7 +60,7 @@ func TestLeasesTable_GetNonExistent(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
+	table := NewLeasesTable([]byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -84,7 +84,7 @@ func TestLeasesTable_CreateMultipleLeases(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
+	table := NewLeasesTable([]byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -147,7 +147,7 @@ func TestLeasesTable_Update(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
+	table := NewLeasesTable([]byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -195,7 +195,7 @@ func TestLeasesTable_UpdateNonExistent(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
+	table := NewLeasesTable([]byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -226,7 +226,7 @@ func TestLeasesTable_UpdateExpirationIndexMaintenance(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
+	table := NewLeasesTable([]byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -308,7 +308,7 @@ func TestLeasesTable_Delete(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
+	table := NewLeasesTable([]byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -352,7 +352,7 @@ func TestLeasesTable_DeleteIndexMaintenance(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
+	table := NewLeasesTable([]byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -412,7 +412,7 @@ func TestLeasesTable_List(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
+	table := NewLeasesTable([]byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -458,7 +458,7 @@ func TestLeasesTable_ListEmpty(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
+	table := NewLeasesTable([]byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -478,7 +478,7 @@ func TestLeasesTable_ListWithPagination(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
+	table := NewLeasesTable([]byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -538,7 +538,7 @@ func TestLeasesTable_ListByExpiration(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
+	table := NewLeasesTable([]byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -603,7 +603,7 @@ func TestLeasesTable_ListByExpirationEmpty(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
+	table := NewLeasesTable([]byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	now := time.Now()
 
@@ -624,7 +624,7 @@ func TestLeasesTable_ListByExpirationEarlyStop(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
+	table := NewLeasesTable([]byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -671,7 +671,7 @@ func TestLeasesTable_ListByProcessId(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
+	table := NewLeasesTable([]byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -756,7 +756,7 @@ func TestLeasesTable_ListByProcessIdEmpty(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
+	table := NewLeasesTable([]byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -777,7 +777,7 @@ func TestLeasesTable_ListByProcessIdWithPagination(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
+	table := NewLeasesTable([]byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -839,7 +839,7 @@ func TestLeasesTable_IndexConsistency(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
+	table := NewLeasesTable([]byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()
@@ -900,7 +900,7 @@ func TestLeasesTable_MultipleNamespaces(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
+	table := NewLeasesTable([]byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
 	namespaceId1 := rand.Uint64()
@@ -965,7 +965,7 @@ func TestLeasesTable_ListByExpirationWithError(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	table := NewLeasesTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff}, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
+	table := NewLeasesTable([]byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x01}, []byte{0x02}, []byte{0x03})
 
 	accountId := rand.Uint64()
 	namespaceId := rand.Uint64()

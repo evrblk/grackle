@@ -16,41 +16,69 @@ import (
 // namespacesTable is a table of namespaces indexed by namespace ID and namespace name.
 //
 // Table Primary Key:
-// 1. shard key (by account id)
-// 2. account id
+// 1. account id
 //
 // Table Sort Key:
 // 1. namespace id
 //
 // Names Index Primary Key:
-// 1. shard key (by account id)
-// 2. account id
-// 3. namespace name
+// 1. account id
+// 2. namespace name
 type namespacesTable struct {
 	table      *honey.BinaryTable[*corepb.Namespace, corepb.Namespace]
 	namesIndex *honey.Uint64Table
 }
 
-func newNamespacesTable(shardLowerBound []byte, shardUpperBound []byte) *namespacesTable {
+// newNamespacesTable scopes the table and the names index under the
+// shard-unique prefix (nested under the registry table ids), so no row is
+// shared with any other core (CoreTypePersistedExclusive). Keys carry no
+// shard key material — the prefix is the isolation, so honey gets nil bounds;
+// routing violations are rejected upstream by the generated core adapter.
+func newNamespacesTable(shardPrefix []byte) *namespacesTable {
 	return &namespacesTable{
 		table: honey.NewBinaryTable[*corepb.Namespace, corepb.Namespace](
-			tables.Grackle["Grackle.NamespacesCore.Namespaces.Table"].Bytes(),
-			shardLowerBound,
-			shardUpperBound,
+			utils.ConcatBytes(tables.Grackle["Grackle.NamespacesCore.Namespaces.Table"].Bytes(), shardPrefix),
+			nil,
+			nil,
 		),
 		namesIndex: honey.NewUint64Table(
-			tables.Grackle["Grackle.NamespacesCore.Namespaces.NamesIndex"].Bytes(),
-			shardLowerBound,
-			shardUpperBound,
+			utils.ConcatBytes(tables.Grackle["Grackle.NamespacesCore.Namespaces.NamesIndex"].Bytes(), shardPrefix),
+			nil,
+			nil,
 		),
 	}
 }
 
-func (t *namespacesTable) GetTableKeyRanges() []honey.KeyRange {
-	return []honey.KeyRange{
-		t.table.GetTableKeyRange(),
-		t.namesIndex.GetTableKeyRange(),
+// Clear deletes every row this table owns: the primary namespace rows and
+// the names index.
+func (t *namespacesTable) Clear(badgerStore *store.BadgerStore) error {
+	for _, prefix := range [][]byte{t.table.TableId(), t.namesIndex.TableId()} {
+		if err := badgerStore.DropPrefix(prefix); err != nil {
+			return err
+		}
 	}
+	return nil
+}
+
+// EachEntity streams every namespace as (canonical key, stored value) — the
+// primary table only; the names index is rebuilt from the namespaces on
+// restore.
+func (t *namespacesTable) EachEntity(txn *store.Txn, fn func(key []byte, value []byte) (bool, error)) error {
+	return t.table.EachEntry(txn, fn)
+}
+
+// RestoreEntity decodes one streamed namespace and, if owned, inserts it
+// through Create — re-deriving its keys and rebuilding the names index from
+// the namespace's own identity fields.
+func (t *namespacesTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds tables.ShardRange) (bool, error) {
+	namespace := &corepb.Namespace{}
+	if err := namespace.UnmarshalBinary(value); err != nil {
+		return false, err
+	}
+	if !bounds.Owns(sharding.ByAccount(namespace.Id.AccountId)) {
+		return false, nil
+	}
+	return true, t.Create(txn, namespace)
 }
 
 func (t *namespacesTable) Get(txn *store.Txn, namespaceId *corepb.NamespaceId) (*corepb.Namespace, error) {
@@ -133,7 +161,6 @@ func (t *namespacesTable) Delete(txn *store.Txn, namespace *corepb.Namespace) er
 
 func (t *namespacesTable) tablePK(accountId uint64) []byte {
 	return utils.ConcatBytes(
-		sharding.ByAccount(accountId),
 		accountId,
 	)
 }
@@ -146,7 +173,6 @@ func (t *namespacesTable) tableSK(namespaceId uint64) []byte {
 
 func (t *namespacesTable) namesIndexPK(accountId uint64, namespaceName string) []byte {
 	return utils.ConcatBytes(
-		sharding.ByAccount(accountId),
 		accountId,
 		namespaceName,
 	)

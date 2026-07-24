@@ -14,46 +14,111 @@ import (
 // holdersTable stores semaphore holders indexed by semaphore holder id and by expiration time.
 //
 // Table Primary Key:
-// 1. shard key (by account id and namespace id)
-// 2. account id
-// 3. namespace id
-// 4. semaphore id
+// 1. account id
+// 2. namespace id
+// 3. semaphore id
 //
 // Table Sort Key:
 // 1. lease id
 //
 // Expiration Index Primay Key:
-// 1. shard key (by account id and namespace id)
-// 2. account id
-// 3. namespace id
-// 4. semaphore id
+// 1. account id
+// 2. namespace id
+// 3. semaphore id
 //
 // Expiration Index Sort Key:
 // 1. expiration time
 // 2. lease id
+//
+// Lease Id Index Primary Key:
+// 1. account id
+// 2. namespace id
+// 3. lease id
+//
+// Lease Id Index Sort Key:
+// 1. semaphore id
 type holdersTable struct {
 	table           *honey.BinaryTable[*corepb.SemaphoreHolder, corepb.SemaphoreHolder]
 	expirationIndex *honey.SortedIndex
+	leaseIdIndex    *honey.OneToManySortedIndex
 }
 
-func newHoldersTable(shardLowerBound []byte, shardUpperBound []byte) *holdersTable {
+// newHoldersTable scopes all three tables under the shard-unique prefix; see
+// newSemaphoresTable.
+func newHoldersTable(shardPrefix []byte) *holdersTable {
 	return &holdersTable{
 		table: honey.NewBinaryTable[*corepb.SemaphoreHolder, corepb.SemaphoreHolder](
-			tables.Grackle["Grackle.SemaphoresCore.Holders.Table"].Bytes(),
-			shardLowerBound,
-			shardUpperBound),
+			utils.ConcatBytes(tables.Grackle["Grackle.SemaphoresCore.Holders.Table"].Bytes(), shardPrefix),
+			nil,
+			nil),
 		expirationIndex: honey.NewSortedIndex(
-			tables.Grackle["Grackle.SemaphoresCore.Holders.ExpirationIndex"].Bytes(),
-			shardLowerBound,
-			shardUpperBound),
+			utils.ConcatBytes(tables.Grackle["Grackle.SemaphoresCore.Holders.ExpirationIndex"].Bytes(), shardPrefix),
+			nil,
+			nil),
+		leaseIdIndex: honey.NewOneToManySortedIndex(
+			utils.ConcatBytes(tables.Grackle["Grackle.SemaphoresCore.Holders.LeaseIdIndex"].Bytes(), shardPrefix),
+			nil,
+			nil),
 	}
 }
 
-func (t *holdersTable) GetTableKeyRanges() []honey.KeyRange {
-	return []honey.KeyRange{
-		t.table.GetTableKeyRange(),
-		t.expirationIndex.GetTableKeyRange(),
+// Clear deletes every row this table owns: the primary holder rows, the
+// expiration index, and the lease id index.
+func (t *holdersTable) Clear(badgerStore *store.BadgerStore) error {
+	for _, prefix := range [][]byte{t.table.TableId(), t.expirationIndex.TableId(), t.leaseIdIndex.TableId()} {
+		if err := badgerStore.DropPrefix(prefix); err != nil {
+			return err
+		}
 	}
+	return nil
+}
+
+// EachEntity streams every holder as (canonical key, stored value) — the
+// primary table only; the expiration and lease id indexes are rebuilt from
+// the holders on restore.
+func (t *holdersTable) EachEntity(txn *store.Txn, fn func(key []byte, value []byte) (bool, error)) error {
+	return t.table.EachEntry(txn, fn)
+}
+
+// RestoreEntity decodes one streamed holder and, if owned, inserts it through
+// Create — rebuilding the expiration and lease id indexes from the holder's
+// own identity fields.
+func (t *holdersTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds tables.ShardRange) (bool, error) {
+	holder := &corepb.SemaphoreHolder{}
+	if err := holder.UnmarshalBinary(value); err != nil {
+		return false, err
+	}
+	if !bounds.Owns(sharding.ByAccountAndNamespace(holder.Id.AccountId, holder.Id.NamespaceId)) {
+		return false, nil
+	}
+	return true, t.Create(txn, holder)
+}
+
+type listSemaphoreIdsResult struct {
+	semaphoreIds            []uint64
+	nextPaginationToken     *corepb.PaginationToken
+	previousPaginationToken *corepb.PaginationToken
+}
+
+// ListSemaphoreIdsByLeaseId returns a page of ids of the semaphores the given
+// lease currently holds.
+func (t *holdersTable) ListSemaphoreIdsByLeaseId(txn *store.Txn, leaseId *corepb.LeaseId, paginationToken *corepb.PaginationToken, limit int) (*listSemaphoreIdsResult, error) {
+	result, err := t.leaseIdIndex.ListPaginated(txn,
+		t.leaseIdIndexPK(leaseId.AccountId, leaseId.NamespaceId, leaseId.LeaseId), pagination.CoreToMonstera(paginationToken), limit)
+	if err != nil {
+		return nil, err
+	}
+
+	semaphoreIds := make([]uint64, len(result.Items))
+	for i, item := range result.Items {
+		semaphoreIds[i] = utils.BytesToUint64(item)
+	}
+
+	return &listSemaphoreIdsResult{
+		semaphoreIds:            semaphoreIds,
+		nextPaginationToken:     pagination.MonsteraToCore(result.NextPaginationToken),
+		previousPaginationToken: pagination.MonsteraToCore(result.PreviousPaginationToken),
+	}, nil
 }
 
 func (t *holdersTable) Get(txn *store.Txn, holderId *corepb.SemaphoreHolderId) (*corepb.SemaphoreHolder, error) {
@@ -68,6 +133,14 @@ func (t *holdersTable) Create(txn *store.Txn, holder *corepb.SemaphoreHolder) er
 		utils.ConcatBytes(
 			t.expirationIndexPK(holder.Id.AccountId, holder.Id.NamespaceId, holder.Id.SemaphoreId),
 			t.expirationIndexSK(holder.ExpiresAt, holder.Id.LeaseId)),
+	)
+	if err != nil {
+		return err
+	}
+
+	err = t.leaseIdIndex.Add(txn,
+		t.leaseIdIndexPK(holder.Id.AccountId, holder.Id.NamespaceId, holder.Id.LeaseId),
+		utils.Uint64ToBytes(holder.Id.SemaphoreId),
 	)
 	if err != nil {
 		return err
@@ -111,6 +184,13 @@ func (t *holdersTable) Delete(txn *store.Txn, holder *corepb.SemaphoreHolder) er
 		utils.ConcatBytes(
 			t.expirationIndexPK(holder.Id.AccountId, holder.Id.NamespaceId, holder.Id.SemaphoreId),
 			t.expirationIndexSK(holder.ExpiresAt, holder.Id.LeaseId)))
+	if err != nil {
+		return err
+	}
+
+	err = t.leaseIdIndex.Delete(txn,
+		t.leaseIdIndexPK(holder.Id.AccountId, holder.Id.NamespaceId, holder.Id.LeaseId),
+		utils.Uint64ToBytes(holder.Id.SemaphoreId))
 	if err != nil {
 		return err
 	}
@@ -164,10 +244,17 @@ func (t *holdersTable) ListByExpiration(txn *store.Txn, semaphoreId *corepb.Sema
 
 func (t *holdersTable) tablePK(accountId uint64, namespaceId uint64, semaphoreId uint64) []byte {
 	return utils.ConcatBytes(
-		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,
 		namespaceId,
 		semaphoreId,
+	)
+}
+
+func (t *holdersTable) leaseIdIndexPK(accountId uint64, namespaceId uint64, leaseId uint64) []byte {
+	return utils.ConcatBytes(
+		accountId,
+		namespaceId,
+		leaseId,
 	)
 }
 
@@ -179,7 +266,6 @@ func (t *holdersTable) tableSK(leaseId uint64) []byte {
 
 func (t *holdersTable) expirationIndexPK(accountId uint64, namespaceId uint64, semaphoreId uint64) []byte {
 	return utils.ConcatBytes(
-		sharding.ByAccountAndNamespace(accountId, namespaceId),
 		accountId,
 		namespaceId,
 		semaphoreId,

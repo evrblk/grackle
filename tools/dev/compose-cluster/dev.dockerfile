@@ -3,4 +3,3 @@ RUN     mkdir /grackle
 WORKDIR /grackle
 ADD     ./grackle ./
 ADD     ./cluster_config.json ./
-ADD     ./.src ./src

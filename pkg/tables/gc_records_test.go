@@ -28,6 +28,10 @@ func (r *testGCRecord) GetId() uint64 {
 	return r.Id
 }
 
+func (r *testGCRecord) Identity() (uint64, uint64, bool) {
+	return 0, 0, false
+}
+
 func TestGCRecordsTable_Create(t *testing.T) {
 	t.Run("creates a gc record", func(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()

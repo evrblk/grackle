@@ -29,7 +29,7 @@ func TestCountersTable_Get(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -57,7 +57,7 @@ func TestCountersTable_Get(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -75,7 +75,7 @@ func TestCountersTable_Get(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01})
 
 		accountId := rand.Uint64()
 		namespaceId1 := rand.Uint64()
@@ -115,7 +115,7 @@ func TestCountersTable_Get(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01})
 
 		accountId1 := rand.Uint64()
 		accountId2 := rand.Uint64()
@@ -157,7 +157,7 @@ func TestCountersTable_Set(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -185,7 +185,7 @@ func TestCountersTable_Set(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -221,7 +221,7 @@ func TestCountersTable_Set(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -249,7 +249,7 @@ func TestCountersTable_Set(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -279,7 +279,7 @@ func TestCountersTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -313,7 +313,7 @@ func TestCountersTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -337,7 +337,7 @@ func TestCountersTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -386,7 +386,7 @@ func TestCountersTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := NewCountersTable[*testCounters, testCounters]([]byte{0x01})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()

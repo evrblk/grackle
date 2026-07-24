@@ -15,7 +15,7 @@ func TestWaitGroupsTable_Create(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newWaitGroupsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newWaitGroupsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		waitGroup := &corepb.WaitGroup{
 			Id: &corepb.WaitGroupId{
@@ -56,7 +56,7 @@ func TestWaitGroupsTable_Create(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newWaitGroupsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newWaitGroupsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		waitGroup := &corepb.WaitGroup{
 			Id: &corepb.WaitGroupId{
@@ -97,7 +97,7 @@ func TestWaitGroupsTable_Get(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newWaitGroupsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newWaitGroupsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		waitGroup := &corepb.WaitGroup{
 			Id: &corepb.WaitGroupId{
@@ -141,7 +141,7 @@ func TestWaitGroupsTable_Get(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newWaitGroupsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newWaitGroupsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		txn := badgerStore.View()
 		defer txn.Discard()
@@ -164,7 +164,7 @@ func TestWaitGroupsTable_GetByName(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newWaitGroupsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newWaitGroupsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		waitGroup := &corepb.WaitGroup{
 			Id: &corepb.WaitGroupId{
@@ -203,7 +203,7 @@ func TestWaitGroupsTable_GetByName(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newWaitGroupsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newWaitGroupsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		txn := badgerStore.View()
 		defer txn.Discard()
@@ -218,7 +218,7 @@ func TestWaitGroupsTable_GetByName(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newWaitGroupsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newWaitGroupsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId1 := rand.Uint64()
@@ -261,7 +261,7 @@ func TestWaitGroupsTable_Update(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newWaitGroupsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newWaitGroupsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		waitGroup := &corepb.WaitGroup{
 			Id: &corepb.WaitGroupId{
@@ -314,7 +314,7 @@ func TestWaitGroupsTable_Update(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newWaitGroupsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newWaitGroupsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		waitGroup := &corepb.WaitGroup{
 			Id: &corepb.WaitGroupId{
@@ -354,7 +354,7 @@ func TestWaitGroupsTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newWaitGroupsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newWaitGroupsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		waitGroup := &corepb.WaitGroup{
 			Id: &corepb.WaitGroupId{
@@ -408,7 +408,7 @@ func TestWaitGroupsTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newWaitGroupsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newWaitGroupsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		waitGroupId := &corepb.WaitGroupId{
 			AccountId:   rand.Uint64(),
@@ -429,7 +429,7 @@ func TestWaitGroupsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newWaitGroupsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newWaitGroupsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -475,7 +475,7 @@ func TestWaitGroupsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newWaitGroupsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newWaitGroupsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -532,7 +532,7 @@ func TestWaitGroupsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newWaitGroupsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newWaitGroupsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		txn := badgerStore.View()
 		defer txn.Discard()
@@ -549,7 +549,7 @@ func TestWaitGroupsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := newWaitGroupsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+		table := newWaitGroupsTable([]byte{0x77, 0x77, 0x77, 0x77})
 
 		accountId := rand.Uint64()
 		namespaceId1 := rand.Uint64()
@@ -615,15 +615,5 @@ func TestWaitGroupsTable_List(t *testing.T) {
 		result2, err := table.List(txn, accountId, namespaceId2, nil, 100)
 		require.NoError(t, err)
 		require.Len(t, result2.waitGroups, 5)
-	})
-}
-
-func TestWaitGroupsTable_GetTableKeyRanges(t *testing.T) {
-	t.Run("get table key ranges", func(t *testing.T) {
-		table := newWaitGroupsTable([]byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
-
-		keyRanges := table.GetTableKeyRanges()
-		require.NotNil(t, keyRanges)
-		require.Len(t, keyRanges, 2)
 	})
 }
