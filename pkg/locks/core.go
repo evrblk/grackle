@@ -10,6 +10,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/evrblk/monstera"
+	"github.com/evrblk/monstera/cluster"
 	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
@@ -25,8 +26,8 @@ type Core struct {
 	badgerStore *store.BadgerStore
 
 	shardPrefix     []byte
-	shardLowerBound []byte
-	shardUpperBound []byte
+	shardLowerBound cluster.ShardKey
+	shardUpperBound cluster.ShardKey
 
 	locks     *locksTable
 	ancestors *lockAncestorsTable
@@ -45,7 +46,7 @@ var _ coreapis.GrackleLocksCoreApi = &Core{}
 // violations are rejected upstream by the generated core adapter's shard
 // bounds check); the lower/upper bounds delimit the shard's key range and
 // drive the bounds-filtered portable Restore.
-func NewCore(badgerStore *store.BadgerStore, shardPrefix []byte, shardLowerBound []byte, shardUpperBound []byte) *Core {
+func NewCore(badgerStore *store.BadgerStore, shardPrefix []byte, shardLowerBound cluster.ShardKey, shardUpperBound cluster.ShardKey) *Core {
 	scoped := func(name string) []byte {
 		return utils.ConcatBytes(tables.Grackle[name].Bytes(), shardPrefix)
 	}

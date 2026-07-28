@@ -1,11 +1,11 @@
 package tables
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 
 	"github.com/evrblk/fenestra"
+	"github.com/evrblk/monstera/cluster"
 	"github.com/evrblk/monstera/store"
 )
 
@@ -27,13 +27,13 @@ import (
 // function) and keeps the entity iff Owns accepts it — a fully generic
 // ownership check, no per-core predicate required.
 type ShardRange struct {
-	Lower []byte
-	Upper []byte
+	Lower cluster.ShardKey
+	Upper cluster.ShardKey
 }
 
 // Owns reports whether shardKey falls within the range (both ends inclusive).
-func (r ShardRange) Owns(shardKey []byte) bool {
-	return bytes.Compare(shardKey, r.Lower) >= 0 && bytes.Compare(shardKey, r.Upper) <= 0
+func (r ShardRange) Owns(shardKey cluster.ShardKey) bool {
+	return shardKey >= r.Lower && shardKey <= r.Upper
 }
 
 // PortableTable is one section of a core's portable snapshot.

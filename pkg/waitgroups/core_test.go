@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/evrblk/monstera/cluster"
 	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
@@ -1765,7 +1766,7 @@ func completeJobRequests(jobIds []string) []*corepb.CompleteJobRequest {
 func newWaitGroupsCore(t *testing.T) *Core {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
-	return NewCore(store, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+	return NewCore(store, []byte{0x1d, 0x36, 0x00, 0x00}, 0x00000000, 0xffffffff)
 }
 
 func createWaitGroup(t *testing.T, core *Core, waitGroupId *corepb.WaitGroupId, name string, counter int64, maxNumberOfWaitGroupsPerNamespace int64, expiresAt time.Time, now time.Time) *corepb.WaitGroup {
@@ -1892,15 +1893,15 @@ func TestCore_SplitSnapshotRestore(t *testing.T) {
 	badgerStore, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	fullLower := []byte{0x00, 0x00, 0x00, 0x00}
-	fullUpper := []byte{0xff, 0xff, 0xff, 0xff}
-	splitAt := []byte{0x80, 0x00, 0x00, 0x00}
+	fullLower := cluster.ShardKey(0x00000000)
+	fullUpper := cluster.ShardKey(0xffffffff)
+	splitAt := cluster.ShardKey(0x80000000)
 
 	parent := NewCore(badgerStore, []byte{0xaa, 0x00, 0x00, 0x01}, fullLower, fullUpper)
-	child1 := NewCore(badgerStore, []byte{0xaa, 0x00, 0x00, 0x02}, fullLower, []byte{0x7f, 0xff, 0xff, 0xff})
+	child1 := NewCore(badgerStore, []byte{0xaa, 0x00, 0x00, 0x02}, fullLower, 0x7fffffff)
 	child2 := NewCore(badgerStore, []byte{0xaa, 0x00, 0x00, 0x03}, splitAt, fullUpper)
 
-	loAccount, loNamespace := namespaceInRange(t, fullLower, []byte{0x7f, 0xff, 0xff, 0xff})
+	loAccount, loNamespace := namespaceInRange(t, fullLower, 0x7fffffff)
 	hiAccount, hiNamespace := namespaceInRange(t, splitAt, fullUpper)
 
 	populate := func(accountId, namespaceId uint64) {
@@ -2003,13 +2004,13 @@ func countOwnedRows(t *testing.T, c *Core) int {
 
 // namespaceInRange finds an (accountId, namespaceId) pair whose shard key
 // falls within [lower, upper].
-func namespaceInRange(t *testing.T, lower []byte, upper []byte) (uint64, uint64) {
+func namespaceInRange(t *testing.T, lower cluster.ShardKey, upper cluster.ShardKey) (uint64, uint64) {
 	t.Helper()
 	for i := 0; i < 100_000; i++ {
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
 		sk := sharding.ByAccountAndNamespace(accountId, namespaceId)
-		if bytes.Compare(sk, lower) >= 0 && bytes.Compare(sk, upper) <= 0 {
+		if sk >= lower && sk <= upper {
 			return accountId, namespaceId
 		}
 	}

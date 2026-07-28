@@ -92,7 +92,7 @@ Cluster apps and shard counts are declared in the Monstera cluster config (see R
 
 ## Cores: conventions & invariants
 
-- **Constructor**: `NewCore(badgerStore, shardGlobalIndexPrefix, shardLowerBound, shardUpperBound)`. Bounds delimit this shard's local key range (for Snapshot/Restore); `shardGlobalIndexPrefix` (a per-shard hash, `utils.GetTruncatedHash([]byte(shardId),4)`) scopes cross-shard *global* indexes (lease expiration index, GC records). Namespaces core has no global-index prefix arg.
+- **Constructor**: `NewCore(badgerStore, shardGlobalIndexPrefix, shardLowerBound, shardUpperBound)`. Bounds (`cluster.ShardKey`) delimit this shard's local key range (for Snapshot/Restore); `shardGlobalIndexPrefix` (a per-shard hash, `utils.GetTruncatedHash([]byte(shardId),4)`) scopes cross-shard *global* indexes (lease expiration index, GC records). Namespaces core has no global-index prefix arg.
 - **`var _ coreapis.Grackle<X>CoreApi = &Core{}`** compile-time interface assertion at top of each `core.go`.
 - **Standard methods**: `Snapshot()` / `Restore(reader)` (delegate to `monsterax.Snapshot/Restore` over `c.ranges()`), `Close()` (usually empty — Badger store is shared, not owned).
 - **Transactions**: reads use `badgerStore.View()`, writes use `badgerStore.Update()`. Always `defer txn.Discard()`, then `txn.Commit()` at the end. A method either commits all its mutations or none.

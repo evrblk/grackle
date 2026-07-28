@@ -3,9 +3,7 @@
 package coreapis
 
 import (
-	"bytes"
 	"context"
-	"encoding/binary"
 	"fmt"
 	corepb "github.com/evrblk/grackle/pkg/corepb"
 	monstera "github.com/evrblk/monstera"
@@ -14,6 +12,14 @@ import (
 	"sync"
 	"time"
 )
+
+func nilifyIfEmpty(err *mrpc.Error) error {
+	if err == nil || err.Code == mrpc.ErrorCode_INVALID || err.Code == mrpc.ErrorCode_OK {
+		return nil
+	} else {
+		return err
+	}
+}
 
 type GrackleMonsteraStub struct {
 	monsteraClient *monstera.Client
@@ -2067,60 +2073,52 @@ func NewGrackleMonsteraStub(monsteraClient *monstera.Client) *GrackleMonsteraStu
 	return &GrackleMonsteraStub{monsteraClient: monsteraClient}
 }
 
-func nilifyIfEmpty(err *mrpc.Error) error {
-	if err == nil || err.Code == mrpc.ErrorCode_INVALID || err.Code == mrpc.ErrorCode_OK {
-		return nil
-	} else {
-		return err
-	}
-}
-
 type grackleLocksCoreNonclusteredAdapter struct {
 	core       GrackleLocksCoreApi
 	mu         sync.RWMutex
 	id         string
-	lowerBound []byte
-	upperBound []byte
+	lowerBound cluster.ShardKey
+	upperBound cluster.ShardKey
 }
 
 type grackleSemaphoresCoreNonclusteredAdapter struct {
 	core       GrackleSemaphoresCoreApi
 	mu         sync.RWMutex
 	id         string
-	lowerBound []byte
-	upperBound []byte
+	lowerBound cluster.ShardKey
+	upperBound cluster.ShardKey
 }
 
 type grackleNamespacesCoreNonclusteredAdapter struct {
 	core       GrackleNamespacesCoreApi
 	mu         sync.RWMutex
 	id         string
-	lowerBound []byte
-	upperBound []byte
+	lowerBound cluster.ShardKey
+	upperBound cluster.ShardKey
 }
 
 type grackleWaitGroupsCoreNonclusteredAdapter struct {
 	core       GrackleWaitGroupsCoreApi
 	mu         sync.RWMutex
 	id         string
-	lowerBound []byte
-	upperBound []byte
+	lowerBound cluster.ShardKey
+	upperBound cluster.ShardKey
 }
 
 type grackleBarriersCoreNonclusteredAdapter struct {
 	core       GrackleBarriersCoreApi
 	mu         sync.RWMutex
 	id         string
-	lowerBound []byte
-	upperBound []byte
+	lowerBound cluster.ShardKey
+	upperBound cluster.ShardKey
 }
 
 type GrackleNonclusteredApplicationCoresFactory struct {
-	GrackleLocksCoreFactoryFunc      func(shardId string, lowerBound []byte, upperBound []byte) GrackleLocksCoreApi
-	GrackleSemaphoresCoreFactoryFunc func(shardId string, lowerBound []byte, upperBound []byte) GrackleSemaphoresCoreApi
-	GrackleNamespacesCoreFactoryFunc func(shardId string, lowerBound []byte, upperBound []byte) GrackleNamespacesCoreApi
-	GrackleWaitGroupsCoreFactoryFunc func(shardId string, lowerBound []byte, upperBound []byte) GrackleWaitGroupsCoreApi
-	GrackleBarriersCoreFactoryFunc   func(shardId string, lowerBound []byte, upperBound []byte) GrackleBarriersCoreApi
+	GrackleLocksCoreFactoryFunc      func(shardId string, lowerBound cluster.ShardKey, upperBound cluster.ShardKey) GrackleLocksCoreApi
+	GrackleSemaphoresCoreFactoryFunc func(shardId string, lowerBound cluster.ShardKey, upperBound cluster.ShardKey) GrackleSemaphoresCoreApi
+	GrackleNamespacesCoreFactoryFunc func(shardId string, lowerBound cluster.ShardKey, upperBound cluster.ShardKey) GrackleNamespacesCoreApi
+	GrackleWaitGroupsCoreFactoryFunc func(shardId string, lowerBound cluster.ShardKey, upperBound cluster.ShardKey) GrackleWaitGroupsCoreApi
+	GrackleBarriersCoreFactoryFunc   func(shardId string, lowerBound cluster.ShardKey, upperBound cluster.ShardKey) GrackleBarriersCoreApi
 }
 type GrackleNonclusteredStub struct {
 	grackleLocksCores      []*grackleLocksCoreNonclusteredAdapter
@@ -2135,7 +2133,7 @@ var _ GrackleClientApi = &GrackleNonclusteredStub{}
 func (s *GrackleNonclusteredStub) GetLock(ctx context.Context, req *corepb.GetLockRequest) (*corepb.GetLockResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -2160,7 +2158,7 @@ func (s *GrackleNonclusteredStub) GetLock(ctx context.Context, req *corepb.GetLo
 func (s *GrackleNonclusteredStub) ListLocks(ctx context.Context, req *corepb.ListLocksRequest) (*corepb.ListLocksResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -2185,7 +2183,7 @@ func (s *GrackleNonclusteredStub) ListLocks(ctx context.Context, req *corepb.Lis
 func (s *GrackleNonclusteredStub) ListLocksByLeaseId(ctx context.Context, req *corepb.ListLocksByLeaseIdRequest) (*corepb.ListLocksByLeaseIdResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -2210,7 +2208,7 @@ func (s *GrackleNonclusteredStub) ListLocksByLeaseId(ctx context.Context, req *c
 func (s *GrackleNonclusteredStub) ListLockLeases(ctx context.Context, req *corepb.ListLockLeasesRequest) (*corepb.ListLockLeasesResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -2235,7 +2233,7 @@ func (s *GrackleNonclusteredStub) ListLockLeases(ctx context.Context, req *corep
 func (s *GrackleNonclusteredStub) ListLockLeasesByProcessId(ctx context.Context, req *corepb.ListLockLeasesByProcessIdRequest) (*corepb.ListLockLeasesByProcessIdResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -2260,7 +2258,7 @@ func (s *GrackleNonclusteredStub) ListLockLeasesByProcessId(ctx context.Context,
 func (s *GrackleNonclusteredStub) GetLockLease(ctx context.Context, req *corepb.GetLockLeaseRequest) (*corepb.GetLockLeaseResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -2285,7 +2283,7 @@ func (s *GrackleNonclusteredStub) GetLockLease(ctx context.Context, req *corepb.
 func (s *GrackleNonclusteredStub) AcquireLock(ctx context.Context, req *corepb.AcquireLockRequest) (*corepb.AcquireLockResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -2310,7 +2308,7 @@ func (s *GrackleNonclusteredStub) AcquireLock(ctx context.Context, req *corepb.A
 func (s *GrackleNonclusteredStub) ReleaseLock(ctx context.Context, req *corepb.ReleaseLockRequest) (*corepb.ReleaseLockResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -2335,7 +2333,7 @@ func (s *GrackleNonclusteredStub) ReleaseLock(ctx context.Context, req *corepb.R
 func (s *GrackleNonclusteredStub) DeleteLock(ctx context.Context, req *corepb.DeleteLockRequest) (*corepb.DeleteLockResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -2384,7 +2382,7 @@ func (s *GrackleNonclusteredStub) RunLocksGarbageCollection(ctx context.Context,
 func (s *GrackleNonclusteredStub) LocksDeleteNamespace(ctx context.Context, req *corepb.LocksDeleteNamespaceRequest) (*corepb.LocksDeleteNamespaceResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -2409,7 +2407,7 @@ func (s *GrackleNonclusteredStub) LocksDeleteNamespace(ctx context.Context, req 
 func (s *GrackleNonclusteredStub) CreateLockLease(ctx context.Context, req *corepb.CreateLockLeaseRequest) (*corepb.CreateLockLeaseResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -2434,7 +2432,7 @@ func (s *GrackleNonclusteredStub) CreateLockLease(ctx context.Context, req *core
 func (s *GrackleNonclusteredStub) RefreshLockLease(ctx context.Context, req *corepb.RefreshLockLeaseRequest) (*corepb.RefreshLockLeaseResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -2459,7 +2457,7 @@ func (s *GrackleNonclusteredStub) RefreshLockLease(ctx context.Context, req *cor
 func (s *GrackleNonclusteredStub) RevokeLockLease(ctx context.Context, req *corepb.RevokeLockLeaseRequest) (*corepb.RevokeLockLeaseResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleLocksCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -2484,7 +2482,7 @@ func (s *GrackleNonclusteredStub) RevokeLockLease(ctx context.Context, req *core
 func (s *GrackleNonclusteredStub) GetSemaphore(ctx context.Context, req *corepb.GetSemaphoreRequest) (*corepb.GetSemaphoreResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -2509,7 +2507,7 @@ func (s *GrackleNonclusteredStub) GetSemaphore(ctx context.Context, req *corepb.
 func (s *GrackleNonclusteredStub) GetSemaphoreByName(ctx context.Context, req *corepb.GetSemaphoreByNameRequest) (*corepb.GetSemaphoreByNameResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -2534,7 +2532,7 @@ func (s *GrackleNonclusteredStub) GetSemaphoreByName(ctx context.Context, req *c
 func (s *GrackleNonclusteredStub) ListSemaphores(ctx context.Context, req *corepb.ListSemaphoresRequest) (*corepb.ListSemaphoresResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -2559,7 +2557,7 @@ func (s *GrackleNonclusteredStub) ListSemaphores(ctx context.Context, req *corep
 func (s *GrackleNonclusteredStub) ListSemaphoresByLeaseId(ctx context.Context, req *corepb.ListSemaphoresByLeaseIdRequest) (*corepb.ListSemaphoresByLeaseIdResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -2584,7 +2582,7 @@ func (s *GrackleNonclusteredStub) ListSemaphoresByLeaseId(ctx context.Context, r
 func (s *GrackleNonclusteredStub) ListSemaphoreHolders(ctx context.Context, req *corepb.ListSemaphoreHoldersRequest) (*corepb.ListSemaphoreHoldersResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -2609,7 +2607,7 @@ func (s *GrackleNonclusteredStub) ListSemaphoreHolders(ctx context.Context, req 
 func (s *GrackleNonclusteredStub) ListSemaphoreLeases(ctx context.Context, req *corepb.ListSemaphoreLeasesRequest) (*corepb.ListSemaphoreLeasesResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -2634,7 +2632,7 @@ func (s *GrackleNonclusteredStub) ListSemaphoreLeases(ctx context.Context, req *
 func (s *GrackleNonclusteredStub) ListSemaphoreLeasesByProcessId(ctx context.Context, req *corepb.ListSemaphoreLeasesByProcessIdRequest) (*corepb.ListSemaphoreLeasesByProcessIdResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -2659,7 +2657,7 @@ func (s *GrackleNonclusteredStub) ListSemaphoreLeasesByProcessId(ctx context.Con
 func (s *GrackleNonclusteredStub) GetSemaphoreLease(ctx context.Context, req *corepb.GetSemaphoreLeaseRequest) (*corepb.GetSemaphoreLeaseResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -2684,7 +2682,7 @@ func (s *GrackleNonclusteredStub) GetSemaphoreLease(ctx context.Context, req *co
 func (s *GrackleNonclusteredStub) AcquireSemaphore(ctx context.Context, req *corepb.AcquireSemaphoreRequest) (*corepb.AcquireSemaphoreResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -2709,7 +2707,7 @@ func (s *GrackleNonclusteredStub) AcquireSemaphore(ctx context.Context, req *cor
 func (s *GrackleNonclusteredStub) ReleaseSemaphore(ctx context.Context, req *corepb.ReleaseSemaphoreRequest) (*corepb.ReleaseSemaphoreResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -2734,7 +2732,7 @@ func (s *GrackleNonclusteredStub) ReleaseSemaphore(ctx context.Context, req *cor
 func (s *GrackleNonclusteredStub) CreateSemaphore(ctx context.Context, req *corepb.CreateSemaphoreRequest) (*corepb.CreateSemaphoreResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -2759,7 +2757,7 @@ func (s *GrackleNonclusteredStub) CreateSemaphore(ctx context.Context, req *core
 func (s *GrackleNonclusteredStub) UpdateSemaphore(ctx context.Context, req *corepb.UpdateSemaphoreRequest) (*corepb.UpdateSemaphoreResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -2784,7 +2782,7 @@ func (s *GrackleNonclusteredStub) UpdateSemaphore(ctx context.Context, req *core
 func (s *GrackleNonclusteredStub) DeleteSemaphore(ctx context.Context, req *corepb.DeleteSemaphoreRequest) (*corepb.DeleteSemaphoreResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -2833,7 +2831,7 @@ func (s *GrackleNonclusteredStub) RunSemaphoresGarbageCollection(ctx context.Con
 func (s *GrackleNonclusteredStub) SemaphoresDeleteNamespace(ctx context.Context, req *corepb.SemaphoresDeleteNamespaceRequest) (*corepb.SemaphoresDeleteNamespaceResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -2858,7 +2856,7 @@ func (s *GrackleNonclusteredStub) SemaphoresDeleteNamespace(ctx context.Context,
 func (s *GrackleNonclusteredStub) CreateSemaphoreLease(ctx context.Context, req *corepb.CreateSemaphoreLeaseRequest) (*corepb.CreateSemaphoreLeaseResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -2883,7 +2881,7 @@ func (s *GrackleNonclusteredStub) CreateSemaphoreLease(ctx context.Context, req 
 func (s *GrackleNonclusteredStub) RevokeSemaphoreLease(ctx context.Context, req *corepb.RevokeSemaphoreLeaseRequest) (*corepb.RevokeSemaphoreLeaseResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -2908,7 +2906,7 @@ func (s *GrackleNonclusteredStub) RevokeSemaphoreLease(ctx context.Context, req 
 func (s *GrackleNonclusteredStub) RefreshSemaphoreLease(ctx context.Context, req *corepb.RefreshSemaphoreLeaseRequest) (*corepb.RefreshSemaphoreLeaseResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleSemaphoresCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -2933,7 +2931,7 @@ func (s *GrackleNonclusteredStub) RefreshSemaphoreLease(ctx context.Context, req
 func (s *GrackleNonclusteredStub) GetNamespace(ctx context.Context, req *corepb.GetNamespaceRequest) (*corepb.GetNamespaceResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleNamespacesCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -2958,7 +2956,7 @@ func (s *GrackleNonclusteredStub) GetNamespace(ctx context.Context, req *corepb.
 func (s *GrackleNonclusteredStub) GetNamespaceByName(ctx context.Context, req *corepb.GetNamespaceByNameRequest) (*corepb.GetNamespaceByNameResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleNamespacesCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -2983,7 +2981,7 @@ func (s *GrackleNonclusteredStub) GetNamespaceByName(ctx context.Context, req *c
 func (s *GrackleNonclusteredStub) ListNamespaces(ctx context.Context, req *corepb.ListNamespacesRequest) (*corepb.ListNamespacesResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleNamespacesCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -3008,7 +3006,7 @@ func (s *GrackleNonclusteredStub) ListNamespaces(ctx context.Context, req *corep
 func (s *GrackleNonclusteredStub) CreateNamespace(ctx context.Context, req *corepb.CreateNamespaceRequest) (*corepb.CreateNamespaceResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleNamespacesCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -3033,7 +3031,7 @@ func (s *GrackleNonclusteredStub) CreateNamespace(ctx context.Context, req *core
 func (s *GrackleNonclusteredStub) UpdateNamespace(ctx context.Context, req *corepb.UpdateNamespaceRequest) (*corepb.UpdateNamespaceResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleNamespacesCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -3058,7 +3056,7 @@ func (s *GrackleNonclusteredStub) UpdateNamespace(ctx context.Context, req *core
 func (s *GrackleNonclusteredStub) DeleteNamespace(ctx context.Context, req *corepb.DeleteNamespaceRequest) (*corepb.DeleteNamespaceResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleNamespacesCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -3083,7 +3081,7 @@ func (s *GrackleNonclusteredStub) DeleteNamespace(ctx context.Context, req *core
 func (s *GrackleNonclusteredStub) GetWaitGroup(ctx context.Context, req *corepb.GetWaitGroupRequest) (*corepb.GetWaitGroupResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleWaitGroupsCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -3108,7 +3106,7 @@ func (s *GrackleNonclusteredStub) GetWaitGroup(ctx context.Context, req *corepb.
 func (s *GrackleNonclusteredStub) GetWaitGroupByName(ctx context.Context, req *corepb.GetWaitGroupByNameRequest) (*corepb.GetWaitGroupByNameResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleWaitGroupsCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -3133,7 +3131,7 @@ func (s *GrackleNonclusteredStub) GetWaitGroupByName(ctx context.Context, req *c
 func (s *GrackleNonclusteredStub) ListWaitGroups(ctx context.Context, req *corepb.ListWaitGroupsRequest) (*corepb.ListWaitGroupsResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleWaitGroupsCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -3158,7 +3156,7 @@ func (s *GrackleNonclusteredStub) ListWaitGroups(ctx context.Context, req *corep
 func (s *GrackleNonclusteredStub) ListWaitGroupCompletedJobs(ctx context.Context, req *corepb.ListWaitGroupCompletedJobsRequest) (*corepb.ListWaitGroupCompletedJobsResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleWaitGroupsCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -3183,7 +3181,7 @@ func (s *GrackleNonclusteredStub) ListWaitGroupCompletedJobs(ctx context.Context
 func (s *GrackleNonclusteredStub) UpdateWaitGroup(ctx context.Context, req *corepb.UpdateWaitGroupRequest) (*corepb.UpdateWaitGroupResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleWaitGroupsCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -3208,7 +3206,7 @@ func (s *GrackleNonclusteredStub) UpdateWaitGroup(ctx context.Context, req *core
 func (s *GrackleNonclusteredStub) CompleteJobsFromWaitGroup(ctx context.Context, req *corepb.CompleteJobsFromWaitGroupRequest) (*corepb.CompleteJobsFromWaitGroupResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleWaitGroupsCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -3233,7 +3231,7 @@ func (s *GrackleNonclusteredStub) CompleteJobsFromWaitGroup(ctx context.Context,
 func (s *GrackleNonclusteredStub) CreateWaitGroup(ctx context.Context, req *corepb.CreateWaitGroupRequest) (*corepb.CreateWaitGroupResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleWaitGroupsCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -3258,7 +3256,7 @@ func (s *GrackleNonclusteredStub) CreateWaitGroup(ctx context.Context, req *core
 func (s *GrackleNonclusteredStub) DeleteWaitGroup(ctx context.Context, req *corepb.DeleteWaitGroupRequest) (*corepb.DeleteWaitGroupResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleWaitGroupsCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -3307,7 +3305,7 @@ func (s *GrackleNonclusteredStub) RunWaitGroupsGarbageCollection(ctx context.Con
 func (s *GrackleNonclusteredStub) WaitGroupsDeleteNamespace(ctx context.Context, req *corepb.WaitGroupsDeleteNamespaceRequest) (*corepb.WaitGroupsDeleteNamespaceResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleWaitGroupsCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -3332,7 +3330,7 @@ func (s *GrackleNonclusteredStub) WaitGroupsDeleteNamespace(ctx context.Context,
 func (s *GrackleNonclusteredStub) GetBarrier(ctx context.Context, req *corepb.GetBarrierRequest) (*corepb.GetBarrierResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleBarriersCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -3357,7 +3355,7 @@ func (s *GrackleNonclusteredStub) GetBarrier(ctx context.Context, req *corepb.Ge
 func (s *GrackleNonclusteredStub) GetBarrierByName(ctx context.Context, req *corepb.GetBarrierByNameRequest) (*corepb.GetBarrierByNameResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleBarriersCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -3382,7 +3380,7 @@ func (s *GrackleNonclusteredStub) GetBarrierByName(ctx context.Context, req *cor
 func (s *GrackleNonclusteredStub) ListBarriers(ctx context.Context, req *corepb.ListBarriersRequest) (*corepb.ListBarriersResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleBarriersCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -3407,7 +3405,7 @@ func (s *GrackleNonclusteredStub) ListBarriers(ctx context.Context, req *corepb.
 func (s *GrackleNonclusteredStub) ListBarrierParticipants(ctx context.Context, req *corepb.ListBarrierParticipantsRequest) (*corepb.ListBarrierParticipantsResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleBarriersCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.RLock()
 			defer adapter.mu.RUnlock()
 
@@ -3432,7 +3430,7 @@ func (s *GrackleNonclusteredStub) ListBarrierParticipants(ctx context.Context, r
 func (s *GrackleNonclusteredStub) CreateBarrier(ctx context.Context, req *corepb.CreateBarrierRequest) (*corepb.CreateBarrierResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleBarriersCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -3457,7 +3455,7 @@ func (s *GrackleNonclusteredStub) CreateBarrier(ctx context.Context, req *corepb
 func (s *GrackleNonclusteredStub) DeleteBarrier(ctx context.Context, req *corepb.DeleteBarrierRequest) (*corepb.DeleteBarrierResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleBarriersCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -3482,7 +3480,7 @@ func (s *GrackleNonclusteredStub) DeleteBarrier(ctx context.Context, req *corepb
 func (s *GrackleNonclusteredStub) UpdateBarrier(ctx context.Context, req *corepb.UpdateBarrierRequest) (*corepb.UpdateBarrierResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleBarriersCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -3507,7 +3505,7 @@ func (s *GrackleNonclusteredStub) UpdateBarrier(ctx context.Context, req *corepb
 func (s *GrackleNonclusteredStub) ArriveAtBarrier(ctx context.Context, req *corepb.ArriveAtBarrierRequest) (*corepb.ArriveAtBarrierResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleBarriersCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -3556,7 +3554,7 @@ func (s *GrackleNonclusteredStub) RunBarriersGarbageCollection(ctx context.Conte
 func (s *GrackleNonclusteredStub) BarriersDeleteNamespace(ctx context.Context, req *corepb.BarriersDeleteNamespaceRequest) (*corepb.BarriersDeleteNamespaceResponse, error) {
 	shardKey := req.ShardKey()
 	for _, adapter := range s.grackleBarriersCores {
-		if bytes.Compare(shardKey, adapter.upperBound) <= 0 && bytes.Compare(shardKey, adapter.lowerBound) >= 0 {
+		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
 			adapter.mu.Lock()
 			defer adapter.mu.Unlock()
 
@@ -3616,22 +3614,22 @@ func (s *GrackleNonclusteredStub) ListShards(applicationName string) ([]string, 
 }
 
 func NewGrackleNonclusteredStub(shardsPerApp int, coresFactory *GrackleNonclusteredApplicationCoresFactory) *GrackleNonclusteredStub {
+	if shardsPerApp < 1 || int64(shardsPerApp) > int64(cluster.KeyspacePerApplication) || shardsPerApp&(shardsPerApp-1) != 0 {
+		panic(fmt.Sprintf("shardsPerApp must be a power of 2 between 1 and 2^32, got %d", shardsPerApp))
+	}
+
 	grackleLocksCores := make([]*grackleLocksCoreNonclusteredAdapter, shardsPerApp)
 	grackleSemaphoresCores := make([]*grackleSemaphoresCoreNonclusteredAdapter, shardsPerApp)
 	grackleNamespacesCores := make([]*grackleNamespacesCoreNonclusteredAdapter, shardsPerApp)
 	grackleWaitGroupsCores := make([]*grackleWaitGroupsCoreNonclusteredAdapter, shardsPerApp)
 	grackleBarriersCores := make([]*grackleBarriersCoreNonclusteredAdapter, shardsPerApp)
 
-	shardSize := cluster.KeyspacePerApplication / shardsPerApp
+	shardSize := int64(cluster.KeyspacePerApplication) / int64(shardsPerApp)
 	for i := 0; i < shardsPerApp; i++ {
-		lower := uint32(i * shardSize)
-		upper := uint32((i+1)*shardSize - 1)
-		lowerBound := make([]byte, 4)
-		upperBound := make([]byte, 4)
-		binary.BigEndian.PutUint32(lowerBound, lower)
-		binary.BigEndian.PutUint32(upperBound, upper)
+		lowerBound := cluster.ShardKey(int64(i) * shardSize)
+		upperBound := cluster.ShardKey(int64(i+1)*shardSize - 1)
 
-		sl, su := cluster.ShortenBounds(lowerBound, upperBound)
+		sl, su := cluster.ShortenBounds(lowerBound.Bytes(), upperBound.Bytes())
 
 		grackleLocksShardId := fmt.Sprintf("%s_%x_%x", "GrackleLocks", sl, su)
 		grackleLocksCores[i] = &grackleLocksCoreNonclusteredAdapter{core: coresFactory.GrackleLocksCoreFactoryFunc(grackleLocksShardId, lowerBound, upperBound), id: grackleLocksShardId, lowerBound: lowerBound, upperBound: upperBound}

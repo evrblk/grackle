@@ -49,7 +49,7 @@ func newDeletionRecordsTable(shardPrefix []byte) *deletionRecordsTable {
 // Clear deletes every deletion record row of this shard (keys carry the
 // shard prefix in-key under the registry table id).
 func (t *deletionRecordsTable) Clear(badgerStore *store.BadgerStore) error {
-	return badgerStore.DropPrefix(utils.ConcatBytes(t.table.TableId(), t.shardPrefix))
+	return badgerStore.DeletePrefix(utils.ConcatBytes(t.table.TableId(), t.shardPrefix))
 }
 
 // EachEntity streams every deletion record as (canonical key, stored value).

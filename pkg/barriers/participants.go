@@ -41,7 +41,7 @@ func newParticipantsTable(shardPrefix []byte) *participantsTable {
 
 // Clear deletes every participant row.
 func (t *participantsTable) Clear(badgerStore *store.BadgerStore) error {
-	return badgerStore.DropPrefix(t.table.TableId())
+	return badgerStore.DeletePrefix(t.table.TableId())
 }
 
 // EachEntity streams every participant as (canonical key, stored value).

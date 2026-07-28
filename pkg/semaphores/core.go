@@ -7,6 +7,7 @@ import (
 	"math"
 
 	"github.com/evrblk/monstera"
+	"github.com/evrblk/monstera/cluster"
 	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
@@ -27,8 +28,8 @@ type Core struct {
 	badgerStore *store.BadgerStore
 
 	shardPrefix     []byte
-	shardLowerBound []byte
-	shardUpperBound []byte
+	shardLowerBound cluster.ShardKey
+	shardUpperBound cluster.ShardKey
 
 	semaphores        *semaphoresTable
 	holders           *holdersTable
@@ -45,7 +46,7 @@ var _ coreapis.GrackleSemaphoresCoreApi = &Core{}
 // id, making all rows exclusively owned by this core
 // (CoreTypePersistedExclusive); the lower/upper bounds delimit the shard's
 // key range and drive the bounds-filtered portable Restore.
-func NewCore(badgerStore *store.BadgerStore, shardPrefix []byte, shardLowerBound []byte, shardUpperBound []byte) *Core {
+func NewCore(badgerStore *store.BadgerStore, shardPrefix []byte, shardLowerBound cluster.ShardKey, shardUpperBound cluster.ShardKey) *Core {
 	scoped := func(name string) []byte {
 		return utils.ConcatBytes(tables.Grackle[name].Bytes(), shardPrefix)
 	}

@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/evrblk/monstera"
+	"github.com/evrblk/monstera/cluster"
 	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
 
@@ -23,8 +24,8 @@ type Core struct {
 	badgerStore *store.BadgerStore
 
 	shardPrefix     []byte
-	shardLowerBound []byte
-	shardUpperBound []byte
+	shardLowerBound cluster.ShardKey
+	shardUpperBound cluster.ShardKey
 
 	namespaces *namespacesTable
 	counters   *countersTable
@@ -36,7 +37,7 @@ var _ coreapis.GrackleNamespacesCoreApi = &Core{}
 // shardPrefix is a shard-unique prefix (derived from the shard id) nested
 // under every table id; the lower/upper bounds delimit the shard's key range
 // and drive the bounds-filtered portable Restore.
-func NewCore(badgerStore *store.BadgerStore, shardPrefix []byte, shardLowerBound []byte, shardUpperBound []byte) *Core {
+func NewCore(badgerStore *store.BadgerStore, shardPrefix []byte, shardLowerBound cluster.ShardKey, shardUpperBound cluster.ShardKey) *Core {
 	return &Core{
 		badgerStore: badgerStore,
 

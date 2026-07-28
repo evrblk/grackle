@@ -57,7 +57,7 @@ func newBarriersTable(shardPrefix []byte) *barriersTable {
 // names index.
 func (t *barriersTable) Clear(badgerStore *store.BadgerStore) error {
 	for _, prefix := range [][]byte{t.table.TableId(), t.namesIndex.TableId()} {
-		if err := badgerStore.DropPrefix(prefix); err != nil {
+		if err := badgerStore.DeletePrefix(prefix); err != nil {
 			return err
 		}
 	}

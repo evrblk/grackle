@@ -42,7 +42,7 @@ func newLockAncestorsTable(shardPrefix []byte) *lockAncestorsTable {
 
 // Clear deletes every ancestor rollup row.
 func (t *lockAncestorsTable) Clear(badgerStore *store.BadgerStore) error {
-	return badgerStore.DropPrefix(t.table.TableId())
+	return badgerStore.DeletePrefix(t.table.TableId())
 }
 
 // EachEntity streams every ancestor rollup as (canonical key, stored value).

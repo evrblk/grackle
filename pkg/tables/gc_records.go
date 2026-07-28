@@ -65,7 +65,7 @@ func (t *GCRecordsTable[T, U]) List(txn *store.Txn, limit int) ([]T, error) {
 // Clear deletes every GC record row of this shard (keys carry the shard
 // prefix in-key under the registry table id).
 func (t *GCRecordsTable[T, U]) Clear(badgerStore *store.BadgerStore) error {
-	return badgerStore.DropPrefix(utils.ConcatBytes(t.table.TableId(), t.shardGlobalIndexPrefix))
+	return badgerStore.DeletePrefix(utils.ConcatBytes(t.table.TableId(), t.shardGlobalIndexPrefix))
 }
 
 // EachEntity streams every GC record as (canonical key, stored value). The

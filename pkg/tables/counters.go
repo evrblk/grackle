@@ -63,7 +63,7 @@ func (t *CountersTable[T, U]) Delete(txn *store.Txn, accountId uint64, namespace
 
 // Clear deletes every counter row.
 func (t *CountersTable[T, U]) Clear(badgerStore *store.BadgerStore) error {
-	return badgerStore.DropPrefix(t.table.TableId())
+	return badgerStore.DeletePrefix(t.table.TableId())
 }
 
 // EachEntity streams every counter as (canonical key, stored value).

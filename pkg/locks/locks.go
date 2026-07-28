@@ -58,7 +58,7 @@ func newLocksTable(shardPrefix []byte) *locksTable {
 // lease id index.
 func (t *locksTable) Clear(badgerStore *store.BadgerStore) error {
 	for _, prefix := range [][]byte{t.table.TableId(), t.leaseIdIndex.TableId()} {
-		if err := badgerStore.DropPrefix(prefix); err != nil {
+		if err := badgerStore.DeletePrefix(prefix); err != nil {
 			return err
 		}
 	}

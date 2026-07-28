@@ -78,7 +78,7 @@ func (t *LeasesTable) Clear(badgerStore *store.BadgerStore) error {
 		t.processIdIndex.TableId(),
 		utils.ConcatBytes(t.expirationIndex.TableId(), t.shardPrefix),
 	} {
-		if err := badgerStore.DropPrefix(prefix); err != nil {
+		if err := badgerStore.DeletePrefix(prefix); err != nil {
 			return err
 		}
 	}

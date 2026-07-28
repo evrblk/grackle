@@ -38,7 +38,7 @@ func newJobsTable(shardPrefix []byte) *jobsTable {
 
 // Clear deletes every job row.
 func (t *jobsTable) Clear(badgerStore *store.BadgerStore) error {
-	return badgerStore.DropPrefix(t.table.TableId())
+	return badgerStore.DeletePrefix(t.table.TableId())
 }
 
 // EachEntity streams every job as (canonical key, stored value).

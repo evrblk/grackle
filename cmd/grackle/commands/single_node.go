@@ -11,6 +11,7 @@ import (
 	"syscall"
 
 	gracklepb "github.com/evrblk/evrblk-go/grackle/v1beta"
+	"github.com/evrblk/monstera/cluster"
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
 	"github.com/evrblk/yellowstone-common/honey"
@@ -71,19 +72,19 @@ var singleNodeCmd = &cobra.Command{
 
 		// Grackle single node client
 		coresFactory := &coreapis.GrackleNonclusteredApplicationCoresFactory{
-			GrackleLocksCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) coreapis.GrackleLocksCoreApi {
+			GrackleLocksCoreFactoryFunc: func(shardId string, lowerBound cluster.ShardKey, upperBound cluster.ShardKey) coreapis.GrackleLocksCoreApi {
 				return locks.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
 			},
-			GrackleNamespacesCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) coreapis.GrackleNamespacesCoreApi {
+			GrackleNamespacesCoreFactoryFunc: func(shardId string, lowerBound cluster.ShardKey, upperBound cluster.ShardKey) coreapis.GrackleNamespacesCoreApi {
 				return namespaces.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
 			},
-			GrackleSemaphoresCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) coreapis.GrackleSemaphoresCoreApi {
+			GrackleSemaphoresCoreFactoryFunc: func(shardId string, lowerBound cluster.ShardKey, upperBound cluster.ShardKey) coreapis.GrackleSemaphoresCoreApi {
 				return semaphores.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
 			},
-			GrackleWaitGroupsCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) coreapis.GrackleWaitGroupsCoreApi {
+			GrackleWaitGroupsCoreFactoryFunc: func(shardId string, lowerBound cluster.ShardKey, upperBound cluster.ShardKey) coreapis.GrackleWaitGroupsCoreApi {
 				return waitgroups.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
 			},
-			GrackleBarriersCoreFactoryFunc: func(shardId string, lowerBound []byte, upperBound []byte) coreapis.GrackleBarriersCoreApi {
+			GrackleBarriersCoreFactoryFunc: func(shardId string, lowerBound cluster.ShardKey, upperBound cluster.ShardKey) coreapis.GrackleBarriersCoreApi {
 				return barriers.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
 			},
 		}

@@ -63,40 +63,40 @@ var nodeCmd = &cobra.Command{
 				CoreType: monstera.CoreTypePersistedExclusive,
 				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 					return coreapis.NewGrackleLocksCoreAdapter(
-						replica.NodeId, shard.Id, replica.Id, shard.LowerBound, shard.UpperBound,
-						locks.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
+						replica.NodeId, shard.Id, replica.Id, shard.LowerKey(), shard.UpperKey(),
+						locks.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerKey(), shard.UpperKey()))
 				},
 			},
 			"GrackleNamespaces": {
 				CoreType: monstera.CoreTypePersistedExclusive,
 				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 					return coreapis.NewGrackleNamespacesCoreAdapter(
-						replica.NodeId, shard.Id, replica.Id, shard.LowerBound, shard.UpperBound,
-						namespaces.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
+						replica.NodeId, shard.Id, replica.Id, shard.LowerKey(), shard.UpperKey(),
+						namespaces.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerKey(), shard.UpperKey()))
 				},
 			},
 			"GrackleWaitGroups": {
 				CoreType: monstera.CoreTypePersistedExclusive,
 				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 					return coreapis.NewGrackleWaitGroupsCoreAdapter(
-						replica.NodeId, shard.Id, replica.Id, shard.LowerBound, shard.UpperBound,
-						waitgroups.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
+						replica.NodeId, shard.Id, replica.Id, shard.LowerKey(), shard.UpperKey(),
+						waitgroups.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerKey(), shard.UpperKey()))
 				},
 			},
 			"GrackleBarriers": {
 				CoreType: monstera.CoreTypePersistedExclusive,
 				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 					return coreapis.NewGrackleBarriersCoreAdapter(
-						replica.NodeId, shard.Id, replica.Id, shard.LowerBound, shard.UpperBound,
-						barriers.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
+						replica.NodeId, shard.Id, replica.Id, shard.LowerKey(), shard.UpperKey(),
+						barriers.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerKey(), shard.UpperKey()))
 				},
 			},
 			"GrackleSemaphores": {
 				CoreType: monstera.CoreTypePersistedExclusive,
 				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 					return coreapis.NewGrackleSemaphoresCoreAdapter(
-						replica.NodeId, shard.Id, replica.Id, shard.LowerBound, shard.UpperBound,
-						semaphores.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
+						replica.NodeId, shard.Id, replica.Id, shard.LowerKey(), shard.UpperKey(),
+						semaphores.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerKey(), shard.UpperKey()))
 				},
 			},
 		}

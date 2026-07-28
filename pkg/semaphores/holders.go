@@ -66,7 +66,7 @@ func newHoldersTable(shardPrefix []byte) *holdersTable {
 // expiration index, and the lease id index.
 func (t *holdersTable) Clear(badgerStore *store.BadgerStore) error {
 	for _, prefix := range [][]byte{t.table.TableId(), t.expirationIndex.TableId(), t.leaseIdIndex.TableId()} {
-		if err := badgerStore.DropPrefix(prefix); err != nil {
+		if err := badgerStore.DeletePrefix(prefix); err != nil {
 			return err
 		}
 	}

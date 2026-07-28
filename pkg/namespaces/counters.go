@@ -35,7 +35,7 @@ func newCountersTable(shardPrefix []byte) *countersTable {
 
 // Clear deletes every counter row.
 func (t *countersTable) Clear(badgerStore *store.BadgerStore) error {
-	return badgerStore.DropPrefix(t.table.TableId())
+	return badgerStore.DeletePrefix(t.table.TableId())
 }
 
 // EachEntity streams every counter as (canonical key, stored value).

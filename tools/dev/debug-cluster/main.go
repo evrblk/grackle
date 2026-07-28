@@ -90,40 +90,40 @@ func (nr *nodeRunner) start(transport transport.DataPlane, useGrpc bool) error {
 			CoreType: monstera.CoreTypePersistedExclusive,
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 				return coreapis.NewGrackleLocksCoreAdapter(
-					replica.NodeId, shard.Id, replica.Id, shard.LowerBound, shard.UpperBound,
-					locks.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
+					replica.NodeId, shard.Id, replica.Id, shard.LowerKey(), shard.UpperKey(),
+					locks.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerKey(), shard.UpperKey()))
 			},
 		},
 		"GrackleNamespaces": {
 			CoreType: monstera.CoreTypePersistedExclusive,
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 				return coreapis.NewGrackleNamespacesCoreAdapter(
-					replica.NodeId, shard.Id, replica.Id, shard.LowerBound, shard.UpperBound,
-					namespaces.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
+					replica.NodeId, shard.Id, replica.Id, shard.LowerKey(), shard.UpperKey(),
+					namespaces.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerKey(), shard.UpperKey()))
 			},
 		},
 		"GrackleWaitGroups": {
 			CoreType: monstera.CoreTypePersistedExclusive,
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 				return coreapis.NewGrackleWaitGroupsCoreAdapter(
-					replica.NodeId, shard.Id, replica.Id, shard.LowerBound, shard.UpperBound,
-					waitgroups.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
+					replica.NodeId, shard.Id, replica.Id, shard.LowerKey(), shard.UpperKey(),
+					waitgroups.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerKey(), shard.UpperKey()))
 			},
 		},
 		"GrackleBarriers": {
 			CoreType: monstera.CoreTypePersistedExclusive,
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 				return coreapis.NewGrackleBarriersCoreAdapter(
-					replica.NodeId, shard.Id, replica.Id, shard.LowerBound, shard.UpperBound,
-					barriers.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
+					replica.NodeId, shard.Id, replica.Id, shard.LowerKey(), shard.UpperKey(),
+					barriers.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerKey(), shard.UpperKey()))
 			},
 		},
 		"GrackleSemaphores": {
 			CoreType: monstera.CoreTypePersistedExclusive,
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 				return coreapis.NewGrackleSemaphoresCoreAdapter(
-					replica.NodeId, shard.Id, replica.Id, shard.LowerBound, shard.UpperBound,
-					semaphores.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerBound, shard.UpperBound))
+					replica.NodeId, shard.Id, replica.Id, shard.LowerKey(), shard.UpperKey(),
+					semaphores.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerKey(), shard.UpperKey()))
 			},
 		},
 	}
@@ -138,7 +138,7 @@ func (nr *nodeRunner) start(transport transport.DataPlane, useGrpc bool) error {
 	// Starting Monstera node. A fresh data dir comes up UNPROVISIONED; bootstrap it
 	// in-process with the cluster config (mirrors an admin Bootstrap over the wire).
 	monsteraNode.Start()
-	if monsteraNode.NodeState() == monstera.UNPROVISIONED {
+	if monsteraNode.NodeState() == monstera.NodeStateUnprovisioned {
 		if err := monsteraNode.Bootstrap(context.Background(), nr.nodeID, nr.clusterConfig); err != nil {
 			return fmt.Errorf("failed to bootstrap Monstera node %s: %w", nr.nodeID, err)
 		}

@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/evrblk/monstera/cluster"
 	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
@@ -2791,7 +2792,7 @@ func TestCore_LastActivityAt(t *testing.T) {
 func newLocksCore(t *testing.T) *Core {
 	badgerStore, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
-	return NewCore(badgerStore, []byte{0x1d, 0x36, 0x00, 0x00}, []byte{0x00, 0x00, 0x00, 0x00}, []byte{0xff, 0xff, 0xff, 0xff})
+	return NewCore(badgerStore, []byte{0x1d, 0x36, 0x00, 0x00}, 0x00000000, 0xffffffff)
 }
 
 func createLease(t *testing.T, core *Core, accountId uint64, namespaceId uint64, processId string, now time.Time, ttl time.Duration) *corepb.Lease {
@@ -3088,18 +3089,18 @@ func TestCore_SplitSnapshotRestore(t *testing.T) {
 	badgerStore, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	fullLower := []byte{0x00, 0x00, 0x00, 0x00}
-	fullUpper := []byte{0xff, 0xff, 0xff, 0xff}
-	splitAt := []byte{0x80, 0x00, 0x00, 0x00}
+	fullLower := cluster.ShardKey(0x00000000)
+	fullUpper := cluster.ShardKey(0xffffffff)
+	splitAt := cluster.ShardKey(0x80000000)
 
 	// Parent and both children share the same physical store: the shard
 	// prefixes are what keep their rows disjoint.
 	parent := NewCore(badgerStore, []byte{0xaa, 0x00, 0x00, 0x01}, fullLower, fullUpper)
-	child1 := NewCore(badgerStore, []byte{0xaa, 0x00, 0x00, 0x02}, fullLower, []byte{0x7f, 0xff, 0xff, 0xff})
+	child1 := NewCore(badgerStore, []byte{0xaa, 0x00, 0x00, 0x02}, fullLower, 0x7fffffff)
 	child2 := NewCore(badgerStore, []byte{0xaa, 0x00, 0x00, 0x03}, splitAt, fullUpper)
 
 	// Two namespaces, one hashing into each half of the keyspace.
-	loAccount, loNamespace := namespaceInRange(t, fullLower, []byte{0x7f, 0xff, 0xff, 0xff})
+	loAccount, loNamespace := namespaceInRange(t, fullLower, 0x7fffffff)
 	hiAccount, hiNamespace := namespaceInRange(t, splitAt, fullUpper)
 
 	type fixture struct {
@@ -3258,13 +3259,13 @@ func countOwnedRows(t *testing.T, c *Core) int {
 
 // namespaceInRange finds an (accountId, namespaceId) pair whose shard key
 // falls within [lower, upper].
-func namespaceInRange(t *testing.T, lower []byte, upper []byte) (uint64, uint64) {
+func namespaceInRange(t *testing.T, lower cluster.ShardKey, upper cluster.ShardKey) (uint64, uint64) {
 	t.Helper()
 	for i := 0; i < 100_000; i++ {
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
 		sk := sharding.ByAccountAndNamespace(accountId, namespaceId)
-		if bytes.Compare(sk, lower) >= 0 && bytes.Compare(sk, upper) <= 0 {
+		if sk >= lower && sk <= upper {
 			return accountId, namespaceId
 		}
 	}
@@ -3282,16 +3283,16 @@ func TestCore_MergeSnapshotRestore(t *testing.T) {
 	badgerStore, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 
-	fullLower := []byte{0x00, 0x00, 0x00, 0x00}
-	fullUpper := []byte{0xff, 0xff, 0xff, 0xff}
-	splitAt := []byte{0x80, 0x00, 0x00, 0x00}
+	fullLower := cluster.ShardKey(0x00000000)
+	fullUpper := cluster.ShardKey(0xffffffff)
+	splitAt := cluster.ShardKey(0x80000000)
 
 	// Two adjacent parents and the merged child share one physical store.
-	parentA := NewCore(badgerStore, []byte{0xbb, 0x00, 0x00, 0x01}, fullLower, []byte{0x7f, 0xff, 0xff, 0xff})
+	parentA := NewCore(badgerStore, []byte{0xbb, 0x00, 0x00, 0x01}, fullLower, 0x7fffffff)
 	parentB := NewCore(badgerStore, []byte{0xbb, 0x00, 0x00, 0x02}, splitAt, fullUpper)
 	child := NewCore(badgerStore, []byte{0xbb, 0x00, 0x00, 0x03}, fullLower, fullUpper)
 
-	loAccount, loNamespace := namespaceInRange(t, fullLower, []byte{0x7f, 0xff, 0xff, 0xff})
+	loAccount, loNamespace := namespaceInRange(t, fullLower, 0x7fffffff)
 	hiAccount, hiNamespace := namespaceInRange(t, splitAt, fullUpper)
 
 	populate := func(parent *Core, accountId, namespaceId uint64) *corepb.LockId {
