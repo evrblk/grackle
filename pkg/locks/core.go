@@ -25,7 +25,7 @@ import (
 type Core struct {
 	badgerStore *store.BadgerStore
 
-	shardPrefix     []byte
+	replicaPrefix   []byte
 	shardLowerBound cluster.ShardKey
 	shardUpperBound cluster.ShardKey
 
@@ -39,39 +39,33 @@ type Core struct {
 var _ coreapis.GrackleLocksCoreApi = &Core{}
 
 // NewCore constructs a Core bound to a single shard of the locks keyspace.
-// shardPrefix is a shard-unique prefix (derived from the shard id, e.g.
-// utils.GetTruncatedHash(shardId, 4)) nested under every table id, making all
+// replicaPrefix is a replica-unique prefix (a node-local two-byte prefix assigned
+// by honey.ReplicaPrefixRegistry) nested under every table id, making all
 // rows exclusively owned by this core. Record keys carry no shard key
 // material (exclusive layout — the prefix is the isolation; routing
 // violations are rejected upstream by the generated core adapter's shard
 // bounds check); the lower/upper bounds delimit the shard's key range and
 // drive the bounds-filtered portable Restore.
-func NewCore(badgerStore *store.BadgerStore, shardPrefix []byte, shardLowerBound cluster.ShardKey, shardUpperBound cluster.ShardKey) *Core {
-	scoped := func(name string) []byte {
-		return utils.ConcatBytes(tables.Grackle[name].Bytes(), shardPrefix)
-	}
-
+func NewCore(badgerStore *store.BadgerStore, replicaPrefix []byte, shardLowerBound cluster.ShardKey, shardUpperBound cluster.ShardKey) *Core {
 	return &Core{
 		badgerStore: badgerStore,
 
-		shardPrefix:     shardPrefix,
+		replicaPrefix:   replicaPrefix,
 		shardLowerBound: shardLowerBound,
 		shardUpperBound: shardUpperBound,
 
-		locks:     newLocksTable(shardPrefix),
-		ancestors: newLockAncestorsTable(shardPrefix),
+		locks:     newLocksTable(replicaPrefix),
+		ancestors: newLockAncestorsTable(replicaPrefix),
 		counters: tables.NewCountersTable[*corepb.LocksCounter, corepb.LocksCounter](
-			scoped("Grackle.LocksCore.Counters.Table"),
+			utils.ConcatBytes(replicaPrefix, tablePrefixCounters),
 		),
 		gcRecords: tables.NewGCRecordsTable[*corepb.LocksGarbageCollectionRecord, corepb.LocksGarbageCollectionRecord](
-			tables.Grackle["Grackle.LocksCore.GarbageCollectionRecords.Table"].Bytes(),
-			shardPrefix,
+			utils.ConcatBytes(replicaPrefix, tablePrefixGCRecords),
 		),
 		leases: tables.NewLeasesTable(
-			shardPrefix,
-			scoped("Grackle.LocksCore.Leases.Table"),
-			scoped("Grackle.LocksCore.Leases.ProcessIdIndex"),
-			tables.Grackle["Grackle.LocksCore.Leases.ExpirationIndex"].Bytes(),
+			utils.ConcatBytes(replicaPrefix, tablePrefixLeases),
+			utils.ConcatBytes(replicaPrefix, tablePrefixLeasesProcessIdIndex),
+			utils.ConcatBytes(replicaPrefix, tablePrefixLeasesExpirationIndex),
 		),
 	}
 }
@@ -84,11 +78,11 @@ func (c *Core) Close() {
 
 func (c *Core) snapshotSections() []tables.Section {
 	return []tables.Section{
-		{Name: "Grackle.LocksCore.Locks", Table: c.locks},
-		{Name: "Grackle.LocksCore.Ancestors", Table: c.ancestors},
-		{Name: "Grackle.LocksCore.Counters", Table: c.counters},
-		{Name: "Grackle.LocksCore.Leases", Table: c.leases},
-		{Name: "Grackle.LocksCore.GarbageCollectionRecords", Table: c.gcRecords},
+		{Name: "Locks", Table: c.locks},
+		{Name: "Ancestors", Table: c.ancestors},
+		{Name: "Counters", Table: c.counters},
+		{Name: "Leases", Table: c.leases},
+		{Name: "GarbageCollectionRecords", Table: c.gcRecords},
 	}
 }
 

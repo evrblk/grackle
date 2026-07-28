@@ -22,7 +22,7 @@ import (
 type Core struct {
 	badgerStore *store.BadgerStore
 
-	shardPrefix     []byte
+	replicaPrefix   []byte
 	shardLowerBound cluster.ShardKey
 	shardUpperBound cluster.ShardKey
 
@@ -37,33 +37,29 @@ type Core struct {
 var _ coreapis.GrackleWaitGroupsCoreApi = &Core{}
 
 // NewCore constructs a Core bound to a single shard of the wait-groups
-// keyspace. shardPrefix is a shard-unique prefix (derived from the shard id)
+// keyspace. replicaPrefix is a replica-unique prefix (a node-local two-byte prefix
+// assigned by honey.ReplicaPrefixRegistry)
 // nested under every table id, making all rows exclusively owned by this core
 // (CoreTypePersistedExclusive); the lower/upper bounds delimit the shard's
 // key range and drive the bounds-filtered portable Restore.
-func NewCore(badgerStore *store.BadgerStore, shardPrefix []byte, shardLowerBound cluster.ShardKey, shardUpperBound cluster.ShardKey) *Core {
-	scoped := func(name string) []byte {
-		return utils.ConcatBytes(tables.Grackle[name].Bytes(), shardPrefix)
-	}
-
+func NewCore(badgerStore *store.BadgerStore, replicaPrefix []byte, shardLowerBound cluster.ShardKey, shardUpperBound cluster.ShardKey) *Core {
 	return &Core{
 		badgerStore: badgerStore,
 
-		shardPrefix:     shardPrefix,
+		replicaPrefix:   replicaPrefix,
 		shardLowerBound: shardLowerBound,
 		shardUpperBound: shardUpperBound,
 
-		waitGroups: newWaitGroupsTable(shardPrefix),
-		jobs:       newJobsTable(shardPrefix),
+		waitGroups: newWaitGroupsTable(replicaPrefix),
+		jobs:       newJobsTable(replicaPrefix),
 		counters: tables.NewCountersTable[*corepb.WaitGroupsCounter, corepb.WaitGroupsCounter](
-			scoped("Grackle.WaitGroupsCore.Counters.Table"),
+			utils.ConcatBytes(replicaPrefix, tablePrefixCounters),
 		),
 		gcRecords: tables.NewGCRecordsTable[*corepb.WaitGroupsGarbageCollectionRecord, corepb.WaitGroupsGarbageCollectionRecord](
-			tables.Grackle["Grackle.WaitGroupsCore.GarbageCollectionRecords.Table"].Bytes(),
-			shardPrefix,
+			utils.ConcatBytes(replicaPrefix, tablePrefixGCRecords),
 		),
-		expirationRecords: newExpirationRecordsTable(shardPrefix),
-		deletionRecords:   newDeletionRecordsTable(shardPrefix),
+		expirationRecords: newExpirationRecordsTable(replicaPrefix),
+		deletionRecords:   newDeletionRecordsTable(replicaPrefix),
 	}
 }
 
@@ -75,12 +71,12 @@ func (c *Core) Close() {
 
 func (c *Core) snapshotSections() []tables.Section {
 	return []tables.Section{
-		{Name: "Grackle.WaitGroupsCore.WaitGroups", Table: c.waitGroups},
-		{Name: "Grackle.WaitGroupsCore.Jobs", Table: c.jobs},
-		{Name: "Grackle.WaitGroupsCore.Counters", Table: c.counters},
-		{Name: "Grackle.WaitGroupsCore.GarbageCollectionRecords", Table: c.gcRecords},
-		{Name: "Grackle.WaitGroupsCore.ExpirationRecords", Table: c.expirationRecords},
-		{Name: "Grackle.WaitGroupsCore.DeletionRecords", Table: c.deletionRecords},
+		{Name: "WaitGroups", Table: c.waitGroups},
+		{Name: "Jobs", Table: c.jobs},
+		{Name: "Counters", Table: c.counters},
+		{Name: "GarbageCollectionRecords", Table: c.gcRecords},
+		{Name: "ExpirationRecords", Table: c.expirationRecords},
+		{Name: "DeletionRecords", Table: c.deletionRecords},
 	}
 }
 

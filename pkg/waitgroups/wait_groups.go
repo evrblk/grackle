@@ -36,17 +36,13 @@ type waitGroupsTable struct {
 // core (CoreTypePersistedExclusive). Keys carry no shard key material — the
 // prefix is the isolation, so honey gets nil bounds; routing violations are
 // rejected upstream by the generated core adapter.
-func newWaitGroupsTable(shardPrefix []byte) *waitGroupsTable {
+func newWaitGroupsTable(replicaPrefix []byte) *waitGroupsTable {
 	return &waitGroupsTable{
 		table: honey.NewBinaryTable[*corepb.WaitGroup, corepb.WaitGroup](
-			utils.ConcatBytes(tables.Grackle["Grackle.WaitGroupsCore.WaitGroups.Table"].Bytes(), shardPrefix),
-			nil,
-			nil,
+			utils.ConcatBytes(replicaPrefix, tablePrefixWaitGroups),
 		),
 		namesIndex: honey.NewUint64Table(
-			utils.ConcatBytes(tables.Grackle["Grackle.WaitGroupsCore.WaitGroups.NamesIndex"].Bytes(), shardPrefix),
-			nil,
-			nil,
+			utils.ConcatBytes(replicaPrefix, tablePrefixWaitGroupsNamesIndex),
 		),
 	}
 }

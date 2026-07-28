@@ -34,17 +34,13 @@ type namespacesTable struct {
 // shared with any other core (CoreTypePersistedExclusive). Keys carry no
 // shard key material — the prefix is the isolation, so honey gets nil bounds;
 // routing violations are rejected upstream by the generated core adapter.
-func newNamespacesTable(shardPrefix []byte) *namespacesTable {
+func newNamespacesTable(replicaPrefix []byte) *namespacesTable {
 	return &namespacesTable{
 		table: honey.NewBinaryTable[*corepb.Namespace, corepb.Namespace](
-			utils.ConcatBytes(tables.Grackle["Grackle.NamespacesCore.Namespaces.Table"].Bytes(), shardPrefix),
-			nil,
-			nil,
+			utils.ConcatBytes(replicaPrefix, tablePrefixNamespaces),
 		),
 		namesIndex: honey.NewUint64Table(
-			utils.ConcatBytes(tables.Grackle["Grackle.NamespacesCore.Namespaces.NamesIndex"].Bytes(), shardPrefix),
-			nil,
-			nil,
+			utils.ConcatBytes(replicaPrefix, tablePrefixNamespacesNamesIndex),
 		),
 	}
 }

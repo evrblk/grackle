@@ -30,12 +30,10 @@ type lockAncestorsTable struct {
 // newLockAncestorsTable scopes the table under the shard-unique prefix
 // (nested under the registry table id); see newLocksTable. Keys carry no
 // shard key material, so honey gets nil bounds.
-func newLockAncestorsTable(shardPrefix []byte) *lockAncestorsTable {
+func newLockAncestorsTable(replicaPrefix []byte) *lockAncestorsTable {
 	return &lockAncestorsTable{
 		table: honey.NewBinaryTable[*corepb.LockAncestor, corepb.LockAncestor](
-			utils.ConcatBytes(tables.Grackle["Grackle.LocksCore.Ancestors.Table"].Bytes(), shardPrefix),
-			nil,
-			nil,
+			utils.ConcatBytes(replicaPrefix, tablePrefixAncestors),
 		),
 	}
 }

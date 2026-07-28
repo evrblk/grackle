@@ -26,12 +26,10 @@ type jobsTable struct {
 
 // newJobsTable scopes the table under the shard-unique prefix; see
 // newWaitGroupsTable.
-func newJobsTable(shardPrefix []byte) *jobsTable {
+func newJobsTable(replicaPrefix []byte) *jobsTable {
 	return &jobsTable{
 		table: honey.NewBinaryTable[*corepb.WaitGroupJob, corepb.WaitGroupJob](
-			utils.ConcatBytes(tables.Grackle["Grackle.WaitGroupsCore.Jobs.Table"].Bytes(), shardPrefix),
-			nil,
-			nil,
+			utils.ConcatBytes(replicaPrefix, tablePrefixJobs),
 		),
 	}
 }

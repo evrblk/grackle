@@ -13,20 +13,13 @@ import (
 	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
-	"github.com/evrblk/yellowstone-common/honey"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
 
 	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/sharding"
-	"github.com/evrblk/grackle/pkg/tables"
 )
-
-func init() {
-	registry := honey.NewBaseTableRegistry(1)
-	tables.RegisterGracklePrefixes(registry)
-}
 
 func TestCore_AcquireSemaphore(t *testing.T) {
 	t.Run("acquire existing semaphore", func(t *testing.T) {
@@ -4299,20 +4292,20 @@ func TestCore_SplitSnapshotRestore(t *testing.T) {
 	}
 }
 
-// ownedTableNames lists the registry names of every table the core owns —
-// the physical storage prefixes are <registry table id><shard prefix>.
-var ownedTableNames = []string{
-	"Grackle.SemaphoresCore.Semaphores.Table",
-	"Grackle.SemaphoresCore.Semaphores.NamesIndex",
-	"Grackle.SemaphoresCore.Holders.LeaseIdIndex",
-	"Grackle.SemaphoresCore.Holders.Table",
-	"Grackle.SemaphoresCore.Holders.ExpirationIndex",
-	"Grackle.SemaphoresCore.Counters.Table",
-	"Grackle.SemaphoresCore.Leases.Table",
-	"Grackle.SemaphoresCore.Leases.ProcessIdIndex",
-	"Grackle.SemaphoresCore.Leases.ExpirationIndex",
-	"Grackle.SemaphoresCore.GarbageCollectionRecords.Table",
-	"Grackle.SemaphoresCore.ExpirationRecords.Table",
+// ownedTablePrefixes lists the table prefix of every table the core owns —
+// the physical storage prefixes are <shard prefix><table prefix>.
+var ownedTablePrefixes = [][]byte{
+	tablePrefixSemaphores,
+	tablePrefixSemaphoresNamesIndex,
+	tablePrefixHoldersLeaseIdIndex,
+	tablePrefixHolders,
+	tablePrefixHoldersExpirationIndex,
+	tablePrefixCounters,
+	tablePrefixLeases,
+	tablePrefixLeasesProcessIdIndex,
+	tablePrefixLeasesExpirationIndex,
+	tablePrefixGCRecords,
+	tablePrefixExpirationRecords,
 }
 
 // countOwnedRows counts the physical rows under every storage prefix the core
@@ -4323,8 +4316,8 @@ func countOwnedRows(t *testing.T, c *Core) int {
 	defer txn.Discard()
 
 	count := 0
-	for _, name := range ownedTableNames {
-		prefix := utils.ConcatBytes(tables.Grackle[name].Bytes(), c.shardPrefix)
+	for _, tablePrefix := range ownedTablePrefixes {
+		prefix := utils.ConcatBytes(c.replicaPrefix, tablePrefix)
 		err := txn.EachPrefixKeys(prefix, func(key []byte) (bool, error) {
 			count++
 			return true, nil

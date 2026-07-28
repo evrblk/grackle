@@ -38,17 +38,13 @@ type barriersTable struct {
 // (CoreTypePersistedExclusive). Keys carry no shard key material — the prefix
 // is the isolation, so honey gets nil bounds; routing violations are rejected
 // upstream by the generated core adapter.
-func newBarriersTable(shardPrefix []byte) *barriersTable {
+func newBarriersTable(replicaPrefix []byte) *barriersTable {
 	return &barriersTable{
 		table: honey.NewBinaryTable[*corepb.Barrier, corepb.Barrier](
-			utils.ConcatBytes(tables.Grackle["Grackle.BarriersCore.Barriers.Table"].Bytes(), shardPrefix),
-			nil,
-			nil,
+			utils.ConcatBytes(replicaPrefix, tablePrefixBarriers),
 		),
 		namesIndex: honey.NewUint64Table(
-			utils.ConcatBytes(tables.Grackle["Grackle.BarriersCore.Barriers.NamesIndex"].Bytes(), shardPrefix),
-			nil,
-			nil,
+			utils.ConcatBytes(replicaPrefix, tablePrefixBarriersNamesIndex),
 		),
 	}
 }

@@ -12,51 +12,37 @@ import (
 
 // expirationRecordsTable stores wait group expiration records indexed by wait group ID and expiration time.
 //
-// Keys are ordered by time (not by identity), so the shard prefix travels
-// in-key instead of in the table id.
+// Keys are ordered by time (not by identity); the shard prefix lives in the
+// table id, so record keys start at the timestamp.
 //
 // Table Primary Key:
-// 1. shard prefix
-// 2. timestamp
-// 3. account id
-// 4. namespace id
-// 5. wait group id
+// 1. timestamp
+// 2. account id
+// 3. namespace id
+// 4. wait group id
 //
 // Table Prefix:
-// 1. shard prefix
-// 2. timestamp
+// 1. timestamp
 type expirationRecordsTable struct {
-	shardPrefix []byte
-
 	table *honey.BinaryTable[*corepb.WaitGroupsExpirationRecord, corepb.WaitGroupsExpirationRecord]
 }
 
-func newExpirationRecordsTable(shardPrefix []byte) *expirationRecordsTable {
+func newExpirationRecordsTable(replicaPrefix []byte) *expirationRecordsTable {
 	return &expirationRecordsTable{
-		shardPrefix: shardPrefix,
-
 		table: honey.NewBinaryTable[*corepb.WaitGroupsExpirationRecord, corepb.WaitGroupsExpirationRecord](
-			tables.Grackle["Grackle.WaitGroupsCore.ExpirationRecords.Table"].Bytes(),
-			shardPrefix,
-			shardPrefix,
+			utils.ConcatBytes(replicaPrefix, tablePrefixExpirationRecords),
 		),
 	}
 }
 
-// Clear deletes every expiration record row of this shard (keys carry the
-// shard prefix in-key under the registry table id).
+// Clear deletes every expiration record row of this shard.
 func (t *expirationRecordsTable) Clear(badgerStore *store.BadgerStore) error {
-	return badgerStore.DeletePrefix(utils.ConcatBytes(t.table.TableId(), t.shardPrefix))
+	return badgerStore.DeletePrefix(t.table.TableId())
 }
 
 // EachEntity streams every expiration record as (canonical key, stored value).
-// The stored key embeds this shard's prefix — identity of the producing
-// shard, which must not travel in a portable stream — so the canonical key
-// starts at the timestamp.
 func (t *expirationRecordsTable) EachEntity(txn *store.Txn, fn func(key []byte, value []byte) (bool, error)) error {
-	return t.table.EachEntry(txn, func(key []byte, value []byte) (bool, error) {
-		return fn(key[len(t.shardPrefix):], value)
-	})
+	return t.table.EachEntry(txn, fn)
 }
 
 // RestoreEntity decodes one streamed expiration record and, if owned, inserts it
@@ -95,7 +81,6 @@ func (t *expirationRecordsTable) ListByExpiration(txn *store.Txn, from int64, to
 
 func (t *expirationRecordsTable) tablePK(time int64, accountId uint64, namespaceId uint64, waitGroupId uint64) []byte {
 	return utils.ConcatBytes(
-		t.shardPrefix,
 		time,
 		accountId,
 		namespaceId,
@@ -105,7 +90,6 @@ func (t *expirationRecordsTable) tablePK(time int64, accountId uint64, namespace
 
 func (t *expirationRecordsTable) tablePrefix(time int64) []byte {
 	return utils.ConcatBytes(
-		t.shardPrefix,
 		time,
 	)
 }

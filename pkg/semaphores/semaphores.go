@@ -38,17 +38,13 @@ type semaphoresTable struct {
 // core (CoreTypePersistedExclusive). Keys carry no shard key material — the
 // prefix is the isolation, so honey gets nil bounds; routing violations are
 // rejected upstream by the generated core adapter.
-func newSemaphoresTable(shardPrefix []byte) *semaphoresTable {
+func newSemaphoresTable(replicaPrefix []byte) *semaphoresTable {
 	return &semaphoresTable{
 		table: honey.NewBinaryTable[*corepb.Semaphore, corepb.Semaphore](
-			utils.ConcatBytes(tables.Grackle["Grackle.SemaphoresCore.Semaphores.Table"].Bytes(), shardPrefix),
-			nil,
-			nil,
+			utils.ConcatBytes(replicaPrefix, tablePrefixSemaphores),
 		),
 		namesIndex: honey.NewUint64Table(
-			utils.ConcatBytes(tables.Grackle["Grackle.SemaphoresCore.Semaphores.NamesIndex"].Bytes(), shardPrefix),
-			nil,
-			nil,
+			utils.ConcatBytes(replicaPrefix, tablePrefixSemaphoresNamesIndex),
 		),
 	}
 }

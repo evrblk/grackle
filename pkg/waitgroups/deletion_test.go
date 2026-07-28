@@ -16,8 +16,8 @@ func TestDeletionRecordsTable_Add(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		shardPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
-		table := newDeletionRecordsTable(shardPrefix)
+		replicaPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
+		table := newDeletionRecordsTable(replicaPrefix)
 
 		now := time.Now()
 		deleteAt := now.Add(time.Hour).UnixNano()
@@ -51,8 +51,8 @@ func TestDeletionRecordsTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		shardPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
-		table := newDeletionRecordsTable(shardPrefix)
+		replicaPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
+		table := newDeletionRecordsTable(replicaPrefix)
 
 		now := time.Now()
 		deleteAt := now.Add(time.Hour).UnixNano()
@@ -88,8 +88,8 @@ func TestDeletionRecordsTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		shardPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
-		table := newDeletionRecordsTable(shardPrefix)
+		replicaPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
+		table := newDeletionRecordsTable(replicaPrefix)
 
 		now := time.Now()
 		deleteAt := now.Add(time.Hour).UnixNano()
@@ -113,8 +113,8 @@ func TestDeletionRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		shardPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
-		table := newDeletionRecordsTable(shardPrefix)
+		replicaPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
+		table := newDeletionRecordsTable(replicaPrefix)
 
 		now := time.Now()
 
@@ -157,8 +157,8 @@ func TestDeletionRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		shardPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
-		table := newDeletionRecordsTable(shardPrefix)
+		replicaPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
+		table := newDeletionRecordsTable(replicaPrefix)
 
 		now := time.Now()
 

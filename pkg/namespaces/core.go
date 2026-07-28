@@ -23,7 +23,7 @@ import (
 type Core struct {
 	badgerStore *store.BadgerStore
 
-	shardPrefix     []byte
+	replicaPrefix   []byte
 	shardLowerBound cluster.ShardKey
 	shardUpperBound cluster.ShardKey
 
@@ -34,19 +34,19 @@ type Core struct {
 var _ coreapis.GrackleNamespacesCoreApi = &Core{}
 
 // NewCore constructs a Core bound to a single shard of the namespaces keyspace.
-// shardPrefix is a shard-unique prefix (derived from the shard id) nested
+// replicaPrefix is a replica-unique prefix (a node-local two-byte prefix assigned by honey.ReplicaPrefixRegistry) nested
 // under every table id; the lower/upper bounds delimit the shard's key range
 // and drive the bounds-filtered portable Restore.
-func NewCore(badgerStore *store.BadgerStore, shardPrefix []byte, shardLowerBound cluster.ShardKey, shardUpperBound cluster.ShardKey) *Core {
+func NewCore(badgerStore *store.BadgerStore, replicaPrefix []byte, shardLowerBound cluster.ShardKey, shardUpperBound cluster.ShardKey) *Core {
 	return &Core{
 		badgerStore: badgerStore,
 
-		shardPrefix:     shardPrefix,
+		replicaPrefix:   replicaPrefix,
 		shardLowerBound: shardLowerBound,
 		shardUpperBound: shardUpperBound,
 
-		namespaces: newNamespacesTable(shardPrefix),
-		counters:   newCountersTable(shardPrefix),
+		namespaces: newNamespacesTable(replicaPrefix),
+		counters:   newCountersTable(replicaPrefix),
 	}
 }
 
@@ -58,8 +58,8 @@ func (c *Core) Close() {
 
 func (c *Core) snapshotSections() []tables.Section {
 	return []tables.Section{
-		{Name: "Grackle.NamespacesCore.Namespaces", Table: c.namespaces},
-		{Name: "Grackle.NamespacesCore.Counters", Table: c.counters},
+		{Name: "Namespaces", Table: c.namespaces},
+		{Name: "Counters", Table: c.counters},
 	}
 }
 

@@ -29,12 +29,10 @@ type participantsTable struct {
 
 // newParticipantsTable scopes the table under the shard-unique prefix; see
 // newBarriersTable.
-func newParticipantsTable(shardPrefix []byte) *participantsTable {
+func newParticipantsTable(replicaPrefix []byte) *participantsTable {
 	return &participantsTable{
 		table: honey.NewBinaryTable[*corepb.BarrierParticipant, corepb.BarrierParticipant](
-			utils.ConcatBytes(tables.Grackle["Grackle.BarriersCore.Participants.Table"].Bytes(), shardPrefix),
-			nil,
-			nil,
+			utils.ConcatBytes(replicaPrefix, tablePrefixParticipants),
 		),
 	}
 }

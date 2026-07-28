@@ -20,9 +20,9 @@ type ptr[T any] interface {
 
 // CountersTable stores counters indexed by namespace id.
 //
-// Exclusive-store layout (CoreTypePersistedExclusive): tableId embeds the
-// shard-unique prefix, keys carry no shard key material, and bounds checking
-// is the owning core's job — honey gets nil bounds.
+// Exclusive-store layout (CoreTypePersistedExclusive): tableId is prefix-first
+// (replica prefix then table prefix), so every row is exclusively owned by this
+// core and record keys carry no shard key material.
 //
 // Table Primary Key:
 // 1. account id
@@ -33,12 +33,8 @@ type CountersTable[T ptr[U], U any] struct {
 
 func NewCountersTable[T ptr[U], U any](tableId []byte) *CountersTable[T, U] {
 	return &CountersTable[T, U]{
-		table: honey.NewBinaryTable[T, U](tableId, nil, nil),
+		table: honey.NewBinaryTable[T, U](tableId),
 	}
-}
-
-func (t *CountersTable[T, U]) GetTableKeyRange() honey.KeyRange {
-	return t.table.GetTableKeyRange()
 }
 
 func (t *CountersTable[T, U]) Get(txn *store.Txn, accountId uint64, namespaceId uint64) (T, error) {

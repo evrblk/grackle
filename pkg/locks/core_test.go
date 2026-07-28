@@ -12,19 +12,12 @@ import (
 	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
-	"github.com/evrblk/yellowstone-common/honey"
 	"github.com/stretchr/testify/require"
 
 	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/sharding"
-	"github.com/evrblk/grackle/pkg/tables"
 )
-
-func init() {
-	registry := honey.NewBaseTableRegistry(1)
-	tables.RegisterGracklePrefixes(registry)
-}
 
 func TestCore_AcquireLock(t *testing.T) {
 	t.Run("exclusive", func(t *testing.T) {
@@ -3227,15 +3220,15 @@ func TestCore_SplitSnapshotRestore(t *testing.T) {
 
 // ownedTableNames lists the registry names of every table the core owns —
 // the physical storage prefixes are <registry table id><shard prefix>.
-var ownedTableNames = []string{
-	"Grackle.LocksCore.Locks.Table",
-	"Grackle.LocksCore.Locks.LeaseIdIndex",
-	"Grackle.LocksCore.Ancestors.Table",
-	"Grackle.LocksCore.Counters.Table",
-	"Grackle.LocksCore.Leases.Table",
-	"Grackle.LocksCore.Leases.ProcessIdIndex",
-	"Grackle.LocksCore.Leases.ExpirationIndex",
-	"Grackle.LocksCore.GarbageCollectionRecords.Table",
+var ownedTableNames = [][]byte{
+	tablePrefixLocks,
+	tablePrefixLocksLeaseIdIndex,
+	tablePrefixAncestors,
+	tablePrefixCounters,
+	tablePrefixLeases,
+	tablePrefixLeasesProcessIdIndex,
+	tablePrefixLeasesExpirationIndex,
+	tablePrefixGCRecords,
 }
 
 // countOwnedRows counts the physical rows under every storage prefix the core
@@ -3246,8 +3239,8 @@ func countOwnedRows(t *testing.T, c *Core) int {
 	defer txn.Discard()
 
 	count := 0
-	for _, name := range ownedTableNames {
-		prefix := utils.ConcatBytes(tables.Grackle[name].Bytes(), c.shardPrefix)
+	for _, tablePrefix := range ownedTableNames {
+		prefix := utils.ConcatBytes(c.replicaPrefix, tablePrefix)
 		err := txn.EachPrefixKeys(prefix, func(key []byte) (bool, error) {
 			count++
 			return true, nil

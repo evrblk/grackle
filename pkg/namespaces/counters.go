@@ -23,12 +23,10 @@ type countersTable struct {
 
 // newCountersTable scopes the table under the shard-unique prefix; see
 // newNamespacesTable.
-func newCountersTable(shardPrefix []byte) *countersTable {
+func newCountersTable(replicaPrefix []byte) *countersTable {
 	return &countersTable{
 		table: honey.NewBinaryTable[*corepb.NamespacesCounter, corepb.NamespacesCounter](
-			utils.ConcatBytes(tables.Grackle["Grackle.NamespacesCore.Counters.Table"].Bytes(), shardPrefix),
-			nil,
-			nil,
+			utils.ConcatBytes(replicaPrefix, tablePrefixCounters),
 		),
 	}
 }

@@ -13,7 +13,6 @@ import (
 	gracklepb "github.com/evrblk/evrblk-go/grackle/v1beta"
 	"github.com/evrblk/monstera/cluster"
 	"github.com/evrblk/monstera/store"
-	"github.com/evrblk/monstera/utils"
 	"github.com/evrblk/yellowstone-common/honey"
 	"github.com/evrblk/yellowstone-common/metrics"
 	"github.com/spf13/cobra"
@@ -25,7 +24,6 @@ import (
 	"github.com/evrblk/grackle/pkg/namespaces"
 	"github.com/evrblk/grackle/pkg/semaphores"
 	grackle_v1beta "github.com/evrblk/grackle/pkg/server/v1beta"
-	"github.com/evrblk/grackle/pkg/tables"
 	"github.com/evrblk/grackle/pkg/waitgroups"
 	"github.com/evrblk/grackle/pkg/workers"
 )
@@ -54,14 +52,22 @@ var singleNodeCmd = &cobra.Command{
 		metricsSrv := metrics.NewMetricsServer(singleNodeCmdCfg.prometheusPort)
 		metricsSrv.Start()
 
-		// Register table prefixes
-		registry := honey.NewBaseTableRegistry(1)
-		tables.RegisterGracklePrefixes(registry)
-
 		// Create shared Badger store for application cores
 		dataStore, err := store.NewBadgerStore(store.DefaultOptions(filepath.Join(singleNodeCmdCfg.dataDir, "cores")))
 		if err != nil {
 			log.Fatalf("failed to create data store: %v", err)
+		}
+
+		// Node-local registry handing out a stable two-byte prefix per shard, so
+		// every core namespaces its data in the shared store without collisions.
+		// Replaces the old truncated-hash shard prefix; see honey.ReplicaPrefixRegistry.
+		replicaRegistry := honey.NewReplicaPrefixRegistry(dataStore)
+		replicaPrefix := func(shardId string) []byte {
+			prefix, err := replicaRegistry.GetOrAssignPrefix(shardId)
+			if err != nil {
+				log.Fatalf("failed to assign replica prefix for shard %s: %v", shardId, err)
+			}
+			return prefix
 		}
 
 		// Middleware
@@ -73,19 +79,19 @@ var singleNodeCmd = &cobra.Command{
 		// Grackle single node client
 		coresFactory := &coreapis.GrackleNonclusteredApplicationCoresFactory{
 			GrackleLocksCoreFactoryFunc: func(shardId string, lowerBound cluster.ShardKey, upperBound cluster.ShardKey) coreapis.GrackleLocksCoreApi {
-				return locks.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
+				return locks.NewCore(dataStore, replicaPrefix(shardId), lowerBound, upperBound)
 			},
 			GrackleNamespacesCoreFactoryFunc: func(shardId string, lowerBound cluster.ShardKey, upperBound cluster.ShardKey) coreapis.GrackleNamespacesCoreApi {
-				return namespaces.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
+				return namespaces.NewCore(dataStore, replicaPrefix(shardId), lowerBound, upperBound)
 			},
 			GrackleSemaphoresCoreFactoryFunc: func(shardId string, lowerBound cluster.ShardKey, upperBound cluster.ShardKey) coreapis.GrackleSemaphoresCoreApi {
-				return semaphores.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
+				return semaphores.NewCore(dataStore, replicaPrefix(shardId), lowerBound, upperBound)
 			},
 			GrackleWaitGroupsCoreFactoryFunc: func(shardId string, lowerBound cluster.ShardKey, upperBound cluster.ShardKey) coreapis.GrackleWaitGroupsCoreApi {
-				return waitgroups.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
+				return waitgroups.NewCore(dataStore, replicaPrefix(shardId), lowerBound, upperBound)
 			},
 			GrackleBarriersCoreFactoryFunc: func(shardId string, lowerBound cluster.ShardKey, upperBound cluster.ShardKey) coreapis.GrackleBarriersCoreApi {
-				return barriers.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
+				return barriers.NewCore(dataStore, replicaPrefix(shardId), lowerBound, upperBound)
 			},
 		}
 		grackleCoreApiClient := coreapis.NewGrackleNonclusteredStub(singleNodeCmdCfg.shardsCount, coresFactory)

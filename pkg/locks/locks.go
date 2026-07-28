@@ -39,17 +39,13 @@ type locksTable struct {
 // shared with any other core (CoreTypePersistedExclusive). Keys carry no
 // shard key material — the prefix is the isolation, so honey gets nil bounds;
 // routing violations are rejected upstream by the generated core adapter.
-func newLocksTable(shardPrefix []byte) *locksTable {
+func newLocksTable(replicaPrefix []byte) *locksTable {
 	return &locksTable{
 		table: honey.NewBinaryTable[*corepb.Lock, corepb.Lock](
-			utils.ConcatBytes(tables.Grackle["Grackle.LocksCore.Locks.Table"].Bytes(), shardPrefix),
-			nil,
-			nil,
+			utils.ConcatBytes(replicaPrefix, tablePrefixLocks),
 		),
 		leaseIdIndex: honey.NewOneToManySortedIndex(
-			utils.ConcatBytes(tables.Grackle["Grackle.LocksCore.Locks.LeaseIdIndex"].Bytes(), shardPrefix),
-			nil,
-			nil,
+			utils.ConcatBytes(replicaPrefix, tablePrefixLocksLeaseIdIndex),
 		),
 	}
 }

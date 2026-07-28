@@ -6,7 +6,6 @@ import (
 	"github.com/evrblk/monstera/cluster"
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
-	"github.com/evrblk/yellowstone-common/honey"
 	"github.com/stretchr/testify/require"
 
 	"github.com/evrblk/grackle/pkg/barriers"
@@ -15,14 +14,8 @@ import (
 	"github.com/evrblk/grackle/pkg/namespaces"
 	"github.com/evrblk/grackle/pkg/semaphores"
 	"github.com/evrblk/grackle/pkg/server/v1beta"
-	"github.com/evrblk/grackle/pkg/tables"
 	"github.com/evrblk/grackle/pkg/waitgroups"
 )
-
-func init() {
-	registry := honey.NewBaseTableRegistry(1)
-	tables.RegisterGracklePrefixes(registry)
-}
 
 func setupGrackleApiServer(t *testing.T) *v1beta.GrackleApiServer {
 	server, close := newGrackleApiServer(t)

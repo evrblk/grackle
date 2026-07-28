@@ -27,7 +27,7 @@ import (
 type Core struct {
 	badgerStore *store.BadgerStore
 
-	shardPrefix     []byte
+	replicaPrefix   []byte
 	shardLowerBound cluster.ShardKey
 	shardUpperBound cluster.ShardKey
 
@@ -41,38 +41,33 @@ type Core struct {
 
 var _ coreapis.GrackleSemaphoresCoreApi = &Core{}
 
-// NewCore constructs a Core bound to a single Monstera shard. shardPrefix is
-// a shard-unique prefix (derived from the shard id) nested under every table
+// NewCore constructs a Core bound to a single Monstera shard. replicaPrefix is
+// a replica-unique prefix (a node-local two-byte prefix assigned by
+// honey.ReplicaPrefixRegistry) nested under every table
 // id, making all rows exclusively owned by this core
 // (CoreTypePersistedExclusive); the lower/upper bounds delimit the shard's
 // key range and drive the bounds-filtered portable Restore.
-func NewCore(badgerStore *store.BadgerStore, shardPrefix []byte, shardLowerBound cluster.ShardKey, shardUpperBound cluster.ShardKey) *Core {
-	scoped := func(name string) []byte {
-		return utils.ConcatBytes(tables.Grackle[name].Bytes(), shardPrefix)
-	}
-
+func NewCore(badgerStore *store.BadgerStore, replicaPrefix []byte, shardLowerBound cluster.ShardKey, shardUpperBound cluster.ShardKey) *Core {
 	return &Core{
 		badgerStore: badgerStore,
 
-		shardPrefix:     shardPrefix,
+		replicaPrefix:   replicaPrefix,
 		shardLowerBound: shardLowerBound,
 		shardUpperBound: shardUpperBound,
 
-		semaphores: newSemaphoresTable(shardPrefix),
-		holders:    newHoldersTable(shardPrefix),
+		semaphores: newSemaphoresTable(replicaPrefix),
+		holders:    newHoldersTable(replicaPrefix),
 		counters: tables.NewCountersTable[*corepb.SemaphoresCounter, corepb.SemaphoresCounter](
-			scoped("Grackle.SemaphoresCore.Counters.Table"),
+			utils.ConcatBytes(replicaPrefix, tablePrefixCounters),
 		),
 		gcRecords: tables.NewGCRecordsTable[*corepb.SemaphoresGarbageCollectionRecord, corepb.SemaphoresGarbageCollectionRecord](
-			tables.Grackle["Grackle.SemaphoresCore.GarbageCollectionRecords.Table"].Bytes(),
-			shardPrefix,
+			utils.ConcatBytes(replicaPrefix, tablePrefixGCRecords),
 		),
-		expirationRecords: newExpirationRecordsTable(shardPrefix),
+		expirationRecords: newExpirationRecordsTable(replicaPrefix),
 		leases: tables.NewLeasesTable(
-			shardPrefix,
-			scoped("Grackle.SemaphoresCore.Leases.Table"),
-			scoped("Grackle.SemaphoresCore.Leases.ProcessIdIndex"),
-			tables.Grackle["Grackle.SemaphoresCore.Leases.ExpirationIndex"].Bytes(),
+			utils.ConcatBytes(replicaPrefix, tablePrefixLeases),
+			utils.ConcatBytes(replicaPrefix, tablePrefixLeasesProcessIdIndex),
+			utils.ConcatBytes(replicaPrefix, tablePrefixLeasesExpirationIndex),
 		),
 	}
 }
@@ -85,12 +80,12 @@ func (c *Core) Close() {
 
 func (c *Core) snapshotSections() []tables.Section {
 	return []tables.Section{
-		{Name: "Grackle.SemaphoresCore.Semaphores", Table: c.semaphores},
-		{Name: "Grackle.SemaphoresCore.Holders", Table: c.holders},
-		{Name: "Grackle.SemaphoresCore.Counters", Table: c.counters},
-		{Name: "Grackle.SemaphoresCore.Leases", Table: c.leases},
-		{Name: "Grackle.SemaphoresCore.GarbageCollectionRecords", Table: c.gcRecords},
-		{Name: "Grackle.SemaphoresCore.ExpirationRecords", Table: c.expirationRecords},
+		{Name: "Semaphores", Table: c.semaphores},
+		{Name: "Holders", Table: c.holders},
+		{Name: "Counters", Table: c.counters},
+		{Name: "Leases", Table: c.leases},
+		{Name: "GarbageCollectionRecords", Table: c.gcRecords},
+		{Name: "ExpirationRecords", Table: c.expirationRecords},
 	}
 }
 

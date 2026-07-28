@@ -25,25 +25,20 @@ type gcptr[T any] interface {
 
 // GCRecordsTable stores GC records for deleted namespaces and entities.
 //
+// Exclusive-store layout (CoreTypePersistedExclusive): tableId is prefix-first
+// (replica prefix then table prefix), so every row is exclusively owned by this
+// core and record keys carry only the gc record id.
+//
 // Table Primary Key:
-// 1. shard id
-// 2. gc record id
+// 1. gc record id
 type GCRecordsTable[T gcptr[U], U any] struct {
-	shardGlobalIndexPrefix []byte
-
 	table *honey.BinaryTable[T, U]
 }
 
-func NewGCRecordsTable[T gcptr[U], U any](tableId []byte, shardGlobalIndexPrefix []byte) *GCRecordsTable[T, U] {
+func NewGCRecordsTable[T gcptr[U], U any](tableId []byte) *GCRecordsTable[T, U] {
 	return &GCRecordsTable[T, U]{
-		shardGlobalIndexPrefix: shardGlobalIndexPrefix,
-
-		table: honey.NewBinaryTable[T, U](tableId, shardGlobalIndexPrefix, shardGlobalIndexPrefix),
+		table: honey.NewBinaryTable[T, U](tableId),
 	}
-}
-
-func (t *GCRecordsTable[T, U]) GetTableKeyRange() honey.KeyRange {
-	return t.table.GetTableKeyRange()
 }
 
 func (t *GCRecordsTable[T, U]) Create(txn *store.Txn, gcRecord T) error {
@@ -62,20 +57,16 @@ func (t *GCRecordsTable[T, U]) List(txn *store.Txn, limit int) ([]T, error) {
 	return result.Items, nil
 }
 
-// Clear deletes every GC record row of this shard (keys carry the shard
-// prefix in-key under the registry table id).
+// Clear deletes every GC record row this core owns.
 func (t *GCRecordsTable[T, U]) Clear(badgerStore *store.BadgerStore) error {
-	return badgerStore.DeletePrefix(utils.ConcatBytes(t.table.TableId(), t.shardGlobalIndexPrefix))
+	return badgerStore.DeletePrefix(t.table.TableId())
 }
 
 // EachEntity streams every GC record as (canonical key, stored value). The
-// stored key embeds this shard's global index prefix — identity of the
-// producing shard, which must not travel in a portable stream — so the
-// canonical key is the record id alone.
+// canonical key is the record id alone — the replica prefix lives in the table
+// id, not the record key, so nothing shard-specific travels in the stream.
 func (t *GCRecordsTable[T, U]) EachEntity(txn *store.Txn, fn func(key []byte, value []byte) (bool, error)) error {
-	return t.table.EachEntry(txn, func(key []byte, value []byte) (bool, error) {
-		return fn(key[len(t.shardGlobalIndexPrefix):], value)
-	})
+	return t.table.EachEntry(txn, fn)
 }
 
 // RestoreEntity decodes one streamed GC record and, if owned, inserts it
@@ -98,7 +89,6 @@ func (t *GCRecordsTable[T, U]) RestoreEntity(txn *store.Txn, key []byte, value [
 
 func (t *GCRecordsTable[T, U]) tablePK(gcRecordId uint64) []byte {
 	return utils.ConcatBytes(
-		t.shardGlobalIndexPrefix,
 		gcRecordId,
 	)
 }

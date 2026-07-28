@@ -16,8 +16,8 @@ func TestExpirationRecordsTable_Add(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		shardPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
-		table := newExpirationRecordsTable(shardPrefix)
+		replicaPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
+		table := newExpirationRecordsTable(replicaPrefix)
 
 		now := time.Now()
 		expiresAt := now.Add(time.Hour).UnixNano()
@@ -51,8 +51,8 @@ func TestExpirationRecordsTable_Add(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		shardPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
-		table := newExpirationRecordsTable(shardPrefix)
+		replicaPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
+		table := newExpirationRecordsTable(replicaPrefix)
 
 		now := time.Now()
 		numRecords := 5
@@ -91,8 +91,8 @@ func TestExpirationRecordsTable_Add(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		shardPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
-		table := newExpirationRecordsTable(shardPrefix)
+		replicaPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
+		table := newExpirationRecordsTable(replicaPrefix)
 
 		now := time.Now()
 		expiresAt := now.Add(time.Hour).UnixNano()
@@ -138,8 +138,8 @@ func TestExpirationRecordsTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		shardPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
-		table := newExpirationRecordsTable(shardPrefix)
+		replicaPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
+		table := newExpirationRecordsTable(replicaPrefix)
 
 		now := time.Now()
 		expiresAt := now.Add(time.Hour).UnixNano()
@@ -178,8 +178,8 @@ func TestExpirationRecordsTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		shardPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
-		table := newExpirationRecordsTable(shardPrefix)
+		replicaPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
+		table := newExpirationRecordsTable(replicaPrefix)
 
 		now := time.Now()
 		expiresAt := now.Add(time.Hour).UnixNano()
@@ -201,8 +201,8 @@ func TestExpirationRecordsTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		shardPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
-		table := newExpirationRecordsTable(shardPrefix)
+		replicaPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
+		table := newExpirationRecordsTable(replicaPrefix)
 
 		now := time.Now()
 		expiresAt1 := now.Add(time.Hour).UnixNano()
@@ -255,8 +255,8 @@ func TestExpirationRecordsTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		shardPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
-		table := newExpirationRecordsTable(shardPrefix)
+		replicaPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
+		table := newExpirationRecordsTable(replicaPrefix)
 
 		now := time.Now()
 		expiresAt := now.Add(time.Hour).UnixNano()
@@ -310,8 +310,8 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		shardPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
-		table := newExpirationRecordsTable(shardPrefix)
+		replicaPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
+		table := newExpirationRecordsTable(replicaPrefix)
 
 		now := time.Now()
 
@@ -365,8 +365,8 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		shardPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
-		table := newExpirationRecordsTable(shardPrefix)
+		replicaPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
+		table := newExpirationRecordsTable(replicaPrefix)
 
 		now := time.Now()
 
@@ -412,8 +412,8 @@ func TestExpirationRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		shardPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
-		table := newExpirationRecordsTable(shardPrefix)
+		replicaPrefix := []byte{0x1d, 0x36, 0x00, 0x00}
+		table := newExpirationRecordsTable(replicaPrefix)
 
 		now := time.Now()
 

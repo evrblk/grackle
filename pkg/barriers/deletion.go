@@ -16,51 +16,37 @@ import (
 // and is reconciled on every activity so the deletion always trails the most
 // recent activity.
 //
-// Keys are ordered by time (not by identity), so the shard prefix travels
-// in-key instead of in the table id.
+// Keys are ordered by time (not by identity). The shard prefix lives in the
+// table id, not in the key.
 //
 // Table Primary Key:
-// 1. shard prefix
-// 2. timestamp (delete_at)
-// 3. account id
-// 4. namespace id
-// 5. barrier id
+// 1. timestamp (delete_at)
+// 2. account id
+// 3. namespace id
+// 4. barrier id
 //
 // Table Prefix:
-// 1. shard prefix
-// 2. timestamp (delete_at)
+// 1. timestamp (delete_at)
 type deletionRecordsTable struct {
-	shardPrefix []byte
-
 	table *honey.BinaryTable[*corepb.BarriersDeletionRecord, corepb.BarriersDeletionRecord]
 }
 
-func newDeletionRecordsTable(shardPrefix []byte) *deletionRecordsTable {
+func newDeletionRecordsTable(replicaPrefix []byte) *deletionRecordsTable {
 	return &deletionRecordsTable{
-		shardPrefix: shardPrefix,
-
 		table: honey.NewBinaryTable[*corepb.BarriersDeletionRecord, corepb.BarriersDeletionRecord](
-			tables.Grackle["Grackle.BarriersCore.DeletionRecords.Table"].Bytes(),
-			shardPrefix,
-			shardPrefix,
+			utils.ConcatBytes(replicaPrefix, tablePrefixDeletionRecords),
 		),
 	}
 }
 
-// Clear deletes every deletion record row of this shard (keys carry the
-// shard prefix in-key under the registry table id).
+// Clear deletes every deletion record row of this shard.
 func (t *deletionRecordsTable) Clear(badgerStore *store.BadgerStore) error {
-	return badgerStore.DeletePrefix(utils.ConcatBytes(t.table.TableId(), t.shardPrefix))
+	return badgerStore.DeletePrefix(t.table.TableId())
 }
 
 // EachEntity streams every deletion record as (canonical key, stored value).
-// The stored key embeds this shard's prefix — identity of the producing
-// shard, which must not travel in a portable stream — so the canonical key
-// starts at the timestamp.
 func (t *deletionRecordsTable) EachEntity(txn *store.Txn, fn func(key []byte, value []byte) (bool, error)) error {
-	return t.table.EachEntry(txn, func(key []byte, value []byte) (bool, error) {
-		return fn(key[len(t.shardPrefix):], value)
-	})
+	return t.table.EachEntry(txn, fn)
 }
 
 // RestoreEntity decodes one streamed deletion record and, if owned, inserts
@@ -99,7 +85,6 @@ func (t *deletionRecordsTable) ListByDeletion(txn *store.Txn, from int64, to int
 
 func (t *deletionRecordsTable) tablePK(time int64, accountId uint64, namespaceId uint64, barrierId uint64) []byte {
 	return utils.ConcatBytes(
-		t.shardPrefix,
 		time,
 		accountId,
 		namespaceId,
@@ -109,7 +94,6 @@ func (t *deletionRecordsTable) tablePK(time int64, accountId uint64, namespaceId
 
 func (t *deletionRecordsTable) tablePrefix(time int64) []byte {
 	return utils.ConcatBytes(
-		t.shardPrefix,
 		time,
 	)
 }

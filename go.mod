@@ -6,8 +6,8 @@ require (
 	github.com/dave/jennifer v1.7.1
 	github.com/evrblk/evrblk-go v0.0.0-20260626162712-8d4590eeb250
 	github.com/evrblk/fenestra v0.0.0-20260724141201-56c281e924fc
-	github.com/evrblk/monstera v0.0.0-20260728172800-bc698252d2b1
-	github.com/evrblk/yellowstone-common v0.0.0-20260724155903-780a112df929
+	github.com/evrblk/monstera v0.0.0-20260728191233-0d4b784a9705
+	github.com/evrblk/yellowstone-common v0.0.0-20260728202725-1a2de654cc6a
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10
 	github.com/prometheus/client_golang v1.24.1
 	github.com/samber/lo v1.53.0

@@ -45,20 +45,14 @@ type holdersTable struct {
 
 // newHoldersTable scopes all three tables under the shard-unique prefix; see
 // newSemaphoresTable.
-func newHoldersTable(shardPrefix []byte) *holdersTable {
+func newHoldersTable(replicaPrefix []byte) *holdersTable {
 	return &holdersTable{
 		table: honey.NewBinaryTable[*corepb.SemaphoreHolder, corepb.SemaphoreHolder](
-			utils.ConcatBytes(tables.Grackle["Grackle.SemaphoresCore.Holders.Table"].Bytes(), shardPrefix),
-			nil,
-			nil),
+			utils.ConcatBytes(replicaPrefix, tablePrefixHolders)),
 		expirationIndex: honey.NewSortedIndex(
-			utils.ConcatBytes(tables.Grackle["Grackle.SemaphoresCore.Holders.ExpirationIndex"].Bytes(), shardPrefix),
-			nil,
-			nil),
+			utils.ConcatBytes(replicaPrefix, tablePrefixHoldersExpirationIndex)),
 		leaseIdIndex: honey.NewOneToManySortedIndex(
-			utils.ConcatBytes(tables.Grackle["Grackle.SemaphoresCore.Holders.LeaseIdIndex"].Bytes(), shardPrefix),
-			nil,
-			nil),
+			utils.ConcatBytes(replicaPrefix, tablePrefixHoldersLeaseIdIndex)),
 	}
 }
 

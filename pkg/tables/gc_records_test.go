@@ -37,7 +37,7 @@ func TestGCRecordsTable_Create(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := NewGCRecordsTable[*testGCRecord, testGCRecord]([]byte{0x01}, []byte{0x01})
+		table := NewGCRecordsTable[*testGCRecord, testGCRecord]([]byte{0x01})
 
 		gcRecordId := rand.Uint64()
 		record := &testGCRecord{
@@ -64,7 +64,7 @@ func TestGCRecordsTable_Create(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := NewGCRecordsTable[*testGCRecord, testGCRecord]([]byte{0x01}, []byte{0x01})
+		table := NewGCRecordsTable[*testGCRecord, testGCRecord]([]byte{0x01})
 
 		// Create multiple records
 		txn := badgerStore.Update()
@@ -92,7 +92,7 @@ func TestGCRecordsTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := NewGCRecordsTable[*testGCRecord, testGCRecord]([]byte{0x01}, []byte{0x01})
+		table := NewGCRecordsTable[*testGCRecord, testGCRecord]([]byte{0x01})
 
 		record := &testGCRecord{
 			Id: rand.Uint64(),
@@ -123,7 +123,7 @@ func TestGCRecordsTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := NewGCRecordsTable[*testGCRecord, testGCRecord]([]byte{0x01}, []byte{0x01})
+		table := NewGCRecordsTable[*testGCRecord, testGCRecord]([]byte{0x01})
 
 		record := &testGCRecord{
 			Id: rand.Uint64(),
@@ -148,7 +148,7 @@ func TestGCRecordsTable_Delete(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := NewGCRecordsTable[*testGCRecord, testGCRecord]([]byte{0x01}, []byte{0x01})
+		table := NewGCRecordsTable[*testGCRecord, testGCRecord]([]byte{0x01})
 
 		// Create 3 records
 		txn := badgerStore.Update()
@@ -185,7 +185,7 @@ func TestGCRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := NewGCRecordsTable[*testGCRecord, testGCRecord]([]byte{0x01}, []byte{0x01})
+		table := NewGCRecordsTable[*testGCRecord, testGCRecord]([]byte{0x01})
 
 		// List from empty table
 		txn := badgerStore.View()
@@ -200,7 +200,7 @@ func TestGCRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := NewGCRecordsTable[*testGCRecord, testGCRecord]([]byte{0x01}, []byte{0x01})
+		table := NewGCRecordsTable[*testGCRecord, testGCRecord]([]byte{0x01})
 
 		// Create 5 records
 		txn := badgerStore.Update()
@@ -230,7 +230,7 @@ func TestGCRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := NewGCRecordsTable[*testGCRecord, testGCRecord]([]byte{0x01}, []byte{0x01})
+		table := NewGCRecordsTable[*testGCRecord, testGCRecord]([]byte{0x01})
 
 		// Create 10 records
 		txn := badgerStore.Update()
@@ -260,7 +260,7 @@ func TestGCRecordsTable_List(t *testing.T) {
 		badgerStore, err := store.NewBadgerInMemoryStore()
 		require.NoError(t, err)
 
-		table := NewGCRecordsTable[*testGCRecord, testGCRecord]([]byte{0x01}, []byte{0x01})
+		table := NewGCRecordsTable[*testGCRecord, testGCRecord]([]byte{0x01})
 
 		// Create 3 records
 		txn := badgerStore.Update()

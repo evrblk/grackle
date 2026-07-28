@@ -19,7 +19,6 @@ import (
 	"github.com/evrblk/monstera/transport"
 	"github.com/evrblk/monstera/transport/grpc"
 	"github.com/evrblk/monstera/transport/local"
-	"github.com/evrblk/monstera/utils"
 	"github.com/evrblk/yellowstone-common/honey"
 	"github.com/evrblk/yellowstone-common/metrics"
 	"github.com/prometheus/client_golang/prometheus"
@@ -32,7 +31,6 @@ import (
 	"github.com/evrblk/grackle/pkg/namespaces"
 	"github.com/evrblk/grackle/pkg/semaphores"
 	grackle_v1beta "github.com/evrblk/grackle/pkg/server/v1beta"
-	"github.com/evrblk/grackle/pkg/tables"
 	"github.com/evrblk/grackle/pkg/waitgroups"
 )
 
@@ -46,12 +44,13 @@ var (
 )
 
 type nodeRunner struct {
-	nodeID         string
-	dataDir        string
-	clusterConfig  *cluster.Config
-	monsteraNode   *monstera.Node
-	monsteraServer *grpc.GrpcServer
-	dataStore      *store.BadgerStore
+	nodeID          string
+	dataDir         string
+	clusterConfig   *cluster.Config
+	monsteraNode    *monstera.Node
+	monsteraServer  *grpc.GrpcServer
+	dataStore       *store.BadgerStore
+	replicaRegistry *honey.ReplicaPrefixRegistry
 }
 
 func newNodeRunner(nodeID string, baseDataDir string, clusterConfig *cluster.Config) (*nodeRunner, error) {
@@ -71,6 +70,9 @@ func newNodeRunner(nodeID string, baseDataDir string, clusterConfig *cluster.Con
 		dataDir:       dataDir,
 		clusterConfig: clusterConfig,
 		dataStore:     dataStore,
+		// Node-local registry handing out a stable two-byte prefix per replica,
+		// replacing the old truncated-hash shard prefix. See honey.ReplicaPrefixRegistry.
+		replicaRegistry: honey.NewReplicaPrefixRegistry(dataStore),
 	}, nil
 }
 
@@ -85,13 +87,21 @@ func (nr *nodeRunner) start(transport transport.DataPlane, useGrpc bool) error {
 	monsteraNodeConfig := monstera.DefaultMonsteraNodeConfig
 	monsteraNodeConfig.UseInMemoryRaftStore = true
 
+	replicaPrefix := func(replicaId string) []byte {
+		prefix, err := nr.replicaRegistry.GetOrAssignPrefix(replicaId)
+		if err != nil {
+			log.Fatalf("failed to assign replica prefix for replica %s: %v", replicaId, err)
+		}
+		return prefix
+	}
+
 	applicationDescriptors := monstera.ApplicationCoreDescriptors{
 		"GrackleLocks": {
 			CoreType: monstera.CoreTypePersistedExclusive,
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 				return coreapis.NewGrackleLocksCoreAdapter(
 					replica.NodeId, shard.Id, replica.Id, shard.LowerKey(), shard.UpperKey(),
-					locks.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerKey(), shard.UpperKey()))
+					locks.NewCore(nr.dataStore, replicaPrefix(replica.Id), shard.LowerKey(), shard.UpperKey()))
 			},
 		},
 		"GrackleNamespaces": {
@@ -99,7 +109,7 @@ func (nr *nodeRunner) start(transport transport.DataPlane, useGrpc bool) error {
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 				return coreapis.NewGrackleNamespacesCoreAdapter(
 					replica.NodeId, shard.Id, replica.Id, shard.LowerKey(), shard.UpperKey(),
-					namespaces.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerKey(), shard.UpperKey()))
+					namespaces.NewCore(nr.dataStore, replicaPrefix(replica.Id), shard.LowerKey(), shard.UpperKey()))
 			},
 		},
 		"GrackleWaitGroups": {
@@ -107,7 +117,7 @@ func (nr *nodeRunner) start(transport transport.DataPlane, useGrpc bool) error {
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 				return coreapis.NewGrackleWaitGroupsCoreAdapter(
 					replica.NodeId, shard.Id, replica.Id, shard.LowerKey(), shard.UpperKey(),
-					waitgroups.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerKey(), shard.UpperKey()))
+					waitgroups.NewCore(nr.dataStore, replicaPrefix(replica.Id), shard.LowerKey(), shard.UpperKey()))
 			},
 		},
 		"GrackleBarriers": {
@@ -115,7 +125,7 @@ func (nr *nodeRunner) start(transport transport.DataPlane, useGrpc bool) error {
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 				return coreapis.NewGrackleBarriersCoreAdapter(
 					replica.NodeId, shard.Id, replica.Id, shard.LowerKey(), shard.UpperKey(),
-					barriers.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerKey(), shard.UpperKey()))
+					barriers.NewCore(nr.dataStore, replicaPrefix(replica.Id), shard.LowerKey(), shard.UpperKey()))
 			},
 		},
 		"GrackleSemaphores": {
@@ -123,7 +133,7 @@ func (nr *nodeRunner) start(transport transport.DataPlane, useGrpc bool) error {
 			CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 				return coreapis.NewGrackleSemaphoresCoreAdapter(
 					replica.NodeId, shard.Id, replica.Id, shard.LowerKey(), shard.UpperKey(),
-					semaphores.NewCore(nr.dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerKey(), shard.UpperKey()))
+					semaphores.NewCore(nr.dataStore, replicaPrefix(replica.Id), shard.LowerKey(), shard.UpperKey()))
 			},
 		},
 	}
@@ -204,10 +214,6 @@ func main() {
 	metricsSrv := metrics.NewMetricsServer(*prometheusPort)
 	metricsSrv.Start()
 	defer metricsSrv.Stop()
-
-	// Register table prefixes
-	registry := honey.NewBaseTableRegistry(1)
-	tables.RegisterGracklePrefixes(registry)
 
 	// Validate and configure transport
 	useGrpc := true

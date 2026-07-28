@@ -14,9 +14,9 @@ import (
 // LeasesTable is a table that stores leases for accounts and namespaces. This is a
 // common implementation that is shared by locks and semaphores.
 //
-// Exclusive-store layout (CoreTypePersistedExclusive): the table ids embed
-// the shard-unique prefix, keys carry no shard key material, and bounds
-// checking is the owning core's job — honey gets nil bounds.
+// Exclusive-store layout (CoreTypePersistedExclusive): every table id is
+// prefix-first (replica prefix then table prefix), so every row is exclusively
+// owned by this core and record keys carry no shard key material.
 //
 // Table Primary Key:
 // 1. account id
@@ -31,52 +31,31 @@ import (
 // 3. process id
 //
 // Expiration Index Primary Key:
-// 1. shard prefix
-// 2. timestamp
-// 3. account id
-// 4. namespace Id
-// 5. lease id
+// 1. timestamp
+// 2. account id
+// 3. namespace Id
+// 4. lease id
 type LeasesTable struct {
-	// shardPrefix scopes the expiration index rows, whose keys are ordered by
-	// time (not by identity) and so carry the prefix in-key instead of in the
-	// table id.
-	shardPrefix []byte
-
 	table           *honey.BinaryTable[*corepb.Lease, corepb.Lease]
 	processIdIndex  *honey.OneToManyUint64Index
 	expirationIndex *honey.SortedIndex
 }
 
-func NewLeasesTable(shardPrefix []byte, tableId []byte, processIdIndexId []byte, expirationIndexId []byte) *LeasesTable {
+func NewLeasesTable(tableId []byte, processIdIndexId []byte, expirationIndexId []byte) *LeasesTable {
 	return &LeasesTable{
-		shardPrefix: shardPrefix,
-
-		table: honey.NewBinaryTable[*corepb.Lease, corepb.Lease](
-			tableId,
-			nil,
-			nil,
-		),
-		processIdIndex: honey.NewOneToManyUint64Index(
-			processIdIndexId,
-			nil,
-			nil,
-		),
-		expirationIndex: honey.NewSortedIndex(
-			expirationIndexId,
-			shardPrefix,
-			shardPrefix,
-		),
+		table:           honey.NewBinaryTable[*corepb.Lease, corepb.Lease](tableId),
+		processIdIndex:  honey.NewOneToManyUint64Index(processIdIndexId),
+		expirationIndex: honey.NewSortedIndex(expirationIndexId),
 	}
 }
 
-// Clear deletes every row this table owns: the primary lease rows, both
-// index tables, and this shard's slice of the expiration index (whose keys
-// carry the shard prefix in-key).
+// Clear deletes every row this table owns: the primary lease rows and both
+// index tables.
 func (t *LeasesTable) Clear(badgerStore *store.BadgerStore) error {
 	for _, prefix := range [][]byte{
 		t.table.TableId(),
 		t.processIdIndex.TableId(),
-		utils.ConcatBytes(t.expirationIndex.TableId(), t.shardPrefix),
+		t.expirationIndex.TableId(),
 	} {
 		if err := badgerStore.DeletePrefix(prefix); err != nil {
 			return err
@@ -106,14 +85,6 @@ func (t *LeasesTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bo
 	return true, t.Create(txn, lease)
 }
 
-func (t *LeasesTable) GetTableKeyRanges() []honey.KeyRange {
-	return []honey.KeyRange{
-		t.table.GetTableKeyRange(),
-		t.processIdIndex.GetTableKeyRange(),
-		t.expirationIndex.GetTableKeyRange(),
-	}
-}
-
 type listLeasesResult struct {
 	Leases                  []*corepb.Lease
 	NextPaginationToken     *corepb.PaginationToken
@@ -136,10 +107,10 @@ func (t *LeasesTable) List(txn *store.Txn, namespaceId *corepb.NamespaceId, pagi
 
 func (t *LeasesTable) ListByExpiration(txn *store.Txn, from int64, to int64, fn func(lease *corepb.Lease) (bool, error)) error {
 	return t.expirationIndex.ListInRange(txn, t.expirationIndexPrefix(from), t.expirationIndexPrefix(to), func(key []byte) (bool, error) {
-		// time := utils.BytesToUint64(key[len(t.shardPrefix) : len(t.shardPrefix)+8])
-		accountId := utils.BytesToUint64(key[len(t.shardPrefix)+8 : len(t.shardPrefix)+8+8])
-		namespaceId := utils.BytesToUint64(key[len(t.shardPrefix)+8+8 : len(t.shardPrefix)+8+8+8])
-		leaseId := utils.BytesToUint64(key[len(t.shardPrefix)+8+8+8 : len(t.shardPrefix)+8+8+8+8])
+		// time := utils.BytesToUint64(key[0:8])
+		accountId := utils.BytesToUint64(key[8 : 8+8])
+		namespaceId := utils.BytesToUint64(key[8+8 : 8+8+8])
+		leaseId := utils.BytesToUint64(key[8+8+8 : 8+8+8+8])
 
 		lease, err := t.table.Get(txn,
 			utils.ConcatBytes(
@@ -278,7 +249,6 @@ func (t *LeasesTable) processIdIndexPK(accountId uint64, namespaceId uint64, pro
 
 func (t *LeasesTable) expirationIndexPK(time int64, accountId uint64, namespaceId uint64, leaseId uint64) []byte {
 	return utils.ConcatBytes(
-		t.shardPrefix,
 		time,
 		accountId,
 		namespaceId,
@@ -288,7 +258,6 @@ func (t *LeasesTable) expirationIndexPK(time int64, accountId uint64, namespaceI
 
 func (t *LeasesTable) expirationIndexPrefix(time int64) []byte {
 	return utils.ConcatBytes(
-		t.shardPrefix,
 		time,
 	)
 }

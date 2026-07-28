@@ -13,7 +13,6 @@ import (
 	"github.com/evrblk/monstera/cluster"
 	"github.com/evrblk/monstera/store"
 	monstrea_grpc "github.com/evrblk/monstera/transport/grpc"
-	"github.com/evrblk/monstera/utils"
 	"github.com/evrblk/yellowstone-common/honey"
 	"github.com/evrblk/yellowstone-common/metrics"
 	"github.com/prometheus/client_golang/prometheus"
@@ -24,7 +23,6 @@ import (
 	"github.com/evrblk/grackle/pkg/locks"
 	"github.com/evrblk/grackle/pkg/namespaces"
 	"github.com/evrblk/grackle/pkg/semaphores"
-	"github.com/evrblk/grackle/pkg/tables"
 	"github.com/evrblk/grackle/pkg/waitgroups"
 )
 
@@ -46,14 +44,21 @@ var nodeCmd = &cobra.Command{
 		metricsSrv := metrics.NewMetricsServer(nodeCmdCfg.prometheusPort)
 		metricsSrv.Start()
 
-		// Register table prefixes
-		registry := honey.NewBaseTableRegistry(1)
-		tables.RegisterGracklePrefixes(registry)
-
 		// Create shared Badger store for application cores
 		dataStore, err := store.NewBadgerStore(store.DefaultOptions(filepath.Join(nodeCmdCfg.dataDir, "cores")))
 		if err != nil {
 			log.Fatal(err)
+		}
+
+		// Node-local registry handing out a stable two-byte prefix per replica, so
+		// every core namespaces its data in the shared store without collisions.
+		replicaRegistry := honey.NewReplicaPrefixRegistry(dataStore)
+		replicaPrefix := func(replicaId string) []byte {
+			prefix, err := replicaRegistry.GetOrAssignPrefix(replicaId)
+			if err != nil {
+				log.Fatalf("failed to assign replica prefix for replica %s: %v", replicaId, err)
+			}
+			return prefix
 		}
 
 		applicationDescriptors := monstera.ApplicationCoreDescriptors{
@@ -64,7 +69,7 @@ var nodeCmd = &cobra.Command{
 				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 					return coreapis.NewGrackleLocksCoreAdapter(
 						replica.NodeId, shard.Id, replica.Id, shard.LowerKey(), shard.UpperKey(),
-						locks.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerKey(), shard.UpperKey()))
+						locks.NewCore(dataStore, replicaPrefix(replica.Id), shard.LowerKey(), shard.UpperKey()))
 				},
 			},
 			"GrackleNamespaces": {
@@ -72,7 +77,7 @@ var nodeCmd = &cobra.Command{
 				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 					return coreapis.NewGrackleNamespacesCoreAdapter(
 						replica.NodeId, shard.Id, replica.Id, shard.LowerKey(), shard.UpperKey(),
-						namespaces.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerKey(), shard.UpperKey()))
+						namespaces.NewCore(dataStore, replicaPrefix(replica.Id), shard.LowerKey(), shard.UpperKey()))
 				},
 			},
 			"GrackleWaitGroups": {
@@ -80,7 +85,7 @@ var nodeCmd = &cobra.Command{
 				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 					return coreapis.NewGrackleWaitGroupsCoreAdapter(
 						replica.NodeId, shard.Id, replica.Id, shard.LowerKey(), shard.UpperKey(),
-						waitgroups.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerKey(), shard.UpperKey()))
+						waitgroups.NewCore(dataStore, replicaPrefix(replica.Id), shard.LowerKey(), shard.UpperKey()))
 				},
 			},
 			"GrackleBarriers": {
@@ -88,7 +93,7 @@ var nodeCmd = &cobra.Command{
 				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 					return coreapis.NewGrackleBarriersCoreAdapter(
 						replica.NodeId, shard.Id, replica.Id, shard.LowerKey(), shard.UpperKey(),
-						barriers.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerKey(), shard.UpperKey()))
+						barriers.NewCore(dataStore, replicaPrefix(replica.Id), shard.LowerKey(), shard.UpperKey()))
 				},
 			},
 			"GrackleSemaphores": {
@@ -96,7 +101,7 @@ var nodeCmd = &cobra.Command{
 				CoreFactoryFunc: func(shard *cluster.Shard, replica *cluster.Replica) monstera.ApplicationCore {
 					return coreapis.NewGrackleSemaphoresCoreAdapter(
 						replica.NodeId, shard.Id, replica.Id, shard.LowerKey(), shard.UpperKey(),
-						semaphores.NewCore(dataStore, utils.GetTruncatedHash([]byte(shard.Id), 4), shard.LowerKey(), shard.UpperKey()))
+						semaphores.NewCore(dataStore, replicaPrefix(replica.Id), shard.LowerKey(), shard.UpperKey()))
 				},
 			},
 		}
