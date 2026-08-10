@@ -34,6 +34,8 @@ github.com/evrblk/fenestra v0.0.0-20260724141201-56c281e924fc h1:hK9DOUE1ev1jmBA
 github.com/evrblk/fenestra v0.0.0-20260724141201-56c281e924fc/go.mod h1:kYcV1aDoe0NJQBCvHUG8uGy9QsVol+LhAUiAEurGPfc=
 github.com/evrblk/monstera v0.0.0-20260808075412-3e8b8dbc0789 h1:b0yFC36JP3HSEf5ZONzG91oIzIWe8W+DzoJNJ/UaKvY=
 github.com/evrblk/monstera v0.0.0-20260808075412-3e8b8dbc0789/go.mod h1:ibh++Ax1Valb5pJe+iNL8BRtIUvtkM4z/3Nibhi0O34=
+github.com/evrblk/monstera v0.0.0-20260810061317-6d18b75d130e h1:xfd7dv0/V5En+s4HOJ9T1P8m1x2YR0lECDp5Id1VX/k=
+github.com/evrblk/monstera v0.0.0-20260810061317-6d18b75d130e/go.mod h1:ibh++Ax1Valb5pJe+iNL8BRtIUvtkM4z/3Nibhi0O34=
 github.com/evrblk/yellowstone-common v0.0.0-20260728202725-1a2de654cc6a h1:qRbykfXiiEdfruGNTM2O8jRnIGZMRHFQ2dkeVRKdMlo=
 github.com/evrblk/yellowstone-common v0.0.0-20260728202725-1a2de654cc6a/go.mod h1:YOb6KTFl5bdXFZBbMXdWUA6WsceCHswyDHWIImEPzMk=
 github.com/fatih/color v1.13.0/go.mod h1:kLAiJbzzSOZDVNGyDpeOxJ47H46qBXwg5ILebYFFOfk=
