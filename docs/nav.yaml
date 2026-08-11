@@ -1,0 +1,18 @@
+landing: overview.md
+
+sections:
+  - title: How it works
+    pages:
+      - overview.md
+      - getting-started.md
+      - api-overview.md
+
+  - title: Primitives
+    pages:
+      - locks.md
+      - semaphores.md
+      - wait-groups.md
+      - barriers.md
+
+  - title: API Reference
+    dir: api/v1beta

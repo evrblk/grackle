@@ -1,4 +1,4 @@
-# Everblack Grackle
+# Overview
 
 **Everblack Grackle is the coordination layer for your distributed system** — fundamental
 synchronization primitives, served over a clean API, in a single self-contained binary.
@@ -39,6 +39,6 @@ provision up front.
   [optimistic-concurrency updates](/docs/api-overview.md#updates), cursor 
   [pagination](/docs/api-overview.md#pagination).
   
-Grackle is Open Source, under the AGPL-3 license.
+Grackle is Open Source, under AGPL-3 License.
 
 [Get started with Grackle →](/docs/getting-started.md)

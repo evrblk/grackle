@@ -159,4 +159,4 @@ Before you contribute:
 
 ## License
 
-Everblack Grackle is released under the [AGPL-3 License](https://opensource.org/license/agpl-v3).
+Everblack Grackle is released under [AGPL-3 License](https://opensource.org/license/agpl-v3).
