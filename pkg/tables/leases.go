@@ -74,7 +74,7 @@ func (t *LeasesTable) EachEntity(txn *store.Txn, fn func(key []byte, value []byt
 // RestoreEntity decodes one streamed lease and, if owned, inserts it through
 // Create — re-deriving its keys and rebuilding both indexes from the lease's
 // own identity fields.
-func (t *LeasesTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds ShardRange) (bool, error) {
+func (t *LeasesTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds honey.ShardRange) (bool, error) {
 	lease := &corepb.Lease{}
 	if err := lease.UnmarshalBinary(value); err != nil {
 		return false, err

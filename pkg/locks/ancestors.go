@@ -9,7 +9,6 @@ import (
 
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/sharding"
-	"github.com/evrblk/grackle/pkg/tables"
 )
 
 // lockAncestorsTable stores ancestor nodes for hierarchical lock names.
@@ -50,7 +49,7 @@ func (t *lockAncestorsTable) EachEntity(txn *store.Txn, fn func(key []byte, valu
 
 // RestoreEntity decodes one streamed ancestor rollup and, if owned, inserts
 // it under this table's own keys.
-func (t *lockAncestorsTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds tables.ShardRange) (bool, error) {
+func (t *lockAncestorsTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds honey.ShardRange) (bool, error) {
 	ancestor := &corepb.LockAncestor{}
 	if err := ancestor.UnmarshalBinary(value); err != nil {
 		return false, err

@@ -10,7 +10,6 @@ import (
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/pagination"
 	"github.com/evrblk/grackle/pkg/sharding"
-	"github.com/evrblk/grackle/pkg/tables"
 )
 
 // waitGroupsTable is a table of wait groups indexed by wait group ID and wait group name.
@@ -68,7 +67,7 @@ func (t *waitGroupsTable) EachEntity(txn *store.Txn, fn func(key []byte, value [
 // RestoreEntity decodes one streamed wait group and, if owned, inserts it
 // through Create — re-deriving its keys and rebuilding the names index from
 // the wait group's own identity fields.
-func (t *waitGroupsTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds tables.ShardRange) (bool, error) {
+func (t *waitGroupsTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds honey.ShardRange) (bool, error) {
 	waitGroup := &corepb.WaitGroup{}
 	if err := waitGroup.UnmarshalBinary(value); err != nil {
 		return false, err

@@ -72,7 +72,7 @@ func (t *GCRecordsTable[T, U]) EachEntity(txn *store.Txn, fn func(key []byte, va
 // RestoreEntity decodes one streamed GC record and, if owned, inserts it
 // through Create — which re-derives its key under this table's own prefix
 // (the canonical key is not needed; identity comes from the record itself).
-func (t *GCRecordsTable[T, U]) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds ShardRange) (bool, error) {
+func (t *GCRecordsTable[T, U]) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds honey.ShardRange) (bool, error) {
 	var record U
 	if err := T(&record).UnmarshalBinary(value); err != nil {
 		return false, err

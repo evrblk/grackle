@@ -10,7 +10,6 @@ import (
 
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/sharding"
-	"github.com/evrblk/grackle/pkg/tables"
 )
 
 // countersTable is a table of namespace counters indexed by account ID.
@@ -46,7 +45,7 @@ func (t *countersTable) EachEntity(txn *store.Txn, fn func(key []byte, value []b
 // canonical key, whose fixed-width layout this table defines (see tablePK):
 // <8-byte account id>. The namespaces keyspace is sharded by account, so the
 // namespace part of the ownership predicate is zero.
-func (t *countersTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds tables.ShardRange) (bool, error) {
+func (t *countersTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds honey.ShardRange) (bool, error) {
 	if len(key) != 8 {
 		return false, fmt.Errorf("namespaces counter key has %d bytes, want 8", len(key))
 	}

@@ -122,12 +122,6 @@ func TestShardByAccount(t *testing.T) {
 		actual := ByAccount(d.accountId)
 		require.Equal(t, d.shardKey, actual)
 	}
-
-	// for _ = range 100 {
-	// 	a := rand.Uint64()
-	// 	key := ByAccount(a)
-	// 	fmt.Printf("{%d, []byte{%d, %d, %d, %d}},\n", a, key[0], key[1], key[2], key[3])
-	// }
 }
 
 func TestByAccountAndNamespace(t *testing.T) {
@@ -242,11 +236,4 @@ func TestByAccountAndNamespace(t *testing.T) {
 		actual := ByAccountAndNamespace(d.accountId, d.namespaceId)
 		require.Equal(t, d.shardKey, actual)
 	}
-
-	// for _ = range 100 {
-	// 	a := rand.Uint64()
-	// 	n := rand.Uint64()
-	// 	key := ByAccountAndNamespace(a, n)
-	// 	fmt.Printf("{%d, %d, []byte{%d, %d, %d, %d}},\n", a, n, key[0], key[1], key[2], key[3])
-	// }
 }

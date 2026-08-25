@@ -7,7 +7,6 @@ import (
 
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/sharding"
-	"github.com/evrblk/grackle/pkg/tables"
 )
 
 // expirationRecordsTable stores expiration queue items indexed by semaphore id.
@@ -48,7 +47,7 @@ func (t *expirationRecordsTable) EachEntity(txn *store.Txn, fn func(key []byte, 
 // RestoreEntity decodes one streamed expiration record and, if owned, inserts
 // it through Add — which re-derives its key under this table's own prefix
 // (the canonical key is not needed; identity comes from the record itself).
-func (t *expirationRecordsTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds tables.ShardRange) (bool, error) {
+func (t *expirationRecordsTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds honey.ShardRange) (bool, error) {
 	record := &corepb.SemaphoresExpirationRecord{}
 	if err := record.UnmarshalBinary(value); err != nil {
 		return false, err

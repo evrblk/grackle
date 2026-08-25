@@ -10,7 +10,6 @@ import (
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/pagination"
 	"github.com/evrblk/grackle/pkg/sharding"
-	"github.com/evrblk/grackle/pkg/tables"
 )
 
 // locksTable
@@ -70,7 +69,7 @@ func (t *locksTable) EachEntity(txn *store.Txn, fn func(key []byte, value []byte
 // RestoreEntity decodes one streamed lock and, if owned, inserts it through
 // Update — re-deriving its keys and rebuilding the lease id index from the
 // lock's own identity fields.
-func (t *locksTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds tables.ShardRange) (bool, error) {
+func (t *locksTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds honey.ShardRange) (bool, error) {
 	lock := &corepb.Lock{}
 	if err := lock.UnmarshalBinary(value); err != nil {
 		return false, err

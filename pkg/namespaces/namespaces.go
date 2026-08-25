@@ -10,7 +10,6 @@ import (
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/pagination"
 	"github.com/evrblk/grackle/pkg/sharding"
-	"github.com/evrblk/grackle/pkg/tables"
 )
 
 // namespacesTable is a table of namespaces indexed by namespace ID and namespace name.
@@ -66,7 +65,7 @@ func (t *namespacesTable) EachEntity(txn *store.Txn, fn func(key []byte, value [
 // RestoreEntity decodes one streamed namespace and, if owned, inserts it
 // through Create — re-deriving its keys and rebuilding the names index from
 // the namespace's own identity fields.
-func (t *namespacesTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds tables.ShardRange) (bool, error) {
+func (t *namespacesTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds honey.ShardRange) (bool, error) {
 	namespace := &corepb.Namespace{}
 	if err := namespace.UnmarshalBinary(value); err != nil {
 		return false, err

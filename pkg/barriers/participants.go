@@ -10,7 +10,6 @@ import (
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/pagination"
 	"github.com/evrblk/grackle/pkg/sharding"
-	"github.com/evrblk/grackle/pkg/tables"
 )
 
 // participantsTable is a table of barrier participants indexed by participant ID
@@ -52,7 +51,7 @@ func (t *participantsTable) EachEntity(txn *store.Txn, fn func(key []byte, value
 // the canonical key, whose layout this table defines (see tablePK/tableSK):
 // <8-byte account id><8-byte namespace id><8-byte barrier id><sort key>. The
 // canonical key needs no rewriting: it IS the table-relative key.
-func (t *participantsTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds tables.ShardRange) (bool, error) {
+func (t *participantsTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds honey.ShardRange) (bool, error) {
 	if len(key) < 8+8+8 {
 		return false, fmt.Errorf("participant key has %d bytes, want at least 24", len(key))
 	}

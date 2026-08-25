@@ -7,7 +7,6 @@ import (
 
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/sharding"
-	"github.com/evrblk/grackle/pkg/tables"
 )
 
 // deletionRecordsTable stores barrier deletion records indexed by deletion time
@@ -51,7 +50,7 @@ func (t *deletionRecordsTable) EachEntity(txn *store.Txn, fn func(key []byte, va
 
 // RestoreEntity decodes one streamed deletion record and, if owned, inserts
 // it through Add — which re-derives its key under this table's own prefix.
-func (t *deletionRecordsTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds tables.ShardRange) (bool, error) {
+func (t *deletionRecordsTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds honey.ShardRange) (bool, error) {
 	record := &corepb.BarriersDeletionRecord{}
 	if err := record.UnmarshalBinary(value); err != nil {
 		return false, err

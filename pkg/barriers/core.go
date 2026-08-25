@@ -11,6 +11,7 @@ import (
 	mrpc "github.com/evrblk/monstera/rpc"
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/monstera/utils"
+	"github.com/evrblk/yellowstone-common/honey"
 
 	"github.com/evrblk/grackle/pkg/coreapis"
 	"github.com/evrblk/grackle/pkg/corepb"
@@ -67,8 +68,8 @@ func (c *Core) Close() {
 
 }
 
-func (c *Core) snapshotSections() []tables.Section {
-	return []tables.Section{
+func (c *Core) snapshotSections() []honey.Section {
+	return []honey.Section{
 		{Name: "Barriers", Table: c.barriers},
 		{Name: "Participants", Table: c.participants},
 		{Name: "Counters", Table: c.counters},
@@ -81,7 +82,7 @@ func (c *Core) snapshotSections() []tables.Section {
 // entities (a pinned view; Write streams from it concurrently with subsequent
 // updates).
 func (c *Core) Snapshot() monstera.ApplicationCoreSnapshot {
-	return tables.NewSnapshot(c.badgerStore, "GrackleBarriers", c.snapshotSections())
+	return honey.NewSnapshot(c.badgerStore, "GrackleBarriers", c.snapshotSections())
 }
 
 // Restore replaces this core's state with the union of the entities from the
@@ -90,8 +91,8 @@ func (c *Core) Snapshot() monstera.ApplicationCoreSnapshot {
 // the tables' own methods (which rebuild all secondary indexes under this
 // core's prefix).
 func (c *Core) Restore(readers ...io.ReadCloser) error {
-	return tables.RestoreSnapshot(c.badgerStore, c.snapshotSections(),
-		tables.ShardRange{Lower: c.shardLowerBound, Upper: c.shardUpperBound}, readers...)
+	return honey.RestoreSnapshot(c.badgerStore, c.snapshotSections(),
+		honey.ShardRange{Lower: c.shardLowerBound, Upper: c.shardUpperBound}, readers...)
 }
 
 // GetBarrier looks up a barrier by its full BarrierId. Returns a NotFound

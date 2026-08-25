@@ -17,3 +17,5 @@ target
 .ijwb
 .intellij
 .claude
+
+*.drawio.bkp

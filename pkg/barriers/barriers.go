@@ -12,7 +12,6 @@ import (
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/pagination"
 	"github.com/evrblk/grackle/pkg/sharding"
-	"github.com/evrblk/grackle/pkg/tables"
 )
 
 // barriersTable is a table of barriers indexed by barrier ID and barrier name.
@@ -71,7 +70,7 @@ func (t *barriersTable) EachEntity(txn *store.Txn, fn func(key []byte, value []b
 // directly (bypassing Create's uniqueness gates — the stream is
 // authoritative), rebuilding the names index from the barrier's own identity
 // fields.
-func (t *barriersTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds tables.ShardRange) (bool, error) {
+func (t *barriersTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds honey.ShardRange) (bool, error) {
 	barrier := &corepb.Barrier{}
 	if err := barrier.UnmarshalBinary(value); err != nil {
 		return false, err

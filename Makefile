@@ -30,7 +30,7 @@ generate:
 	cd ./pkg/coreapis; go tool github.com/evrblk/monstera/cmd/monstera code generate
 
 	@echo "Generating Marshal/Unmarshal implementations..."
-	go run ./tools/codegen/genmarshal -dir ./pkg/corepb -output ./pkg/corepb/marshal_gen.go
+	go tool github.com/evrblk/yellowstone-common/codegen/genmarshal -dir ./pkg/corepb -output ./pkg/corepb/marshal_gen.go
 
 grackle: build
 	$(GO_BUILD_ENV) go build -o ./cmd/grackle/grackle ./cmd/grackle

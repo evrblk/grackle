@@ -71,7 +71,7 @@ func (t *CountersTable[T, U]) EachEntity(txn *store.Txn, fn func(key []byte, val
 // counter value carries no identity of its own — the identity lives in the
 // canonical key, whose fixed-width layout this table defines (see tablePK):
 // <8-byte account id><8-byte namespace id>.
-func (t *CountersTable[T, U]) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds ShardRange) (bool, error) {
+func (t *CountersTable[T, U]) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds honey.ShardRange) (bool, error) {
 	if len(key) != 8+8 {
 		return false, fmt.Errorf("counter key has %d bytes, want %d", len(key), 8+8)
 	}

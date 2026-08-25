@@ -8,7 +8,6 @@ import (
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/pagination"
 	"github.com/evrblk/grackle/pkg/sharding"
-	"github.com/evrblk/grackle/pkg/tables"
 )
 
 // jobsTable stores completed jobs for wait groups indexed by job ID.
@@ -46,7 +45,7 @@ func (t *jobsTable) EachEntity(txn *store.Txn, fn func(key []byte, value []byte)
 
 // RestoreEntity decodes one streamed job and, if owned, inserts it through
 // Create — re-deriving its key from the job's own identity fields.
-func (t *jobsTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds tables.ShardRange) (bool, error) {
+func (t *jobsTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds honey.ShardRange) (bool, error) {
 	job := &corepb.WaitGroupJob{}
 	if err := job.UnmarshalBinary(value); err != nil {
 		return false, err

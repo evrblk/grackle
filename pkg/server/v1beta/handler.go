@@ -107,6 +107,8 @@ func (s *GrackleApiServerHandler) UpdateNamespace(ctx context.Context, req *grac
 }
 
 // TODO what to do with active AcquireLock, WaitForWaitGroup, etc requests?
+// TODO there is a cache for namespaces now, so primitives can be creates/modified after
+// a namespace has been deleted and potentially after GC has ran.
 func (s *GrackleApiServerHandler) DeleteNamespace(ctx context.Context, req *gracklepb.DeleteNamespaceRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.DeleteNamespaceResponse, error) {
 	gcRecordId := rand.Uint64()
 

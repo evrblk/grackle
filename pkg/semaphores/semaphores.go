@@ -12,7 +12,6 @@ import (
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/pagination"
 	"github.com/evrblk/grackle/pkg/sharding"
-	"github.com/evrblk/grackle/pkg/tables"
 )
 
 // semaphoresTable is a table of semaphores indexed by semaphore ID and semaphore name.
@@ -71,7 +70,7 @@ func (t *semaphoresTable) EachEntity(txn *store.Txn, fn func(key []byte, value [
 // directly (bypassing Create's uniqueness gates — the stream is
 // authoritative), rebuilding the names index from the semaphore's own
 // identity fields.
-func (t *semaphoresTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds tables.ShardRange) (bool, error) {
+func (t *semaphoresTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds honey.ShardRange) (bool, error) {
 	semaphore := &corepb.Semaphore{}
 	if err := semaphore.UnmarshalBinary(value); err != nil {
 		return false, err

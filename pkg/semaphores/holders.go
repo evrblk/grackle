@@ -8,7 +8,6 @@ import (
 	"github.com/evrblk/grackle/pkg/corepb"
 	"github.com/evrblk/grackle/pkg/pagination"
 	"github.com/evrblk/grackle/pkg/sharding"
-	"github.com/evrblk/grackle/pkg/tables"
 )
 
 // holdersTable stores semaphore holders indexed by semaphore holder id and by expiration time.
@@ -77,7 +76,7 @@ func (t *holdersTable) EachEntity(txn *store.Txn, fn func(key []byte, value []by
 // RestoreEntity decodes one streamed holder and, if owned, inserts it through
 // Create — rebuilding the expiration and lease id indexes from the holder's
 // own identity fields.
-func (t *holdersTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds tables.ShardRange) (bool, error) {
+func (t *holdersTable) RestoreEntity(txn *store.Txn, key []byte, value []byte, bounds honey.ShardRange) (bool, error) {
 	holder := &corepb.SemaphoreHolder{}
 	if err := holder.UnmarshalBinary(value); err != nil {
 		return false, err
