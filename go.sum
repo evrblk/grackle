@@ -27,8 +27,8 @@ github.com/dgryski/go-farm v0.0.0-20240924180020-3414d57e47da h1:aIftn67I1fkbMa5
 github.com/dgryski/go-farm v0.0.0-20240924180020-3414d57e47da/go.mod h1:SqUrOPUnsFjfmXRMNPybcSiG0BgUW2AuFH8PAnS2iTw=
 github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkpeCY=
 github.com/dustin/go-humanize v1.0.1/go.mod h1:Mu1zIs6XwVuF/gI1OepvI0qD18qycQx+mFykh5fBlto=
-github.com/evrblk/evrblk-go v0.0.0-20260825142925-d3f23d68a56a h1:z4ExI0oIvQuPoOU3Um+Hlsu5WbDaRltvhuZYaefayx8=
-github.com/evrblk/evrblk-go v0.0.0-20260825142925-d3f23d68a56a/go.mod h1:WfrrXsfeBM1HgcqSUCoqKFezm3Ucjw4dLHWxQ4PSV0c=
+github.com/evrblk/evrblk-go v0.0.0-20260828171703-182ab516f8c5 h1:/4PYk6zuMHvIpaSMhVPPfwzA3TS1JvoQWEhYSOZZhm0=
+github.com/evrblk/evrblk-go v0.0.0-20260828171703-182ab516f8c5/go.mod h1:WfrrXsfeBM1HgcqSUCoqKFezm3Ucjw4dLHWxQ4PSV0c=
 github.com/evrblk/fenestra v0.0.0-20260724141201-56c281e924fc h1:hK9DOUE1ev1jmBAQye8IK7Xb/lD/Z1eFeoW2hW4GgKE=
 github.com/evrblk/fenestra v0.0.0-20260724141201-56c281e924fc/go.mod h1:kYcV1aDoe0NJQBCvHUG8uGy9QsVol+LhAUiAEurGPfc=
 github.com/evrblk/monstera v0.0.0-20260825150647-4b5fb47b1fc3 h1:moUYiPEWX4XmiLaWDjvEZXhPPHmXi9jhLc/CEwteyBQ=
