@@ -78,6 +78,13 @@ func (t *expirationRecordsTable) ListByExpiration(txn *store.Txn, from int64, to
 	})
 }
 
+// time is encoded as plain big-endian, so byte-lexicographic ordering only
+// matches numeric ordering for time >= 0 (two's complement makes negative
+// values sort after positive ones). ListByExpiration's range scans (called
+// with a lower bound of 0 from waitgroups/core.go) depend on time never
+// being negative; in practice it never is, since the gRPC handler layer
+// (server/v1beta/handler.go) rejects any ExpiresAt that isn't sufficiently
+// far in the future before it ever reaches this table.
 func (t *expirationRecordsTable) tablePK(time int64, accountId uint64, namespaceId uint64, waitGroupId uint64) []byte {
 	return utils.ConcatBytes(
 		time,

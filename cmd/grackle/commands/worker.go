@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/evrblk/monstera"
-	monstrea_grpc "github.com/evrblk/monstera/transport/grpc"
+	monstera_grpc "github.com/evrblk/monstera/transport/grpc"
 	"github.com/evrblk/yellowstone-common/metrics"
 
 	"github.com/evrblk/grackle/pkg/coreapis"
@@ -38,11 +38,11 @@ var workerCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-		adminClient := monstrea_grpc.NewAdminClient()
+		adminClient := monstera_grpc.NewAdminClient()
 		provider := monstera.NewPollingClusterConfigProvider(discovery, adminClient, monstera.PollingOptions{})
 
 		// Data plane + Monstera client
-		transport := monstrea_grpc.NewDataPlaneClient()
+		transport := monstera_grpc.NewDataPlaneClient()
 		monsteraClient := monstera.NewMonsteraClient(provider, transport, monstera.DefaultClientConfig())
 
 		ctx, cancel := context.WithCancel(context.Background())

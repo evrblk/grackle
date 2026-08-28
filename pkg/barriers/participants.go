@@ -121,6 +121,14 @@ func (t *participantsTable) tablePK(accountId uint64, namespaceId uint64, barrie
 	)
 }
 
+// generation is encoded as plain big-endian, so byte-lexicographic ordering
+// only matches numeric ordering for generation >= 0 (two's complement makes
+// negative values sort after positive ones). It's the leading sort field of
+// this table, so List's paginated iteration order depends on generation
+// never being negative; in practice it never is, since Barrier.Generation
+// starts at 1 (see core.go) and ArriveAtBarrier rejects any request whose
+// generation doesn't exactly match the barrier's current one before a
+// participant row is ever written.
 func (t *participantsTable) tableSK(generation int64, processId string) []byte {
 	return utils.ConcatBytes(
 		generation,

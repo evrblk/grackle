@@ -247,6 +247,12 @@ func (t *LeasesTable) processIdIndexPK(accountId uint64, namespaceId uint64, pro
 	)
 }
 
+// time is encoded as plain big-endian, so byte-lexicographic ordering only
+// matches numeric ordering for time >= 0 (two's complement makes negative
+// values sort after positive ones). ListByExpiration's range scans (called
+// with a lower bound of 0 from locks/core.go and semaphores/core.go) depend
+// on time never being negative; in practice it never is, since ExpiresAt is
+// always req.Now plus a positive TTL, never a zero/negative sentinel.
 func (t *LeasesTable) expirationIndexPK(time int64, accountId uint64, namespaceId uint64, leaseId uint64) []byte {
 	return utils.ConcatBytes(
 		time,

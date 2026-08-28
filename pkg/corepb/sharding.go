@@ -1,8 +1,9 @@
 package corepb
 
 import (
-	"github.com/evrblk/grackle/pkg/sharding"
 	"github.com/evrblk/monstera/cluster"
+
+	"github.com/evrblk/grackle/pkg/sharding"
 )
 
 // ListLocksRequest

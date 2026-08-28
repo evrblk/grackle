@@ -70,7 +70,7 @@ func (s *GrackleApiServerHandler) CreateNamespace(ctx context.Context, req *grac
 		}, nil
 	}
 
-	return nil, status.Error(codes.Internal, "failed to generate a unique namespace id")
+	return nil, status.Error(codes.Internal, "failed to generate a unique id")
 }
 
 func (s *GrackleApiServerHandler) GetNamespace(ctx context.Context, req *gracklepb.GetNamespaceRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.GetNamespaceResponse, error) {
@@ -250,7 +250,7 @@ func (s *GrackleApiServerHandler) CreateWaitGroup(ctx context.Context, req *grac
 		}, nil
 	}
 
-	return nil, status.Error(codes.Internal, "failed to generate a unique wait group id")
+	return nil, status.Error(codes.Internal, "failed to generate a unique id")
 }
 
 func (s *GrackleApiServerHandler) UpdateWaitGroup(ctx context.Context, req *gracklepb.UpdateWaitGroupRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.UpdateWaitGroupResponse, error) {
@@ -742,7 +742,7 @@ func (s *GrackleApiServerHandler) CreateSemaphore(ctx context.Context, req *grac
 		}, nil
 	}
 
-	return nil, status.Error(codes.Internal, "failed to generate a unique semaphore id")
+	return nil, status.Error(codes.Internal, "failed to generate a unique id")
 }
 
 func (s *GrackleApiServerHandler) ListSemaphores(ctx context.Context, req *gracklepb.ListSemaphoresRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.ListSemaphoresResponse, error) {
@@ -1037,7 +1037,7 @@ func (s *GrackleApiServerHandler) CreateBarrier(ctx context.Context, req *grackl
 		}, nil
 	}
 
-	return nil, status.Error(codes.Internal, "failed to generate a unique barrier id")
+	return nil, status.Error(codes.Internal, "failed to generate a unique id")
 }
 
 func (s *GrackleApiServerHandler) ListBarriers(ctx context.Context, req *gracklepb.ListBarriersRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.ListBarriersResponse, error) {
@@ -1324,7 +1324,7 @@ func (s *GrackleApiServerHandler) CreateSemaphoreLease(ctx context.Context, req 
 		}, nil
 	}
 
-	return nil, status.Error(codes.Internal, "failed to generate a unique lease id")
+	return nil, status.Error(codes.Internal, "failed to generate a unique id")
 }
 
 func (s *GrackleApiServerHandler) RevokeSemaphoreLease(ctx context.Context, req *gracklepb.RevokeSemaphoreLeaseRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.RevokeSemaphoreLeaseResponse, error) {
@@ -1492,7 +1492,7 @@ func (s *GrackleApiServerHandler) CreateLockLease(ctx context.Context, req *grac
 		}, nil
 	}
 
-	return nil, status.Error(codes.Internal, "failed to generate a unique lease id")
+	return nil, status.Error(codes.Internal, "failed to generate a unique id")
 }
 
 func (s *GrackleApiServerHandler) RevokeLockLease(ctx context.Context, req *gracklepb.RevokeLockLeaseRequest, accountId uint64, limits grackle.ServiceLimits) (*gracklepb.RevokeLockLeaseResponse, error) {

@@ -82,6 +82,13 @@ func (t *deletionRecordsTable) ListByDeletion(txn *store.Txn, from int64, to int
 	})
 }
 
+// time is encoded as plain big-endian, so byte-lexicographic ordering only
+// matches numeric ordering for time >= 0 (two's complement makes negative
+// values sort after positive ones). ListByDeletion's range scans (called
+// with a lower bound of 0 from barriers/core.go) depend on time never being
+// negative; in practice it never is, since it's always
+// barrier.LastActivityAt (always req.Now) plus a validated-positive
+// DeleteInactiveAfterSeconds, never a zero/negative sentinel.
 func (t *deletionRecordsTable) tablePK(time int64, accountId uint64, namespaceId uint64, barrierId uint64) []byte {
 	return utils.ConcatBytes(
 		time,

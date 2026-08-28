@@ -12,7 +12,7 @@ import (
 	"github.com/evrblk/monstera"
 	"github.com/evrblk/monstera/cluster"
 	"github.com/evrblk/monstera/store"
-	monstrea_grpc "github.com/evrblk/monstera/transport/grpc"
+	monstera_grpc "github.com/evrblk/monstera/transport/grpc"
 	"github.com/evrblk/yellowstone-common/honey"
 	"github.com/evrblk/yellowstone-common/metrics"
 	"github.com/prometheus/client_golang/prometheus"
@@ -106,7 +106,7 @@ var nodeCmd = &cobra.Command{
 			},
 		}
 
-		transport := monstrea_grpc.NewDataPlaneClient()
+		transport := monstera_grpc.NewDataPlaneClient()
 
 		// TODO set timeouts
 		monsteraNodeConfig := monstera.DefaultMonsteraNodeConfig
@@ -118,7 +118,7 @@ var nodeCmd = &cobra.Command{
 
 		monsteraNode.Start()
 
-		monsteraServer := monstrea_grpc.NewGrpcServer(monsteraNode)
+		monsteraServer := monstera_grpc.NewGrpcServer(monsteraNode)
 
 		cleanupDone := &sync.WaitGroup{}
 		cleanupDone.Add(1)

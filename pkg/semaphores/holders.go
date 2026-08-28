@@ -265,6 +265,14 @@ func (t *holdersTable) expirationIndexPK(accountId uint64, namespaceId uint64, s
 	)
 }
 
+// expirationTime is encoded as plain big-endian, so byte-lexicographic
+// ordering only matches numeric ordering for expirationTime >= 0 (two's
+// complement makes negative values sort after positive ones).
+// ListByExpiration's range scans (called with a lower bound of 0 from
+// semaphores/core.go) depend on expirationTime never being negative; in
+// practice it never is, since a holder's ExpiresAt is always copied from its
+// backing lease's ExpiresAt (req.Now plus a positive TTL), never a
+// zero/negative sentinel.
 func (t *holdersTable) expirationIndexSK(expirationTime int64, leaseId uint64) []byte {
 	return utils.ConcatBytes(
 		expirationTime,

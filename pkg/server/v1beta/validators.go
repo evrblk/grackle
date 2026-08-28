@@ -30,9 +30,11 @@ const (
 	maxMetadataEntries     = 32
 	maxMetadataKeyLength   = 128
 	maxMetadataValueLength = 256
+)
 
-	nameRegex     = "^[-_0-9a-zA-Z]+$"
-	lockNameRegex = "^[-_0-9a-zA-Z]+(/[-_0-9a-zA-Z]+)*$"
+var (
+	nameRegex     = regexp.MustCompile("^[-_0-9a-zA-Z]+$")
+	lockNameRegex = regexp.MustCompile("^[-_0-9a-zA-Z]+(/[-_0-9a-zA-Z]+)*$")
 )
 
 func ValidateCreateNamespaceRequest(req *gracklepb.CreateNamespaceRequest) error {
@@ -916,13 +918,13 @@ func validateLimit(value int32, fieldName string) error {
 	return nil
 }
 
-func validateString(value string, minLength int, maxLength int, regex string, fieldName string) error {
+func validateString(value string, minLength int, maxLength int, regex *regexp.Regexp, fieldName string) error {
 	if len(value) > maxLength || len(value) < minLength {
 		return invalid(fieldName, fmt.Sprintf("length must be between %d and %d characters", minLength, maxLength))
 	}
 
-	if m, err := regexp.MatchString(regex, value); err != nil || !m {
-		return invalid(fieldName, "must match regex pattern "+regex)
+	if !regex.Match([]byte(value)) {
+		return invalid(fieldName, "must match regex pattern "+regex.String())
 	}
 
 	return nil
