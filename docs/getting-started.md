@@ -36,7 +36,15 @@ There are 3 components:
 * `node` stateful node with data persisted on disk
 * `worker` stateless async worker
 
-Running in the clustered mode requires Monstera cluster config file. To generate a simple config run:
+`node` processes don't take a cluster config file — they only need a data directory and a
+gRPC listen address, and they start out **unprovisioned**. Cluster topology (which nodes exist,
+which applications/shards/replicas they host) lives on the cluster itself and is pushed to nodes
+over Monstera's admin plane. `gateway` and `worker` don't take a config file either: they take one
+of `--monstera-nodes` / `--monstera-nodes-file` / `--monstera-nodes-srv` to discover a few live
+nodes, then learn (and keep polling) the full cluster config from the cluster itself.
+
+First, build a cluster config file locally — this is only a local artifact used to bootstrap the
+cluster, not something any `grackle` process reads directly:
 
 ```shell
 $ go tool github.com/evrblk/monstera/cmd/monstera config init \
@@ -50,13 +58,13 @@ $ go tool github.com/evrblk/monstera/cmd/monstera config add-application \
   --name=GrackleLocks \
   --implementation=GrackleLocks \
   --shards-count=16
-  
+
 $ go tool github.com/evrblk/monstera/cmd/monstera config add-application \
   --config=./cluster_config.json \
   --name=GrackleSemaphores \
   --implementation=GrackleSemaphores \
   --shards-count=16
-  
+
 $ go tool github.com/evrblk/monstera/cmd/monstera config add-application \
   --config=./cluster_config.json \
   --name=GrackleWaitGroups \
@@ -68,7 +76,7 @@ $ go tool github.com/evrblk/monstera/cmd/monstera config add-application \
   --name=GrackleBarriers \
   --implementation=GrackleBarriers \
   --shards-count=16
-  
+
 $ go tool github.com/evrblk/monstera/cmd/monstera config add-application \
   --config=./cluster_config.json \
   --name=GrackleNamespaces \
@@ -76,20 +84,41 @@ $ go tool github.com/evrblk/monstera/cmd/monstera config add-application \
   --shards-count=8
 ```
 
-This will create `./cluster_config.json` file with 3 nodes and 5 sharded application cores that are parts of Grackle.
-Take a look inside to see how actually simple it is.
+This creates `./cluster_config.json` with 3 nodes and 5 sharded application cores (each
+replicated 3x by default — pass `--replication-factor` to `add-application` to change it). Take a
+look inside to see how simple it is.
 
-Then run all components:
+Next, start the (empty, unprovisioned) nodes — each just needs its own data directory and the
+gRPC address it will listen on, matching what you put in the config:
 
 ```shell
-$ ./grackle run node --node-id=node_01 --data-dir=./data/node_01 --monstera-config=./cluster_config.json
-$ ./grackle run node --node-id=node_02 --data-dir=./data/node_02 --monstera-config=./cluster_config.json
-$ ./grackle run node --node-id=node_03 --data-dir=./data/node_03 --monstera-config=./cluster_config.json
-
-$ ./grackle run worker --monstera-config=./cluster_config.json
-
-$ ./grackle run gateway --port=8000 --monstera-config=./cluster_config.json
+$ ./grackle run node --data-dir=./data/node_01 --listen=localhost:7001
+$ ./grackle run node --data-dir=./data/node_02 --listen=localhost:7002
+$ ./grackle run node --data-dir=./data/node_03 --listen=localhost:7003
 ```
+
+Then push the config to all of them in one step over the admin plane — this assigns each node its
+`--node-id` from the config and is what flips them from `UNPROVISIONED` to `READY`:
+
+```shell
+$ go tool github.com/evrblk/monstera/cmd/monstera cluster bootstrap-nodes \
+  --config=./cluster_config.json
+```
+
+Finally, start the stateless components. Instead of a config file, they take one or more live node
+addresses to discover the cluster from (they then keep polling the cluster for topology changes,
+so this doesn't need to be an exhaustive list):
+
+```shell
+$ ./grackle run worker --monstera-nodes=localhost:7001,localhost:7002,localhost:7003
+
+$ ./grackle run gateway --port=8000 --monstera-nodes=localhost:7001,localhost:7002,localhost:7003
+```
+
+To add a node to a running cluster, move a shard's replica between nodes, or fetch the live
+cluster config, use `monstera cluster add-node` / `move-shard` / `get-config` — see
+[`tools/dev/compose-cluster/README.md`](/tools/dev/compose-cluster/README.md) for a worked example
+of the full add-node-and-rebalance flow.
 
 ## Using
 
