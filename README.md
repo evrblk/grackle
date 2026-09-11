@@ -105,7 +105,7 @@ import (
     grackle "github.com/evrblk/evrblk-go/grackle/v1beta"
 )
 
-grackleClient := grackle.NewGrackleGrpcClient("localhost:8000", evrblk.NewNoOpSigner())
+grackleClient, err := grackle.NewGrackleGrpcClient("localhost:8000", evrblk.NewNoOpSigner())
 
 createLeaseResp, err := grackleClient.CreateLockLease(context.Background(), &grackle.CreateLockLeaseRequest{
 	NamespaceName: "my_namespace",
