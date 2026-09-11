@@ -56,7 +56,10 @@ func main() {
 	}
 	defer conn.Close()
 
-	client := grackle.NewGrackleGrpcClient(config.Endpoint, evrblk.NewNoOpSigner())
+	client, err := grackle.NewGrackleGrpcClient(config.Endpoint, evrblk.NewNoOpSigner())
+	if err != nil {
+		log.Fatalf("Failed to create grackle client: %v", err)
+	}
 	log.Println("Connected to Grackle")
 
 	// Setup resources
