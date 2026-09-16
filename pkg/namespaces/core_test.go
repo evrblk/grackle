@@ -646,13 +646,17 @@ func TestCore_NamespaceMetadata(t *testing.T) {
 	require.Equal(t, map[string]string{"team": "search", "cost-center": "5678"}, ns.Metadata)
 }
 
-func newNamespacesCore(t *testing.T) *Core {
+// newNamespacesCore wraps the raw Core in GrackleNamespacesValidatingCore —
+// the same validation layer the client-side stub and single-node mode use —
+// so tests exercise requests through the same Validate() rejection path
+// production traffic does.
+func newNamespacesCore(t *testing.T) coreapis.GrackleNamespacesCoreApi {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
-	return NewCore(store, []byte{0x1d, 0x36, 0x00, 0x00}, 0x00000000, 0xffffffff)
+	return coreapis.NewGrackleNamespacesValidatingCore(NewCore(store, []byte{0x1d, 0x36, 0x00, 0x00}, 0x00000000, 0xffffffff))
 }
 
-func createNamespace(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, name string, maxNumberOfNamespaces int64, now time.Time) *corepb.Namespace {
+func createNamespace(t *testing.T, core coreapis.GrackleNamespacesCoreApi, namespaceId *corepb.NamespaceId, name string, maxNumberOfNamespaces int64, now time.Time) *corepb.Namespace {
 	t.Helper()
 
 	resp, err := core.CreateNamespace(&coreapis.CreateNamespaceRequest{
@@ -674,7 +678,7 @@ func createNamespace(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, 
 	return resp.Payload.Namespace
 }
 
-func createNamespaceWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, name string, maxNumberOfNamespaces int64, now time.Time) *mrpc.Error {
+func createNamespaceWithError(t *testing.T, core coreapis.GrackleNamespacesCoreApi, namespaceId *corepb.NamespaceId, name string, maxNumberOfNamespaces int64, now time.Time) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.CreateNamespace(&coreapis.CreateNamespaceRequest{
@@ -695,7 +699,7 @@ func createNamespaceWithError(t *testing.T, core *Core, namespaceId *corepb.Name
 	return resp.ApplicationError
 }
 
-func getNamespaceByName(t *testing.T, core *Core, accountId uint64, name string) *corepb.Namespace {
+func getNamespaceByName(t *testing.T, core coreapis.GrackleNamespacesCoreApi, accountId uint64, name string) *corepb.Namespace {
 	t.Helper()
 
 	resp, err := core.GetNamespaceByName(&coreapis.GetNamespaceByNameRequest{
@@ -714,7 +718,7 @@ func getNamespaceByName(t *testing.T, core *Core, accountId uint64, name string)
 	return resp.Payload.Namespace
 }
 
-func getNamespace(t *testing.T, core *Core, namespaceId *corepb.NamespaceId) *corepb.Namespace {
+func getNamespace(t *testing.T, core coreapis.GrackleNamespacesCoreApi, namespaceId *corepb.NamespaceId) *corepb.Namespace {
 	t.Helper()
 
 	resp, err := core.GetNamespace(&coreapis.GetNamespaceRequest{
@@ -732,7 +736,7 @@ func getNamespace(t *testing.T, core *Core, namespaceId *corepb.NamespaceId) *co
 	return resp.Payload.Namespace
 }
 
-func getNamespaceWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId) *mrpc.Error {
+func getNamespaceWithError(t *testing.T, core coreapis.GrackleNamespacesCoreApi, namespaceId *corepb.NamespaceId) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.GetNamespace(&coreapis.GetNamespaceRequest{
@@ -749,7 +753,7 @@ func getNamespaceWithError(t *testing.T, core *Core, namespaceId *corepb.Namespa
 	return resp.ApplicationError
 }
 
-func getNamespaceByNameWithError(t *testing.T, core *Core, accountId uint64, name string) *mrpc.Error {
+func getNamespaceByNameWithError(t *testing.T, core coreapis.GrackleNamespacesCoreApi, accountId uint64, name string) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.GetNamespaceByName(&coreapis.GetNamespaceByNameRequest{
@@ -767,7 +771,7 @@ func getNamespaceByNameWithError(t *testing.T, core *Core, accountId uint64, nam
 	return resp.ApplicationError
 }
 
-func listNamespaces(t *testing.T, core *Core, accountId uint64) *corepb.ListNamespacesResponse {
+func listNamespaces(t *testing.T, core coreapis.GrackleNamespacesCoreApi, accountId uint64) *corepb.ListNamespacesResponse {
 	t.Helper()
 
 	resp, err := core.ListNamespaces(&coreapis.ListNamespacesRequest{
@@ -784,7 +788,7 @@ func listNamespaces(t *testing.T, core *Core, accountId uint64) *corepb.ListName
 	return resp.Payload
 }
 
-func updateNamespace(t *testing.T, core *Core, accountId uint64, namespaceName string, description string, version int64, now time.Time) *corepb.Namespace {
+func updateNamespace(t *testing.T, core coreapis.GrackleNamespacesCoreApi, accountId uint64, namespaceName string, description string, version int64, now time.Time) *corepb.Namespace {
 	t.Helper()
 
 	resp, err := core.UpdateNamespace(&coreapis.UpdateNamespaceRequest{
@@ -806,7 +810,7 @@ func updateNamespace(t *testing.T, core *Core, accountId uint64, namespaceName s
 	return resp.Payload.Namespace
 }
 
-func updateNamespaceWithError(t *testing.T, core *Core, accountId uint64, namespaceName string, description string, version int64, now time.Time) *mrpc.Error {
+func updateNamespaceWithError(t *testing.T, core coreapis.GrackleNamespacesCoreApi, accountId uint64, namespaceName string, description string, version int64, now time.Time) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.UpdateNamespace(&coreapis.UpdateNamespaceRequest{
@@ -827,7 +831,7 @@ func updateNamespaceWithError(t *testing.T, core *Core, accountId uint64, namesp
 	return resp.ApplicationError
 }
 
-func deleteNamespace(t *testing.T, core *Core, accountId uint64, namespaceName string, now time.Time) *corepb.DeleteNamespaceResponse {
+func deleteNamespace(t *testing.T, core coreapis.GrackleNamespacesCoreApi, accountId uint64, namespaceName string, now time.Time) *corepb.DeleteNamespaceResponse {
 	t.Helper()
 
 	resp, err := core.DeleteNamespace(&coreapis.DeleteNamespaceRequest{

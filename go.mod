@@ -4,8 +4,8 @@ go 1.27.0
 
 require (
 	github.com/evrblk/evrblk-go v0.0.0-20260911145547-e3a3f0a45629
-	github.com/evrblk/monstera v0.0.0-20260825150647-4b5fb47b1fc3
-	github.com/evrblk/yellowstone-common v0.0.0-20260825180005-d53bdcf78940
+	github.com/evrblk/monstera v0.0.0-20260916142845-0de6d2d7b117
+	github.com/evrblk/yellowstone-common v0.0.0-20260915204323-38c802c5a1de
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10
 	github.com/prometheus/client_golang v1.24.1
 	github.com/samber/lo v1.53.0
@@ -31,10 +31,10 @@ require (
 	github.com/google/flatbuffers v25.12.19+incompatible // indirect
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
-	github.com/hashicorp/go-metrics v0.6.1 // indirect
+	github.com/hashicorp/go-metrics v0.7.0 // indirect
 	github.com/hashicorp/go-msgpack/v2 v2.1.5 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
-	github.com/hashicorp/raft v1.7.3 // indirect
+	github.com/hashicorp/raft v1.8.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/klauspost/compress v1.20.0 // indirect
 	github.com/labstack/echo/v4 v4.15.4 // indirect
@@ -58,7 +58,7 @@ require (
 	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260908043556-f8649ddbbfe6 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260911204522-f61a6ca850bd // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 

@@ -14,7 +14,7 @@ import (
 )
 
 func TestAncestors_ExclusiveLock(t *testing.T) {
-	core := newLocksCore(t)
+	core := newRawLocksCore(t)
 	now := time.Now()
 
 	lockId := &corepb.LockId{
@@ -53,7 +53,7 @@ func TestAncestors_ExclusiveLock(t *testing.T) {
 }
 
 func TestAncestors_SharedLock(t *testing.T) {
-	core := newLocksCore(t)
+	core := newRawLocksCore(t)
 	now := time.Now()
 
 	lockId := &corepb.LockId{
@@ -93,7 +93,7 @@ func TestAncestors_SharedLock(t *testing.T) {
 }
 
 func TestAncestors_MultipleLocksSameAncestor(t *testing.T) {
-	core := newLocksCore(t)
+	core := newRawLocksCore(t)
 	now := time.Now()
 
 	accountId := rand.Uint64()
@@ -153,7 +153,7 @@ func TestAncestors_MultipleLocksSameAncestor(t *testing.T) {
 }
 
 func TestAncestors_FlatLockNoAncestors(t *testing.T) {
-	core := newLocksCore(t)
+	core := newRawLocksCore(t)
 	now := time.Now()
 
 	lockId := &corepb.LockId{
@@ -179,7 +179,7 @@ func TestAncestors_FlatLockNoAncestors(t *testing.T) {
 }
 
 func TestAncestors_ExpirationCleansUpAncestors(t *testing.T) {
-	core := newLocksCore(t)
+	core := newRawLocksCore(t)
 	now := time.Now()
 
 	lockId := &corepb.LockId{
@@ -225,7 +225,7 @@ func TestAncestors_ExpirationCleansUpAncestors(t *testing.T) {
 }
 
 func TestAncestors_GarbageCollectionCleansUpAncestors(t *testing.T) {
-	core := newLocksCore(t)
+	core := newRawLocksCore(t)
 	now := time.Now()
 
 	lockId := &corepb.LockId{
@@ -264,7 +264,7 @@ func TestAncestors_GarbageCollectionCleansUpAncestors(t *testing.T) {
 }
 
 func TestAncestors_NamespaceGCCleansUpAncestors(t *testing.T) {
-	core := newLocksCore(t)
+	core := newRawLocksCore(t)
 	now := time.Now()
 	namespaceId := &corepb.NamespaceId{
 		AccountId:   rand.Uint64(),
@@ -317,7 +317,7 @@ func TestAncestors_NamespaceGCCleansUpAncestors(t *testing.T) {
 }
 
 func TestAncestors_ReacquireExpiredWithDifferentMode(t *testing.T) {
-	core := newLocksCore(t)
+	core := newRawLocksCore(t)
 	now := time.Now()
 
 	lockId := &corepb.LockId{
@@ -349,7 +349,7 @@ func TestAncestors_ReacquireExpiredWithDifferentMode(t *testing.T) {
 }
 
 func TestAncestors_SnapshotRestore(t *testing.T) {
-	core1 := newLocksCore(t)
+	core1 := newRawLocksCore(t)
 	now := time.Now()
 
 	lockId := &corepb.LockId{
@@ -371,7 +371,7 @@ func TestAncestors_SnapshotRestore(t *testing.T) {
 	require.NoError(t, err)
 
 	// Restore into a new core
-	core2 := newLocksCore(t)
+	core2 := newRawLocksCore(t)
 	err = core2.Restore(io.NopCloser(buf))
 	require.NoError(t, err)
 

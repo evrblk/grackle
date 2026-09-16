@@ -111,18 +111,6 @@ func (c *Core) Restore(readers ...io.ReadCloser) error {
 // Returns a ResourceExhausted application error when the namespace has reached
 // MaxNumberOfSemaphoresPerNamespace, or AlreadyExists when a semaphore with the same name exists.
 func (c *Core) CreateSemaphore(req *coreapis.CreateSemaphoreRequest) (*coreapis.CreateSemaphoreResponse, error) {
-	if req.Payload.Permits == 0 {
-		return &coreapis.CreateSemaphoreResponse{
-			ApplicationError: mrpc.NewErrorWithContext(
-				mrpc.InvalidRequest,
-				"permits must be greater than 0",
-				map[string]string{
-					"permits": fmt.Sprintf("%d", req.Payload.Permits),
-				},
-			),
-		}, nil
-	}
-
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -191,18 +179,6 @@ func (c *Core) CreateSemaphore(req *coreapis.CreateSemaphoreRequest) (*coreapis.
 // a legitimate shrink. Returns NotFound if the semaphore does not exist, or InvalidArgument if
 // the new permit count is below the current ActiveHolds.
 func (c *Core) UpdateSemaphore(req *coreapis.UpdateSemaphoreRequest) (*coreapis.UpdateSemaphoreResponse, error) {
-	if req.Payload.Permits == 0 {
-		return &coreapis.UpdateSemaphoreResponse{
-			ApplicationError: mrpc.NewErrorWithContext(
-				mrpc.InvalidRequest,
-				"permits must be greater than 0",
-				map[string]string{
-					"permits": fmt.Sprintf("%d", req.Payload.Permits),
-				},
-			),
-		}, nil
-	}
-
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -527,21 +503,8 @@ func (c *Core) ListSemaphores(req *coreapis.ListSemaphoresRequest) (*coreapis.Li
 // check so an expired holder's permits become available immediately.
 // Returns Payload.Success=false (without an application error) when the request is valid but
 // permits are unavailable. Returns NotFound application errors for missing/expired leases or a
-// missing semaphore, and InvalidArgument when Weight == 0 or Weight exceeds the semaphore's
-// permits (a request that could never be satisfied no matter how long the caller waits).
+// missing semaphore.
 func (c *Core) AcquireSemaphore(req *coreapis.AcquireSemaphoreRequest) (*coreapis.AcquireSemaphoreResponse, error) {
-	if req.Payload.Weight == 0 {
-		return &coreapis.AcquireSemaphoreResponse{
-			ApplicationError: mrpc.NewErrorWithContext(
-				mrpc.InvalidRequest,
-				"weight must be greater than 0",
-				map[string]string{
-					"weight": fmt.Sprintf("%d", req.Payload.Weight),
-				},
-			),
-		}, nil
-	}
-
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 

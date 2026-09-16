@@ -175,9 +175,13 @@ func (c *Core) ListBarriers(req *coreapis.ListBarriersRequest) (*coreapis.ListBa
 	}, nil
 }
 
-// ListBarrierParticipants returns a page of participants currently recorded
-// for the named barrier, across all generations. Returns a NotFound
-// application error if the barrier does not exist.
+// ListBarrierParticipants returns a page of participants recorded for the
+// named barrier's req.Payload.Generation — a specific round, not "whatever
+// is currently there": a tripped barrier's completed round remains
+// queryable by its own generation even after the barrier has moved on to
+// the next one (participant rows are only ever cleaned up by GC, not by the
+// trip itself). Returns a NotFound application error if the barrier does
+// not exist.
 func (c *Core) ListBarrierParticipants(req *coreapis.ListBarrierParticipantsRequest) (*coreapis.ListBarrierParticipantsResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
@@ -198,7 +202,7 @@ func (c *Core) ListBarrierParticipants(req *coreapis.ListBarrierParticipantsRequ
 		return nil, err
 	}
 
-	result, err := c.participants.List(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, barrier.Id.BarrierId, req.Payload.PaginationToken, pagination.GetLimitWithDefaults(int(req.Payload.Limit)))
+	result, err := c.participants.ListByGeneration(txn, req.Payload.NamespaceId.AccountId, req.Payload.NamespaceId.NamespaceId, barrier.Id.BarrierId, req.Payload.Generation, req.Payload.PaginationToken, pagination.GetLimitWithDefaults(int(req.Payload.Limit)))
 	if err != nil {
 		return nil, err
 	}
@@ -220,18 +224,6 @@ func (c *Core) ListBarrierParticipants(req *coreapis.ListBarrierParticipantsRequ
 func (c *Core) CreateBarrier(req *coreapis.CreateBarrierRequest) (*coreapis.CreateBarrierResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
-
-	// A barrier that expects zero processes can never trip; reject it outright.
-	if req.Payload.ExpectedProcesses == 0 {
-		return &coreapis.CreateBarrierResponse{
-			ApplicationError: mrpc.NewErrorWithContext(
-				mrpc.InvalidRequest,
-				"expected processes must be greater than 0",
-				map[string]string{
-					"barrier_name": req.Payload.Name,
-				}),
-		}, nil
-	}
 
 	// Get counters for that namespace
 	counters, err := c.counters.Get(txn, req.Payload.BarrierId.AccountId, req.Payload.BarrierId.NamespaceId)
@@ -406,18 +398,6 @@ func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest) (*coreapis.Upda
 					"expected_version": fmt.Sprintf("%d", req.Payload.ExpectedVersion),
 				},
 			),
-		}, nil
-	}
-
-	// A barrier that expects zero processes can never trip; reject it outright.
-	if req.Payload.ExpectedProcesses == 0 {
-		return &coreapis.UpdateBarrierResponse{
-			ApplicationError: mrpc.NewErrorWithContext(
-				mrpc.InvalidRequest,
-				"expected processes must be greater than 0",
-				map[string]string{
-					"barrier_id": ids.EncodeBarrierId(req.Payload.BarrierId),
-				}),
 		}, nil
 	}
 

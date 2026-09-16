@@ -476,3 +476,106 @@ func TestParticipantsTable_List(t *testing.T) {
 		require.Equal(t, 3, gens[2])
 	})
 }
+
+func TestParticipantsTable_ListByGeneration(t *testing.T) {
+	t.Run("scopes to one generation, leaving others out", func(t *testing.T) {
+		badgerStore, err := store.NewBadgerInMemoryStore()
+		require.NoError(t, err)
+
+		table := newParticipantsTable([]byte{0x77, 0x77, 0x77, 0x77})
+
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint64()
+		barrierId := rand.Uint64()
+
+		// 2 participants in gen 1, 3 in gen 2.
+		txn := badgerStore.Update()
+		for i := range 2 {
+			err = table.Create(txn, accountId, namespaceId, barrierId, &corepb.BarrierParticipant{
+				ProcessId:  fmt.Sprintf("g1_p_%d", i),
+				Generation: 1,
+				ArrivedAt:  rand.Int64(),
+			})
+			require.NoError(t, err)
+		}
+		for i := range 3 {
+			err = table.Create(txn, accountId, namespaceId, barrierId, &corepb.BarrierParticipant{
+				ProcessId:  fmt.Sprintf("g2_p_%d", i),
+				Generation: 2,
+				ArrivedAt:  rand.Int64(),
+			})
+			require.NoError(t, err)
+		}
+		require.NoError(t, txn.Commit())
+
+		txn = badgerStore.View()
+		defer txn.Discard()
+
+		gen1, err := table.ListByGeneration(txn, accountId, namespaceId, barrierId, 1, nil, 100)
+		require.NoError(t, err)
+		require.Len(t, gen1.participants, 2)
+		for _, p := range gen1.participants {
+			require.EqualValues(t, 1, p.Generation)
+		}
+
+		gen2, err := table.ListByGeneration(txn, accountId, namespaceId, barrierId, 2, nil, 100)
+		require.NoError(t, err)
+		require.Len(t, gen2.participants, 3)
+		for _, p := range gen2.participants {
+			require.EqualValues(t, 2, p.Generation)
+		}
+
+		// A generation that was never reached (the barrier never tripped that
+		// far) has nothing to list, but is not an error.
+		gen3, err := table.ListByGeneration(txn, accountId, namespaceId, barrierId, 3, nil, 100)
+		require.NoError(t, err)
+		require.Empty(t, gen3.participants)
+	})
+
+	t.Run("pagination stays within the requested generation", func(t *testing.T) {
+		badgerStore, err := store.NewBadgerInMemoryStore()
+		require.NoError(t, err)
+
+		table := newParticipantsTable([]byte{0x77, 0x77, 0x77, 0x77})
+
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint64()
+		barrierId := rand.Uint64()
+
+		txn := badgerStore.Update()
+		for i := range 5 {
+			err = table.Create(txn, accountId, namespaceId, barrierId, &corepb.BarrierParticipant{
+				ProcessId:  fmt.Sprintf("g1_p_%03d", i),
+				Generation: 1,
+				ArrivedAt:  rand.Int64(),
+			})
+			require.NoError(t, err)
+		}
+		require.NoError(t, err)
+		// A single gen-2 participant, sorting after every gen-1 one: a scan
+		// that forgot to scope by generation would spill into it once gen-1
+		// is exhausted.
+		err = table.Create(txn, accountId, namespaceId, barrierId, &corepb.BarrierParticipant{
+			ProcessId:  "g2_p_000",
+			Generation: 2,
+			ArrivedAt:  rand.Int64(),
+		})
+		require.NoError(t, err)
+		require.NoError(t, txn.Commit())
+
+		txn = badgerStore.View()
+		defer txn.Discard()
+
+		page1, err := table.ListByGeneration(txn, accountId, namespaceId, barrierId, 1, nil, 3)
+		require.NoError(t, err)
+		require.Len(t, page1.participants, 3)
+		require.NotNil(t, page1.nextPaginationToken)
+
+		page2, err := table.ListByGeneration(txn, accountId, namespaceId, barrierId, 1, page1.nextPaginationToken, 3)
+		require.NoError(t, err)
+		require.Len(t, page2.participants, 2)
+		for _, p := range page2.participants {
+			require.EqualValues(t, 1, p.Generation)
+		}
+	})
+}

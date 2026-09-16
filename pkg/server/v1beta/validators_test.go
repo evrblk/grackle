@@ -9,6 +9,7 @@ import (
 
 	gracklepb "github.com/evrblk/evrblk-go/grackle/v1beta"
 	"github.com/evrblk/grackle/pkg/ids"
+	"github.com/evrblk/yellowstone-common/validatortest"
 )
 
 func init() {
@@ -3531,18 +3532,28 @@ func TestValidateListBarrierParticipantsRequest(t *testing.T) {
 			shouldError: true,
 		},
 		{
-			name: "valid request",
+			name: "missing generation",
 			request: &gracklepb.ListBarrierParticipantsRequest{
 				NamespaceName: "validname",
 				BarrierName:   "validname",
 			},
-			shouldError: false,
+			shouldError: true,
+		},
+		{
+			name: "negative generation",
+			request: &gracklepb.ListBarrierParticipantsRequest{
+				NamespaceName: "validname",
+				BarrierName:   "validname",
+				Generation:    -1,
+			},
+			shouldError: true,
 		},
 		{
 			name: "valid request with pagination",
 			request: &gracklepb.ListBarrierParticipantsRequest{
 				NamespaceName:   "validname",
 				BarrierName:     "validname",
+				Generation:      1,
 				PaginationToken: "dGVzdA==",
 				Limit:           50,
 			},
@@ -4510,6 +4521,73 @@ func TestValidateGetLockLeaseRequest(t *testing.T) {
 			} else {
 				require.NoError(t, ValidateGetLockLeaseRequest(test.request))
 			}
+		})
+	}
+}
+
+// TestValidatorsCheckAllProtoFields guards against a proto field being added
+// to a request message without a corresponding hand-written check ever being
+// added to its validator: for each ValidateXxxRequest function, it statically
+// verifies (see validatortest.AssertAllFieldsChecked) that every field of the
+// request message is referenced somewhere in the function body.
+func TestValidatorsCheckAllProtoFields(t *testing.T) {
+	tests := []struct {
+		name       string
+		validateFn interface{}
+		skipFields []string
+	}{
+		{name: "CreateNamespaceRequest", validateFn: ValidateCreateNamespaceRequest},
+		{name: "GetNamespaceRequest", validateFn: ValidateGetNamespaceRequest},
+		{name: "UpdateNamespaceRequest", validateFn: ValidateUpdateNamespaceRequest},
+		{name: "DeleteNamespaceRequest", validateFn: ValidateDeleteNamespaceRequest},
+		{name: "ListNamespacesRequest", validateFn: ValidateListNamespacesRequest},
+		// TODO: ExpiresAt (absolute deadline, unix nanoseconds) has no bounds
+		// check at all today; unclear what a correct bound should be.
+		{name: "CreateWaitGroupRequest", validateFn: ValidateCreateWaitGroupRequest, skipFields: []string{"ExpiresAt"}},
+		{name: "UpdateWaitGroupRequest", validateFn: ValidateUpdateWaitGroupRequest, skipFields: []string{"ExpiresAt"}},
+		{name: "GetWaitGroupRequest", validateFn: ValidateGetWaitGroupRequest},
+		{name: "WaitForWaitGroupRequest", validateFn: ValidateWaitForWaitGroupRequest},
+		{name: "DeleteWaitGroupRequest", validateFn: ValidateDeleteWaitGroupRequest},
+		{name: "ListWaitGroupsRequest", validateFn: ValidateListWaitGroupsRequest},
+		{name: "ListWaitGroupCompletedJobsRequest", validateFn: ValidateListWaitGroupCompletedJobsRequest},
+		{name: "CompleteJobsFromWaitGroupRequest", validateFn: ValidateCompleteJobsFromWaitGroupRequest},
+		{name: "ListLocksRequest", validateFn: ValidateListLocksRequest},
+		{name: "DeleteLockRequest", validateFn: ValidateDeleteLockRequest},
+		{name: "GetLockRequest", validateFn: ValidateGetLockRequest},
+		{name: "ReleaseLockRequest", validateFn: ValidateReleaseLockRequest},
+		// Exclusive is a bool: every value is valid, so there's nothing to check.
+		{name: "AcquireLockRequest", validateFn: ValidateAcquireLockRequest, skipFields: []string{"Exclusive"}},
+		{name: "CreateSemaphoreRequest", validateFn: ValidateCreateSemaphoreRequest},
+		{name: "GetSemaphoreRequest", validateFn: ValidateGetSemaphoreRequest},
+		{name: "ReleaseSemaphoreRequest", validateFn: ValidateReleaseSemaphoreRequest},
+		{name: "UpdateSemaphoreRequest", validateFn: ValidateUpdateSemaphoreRequest},
+		{name: "DeleteSemaphoreRequest", validateFn: ValidateDeleteSemaphoreRequest},
+		{name: "ListSemaphoresRequest", validateFn: ValidateListSemaphoresRequest},
+		{name: "ListSemaphoreHoldersRequest", validateFn: ValidateListSemaphoreHoldersRequest},
+		{name: "AcquireSemaphoreRequest", validateFn: ValidateAcquireSemaphoreRequest},
+		{name: "CreateBarrierRequest", validateFn: ValidateCreateBarrierRequest},
+		{name: "ListBarriersRequest", validateFn: ValidateListBarriersRequest},
+		{name: "GetBarrierRequest", validateFn: ValidateGetBarrierRequest},
+		{name: "DeleteBarrierRequest", validateFn: ValidateDeleteBarrierRequest},
+		{name: "UpdateBarrierRequest", validateFn: ValidateUpdateBarrierRequest},
+		{name: "ArriveAtBarrierRequest", validateFn: ValidateArriveAtBarrierRequest},
+		{name: "WaitAtBarrierRequest", validateFn: ValidateWaitAtBarrierRequest},
+		{name: "ListBarrierParticipantsRequest", validateFn: ValidateListBarrierParticipantsRequest},
+		{name: "CreateSemaphoreLeaseRequest", validateFn: ValidateCreateSemaphoreLeaseRequest},
+		{name: "RevokeSemaphoreLeaseRequest", validateFn: ValidateRevokeSemaphoreLeaseRequest},
+		{name: "RefreshSemaphoreLeaseRequest", validateFn: ValidateRefreshSemaphoreLeaseRequest},
+		{name: "ListSemaphoreLeasesRequest", validateFn: ValidateListSemaphoreLeasesRequest},
+		{name: "GetSemaphoreLeaseRequest", validateFn: ValidateGetSemaphoreLeaseRequest},
+		{name: "CreateLockLeaseRequest", validateFn: ValidateCreateLockLeaseRequest},
+		{name: "RevokeLockLeaseRequest", validateFn: ValidateRevokeLockLeaseRequest},
+		{name: "RefreshLockLeaseRequest", validateFn: ValidateRefreshLockLeaseRequest},
+		{name: "ListLockLeasesRequest", validateFn: ValidateListLockLeasesRequest},
+		{name: "GetLockLeaseRequest", validateFn: ValidateGetLockLeaseRequest},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			validatortest.AssertAllFieldsChecked(t, test.validateFn, test.skipFields...)
 		})
 	}
 }

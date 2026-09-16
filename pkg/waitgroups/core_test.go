@@ -649,6 +649,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				Description:                       "initial description",
 				Counter:                           10,
 				ExpiresAt:                         expiresAt,
+				DeleteAfterFinishedSeconds:        3600,
 				Metadata:                          map[string]string{"team": "search", "env": "staging"},
 				MaxNumberOfWaitGroupsPerNamespace: 100,
 			},
@@ -662,13 +663,14 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 		newExpiresAt := now.Add(2 * time.Hour).UnixNano()
 		resp2, err := core.UpdateWaitGroup(&coreapis.UpdateWaitGroupRequest{
 			Payload: &corepb.UpdateWaitGroupRequest{
-				NamespaceId:     namespaceId,
-				WaitGroupName:   "test_wait_group",
-				Description:     "updated description",
-				ExpiresAt:       newExpiresAt,
-				Metadata:        map[string]string{"team": "search", "env": "production"},
-				ExpectedVersion: 1,
-				Counter:         10,
+				NamespaceId:                namespaceId,
+				WaitGroupName:              "test_wait_group",
+				Description:                "updated description",
+				ExpiresAt:                  newExpiresAt,
+				DeleteAfterFinishedSeconds: 3600,
+				Metadata:                   map[string]string{"team": "search", "env": "production"},
+				ExpectedVersion:            1,
+				Counter:                    10,
 			},
 			Now: now.Add(time.Minute).UnixNano(),
 		})
@@ -713,6 +715,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				Description:                       "desc",
 				Counter:                           1,
 				ExpiresAt:                         now.Add(time.Hour).UnixNano(),
+				DeleteAfterFinishedSeconds:        3600,
 				Metadata:                          map[string]string{"key": "value"},
 				MaxNumberOfWaitGroupsPerNamespace: 100,
 			},
@@ -723,11 +726,12 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 		// Update with no metadata clears it
 		resp, err := core.UpdateWaitGroup(&coreapis.UpdateWaitGroupRequest{
 			Payload: &corepb.UpdateWaitGroupRequest{
-				NamespaceId:     namespaceId,
-				WaitGroupName:   "test_wait_group",
-				Description:     "desc",
-				ExpiresAt:       now.Add(time.Hour).UnixNano(),
-				ExpectedVersion: 1,
+				NamespaceId:                namespaceId,
+				WaitGroupName:              "test_wait_group",
+				Description:                "desc",
+				ExpiresAt:                  now.Add(time.Hour).UnixNano(),
+				DeleteAfterFinishedSeconds: 3600,
+				ExpectedVersion:            1,
 			},
 			Now: now.Add(time.Minute).UnixNano(),
 		})
@@ -746,9 +750,10 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 					AccountId:   rand.Uint64(),
 					NamespaceId: rand.Uint64(),
 				},
-				WaitGroupName: "nonexistent_wait_group",
-				Description:   "updated description",
-				ExpiresAt:     now.Add(time.Hour).UnixNano(),
+				WaitGroupName:              "nonexistent_wait_group",
+				Description:                "updated description",
+				ExpiresAt:                  now.Add(time.Hour).UnixNano(),
+				DeleteAfterFinishedSeconds: 3600,
 			},
 			Now: now.UnixNano(),
 		})
@@ -781,6 +786,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				Description:                       "desc",
 				Counter:                           1,
 				ExpiresAt:                         oldExpiresAt,
+				DeleteAfterFinishedSeconds:        3600,
 				MaxNumberOfWaitGroupsPerNamespace: 100,
 			},
 			Now: now.UnixNano(),
@@ -790,12 +796,13 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 		// Push expiration far into the future
 		_, err = core.UpdateWaitGroup(&coreapis.UpdateWaitGroupRequest{
 			Payload: &corepb.UpdateWaitGroupRequest{
-				NamespaceId:     namespaceId,
-				WaitGroupName:   "test_wait_group",
-				Description:     "desc",
-				ExpiresAt:       newExpiresAt,
-				ExpectedVersion: 1,
-				Counter:         1,
+				NamespaceId:                namespaceId,
+				WaitGroupName:              "test_wait_group",
+				Description:                "desc",
+				ExpiresAt:                  newExpiresAt,
+				DeleteAfterFinishedSeconds: 3600,
+				ExpectedVersion:            1,
+				Counter:                    1,
 			},
 			Now: now.Add(time.Minute).UnixNano(),
 		})
@@ -840,6 +847,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				Description:                       "desc",
 				Counter:                           10,
 				ExpiresAt:                         now.Add(time.Hour).UnixNano(),
+				DeleteAfterFinishedSeconds:        3600,
 				MaxNumberOfWaitGroupsPerNamespace: 100,
 			},
 			Now: now.UnixNano(),
@@ -851,12 +859,13 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 		// Updating with the matching current version succeeds and bumps the version
 		resp2, err := core.UpdateWaitGroup(&coreapis.UpdateWaitGroupRequest{
 			Payload: &corepb.UpdateWaitGroupRequest{
-				NamespaceId:     namespaceId,
-				WaitGroupName:   "test_wait_group",
-				Description:     "desc v2",
-				ExpiresAt:       now.Add(time.Hour).UnixNano(),
-				ExpectedVersion: 1,
-				Counter:         10,
+				NamespaceId:                namespaceId,
+				WaitGroupName:              "test_wait_group",
+				Description:                "desc v2",
+				ExpiresAt:                  now.Add(time.Hour).UnixNano(),
+				DeleteAfterFinishedSeconds: 3600,
+				ExpectedVersion:            1,
+				Counter:                    10,
 			},
 			Now: now.Add(time.Minute).UnixNano(),
 		})
@@ -867,12 +876,13 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 		// The next update must use the new version
 		resp3, err := core.UpdateWaitGroup(&coreapis.UpdateWaitGroupRequest{
 			Payload: &corepb.UpdateWaitGroupRequest{
-				NamespaceId:     namespaceId,
-				WaitGroupName:   "test_wait_group",
-				Description:     "desc v3",
-				ExpiresAt:       now.Add(time.Hour).UnixNano(),
-				ExpectedVersion: 2,
-				Counter:         10,
+				NamespaceId:                namespaceId,
+				WaitGroupName:              "test_wait_group",
+				Description:                "desc v3",
+				ExpiresAt:                  now.Add(time.Hour).UnixNano(),
+				DeleteAfterFinishedSeconds: 3600,
+				ExpectedVersion:            2,
+				Counter:                    10,
 			},
 			Now: now.Add(2 * time.Minute).UnixNano(),
 		})
@@ -901,6 +911,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				Description:                       "desc",
 				Counter:                           10,
 				ExpiresAt:                         now.Add(time.Hour).UnixNano(),
+				DeleteAfterFinishedSeconds:        3600,
 				MaxNumberOfWaitGroupsPerNamespace: 100,
 			},
 			Now: now.UnixNano(),
@@ -910,12 +921,13 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 		// First update with version 1 succeeds (wait group is now at version 2)
 		resp, err := core.UpdateWaitGroup(&coreapis.UpdateWaitGroupRequest{
 			Payload: &corepb.UpdateWaitGroupRequest{
-				NamespaceId:     namespaceId,
-				WaitGroupName:   "test_wait_group",
-				Description:     "desc v2",
-				ExpiresAt:       now.Add(time.Hour).UnixNano(),
-				ExpectedVersion: 1,
-				Counter:         10,
+				NamespaceId:                namespaceId,
+				WaitGroupName:              "test_wait_group",
+				Description:                "desc v2",
+				ExpiresAt:                  now.Add(time.Hour).UnixNano(),
+				DeleteAfterFinishedSeconds: 3600,
+				ExpectedVersion:            1,
+				Counter:                    10,
 			},
 			Now: now.Add(time.Minute).UnixNano(),
 		})
@@ -925,12 +937,13 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 		// Reusing the stale version 1 is rejected with a version mismatch
 		resp, err = core.UpdateWaitGroup(&coreapis.UpdateWaitGroupRequest{
 			Payload: &corepb.UpdateWaitGroupRequest{
-				NamespaceId:     namespaceId,
-				WaitGroupName:   "test_wait_group",
-				Description:     "should not apply",
-				ExpiresAt:       now.Add(time.Hour).UnixNano(),
-				ExpectedVersion: 1,
-				Counter:         10,
+				NamespaceId:                namespaceId,
+				WaitGroupName:              "test_wait_group",
+				Description:                "should not apply",
+				ExpiresAt:                  now.Add(time.Hour).UnixNano(),
+				DeleteAfterFinishedSeconds: 3600,
+				ExpectedVersion:            1,
+				Counter:                    10,
 			},
 			Now: now.Add(2 * time.Minute).UnixNano(),
 		})
@@ -966,6 +979,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				Description:                       "desc",
 				Counter:                           10,
 				ExpiresAt:                         now.Add(time.Hour).UnixNano(),
+				DeleteAfterFinishedSeconds:        3600,
 				MaxNumberOfWaitGroupsPerNamespace: 100,
 			},
 			Now: now.UnixNano(),
@@ -975,12 +989,13 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 		// Passing a version the wait group has never reached is rejected
 		resp, err := core.UpdateWaitGroup(&coreapis.UpdateWaitGroupRequest{
 			Payload: &corepb.UpdateWaitGroupRequest{
-				NamespaceId:     namespaceId,
-				WaitGroupName:   "test_wait_group",
-				Description:     "desc",
-				ExpiresAt:       now.Add(time.Hour).UnixNano(),
-				ExpectedVersion: 99,
-				Counter:         10,
+				NamespaceId:                namespaceId,
+				WaitGroupName:              "test_wait_group",
+				Description:                "desc",
+				ExpiresAt:                  now.Add(time.Hour).UnixNano(),
+				DeleteAfterFinishedSeconds: 3600,
+				ExpectedVersion:            99,
+				Counter:                    10,
 			},
 			Now: now.Add(time.Minute).UnixNano(),
 		})
@@ -1011,6 +1026,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				Description:                       "desc",
 				Counter:                           2,
 				ExpiresAt:                         now.Add(time.Hour).UnixNano(),
+				DeleteAfterFinishedSeconds:        3600,
 				MaxNumberOfWaitGroupsPerNamespace: 100,
 			},
 			Now: now.UnixNano(),
@@ -1024,12 +1040,13 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 		// Updating a finished wait group is rejected.
 		resp, err := core.UpdateWaitGroup(&coreapis.UpdateWaitGroupRequest{
 			Payload: &corepb.UpdateWaitGroupRequest{
-				NamespaceId:     namespaceId,
-				WaitGroupName:   "test_wait_group",
-				Description:     "new desc",
-				ExpiresAt:       now.Add(2 * time.Hour).UnixNano(),
-				ExpectedVersion: wg.Version,
-				Counter:         2,
+				NamespaceId:                namespaceId,
+				WaitGroupName:              "test_wait_group",
+				Description:                "new desc",
+				ExpiresAt:                  now.Add(2 * time.Hour).UnixNano(),
+				DeleteAfterFinishedSeconds: 3600,
+				ExpectedVersion:            wg.Version,
+				Counter:                    2,
 			},
 			Now: now.Add(2 * time.Minute).UnixNano(),
 		})
@@ -1060,6 +1077,7 @@ func TestCore_CompleteJobsWithMetadata(t *testing.T) {
 			Description:                       "test description",
 			Counter:                           10,
 			ExpiresAt:                         now.Add(time.Hour).UnixNano(),
+			DeleteAfterFinishedSeconds:        3600,
 			MaxNumberOfWaitGroupsPerNamespace: 100,
 		},
 		Now: now.UnixNano(),
@@ -1113,6 +1131,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 			Description:                       "test description",
 			Counter:                           10,
 			ExpiresAt:                         now.Add(time.Hour).UnixNano(),
+			DeleteAfterFinishedSeconds:        3600,
 			MaxNumberOfWaitGroupsPerNamespace: 100,
 		},
 		Now: now.UnixNano(),
@@ -1294,6 +1313,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 				Description:                       fmt.Sprintf("test description %d", i),
 				Counter:                           int64(jobsPerGroup),
 				ExpiresAt:                         now.Add(time.Hour).UnixNano(),
+				DeleteAfterFinishedSeconds:        3600,
 				MaxNumberOfWaitGroupsPerNamespace: 100,
 			},
 			Now: now.UnixNano(),
@@ -1309,21 +1329,10 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 			jobIds[j] = fmt.Sprintf("job_%d_%d", i, j)
 		}
 
-		resp2, err := core.CompleteJobsFromWaitGroup(&coreapis.CompleteJobsFromWaitGroupRequest{
-			Payload: &corepb.CompleteJobsFromWaitGroupRequest{
-				NamespaceId: &corepb.NamespaceId{
-					AccountId:   waitGroupIds[i].AccountId,
-					NamespaceId: waitGroupIds[i].NamespaceId,
-				},
-				WaitGroupName: waitGroupName,
-				Jobs:          completeJobRequests(jobIds),
-			},
-			Now: now.Add(time.Minute).UnixNano(),
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp2)
-		require.Nil(t, resp2.ApplicationError)
-		require.NotNil(t, resp2.Payload)
+		completeManyJobs(t, core, &corepb.NamespaceId{
+			AccountId:   waitGroupIds[i].AccountId,
+			NamespaceId: waitGroupIds[i].NamespaceId,
+		}, waitGroupName, jobIds, now.Add(time.Minute))
 	}
 
 	// Create test data for account 2 with multiple namespaces
@@ -1345,7 +1354,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 			waitGroupId := &corepb.WaitGroupId{
 				AccountId:   namespaceIds[ns].AccountId,
 				NamespaceId: namespaceIds[ns].NamespaceId,
-				WaitGroupId: uint64(wg),
+				WaitGroupId: uint64(wg) + 1, // 0 is not a valid WaitGroupId
 			}
 
 			// Create wait group with many jobs
@@ -1356,6 +1365,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 					Description:                       fmt.Sprintf("test description namespace %d wg %d", ns, wg),
 					Counter:                           int64(jobsPerWaitGroup),
 					ExpiresAt:                         now.Add(time.Hour).UnixNano(),
+					DeleteAfterFinishedSeconds:        3600,
 					MaxNumberOfWaitGroupsPerNamespace: 100,
 				},
 				Now: now.UnixNano(),
@@ -1371,21 +1381,10 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 				jobIds[j] = fmt.Sprintf("job_ns%d_wg%d_%d", ns, wg, j)
 			}
 
-			resp4, err := core.CompleteJobsFromWaitGroup(&coreapis.CompleteJobsFromWaitGroupRequest{
-				Payload: &corepb.CompleteJobsFromWaitGroupRequest{
-					NamespaceId: &corepb.NamespaceId{
-						AccountId:   waitGroupId.AccountId,
-						NamespaceId: waitGroupId.NamespaceId,
-					},
-					WaitGroupName: waitGroupName,
-					Jobs:          completeJobRequests(jobIds),
-				},
-				Now: now.Add(time.Minute).UnixNano(),
-			})
-			require.NoError(t, err)
-			require.NotNil(t, resp4)
-			require.Nil(t, resp4.ApplicationError)
-			require.NotNil(t, resp4.Payload)
+			completeManyJobs(t, core, &corepb.NamespaceId{
+				AccountId:   waitGroupId.AccountId,
+				NamespaceId: waitGroupId.NamespaceId,
+			}, waitGroupName, jobIds, now.Add(time.Minute))
 		}
 	}
 
@@ -1464,7 +1463,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 		deletedNamespaceWaitGroupId := &corepb.WaitGroupId{
 			AccountId:   namespaceToDelete.AccountId,
 			NamespaceId: namespaceToDelete.NamespaceId,
-			WaitGroupId: 0,
+			WaitGroupId: 1, // the first wait group created in this namespace (wg=0 above, shifted by +1)
 		}
 		resp9, err := core.GetWaitGroup(&coreapis.GetWaitGroupRequest{
 			Payload: &corepb.GetWaitGroupRequest{
@@ -1505,7 +1504,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 			WaitGroupId: &corepb.WaitGroupId{
 				AccountId:   namespaceToDelete.AccountId,
 				NamespaceId: namespaceToDelete.NamespaceId,
-				WaitGroupId: 0,
+				WaitGroupId: 1, // the first wait group created in this namespace (wg=0 above, shifted by +1)
 			},
 		},
 	})
@@ -1530,7 +1529,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 	remainingNamespaceWaitGroupId := &corepb.WaitGroupId{
 		AccountId:   namespaceIds[0].AccountId,
 		NamespaceId: namespaceIds[0].NamespaceId,
-		WaitGroupId: 0, // First wait group in that namespace
+		WaitGroupId: 1, // first wait group in that namespace (wg=0 above, shifted by +1)
 	}
 	resp13, err := core.GetWaitGroup(&coreapis.GetWaitGroupRequest{
 		Payload: &corepb.GetWaitGroupRequest{
@@ -1674,7 +1673,7 @@ func TestCore_DeleteAfterFinished(t *testing.T) {
 
 // runWaitGroupsGC runs a garbage collection pass at the given wall-clock time
 // with generous page sizes.
-func runWaitGroupsGC(t *testing.T, core *Core, now time.Time) {
+func runWaitGroupsGC(t *testing.T, core coreapis.GrackleWaitGroupsCoreApi, now time.Time) {
 	t.Helper()
 
 	resp, err := core.RunWaitGroupsGarbageCollection(&coreapis.RunWaitGroupsGarbageCollectionRequest{
@@ -1691,7 +1690,7 @@ func runWaitGroupsGC(t *testing.T, core *Core, now time.Time) {
 }
 
 // requireWaitGroupNotFound asserts that the wait group no longer exists.
-func requireWaitGroupNotFound(t *testing.T, core *Core, waitGroupId *corepb.WaitGroupId) {
+func requireWaitGroupNotFound(t *testing.T, core coreapis.GrackleWaitGroupsCoreApi, waitGroupId *corepb.WaitGroupId) {
 	t.Helper()
 
 	resp, err := core.GetWaitGroup(&coreapis.GetWaitGroupRequest{
@@ -1726,12 +1725,13 @@ func TestCore_LastActivityAt(t *testing.T) {
 		// Update* must NOT touch last_activity_at.
 		updateResp, err := core.UpdateWaitGroup(&coreapis.UpdateWaitGroupRequest{
 			Payload: &corepb.UpdateWaitGroupRequest{
-				NamespaceId:     namespaceId,
-				WaitGroupName:   "test_wait_group",
-				Description:     "new description",
-				Counter:         10,
-				ExpiresAt:       now.Add(2 * time.Hour).UnixNano(),
-				ExpectedVersion: 1,
+				NamespaceId:                namespaceId,
+				WaitGroupName:              "test_wait_group",
+				Description:                "new description",
+				Counter:                    10,
+				ExpiresAt:                  now.Add(2 * time.Hour).UnixNano(),
+				DeleteAfterFinishedSeconds: 3600,
+				ExpectedVersion:            1,
 			},
 			Now: now.Add(time.Minute).UnixNano(),
 		})
@@ -1756,13 +1756,44 @@ func completeJobRequests(jobIds []string) []*corepb.CompleteJobRequest {
 	return jobs
 }
 
-func newWaitGroupsCore(t *testing.T) *Core {
-	store, err := store.NewBadgerInMemoryStore()
-	require.NoError(t, err)
-	return NewCore(store, []byte{0x1d, 0x36, 0x00, 0x00}, 0x00000000, 0xffffffff)
+// completeManyJobs reports jobIds as completed in batches of at most 50, the
+// bound corepb.CompleteJobsFromWaitGroupRequest.Validate() enforces per
+// request — the same batching a real caller with more than 50 jobs would
+// have to do.
+func completeManyJobs(t *testing.T, core coreapis.GrackleWaitGroupsCoreApi, namespaceId *corepb.NamespaceId, waitGroupName string, jobIds []string, now time.Time) {
+	t.Helper()
+
+	const batchSize = 50
+	for start := 0; start < len(jobIds); start += batchSize {
+		end := min(start+batchSize, len(jobIds))
+
+		resp, err := core.CompleteJobsFromWaitGroup(&coreapis.CompleteJobsFromWaitGroupRequest{
+			Payload: &corepb.CompleteJobsFromWaitGroupRequest{
+				NamespaceId:   namespaceId,
+				WaitGroupName: waitGroupName,
+				Jobs:          completeJobRequests(jobIds[start:end]),
+			},
+			Now: now.UnixNano(),
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		require.Nil(t, resp.ApplicationError)
+		require.NotNil(t, resp.Payload)
+	}
 }
 
-func createWaitGroup(t *testing.T, core *Core, waitGroupId *corepb.WaitGroupId, name string, counter int64, maxNumberOfWaitGroupsPerNamespace int64, expiresAt time.Time, now time.Time) *corepb.WaitGroup {
+// newWaitGroupsCore wraps the Core in GrackleWaitGroupsValidatingCore, the
+// same validation every request passes through the client-side stub (and
+// what a single-node deployment wraps Core in directly, with no
+// adapter/Raft layer in between) — so tests exercise requests the way
+// callers do: Validate runs before the request ever reaches Core.
+func newWaitGroupsCore(t *testing.T) coreapis.GrackleWaitGroupsCoreApi {
+	badgerStore, err := store.NewBadgerInMemoryStore()
+	require.NoError(t, err)
+	return coreapis.NewGrackleWaitGroupsValidatingCore(NewCore(badgerStore, []byte{0x1d, 0x36, 0x00, 0x00}, 0x00000000, 0xffffffff))
+}
+
+func createWaitGroup(t *testing.T, core coreapis.GrackleWaitGroupsCoreApi, waitGroupId *corepb.WaitGroupId, name string, counter int64, maxNumberOfWaitGroupsPerNamespace int64, expiresAt time.Time, now time.Time) *corepb.WaitGroup {
 	t.Helper()
 
 	resp, err := core.CreateWaitGroup(&coreapis.CreateWaitGroupRequest{
@@ -1785,7 +1816,7 @@ func createWaitGroup(t *testing.T, core *Core, waitGroupId *corepb.WaitGroupId, 
 	return resp.Payload.WaitGroup
 }
 
-func createWaitGroupWithError(t *testing.T, core *Core, waitGroupId *corepb.WaitGroupId, name string, counter int64, maxNumberOfWaitGroupsPerNamespace int64, expiresAt time.Time, now time.Time) *mrpc.Error {
+func createWaitGroupWithError(t *testing.T, core coreapis.GrackleWaitGroupsCoreApi, waitGroupId *corepb.WaitGroupId, name string, counter int64, maxNumberOfWaitGroupsPerNamespace int64, expiresAt time.Time, now time.Time) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.CreateWaitGroup(&coreapis.CreateWaitGroupRequest{
@@ -1807,7 +1838,7 @@ func createWaitGroupWithError(t *testing.T, core *Core, waitGroupId *corepb.Wait
 	return resp.ApplicationError
 }
 
-func completeJobsFromWaitGroup(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, waitGroupName string, jobIds []string, now time.Time) *corepb.WaitGroup {
+func completeJobsFromWaitGroup(t *testing.T, core coreapis.GrackleWaitGroupsCoreApi, namespaceId *corepb.NamespaceId, waitGroupName string, jobIds []string, now time.Time) *corepb.WaitGroup {
 	t.Helper()
 
 	resp, err := core.CompleteJobsFromWaitGroup(&coreapis.CompleteJobsFromWaitGroupRequest{
@@ -1826,7 +1857,7 @@ func completeJobsFromWaitGroup(t *testing.T, core *Core, namespaceId *corepb.Nam
 	return resp.Payload.WaitGroup
 }
 
-func completeJobsFromWaitGroupWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, waitGroupName string, jobIds []string, now time.Time) *mrpc.Error {
+func completeJobsFromWaitGroupWithError(t *testing.T, core coreapis.GrackleWaitGroupsCoreApi, namespaceId *corepb.NamespaceId, waitGroupName string, jobIds []string, now time.Time) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.CompleteJobsFromWaitGroup(&coreapis.CompleteJobsFromWaitGroupRequest{
@@ -1844,7 +1875,7 @@ func completeJobsFromWaitGroupWithError(t *testing.T, core *Core, namespaceId *c
 	return resp.ApplicationError
 }
 
-func getWaitGroup(t *testing.T, core *Core, waitGroupId *corepb.WaitGroupId) *corepb.WaitGroup {
+func getWaitGroup(t *testing.T, core coreapis.GrackleWaitGroupsCoreApi, waitGroupId *corepb.WaitGroupId) *corepb.WaitGroup {
 	t.Helper()
 
 	resp, err := core.GetWaitGroup(&coreapis.GetWaitGroupRequest{
@@ -1860,7 +1891,7 @@ func getWaitGroup(t *testing.T, core *Core, waitGroupId *corepb.WaitGroupId) *co
 	return resp.Payload.WaitGroup
 }
 
-func ListWaitGroupCompletedJobs(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, waitGroupName string) *corepb.ListWaitGroupCompletedJobsResponse {
+func ListWaitGroupCompletedJobs(t *testing.T, core coreapis.GrackleWaitGroupsCoreApi, namespaceId *corepb.NamespaceId, waitGroupName string) *corepb.ListWaitGroupCompletedJobsResponse {
 	t.Helper()
 
 	resp, err := core.ListWaitGroupCompletedJobs(&coreapis.ListWaitGroupCompletedJobsRequest{

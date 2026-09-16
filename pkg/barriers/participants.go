@@ -96,10 +96,37 @@ type listParticipantResult struct {
 	previousPaginationToken *corepb.PaginationToken
 }
 
+// List scans every participant of a barrier, across every generation it
+// has ever had. This is what GC's unconditional drain needs (it must clean
+// up leftover rows from every past round, not just the current one); it is
+// deliberately not what ListBarrierParticipants uses — see ListByGeneration.
 func (t *participantsTable) List(txn *store.Txn, accountId uint64, namespaceId uint64, barrierId uint64,
 	paginationToken *corepb.PaginationToken, limit int) (*listParticipantResult, error) {
 	result, err := t.table.ListPaginated(txn,
 		t.tablePK(accountId, namespaceId, barrierId),
+		pagination.CoreToMonstera(paginationToken),
+		limit)
+	if err != nil {
+		return nil, err
+	}
+
+	return &listParticipantResult{
+		participants:            result.Items,
+		nextPaginationToken:     pagination.MonsteraToCore(result.NextPaginationToken),
+		previousPaginationToken: pagination.MonsteraToCore(result.PreviousPaginationToken),
+	}, nil
+}
+
+// ListByGeneration scans the participants of one specific generation of a
+// barrier — generation is the leading component of this table's sort key
+// (see tableSK), so it can be folded straight into the scan prefix. Unlike
+// List, this reaches only one round, even if the barrier has since tripped
+// past it: a completed round's participants stay queryable by their own
+// generation number until GC reaps them.
+func (t *participantsTable) ListByGeneration(txn *store.Txn, accountId uint64, namespaceId uint64, barrierId uint64, generation int64,
+	paginationToken *corepb.PaginationToken, limit int) (*listParticipantResult, error) {
+	result, err := t.table.ListPaginated(txn,
+		utils.ConcatBytes(t.tablePK(accountId, namespaceId, barrierId), generation),
 		pagination.CoreToMonstera(paginationToken),
 		limit)
 	if err != nil {

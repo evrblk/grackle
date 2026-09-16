@@ -21,7 +21,7 @@ import (
 
 func TestCore_AcquireLock(t *testing.T) {
 	t.Run("exclusive", func(t *testing.T) {
-		core := newLocksCore(t)
+		core := newRawLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -71,7 +71,7 @@ func TestCore_AcquireLock(t *testing.T) {
 	})
 
 	t.Run("shared lock", func(t *testing.T) {
-		core := newLocksCore(t)
+		core := newRawLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -113,7 +113,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		}
 
 		// Create lease with 60 minute TTL
-		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
 
 		// T+0: Acquire lock
 		success, lock := acquireLock(t, core, lockId, lease.Id, true, now)
@@ -138,7 +138,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		}
 
 		// Create lease with 60 minute TTL
-		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
 
 		// T+0: Acquire lock
 		success, lock := acquireLock(t, core, lockId, lease.Id, false, now)
@@ -163,9 +163,9 @@ func TestCore_AcquireLock(t *testing.T) {
 		}
 
 		// Create leases for two different processes
-		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
-		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
-		lease3 := createLease(t, core, accountId, namespaceId, "process-3", now, 60*time.Minute)
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 5*time.Minute)
+		lease3 := createLease(t, core, accountId, namespaceId, "process-3", now, 5*time.Minute)
 
 		// T+0: Acquire lock
 		success, lock := acquireLock(t, core, lockId, lease1.Id, true, now)
@@ -195,9 +195,9 @@ func TestCore_AcquireLock(t *testing.T) {
 		}
 
 		// Create leases for three different processes
-		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
-		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
-		lease3 := createLease(t, core, accountId, namespaceId, "process-3", now, 60*time.Minute)
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 5*time.Minute)
+		lease3 := createLease(t, core, accountId, namespaceId, "process-3", now, 5*time.Minute)
 
 		// T+0: Acquire lock
 		success, lock := acquireLock(t, core, lockId, lease1.Id, false, now)
@@ -225,7 +225,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		maxLocksPerNamespace := int64(3)
 
 		// Create lease with 60 minute TTL
-		lease := createLease(t, core, accountId1, namespaceId1, "process-1", now, 60*time.Minute)
+		lease := createLease(t, core, accountId1, namespaceId1, "process-1", now, 5*time.Minute)
 
 		// Create locks up to the maximum limit
 		for i := 0; i < int(maxLocksPerNamespace); i++ {
@@ -335,7 +335,7 @@ func TestCore_AcquireLock(t *testing.T) {
 			LockName:    "lock_different_namespace",
 		}
 
-		lease2 := createLease(t, core, accountId1, differentNamespaceId, "process-2", now, 60*time.Minute)
+		lease2 := createLease(t, core, accountId1, differentNamespaceId, "process-2", now, 5*time.Minute)
 
 		response, err = core.AcquireLock(&coreapis.AcquireLockRequest{
 			Payload: &corepb.AcquireLockRequest{
@@ -360,7 +360,7 @@ func TestCore_AcquireLock(t *testing.T) {
 			LockName:    "lock_different_account",
 		}
 
-		lease3 := createLease(t, core, accountId2, differentAccountNamespaceId, "process-3", now, 60*time.Minute)
+		lease3 := createLease(t, core, accountId2, differentAccountNamespaceId, "process-3", now, 5*time.Minute)
 
 		response, err = core.AcquireLock(&coreapis.AcquireLockRequest{
 			Payload: &corepb.AcquireLockRequest{
@@ -395,8 +395,8 @@ func TestCore_AcquireLock(t *testing.T) {
 		}
 
 		// Create leases for two different processes
-		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
-		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 5*time.Minute)
 
 		// Acquire exclusive lock on parent
 		success, _ := acquireLock(t, core, parentLock, lease1.Id, true, now)
@@ -431,8 +431,8 @@ func TestCore_AcquireLock(t *testing.T) {
 		}
 
 		// Create leases for two different processes
-		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
-		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 5*time.Minute)
 
 		// Acquire exclusive lock on parent
 		success, _ := acquireLock(t, core, parentLock, lease1.Id, true, now)
@@ -460,7 +460,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		}
 
 		// Create lease with 60 minute TTL
-		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
 
 		// Acquire shared lock on parent
 		success, _ := acquireLock(t, core, parentLock, lease.Id, false, now)
@@ -488,8 +488,8 @@ func TestCore_AcquireLock(t *testing.T) {
 		}
 
 		// Create leases for two different processes
-		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
-		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 5*time.Minute)
 
 		// Acquire shared lock on parent
 		success, _ := acquireLock(t, core, parentLock, lease1.Id, false, now)
@@ -517,8 +517,8 @@ func TestCore_AcquireLock(t *testing.T) {
 		}
 
 		// Create leases for two different processes
-		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
-		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 5*time.Minute)
 
 		// Acquire exclusive lock on child
 		success, _ := acquireLock(t, core, childLock, lease1.Id, true, now)
@@ -546,8 +546,8 @@ func TestCore_AcquireLock(t *testing.T) {
 		}
 
 		// Create leases for two different processes
-		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
-		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 5*time.Minute)
 
 		// Acquire exclusive lock on child
 		success, _ := acquireLock(t, core, childLock, lease1.Id, true, now)
@@ -575,7 +575,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		}
 
 		// Create lease with 60 minute TTL
-		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
 
 		// Acquire shared lock on child
 		success, _ := acquireLock(t, core, childLock, lease.Id, false, now)
@@ -603,8 +603,8 @@ func TestCore_AcquireLock(t *testing.T) {
 		}
 
 		// Create leases for two different processes
-		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
-		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 5*time.Minute)
 
 		// Acquire shared lock on child
 		success, _ := acquireLock(t, core, childLock, lease1.Id, false, now)
@@ -632,7 +632,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		}
 
 		// Create lease with 60 minute TTL
-		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
 
 		// Acquire exclusive lock on a/b
 		success, _ := acquireLock(t, core, lock1, lease.Id, true, now)
@@ -670,10 +670,10 @@ func TestCore_AcquireLock(t *testing.T) {
 		}
 
 		// Create leases for four different processes
-		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
-		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
-		lease3 := createLease(t, core, accountId, namespaceId, "process-3", now, 60*time.Minute)
-		lease4 := createLease(t, core, accountId, namespaceId, "process-4", now, 60*time.Minute)
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 5*time.Minute)
+		lease3 := createLease(t, core, accountId, namespaceId, "process-3", now, 5*time.Minute)
+		lease4 := createLease(t, core, accountId, namespaceId, "process-4", now, 5*time.Minute)
 
 		// Acquire exclusive lock on a/b
 		success, _ := acquireLock(t, core, lock2, lease1.Id, true, now)
@@ -714,8 +714,8 @@ func TestCore_AcquireLock(t *testing.T) {
 		}
 
 		// Create leases for two different processes
-		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
-		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 5*time.Minute)
 
 		// Acquire shared lock on a/b
 		success, _ := acquireLock(t, core, lock1, lease1.Id, false, now)
@@ -751,7 +751,7 @@ func TestCore_AcquireLock(t *testing.T) {
 		}
 
 		// Create lease with 60 minute TTL
-		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
 
 		// Acquire exclusive lock
 		success, _ := acquireLock(t, core, lock1, lease.Id, true, now)
@@ -784,10 +784,10 @@ func TestCore_AcquireLock(t *testing.T) {
 		}
 
 		// Create leases for four different processes
-		leaseA := createLease(t, core, accountId, namespaceId, "process-a", now, 60*time.Minute)
-		leaseB := createLease(t, core, accountId, namespaceId, "process-b", now, 60*time.Minute)
-		leaseC := createLease(t, core, accountId, namespaceId, "process-c", now, 60*time.Minute)
-		leaseD := createLease(t, core, accountId, namespaceId, "process-d", now, 60*time.Minute)
+		leaseA := createLease(t, core, accountId, namespaceId, "process-a", now, 5*time.Minute)
+		leaseB := createLease(t, core, accountId, namespaceId, "process-b", now, 5*time.Minute)
+		leaseC := createLease(t, core, accountId, namespaceId, "process-c", now, 5*time.Minute)
+		leaseD := createLease(t, core, accountId, namespaceId, "process-d", now, 5*time.Minute)
 
 		// Client A: Acquire shared lock on users/
 		success, _ := acquireLock(t, core, usersLock, leaseA.Id, false, now)
@@ -823,9 +823,9 @@ func TestCore_AcquireLock(t *testing.T) {
 		}
 
 		// Create leases for three different processes
-		leaseA := createLease(t, core, accountId, namespaceId, "process-a", now, 60*time.Minute)
-		leaseB := createLease(t, core, accountId, namespaceId, "process-b", now, 60*time.Minute)
-		leaseC := createLease(t, core, accountId, namespaceId, "process-c", now, 60*time.Minute)
+		leaseA := createLease(t, core, accountId, namespaceId, "process-a", now, 5*time.Minute)
+		leaseB := createLease(t, core, accountId, namespaceId, "process-b", now, 5*time.Minute)
+		leaseC := createLease(t, core, accountId, namespaceId, "process-c", now, 5*time.Minute)
 
 		// Client A: Acquire exclusive lock on users/123
 		success, _ := acquireLock(t, core, user123Lock, leaseA.Id, true, now)
@@ -912,7 +912,7 @@ func TestCore_LockHolderMetadata(t *testing.T) {
 	}
 
 	// Create lease with 60 minute TTL
-	lease := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+	lease := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
 
 	metadata := map[string]string{"host": "node-1", "pid": "1234"}
 
@@ -948,7 +948,7 @@ func TestCore_LockHolderMetadata(t *testing.T) {
 
 func TestCore_CreateLockLease(t *testing.T) {
 	t.Run("creates a lease", func(t *testing.T) {
-		core := newLocksCore(t)
+		core := newRawLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -999,7 +999,7 @@ func TestCore_CreateLockLease(t *testing.T) {
 	})
 
 	t.Run("max number of lock leases per namespace", func(t *testing.T) {
-		core := newLocksCore(t)
+		core := newRawLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -1036,7 +1036,7 @@ func TestCore_GetLockLease(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
 
-		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
 
 		got := getLockLease(t, core, lease.Id, now)
 		require.Equal(t, lease.Id.LeaseId, got.Id.LeaseId)
@@ -1086,7 +1086,7 @@ func TestCore_GetLock(t *testing.T) {
 	})
 
 	t.Run("shared locked with multiple holders between expirations", func(t *testing.T) {
-		core := newLocksCore(t)
+		core := newRawLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -1166,7 +1166,7 @@ func TestCore_DeleteLock(t *testing.T) {
 		}
 
 		// Create lease with 60 minute TTL
-		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
 
 		// T+0: Acquire lock
 		success, lock := acquireLock(t, core, lockId, lease.Id, true, now)
@@ -1222,8 +1222,8 @@ func TestCore_ReleaseLock(t *testing.T) {
 		}
 
 		// Create leases for two different processes
-		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
-		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 5*time.Minute)
 
 		// T+0: Acquire lock
 		success, lock := acquireLock(t, core, lockId, lease1.Id, true, now)
@@ -1252,8 +1252,8 @@ func TestCore_ReleaseLock(t *testing.T) {
 		}
 
 		// Create leases for two different processes
-		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
-		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 5*time.Minute)
 
 		// T+0: Acquire read lock
 		success, lock := acquireLock(t, core, lockId, lease1.Id, false, now)
@@ -1276,7 +1276,7 @@ func TestCore_ReleaseLock(t *testing.T) {
 	})
 
 	t.Run("expired lock", func(t *testing.T) {
-		core := newLocksCore(t)
+		core := newRawLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -1311,8 +1311,8 @@ func TestCore_ReleaseLock(t *testing.T) {
 		}
 
 		// Create leases for two different processes
-		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
-		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 5*time.Minute)
 
 		// T+0: Acquire shared lock with process_1
 		success, lock := acquireLock(t, core, lockId, lease1.Id, false, now)
@@ -1364,8 +1364,8 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 	}
 
 	// Create two lock cores for testing snapshot and restore
-	core1 := newLocksCore(t)
-	core2 := newLocksCore(t)
+	core1 := newRawLocksCore(t)
+	core2 := newRawLocksCore(t)
 
 	// Create leases for different processes
 	lease1 := createLease(t, core1, accountId, namespaceId, "process-1", now, 60*time.Minute)
@@ -1491,9 +1491,9 @@ func TestCore_ListLocks(t *testing.T) {
 		}
 
 		// Create leases for three different processes
-		lease1 := createLease(t, core, namespaceId.AccountId, namespaceId.NamespaceId, "process-1", now, 60*time.Minute)
-		lease2 := createLease(t, core, namespaceId.AccountId, namespaceId.NamespaceId, "process-2", now, 60*time.Minute)
-		lease3 := createLease(t, core, namespaceId.AccountId, namespaceId.NamespaceId, "process-3", now, 60*time.Minute)
+		lease1 := createLease(t, core, namespaceId.AccountId, namespaceId.NamespaceId, "process-1", now, 5*time.Minute)
+		lease2 := createLease(t, core, namespaceId.AccountId, namespaceId.NamespaceId, "process-2", now, 5*time.Minute)
+		lease3 := createLease(t, core, namespaceId.AccountId, namespaceId.NamespaceId, "process-3", now, 5*time.Minute)
 
 		// T+0: Acquire exclusive lock for lock_1
 		success, _ := acquireLock(t, core, lockId1, lease1.Id, true, now)
@@ -1557,7 +1557,7 @@ func TestCore_ListLocks(t *testing.T) {
 		}
 
 		// Create leases with different TTLs - one that stays active, one that expires
-		lease1 := createLease(t, core, namespaceId.AccountId, namespaceId.NamespaceId, "process-1", now, 60*time.Minute)
+		lease1 := createLease(t, core, namespaceId.AccountId, namespaceId.NamespaceId, "process-1", now, 5*time.Minute)
 		lease2 := createLease(t, core, namespaceId.AccountId, namespaceId.NamespaceId, "process-2", now.Add(time.Minute), 1*time.Minute)
 
 		// T+0: Acquire lock that will remain active
@@ -1604,8 +1604,8 @@ func TestCore_ListLocks(t *testing.T) {
 		}
 
 		// Create leases for two different processes in different namespaces
-		lease1 := createLease(t, core, accountId, lockId1.NamespaceId, "process-1", now, 60*time.Minute)
-		lease2 := createLease(t, core, accountId, lockId2.NamespaceId, "process-2", now, 60*time.Minute)
+		lease1 := createLease(t, core, accountId, lockId1.NamespaceId, "process-1", now, 5*time.Minute)
+		lease2 := createLease(t, core, accountId, lockId2.NamespaceId, "process-2", now, 5*time.Minute)
 
 		// T+0: Acquire lock in namespace_1
 		success, _ := acquireLock(t, core, lockId1, lease1.Id, true, now)
@@ -1695,10 +1695,10 @@ func TestCore_ListLocks(t *testing.T) {
 		}
 
 		// Create leases for different processes
-		lease1 := createLease(t, core, namespaceId.AccountId, namespaceId.NamespaceId, "process-1", now, 60*time.Minute)
-		lease2 := createLease(t, core, namespaceId.AccountId, namespaceId.NamespaceId, "process-2", now, 60*time.Minute)
-		lease3 := createLease(t, core, namespaceId.AccountId, namespaceId.NamespaceId, "process-3", now, 60*time.Minute)
-		lease4 := createLease(t, core, namespaceId.AccountId, namespaceId.NamespaceId, "process-4", now, 60*time.Minute)
+		lease1 := createLease(t, core, namespaceId.AccountId, namespaceId.NamespaceId, "process-1", now, 5*time.Minute)
+		lease2 := createLease(t, core, namespaceId.AccountId, namespaceId.NamespaceId, "process-2", now, 5*time.Minute)
+		lease3 := createLease(t, core, namespaceId.AccountId, namespaceId.NamespaceId, "process-3", now, 5*time.Minute)
+		lease4 := createLease(t, core, namespaceId.AccountId, namespaceId.NamespaceId, "process-4", now, 5*time.Minute)
 
 		// T+0: Acquire exclusive lock
 		success, _ := acquireLock(t, core, lockId1, lease1.Id, true, now)
@@ -1797,7 +1797,7 @@ func TestCore_ListLocks(t *testing.T) {
 
 func TestCore_RunLocksGarbageCollection(t *testing.T) {
 	t.Run("with multiple expiring locks", func(t *testing.T) {
-		core := newLocksCore(t)
+		core := newRawLocksCore(t)
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
@@ -1965,7 +1965,7 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 		// Create leases for acquiring locks
 		leases := make([]*corepb.Lease, 10)
 		for i := range 10 {
-			leases[i] = createLease(t, core, namespaceId.AccountId, namespaceId.NamespaceId, fmt.Sprintf("process-%d", i), now, 60*time.Minute)
+			leases[i] = createLease(t, core, namespaceId.AccountId, namespaceId.NamespaceId, fmt.Sprintf("process-%d", i), now, 5*time.Minute)
 		}
 
 		// Acquire locks in the namespace
@@ -1982,7 +1982,7 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 		}
 
 		// Create a lease for the different namespace lock
-		differentLease := createLease(t, core, namespaceId.AccountId, differentNamespaceLockId.NamespaceId, "different-process", now, 60*time.Minute)
+		differentLease := createLease(t, core, namespaceId.AccountId, differentNamespaceLockId.NamespaceId, "different-process", now, 5*time.Minute)
 
 		// Acquire a lock in a different namespace
 		success, _ := acquireLock(t, core, differentNamespaceLockId, differentLease.Id, true, now)
@@ -2038,8 +2038,8 @@ func TestCore_AcquireLock_ContentionReason(t *testing.T) {
 		namespaceId := rand.Uint64()
 		lockId := &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a"}
 
-		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
-		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 5*time.Minute)
 
 		// Hold it exclusively, then another lease tries to acquire it.
 		success, reason, _ := acquireLockReason(t, core, lockId, lease1.Id, true, now)
@@ -2062,8 +2062,8 @@ func TestCore_AcquireLock_ContentionReason(t *testing.T) {
 		parentLock := &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a/b"}
 		childLock := &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a/b/c"}
 
-		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
-		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 5*time.Minute)
 
 		success, _, _ := acquireLockReason(t, core, parentLock, lease1.Id, true, now)
 		require.True(t, success)
@@ -2083,8 +2083,8 @@ func TestCore_AcquireLock_ContentionReason(t *testing.T) {
 		parentLock := &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a/b"}
 		childLock := &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a/b/c"}
 
-		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
-		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 5*time.Minute)
 
 		// Child held exclusively blocks acquiring the parent.
 		success, _, _ := acquireLockReason(t, core, childLock, lease1.Id, true, now)
@@ -2111,13 +2111,13 @@ func TestCore_AcquireLock_ContentionReason(t *testing.T) {
 				NamespaceId: namespaceId,
 				LockName:    fmt.Sprintf("a/child-%03d", i),
 			}
-			lease := createLease(t, core, accountId, namespaceId, fmt.Sprintf("p-%d", i), now, 60*time.Minute)
+			lease := createLease(t, core, accountId, namespaceId, fmt.Sprintf("p-%d", i), now, 5*time.Minute)
 			success, _, _ := acquireLockReason(t, core, childLock, lease.Id, true, now)
 			require.True(t, success)
 		}
 
 		// Acquiring the parent is blocked, and the reported blockers are capped.
-		waiter := createLease(t, core, accountId, namespaceId, "waiter", now, 60*time.Minute)
+		waiter := createLease(t, core, accountId, namespaceId, "waiter", now, 5*time.Minute)
 		success, reason, blocking := acquireLockReason(t, core, parentLock, waiter.Id, true, now)
 		require.False(t, success)
 		require.Equal(t, corepb.ContentionReason_CONTENTION_REASON_DESCENDANT, reason)
@@ -2131,7 +2131,7 @@ func TestCore_AcquireLock_ContentionReason(t *testing.T) {
 		namespaceId := rand.Uint64()
 		lockId := &corepb.LockId{AccountId: accountId, NamespaceId: namespaceId, LockName: "a"}
 
-		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
 
 		success, reason, blocking := acquireLockReason(t, core, lockId, lease.Id, true, now)
 		require.True(t, success)
@@ -2141,7 +2141,7 @@ func TestCore_AcquireLock_ContentionReason(t *testing.T) {
 }
 
 func TestCore_LockAncestorNames(t *testing.T) {
-	core := newLocksCore(t)
+	core := newRawLocksCore(t)
 	require.Nil(t, core.lockAncestorNames("flat"))
 	require.Nil(t, core.lockAncestorNames(""))
 	require.Equal(t, []string{"a"}, core.lockAncestorNames("a/b"))
@@ -2151,7 +2151,7 @@ func TestCore_LockAncestorNames(t *testing.T) {
 
 func TestCore_RevokeLockLease(t *testing.T) {
 	t.Run("revokes all locks with pagination", func(t *testing.T) {
-		core := newLocksCore(t)
+		core := newRawLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -2228,7 +2228,7 @@ func TestCore_RevokeLockLease(t *testing.T) {
 	})
 
 	t.Run("expired lease", func(t *testing.T) {
-		core := newLocksCore(t)
+		core := newRawLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -2278,8 +2278,8 @@ func TestCore_RevokeLockLease_ReleasesSharedLocks(t *testing.T) {
 	}
 
 	// Create two leases
-	lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
-	lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+	lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
+	lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 5*time.Minute)
 
 	// Acquire shared lock with lease1
 	success, lock := acquireLock(t, core, lockId, lease1.Id, false, now)
@@ -2379,7 +2379,7 @@ func TestCore_RefreshLockLease(t *testing.T) {
 	})
 
 	t.Run("revokes an expired lease and releases its locks", func(t *testing.T) {
-		core := newLocksCore(t)
+		core := newRawLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -2447,7 +2447,7 @@ func TestCore_RefreshLockLease(t *testing.T) {
 	})
 
 	t.Run("revokes an expired lease while preserving shared locks held by others", func(t *testing.T) {
-		core := newLocksCore(t)
+		core := newRawLocksCore(t)
 		now := time.Now()
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
@@ -2501,9 +2501,9 @@ func TestCore_ListLockLeases(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
 
-		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
-		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
-		lease3 := createLease(t, core, accountId, namespaceId, "process-3", now, 60*time.Minute)
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 5*time.Minute)
+		lease3 := createLease(t, core, accountId, namespaceId, "process-3", now, 5*time.Minute)
 
 		resp := listLockLeases(t, core, &corepb.NamespaceId{AccountId: accountId, NamespaceId: namespaceId}, now)
 		require.Len(t, resp.Leases, 3)
@@ -2548,8 +2548,8 @@ func TestCore_ListLockLeases(t *testing.T) {
 		nsA := rand.Uint64()
 		nsB := rand.Uint64()
 
-		ownLease := createLease(t, core, accountId, nsA, "process-1", now, 60*time.Minute)
-		otherLease := createLease(t, core, accountId, nsB, "process-2", now, 60*time.Minute)
+		ownLease := createLease(t, core, accountId, nsA, "process-1", now, 5*time.Minute)
+		otherLease := createLease(t, core, accountId, nsB, "process-2", now, 5*time.Minute)
 
 		resp := listLockLeases(t, core, &corepb.NamespaceId{AccountId: accountId, NamespaceId: nsA}, now)
 		require.Len(t, resp.Leases, 1)
@@ -2577,9 +2577,9 @@ func TestCore_ListLockLeasesByProcessId(t *testing.T) {
 		namespaceId := rand.Uint64()
 
 		// Two leases for process-1, one lease for process-2.
-		lease1a := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
-		lease1b := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
-		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+		lease1a := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
+		lease1b := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 5*time.Minute)
 
 		resp := listLockLeasesByProcessId(t, core, &corepb.NamespaceId{AccountId: accountId, NamespaceId: namespaceId}, "process-1", now)
 		require.Len(t, resp.Leases, 2)
@@ -2616,7 +2616,7 @@ func TestCore_ListLockLeasesByProcessId(t *testing.T) {
 		namespaceId := rand.Uint64()
 
 		// A lease exists for a different process.
-		_ = createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		_ = createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
 
 		resp := listLockLeasesByProcessId(t, core, &corepb.NamespaceId{AccountId: accountId, NamespaceId: namespaceId}, "process-other", now)
 		require.Empty(t, resp.Leases)
@@ -2630,8 +2630,8 @@ func TestCore_ListLocksByLeaseId(t *testing.T) {
 		accountId := rand.Uint64()
 		namespaceId := rand.Uint64()
 
-		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
-		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 5*time.Minute)
 
 		// lease1 acquires 3 locks, lease2 acquires 2.
 		lockIds := make([]*corepb.LockId, 5)
@@ -2676,8 +2676,8 @@ func TestCore_ListLocksByLeaseId(t *testing.T) {
 			LockName:    "shared_lock",
 		}
 
-		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
-		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 5*time.Minute)
 
 		// Both leases acquire a shared lock.
 		success, _ := acquireLock(t, core, lockId, lease1.Id, false, now)
@@ -2728,7 +2728,7 @@ func TestCore_ListLocksByLeaseId(t *testing.T) {
 		namespaceId := rand.Uint64()
 
 		// Lease exists but never acquired any locks.
-		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
 
 		resp := listLocksByLeaseId(t, core, lease.Id, now)
 		require.Empty(t, resp.Locks)
@@ -2747,7 +2747,7 @@ func TestCore_LastActivityAt(t *testing.T) {
 			LockName:    "test_lock",
 		}
 
-		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
+		lease := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
 
 		acquireTime := now.Add(time.Minute)
 		success, lock := acquireLock(t, core, lockId, lease.Id, true, acquireTime)
@@ -2766,8 +2766,8 @@ func TestCore_LastActivityAt(t *testing.T) {
 			LockName:    "test_lock",
 		}
 
-		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 60*time.Minute)
-		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 60*time.Minute)
+		lease1 := createLease(t, core, accountId, namespaceId, "process-1", now, 5*time.Minute)
+		lease2 := createLease(t, core, accountId, namespaceId, "process-2", now, 5*time.Minute)
 
 		// Two shared holders so the lock survives a single release.
 		acquireLock(t, core, lockId, lease1.Id, false, now)
@@ -2782,13 +2782,26 @@ func TestCore_LastActivityAt(t *testing.T) {
 	})
 }
 
-func newLocksCore(t *testing.T) *Core {
+// newLocksCore wraps the Core in GrackleLocksValidatingCore so tests exercise
+// requests the way the client-side stub does: Validate runs before the
+// request reaches Core. (The Raft-applied adapter no longer wraps in
+// ValidatingCore itself, to avoid FSM divergence if a validator changes —
+// this wrapper still backs the stub's own checks, tests, and single-node
+// mode.)
+func newLocksCore(t *testing.T) coreapis.GrackleLocksCoreApi {
+	return coreapis.NewGrackleLocksValidatingCore(newRawLocksCore(t))
+}
+
+// newRawLocksCore returns the unwrapped Core, for tests that need direct
+// access to internal tables (e.g. ancestor rollups in ancestors_test.go)
+// rather than the request API. Most tests should use newLocksCore instead.
+func newRawLocksCore(t *testing.T) *Core {
 	badgerStore, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)
 	return NewCore(badgerStore, []byte{0x1d, 0x36, 0x00, 0x00}, 0x00000000, 0xffffffff)
 }
 
-func createLease(t *testing.T, core *Core, accountId uint64, namespaceId uint64, processId string, now time.Time, ttl time.Duration) *corepb.Lease {
+func createLease(t *testing.T, core coreapis.GrackleLocksCoreApi, accountId uint64, namespaceId uint64, processId string, now time.Time, ttl time.Duration) *corepb.Lease {
 	t.Helper()
 
 	leaseId := rand.Uint64()
@@ -2813,7 +2826,7 @@ func createLease(t *testing.T, core *Core, accountId uint64, namespaceId uint64,
 	return resp.Payload.Lease
 }
 
-func acquireLock(t *testing.T, core *Core, lockId *corepb.LockId, leaseId *corepb.LeaseId, exclusive bool, now time.Time) (bool, *corepb.Lock) {
+func acquireLock(t *testing.T, core coreapis.GrackleLocksCoreApi, lockId *corepb.LockId, leaseId *corepb.LeaseId, exclusive bool, now time.Time) (bool, *corepb.Lock) {
 	t.Helper()
 
 	resp, err := core.AcquireLock(&coreapis.AcquireLockRequest{
@@ -2837,7 +2850,7 @@ func acquireLock(t *testing.T, core *Core, lockId *corepb.LockId, leaseId *corep
 
 // acquireLockReason is like acquireLock but also returns the contention reason
 // and blocking locks the core reported for the attempt.
-func acquireLockReason(t *testing.T, core *Core, lockId *corepb.LockId, leaseId *corepb.LeaseId, exclusive bool, now time.Time) (bool, corepb.ContentionReason, []*corepb.Lock) {
+func acquireLockReason(t *testing.T, core coreapis.GrackleLocksCoreApi, lockId *corepb.LockId, leaseId *corepb.LeaseId, exclusive bool, now time.Time) (bool, corepb.ContentionReason, []*corepb.Lock) {
 	t.Helper()
 
 	resp, err := core.AcquireLock(&coreapis.AcquireLockRequest{
@@ -2866,7 +2879,7 @@ func lockNames(locks []*corepb.Lock) []string {
 	return names
 }
 
-func releaseLock(t *testing.T, core *Core, lockId *corepb.LockId, leaseId *corepb.LeaseId, now time.Time) *corepb.Lock {
+func releaseLock(t *testing.T, core coreapis.GrackleLocksCoreApi, lockId *corepb.LockId, leaseId *corepb.LeaseId, now time.Time) *corepb.Lock {
 	t.Helper()
 
 	resp, err := core.ReleaseLock(&coreapis.ReleaseLockRequest{
@@ -2886,7 +2899,7 @@ func releaseLock(t *testing.T, core *Core, lockId *corepb.LockId, leaseId *corep
 	return resp.Payload.Lock
 }
 
-func getLock(t *testing.T, core *Core, lockId *corepb.LockId, now time.Time) *corepb.Lock {
+func getLock(t *testing.T, core coreapis.GrackleLocksCoreApi, lockId *corepb.LockId, now time.Time) *corepb.Lock {
 	t.Helper()
 
 	resp, err := core.GetLock(&coreapis.GetLockRequest{
@@ -2905,7 +2918,7 @@ func getLock(t *testing.T, core *Core, lockId *corepb.LockId, now time.Time) *co
 	return resp.Payload.Lock
 }
 
-func acquireLockWithError(t *testing.T, core *Core, lockId *corepb.LockId, leaseId *corepb.LeaseId, exclusive bool, now time.Time) *mrpc.Error {
+func acquireLockWithError(t *testing.T, core coreapis.GrackleLocksCoreApi, lockId *corepb.LockId, leaseId *corepb.LeaseId, exclusive bool, now time.Time) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.AcquireLock(&coreapis.AcquireLockRequest{
@@ -2926,7 +2939,7 @@ func acquireLockWithError(t *testing.T, core *Core, lockId *corepb.LockId, lease
 	return resp.ApplicationError
 }
 
-func createLeaseWithMax(t *testing.T, core *Core, accountId uint64, namespaceId uint64, processId string, now time.Time, ttl time.Duration, maxNumberOfLockLeases int64) *corepb.Lease {
+func createLeaseWithMax(t *testing.T, core coreapis.GrackleLocksCoreApi, accountId uint64, namespaceId uint64, processId string, now time.Time, ttl time.Duration, maxNumberOfLockLeases int64) *corepb.Lease {
 	t.Helper()
 
 	resp, err := core.CreateLockLease(&coreapis.CreateLockLeaseRequest{
@@ -2950,7 +2963,7 @@ func createLeaseWithMax(t *testing.T, core *Core, accountId uint64, namespaceId 
 	return resp.Payload.Lease
 }
 
-func createLeaseWithError(t *testing.T, core *Core, accountId uint64, namespaceId uint64, processId string, now time.Time, ttl time.Duration, maxNumberOfLockLeases int64) *mrpc.Error {
+func createLeaseWithError(t *testing.T, core coreapis.GrackleLocksCoreApi, accountId uint64, namespaceId uint64, processId string, now time.Time, ttl time.Duration, maxNumberOfLockLeases int64) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.CreateLockLease(&coreapis.CreateLockLeaseRequest{
@@ -2973,7 +2986,7 @@ func createLeaseWithError(t *testing.T, core *Core, accountId uint64, namespaceI
 	return resp.ApplicationError
 }
 
-func getLockLease(t *testing.T, core *Core, leaseId *corepb.LeaseId, now time.Time) *corepb.Lease {
+func getLockLease(t *testing.T, core coreapis.GrackleLocksCoreApi, leaseId *corepb.LeaseId, now time.Time) *corepb.Lease {
 	t.Helper()
 
 	resp, err := core.GetLockLease(&coreapis.GetLockLeaseRequest{
@@ -2990,7 +3003,7 @@ func getLockLease(t *testing.T, core *Core, leaseId *corepb.LeaseId, now time.Ti
 	return resp.Payload.Lease
 }
 
-func getLockLeaseWithError(t *testing.T, core *Core, leaseId *corepb.LeaseId, now time.Time) *mrpc.Error {
+func getLockLeaseWithError(t *testing.T, core coreapis.GrackleLocksCoreApi, leaseId *corepb.LeaseId, now time.Time) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.GetLockLease(&coreapis.GetLockLeaseRequest{
@@ -3006,7 +3019,7 @@ func getLockLeaseWithError(t *testing.T, core *Core, leaseId *corepb.LeaseId, no
 	return resp.ApplicationError
 }
 
-func revokeLockLease(t *testing.T, core *Core, leaseId *corepb.LeaseId, now time.Time) {
+func revokeLockLease(t *testing.T, core coreapis.GrackleLocksCoreApi, leaseId *corepb.LeaseId, now time.Time) {
 	t.Helper()
 
 	resp, err := core.RevokeLockLease(&coreapis.RevokeLockLeaseRequest{
@@ -3021,7 +3034,7 @@ func revokeLockLease(t *testing.T, core *Core, leaseId *corepb.LeaseId, now time
 	require.NotNil(t, resp.Payload)
 }
 
-func listLockLeases(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, now time.Time) *corepb.ListLockLeasesResponse {
+func listLockLeases(t *testing.T, core coreapis.GrackleLocksCoreApi, namespaceId *corepb.NamespaceId, now time.Time) *corepb.ListLockLeasesResponse {
 	t.Helper()
 
 	resp, err := core.ListLockLeases(&coreapis.ListLockLeasesRequest{
@@ -3037,7 +3050,7 @@ func listLockLeases(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, n
 	return resp.Payload
 }
 
-func listLockLeasesByProcessId(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, processId string, now time.Time) *corepb.ListLockLeasesByProcessIdResponse {
+func listLockLeasesByProcessId(t *testing.T, core coreapis.GrackleLocksCoreApi, namespaceId *corepb.NamespaceId, processId string, now time.Time) *corepb.ListLockLeasesByProcessIdResponse {
 	t.Helper()
 
 	resp, err := core.ListLockLeasesByProcessId(&coreapis.ListLockLeasesByProcessIdRequest{
@@ -3054,7 +3067,7 @@ func listLockLeasesByProcessId(t *testing.T, core *Core, namespaceId *corepb.Nam
 	return resp.Payload
 }
 
-func listLocksByLeaseId(t *testing.T, core *Core, leaseId *corepb.LeaseId, now time.Time) *corepb.ListLocksByLeaseIdResponse {
+func listLocksByLeaseId(t *testing.T, core coreapis.GrackleLocksCoreApi, leaseId *corepb.LeaseId, now time.Time) *corepb.ListLocksByLeaseIdResponse {
 	t.Helper()
 
 	resp, err := core.ListLocksByLeaseId(&coreapis.ListLocksByLeaseIdRequest{

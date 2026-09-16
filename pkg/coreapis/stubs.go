@@ -28,6 +28,10 @@ type GrackleMonsteraStub struct {
 var _ GrackleClientApi = &GrackleMonsteraStub{}
 
 func (s *GrackleMonsteraStub) GetLock(ctx context.Context, methodReq *corepb.GetLockRequest) (*corepb.GetLockResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -63,6 +67,10 @@ func (s *GrackleMonsteraStub) GetLock(ctx context.Context, methodReq *corepb.Get
 }
 
 func (s *GrackleMonsteraStub) ListLocks(ctx context.Context, methodReq *corepb.ListLocksRequest) (*corepb.ListLocksResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -98,6 +106,10 @@ func (s *GrackleMonsteraStub) ListLocks(ctx context.Context, methodReq *corepb.L
 }
 
 func (s *GrackleMonsteraStub) ListLocksByLeaseId(ctx context.Context, methodReq *corepb.ListLocksByLeaseIdRequest) (*corepb.ListLocksByLeaseIdResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -133,6 +145,10 @@ func (s *GrackleMonsteraStub) ListLocksByLeaseId(ctx context.Context, methodReq 
 }
 
 func (s *GrackleMonsteraStub) ListLockLeases(ctx context.Context, methodReq *corepb.ListLockLeasesRequest) (*corepb.ListLockLeasesResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -168,6 +184,10 @@ func (s *GrackleMonsteraStub) ListLockLeases(ctx context.Context, methodReq *cor
 }
 
 func (s *GrackleMonsteraStub) ListLockLeasesByProcessId(ctx context.Context, methodReq *corepb.ListLockLeasesByProcessIdRequest) (*corepb.ListLockLeasesByProcessIdResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -203,6 +223,10 @@ func (s *GrackleMonsteraStub) ListLockLeasesByProcessId(ctx context.Context, met
 }
 
 func (s *GrackleMonsteraStub) GetLockLease(ctx context.Context, methodReq *corepb.GetLockLeaseRequest) (*corepb.GetLockLeaseResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -238,6 +262,10 @@ func (s *GrackleMonsteraStub) GetLockLease(ctx context.Context, methodReq *corep
 }
 
 func (s *GrackleMonsteraStub) AcquireLock(ctx context.Context, methodReq *corepb.AcquireLockRequest) (*corepb.AcquireLockResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -273,6 +301,10 @@ func (s *GrackleMonsteraStub) AcquireLock(ctx context.Context, methodReq *corepb
 }
 
 func (s *GrackleMonsteraStub) ReleaseLock(ctx context.Context, methodReq *corepb.ReleaseLockRequest) (*corepb.ReleaseLockResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -308,6 +340,10 @@ func (s *GrackleMonsteraStub) ReleaseLock(ctx context.Context, methodReq *corepb
 }
 
 func (s *GrackleMonsteraStub) DeleteLock(ctx context.Context, methodReq *corepb.DeleteLockRequest) (*corepb.DeleteLockResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -343,6 +379,10 @@ func (s *GrackleMonsteraStub) DeleteLock(ctx context.Context, methodReq *corepb.
 }
 
 func (s *GrackleMonsteraStub) RunLocksGarbageCollection(ctx context.Context, methodReq *corepb.RunLocksGarbageCollectionRequest, shardId string) (*corepb.RunLocksGarbageCollectionResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -378,6 +418,10 @@ func (s *GrackleMonsteraStub) RunLocksGarbageCollection(ctx context.Context, met
 }
 
 func (s *GrackleMonsteraStub) LocksDeleteNamespace(ctx context.Context, methodReq *corepb.LocksDeleteNamespaceRequest) (*corepb.LocksDeleteNamespaceResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -413,6 +457,10 @@ func (s *GrackleMonsteraStub) LocksDeleteNamespace(ctx context.Context, methodRe
 }
 
 func (s *GrackleMonsteraStub) CreateLockLease(ctx context.Context, methodReq *corepb.CreateLockLeaseRequest) (*corepb.CreateLockLeaseResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -448,6 +496,10 @@ func (s *GrackleMonsteraStub) CreateLockLease(ctx context.Context, methodReq *co
 }
 
 func (s *GrackleMonsteraStub) RefreshLockLease(ctx context.Context, methodReq *corepb.RefreshLockLeaseRequest) (*corepb.RefreshLockLeaseResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -483,6 +535,10 @@ func (s *GrackleMonsteraStub) RefreshLockLease(ctx context.Context, methodReq *c
 }
 
 func (s *GrackleMonsteraStub) RevokeLockLease(ctx context.Context, methodReq *corepb.RevokeLockLeaseRequest) (*corepb.RevokeLockLeaseResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -518,6 +574,10 @@ func (s *GrackleMonsteraStub) RevokeLockLease(ctx context.Context, methodReq *co
 }
 
 func (s *GrackleMonsteraStub) GetSemaphore(ctx context.Context, methodReq *corepb.GetSemaphoreRequest) (*corepb.GetSemaphoreResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -553,6 +613,10 @@ func (s *GrackleMonsteraStub) GetSemaphore(ctx context.Context, methodReq *corep
 }
 
 func (s *GrackleMonsteraStub) GetSemaphoreByName(ctx context.Context, methodReq *corepb.GetSemaphoreByNameRequest) (*corepb.GetSemaphoreByNameResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -588,6 +652,10 @@ func (s *GrackleMonsteraStub) GetSemaphoreByName(ctx context.Context, methodReq 
 }
 
 func (s *GrackleMonsteraStub) ListSemaphores(ctx context.Context, methodReq *corepb.ListSemaphoresRequest) (*corepb.ListSemaphoresResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -623,6 +691,10 @@ func (s *GrackleMonsteraStub) ListSemaphores(ctx context.Context, methodReq *cor
 }
 
 func (s *GrackleMonsteraStub) ListSemaphoresByLeaseId(ctx context.Context, methodReq *corepb.ListSemaphoresByLeaseIdRequest) (*corepb.ListSemaphoresByLeaseIdResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -658,6 +730,10 @@ func (s *GrackleMonsteraStub) ListSemaphoresByLeaseId(ctx context.Context, metho
 }
 
 func (s *GrackleMonsteraStub) ListSemaphoreHolders(ctx context.Context, methodReq *corepb.ListSemaphoreHoldersRequest) (*corepb.ListSemaphoreHoldersResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -693,6 +769,10 @@ func (s *GrackleMonsteraStub) ListSemaphoreHolders(ctx context.Context, methodRe
 }
 
 func (s *GrackleMonsteraStub) ListSemaphoreLeases(ctx context.Context, methodReq *corepb.ListSemaphoreLeasesRequest) (*corepb.ListSemaphoreLeasesResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -728,6 +808,10 @@ func (s *GrackleMonsteraStub) ListSemaphoreLeases(ctx context.Context, methodReq
 }
 
 func (s *GrackleMonsteraStub) ListSemaphoreLeasesByProcessId(ctx context.Context, methodReq *corepb.ListSemaphoreLeasesByProcessIdRequest) (*corepb.ListSemaphoreLeasesByProcessIdResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -763,6 +847,10 @@ func (s *GrackleMonsteraStub) ListSemaphoreLeasesByProcessId(ctx context.Context
 }
 
 func (s *GrackleMonsteraStub) GetSemaphoreLease(ctx context.Context, methodReq *corepb.GetSemaphoreLeaseRequest) (*corepb.GetSemaphoreLeaseResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -798,6 +886,10 @@ func (s *GrackleMonsteraStub) GetSemaphoreLease(ctx context.Context, methodReq *
 }
 
 func (s *GrackleMonsteraStub) AcquireSemaphore(ctx context.Context, methodReq *corepb.AcquireSemaphoreRequest) (*corepb.AcquireSemaphoreResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -833,6 +925,10 @@ func (s *GrackleMonsteraStub) AcquireSemaphore(ctx context.Context, methodReq *c
 }
 
 func (s *GrackleMonsteraStub) ReleaseSemaphore(ctx context.Context, methodReq *corepb.ReleaseSemaphoreRequest) (*corepb.ReleaseSemaphoreResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -868,6 +964,10 @@ func (s *GrackleMonsteraStub) ReleaseSemaphore(ctx context.Context, methodReq *c
 }
 
 func (s *GrackleMonsteraStub) CreateSemaphore(ctx context.Context, methodReq *corepb.CreateSemaphoreRequest) (*corepb.CreateSemaphoreResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -903,6 +1003,10 @@ func (s *GrackleMonsteraStub) CreateSemaphore(ctx context.Context, methodReq *co
 }
 
 func (s *GrackleMonsteraStub) UpdateSemaphore(ctx context.Context, methodReq *corepb.UpdateSemaphoreRequest) (*corepb.UpdateSemaphoreResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -938,6 +1042,10 @@ func (s *GrackleMonsteraStub) UpdateSemaphore(ctx context.Context, methodReq *co
 }
 
 func (s *GrackleMonsteraStub) DeleteSemaphore(ctx context.Context, methodReq *corepb.DeleteSemaphoreRequest) (*corepb.DeleteSemaphoreResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -973,6 +1081,10 @@ func (s *GrackleMonsteraStub) DeleteSemaphore(ctx context.Context, methodReq *co
 }
 
 func (s *GrackleMonsteraStub) RunSemaphoresGarbageCollection(ctx context.Context, methodReq *corepb.RunSemaphoresGarbageCollectionRequest, shardId string) (*corepb.RunSemaphoresGarbageCollectionResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1008,6 +1120,10 @@ func (s *GrackleMonsteraStub) RunSemaphoresGarbageCollection(ctx context.Context
 }
 
 func (s *GrackleMonsteraStub) SemaphoresDeleteNamespace(ctx context.Context, methodReq *corepb.SemaphoresDeleteNamespaceRequest) (*corepb.SemaphoresDeleteNamespaceResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1043,6 +1159,10 @@ func (s *GrackleMonsteraStub) SemaphoresDeleteNamespace(ctx context.Context, met
 }
 
 func (s *GrackleMonsteraStub) CreateSemaphoreLease(ctx context.Context, methodReq *corepb.CreateSemaphoreLeaseRequest) (*corepb.CreateSemaphoreLeaseResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1078,6 +1198,10 @@ func (s *GrackleMonsteraStub) CreateSemaphoreLease(ctx context.Context, methodRe
 }
 
 func (s *GrackleMonsteraStub) RevokeSemaphoreLease(ctx context.Context, methodReq *corepb.RevokeSemaphoreLeaseRequest) (*corepb.RevokeSemaphoreLeaseResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1113,6 +1237,10 @@ func (s *GrackleMonsteraStub) RevokeSemaphoreLease(ctx context.Context, methodRe
 }
 
 func (s *GrackleMonsteraStub) RefreshSemaphoreLease(ctx context.Context, methodReq *corepb.RefreshSemaphoreLeaseRequest) (*corepb.RefreshSemaphoreLeaseResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1148,6 +1276,10 @@ func (s *GrackleMonsteraStub) RefreshSemaphoreLease(ctx context.Context, methodR
 }
 
 func (s *GrackleMonsteraStub) GetNamespace(ctx context.Context, methodReq *corepb.GetNamespaceRequest) (*corepb.GetNamespaceResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1183,6 +1315,10 @@ func (s *GrackleMonsteraStub) GetNamespace(ctx context.Context, methodReq *corep
 }
 
 func (s *GrackleMonsteraStub) GetNamespaceByName(ctx context.Context, methodReq *corepb.GetNamespaceByNameRequest) (*corepb.GetNamespaceByNameResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1218,6 +1354,10 @@ func (s *GrackleMonsteraStub) GetNamespaceByName(ctx context.Context, methodReq 
 }
 
 func (s *GrackleMonsteraStub) ListNamespaces(ctx context.Context, methodReq *corepb.ListNamespacesRequest) (*corepb.ListNamespacesResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1253,6 +1393,10 @@ func (s *GrackleMonsteraStub) ListNamespaces(ctx context.Context, methodReq *cor
 }
 
 func (s *GrackleMonsteraStub) CreateNamespace(ctx context.Context, methodReq *corepb.CreateNamespaceRequest) (*corepb.CreateNamespaceResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1288,6 +1432,10 @@ func (s *GrackleMonsteraStub) CreateNamespace(ctx context.Context, methodReq *co
 }
 
 func (s *GrackleMonsteraStub) UpdateNamespace(ctx context.Context, methodReq *corepb.UpdateNamespaceRequest) (*corepb.UpdateNamespaceResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1323,6 +1471,10 @@ func (s *GrackleMonsteraStub) UpdateNamespace(ctx context.Context, methodReq *co
 }
 
 func (s *GrackleMonsteraStub) DeleteNamespace(ctx context.Context, methodReq *corepb.DeleteNamespaceRequest) (*corepb.DeleteNamespaceResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1358,6 +1510,10 @@ func (s *GrackleMonsteraStub) DeleteNamespace(ctx context.Context, methodReq *co
 }
 
 func (s *GrackleMonsteraStub) GetWaitGroup(ctx context.Context, methodReq *corepb.GetWaitGroupRequest) (*corepb.GetWaitGroupResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1393,6 +1549,10 @@ func (s *GrackleMonsteraStub) GetWaitGroup(ctx context.Context, methodReq *corep
 }
 
 func (s *GrackleMonsteraStub) GetWaitGroupByName(ctx context.Context, methodReq *corepb.GetWaitGroupByNameRequest) (*corepb.GetWaitGroupByNameResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1428,6 +1588,10 @@ func (s *GrackleMonsteraStub) GetWaitGroupByName(ctx context.Context, methodReq 
 }
 
 func (s *GrackleMonsteraStub) ListWaitGroups(ctx context.Context, methodReq *corepb.ListWaitGroupsRequest) (*corepb.ListWaitGroupsResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1463,6 +1627,10 @@ func (s *GrackleMonsteraStub) ListWaitGroups(ctx context.Context, methodReq *cor
 }
 
 func (s *GrackleMonsteraStub) ListWaitGroupCompletedJobs(ctx context.Context, methodReq *corepb.ListWaitGroupCompletedJobsRequest) (*corepb.ListWaitGroupCompletedJobsResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1498,6 +1666,10 @@ func (s *GrackleMonsteraStub) ListWaitGroupCompletedJobs(ctx context.Context, me
 }
 
 func (s *GrackleMonsteraStub) UpdateWaitGroup(ctx context.Context, methodReq *corepb.UpdateWaitGroupRequest) (*corepb.UpdateWaitGroupResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1533,6 +1705,10 @@ func (s *GrackleMonsteraStub) UpdateWaitGroup(ctx context.Context, methodReq *co
 }
 
 func (s *GrackleMonsteraStub) CompleteJobsFromWaitGroup(ctx context.Context, methodReq *corepb.CompleteJobsFromWaitGroupRequest) (*corepb.CompleteJobsFromWaitGroupResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1568,6 +1744,10 @@ func (s *GrackleMonsteraStub) CompleteJobsFromWaitGroup(ctx context.Context, met
 }
 
 func (s *GrackleMonsteraStub) CreateWaitGroup(ctx context.Context, methodReq *corepb.CreateWaitGroupRequest) (*corepb.CreateWaitGroupResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1603,6 +1783,10 @@ func (s *GrackleMonsteraStub) CreateWaitGroup(ctx context.Context, methodReq *co
 }
 
 func (s *GrackleMonsteraStub) DeleteWaitGroup(ctx context.Context, methodReq *corepb.DeleteWaitGroupRequest) (*corepb.DeleteWaitGroupResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1638,6 +1822,10 @@ func (s *GrackleMonsteraStub) DeleteWaitGroup(ctx context.Context, methodReq *co
 }
 
 func (s *GrackleMonsteraStub) RunWaitGroupsGarbageCollection(ctx context.Context, methodReq *corepb.RunWaitGroupsGarbageCollectionRequest, shardId string) (*corepb.RunWaitGroupsGarbageCollectionResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1673,6 +1861,10 @@ func (s *GrackleMonsteraStub) RunWaitGroupsGarbageCollection(ctx context.Context
 }
 
 func (s *GrackleMonsteraStub) WaitGroupsDeleteNamespace(ctx context.Context, methodReq *corepb.WaitGroupsDeleteNamespaceRequest) (*corepb.WaitGroupsDeleteNamespaceResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1708,6 +1900,10 @@ func (s *GrackleMonsteraStub) WaitGroupsDeleteNamespace(ctx context.Context, met
 }
 
 func (s *GrackleMonsteraStub) GetBarrier(ctx context.Context, methodReq *corepb.GetBarrierRequest) (*corepb.GetBarrierResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1743,6 +1939,10 @@ func (s *GrackleMonsteraStub) GetBarrier(ctx context.Context, methodReq *corepb.
 }
 
 func (s *GrackleMonsteraStub) GetBarrierByName(ctx context.Context, methodReq *corepb.GetBarrierByNameRequest) (*corepb.GetBarrierByNameResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1778,6 +1978,10 @@ func (s *GrackleMonsteraStub) GetBarrierByName(ctx context.Context, methodReq *c
 }
 
 func (s *GrackleMonsteraStub) ListBarriers(ctx context.Context, methodReq *corepb.ListBarriersRequest) (*corepb.ListBarriersResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1813,6 +2017,10 @@ func (s *GrackleMonsteraStub) ListBarriers(ctx context.Context, methodReq *corep
 }
 
 func (s *GrackleMonsteraStub) ListBarrierParticipants(ctx context.Context, methodReq *corepb.ListBarrierParticipantsRequest) (*corepb.ListBarrierParticipantsResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1848,6 +2056,10 @@ func (s *GrackleMonsteraStub) ListBarrierParticipants(ctx context.Context, metho
 }
 
 func (s *GrackleMonsteraStub) CreateBarrier(ctx context.Context, methodReq *corepb.CreateBarrierRequest) (*corepb.CreateBarrierResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1883,6 +2095,10 @@ func (s *GrackleMonsteraStub) CreateBarrier(ctx context.Context, methodReq *core
 }
 
 func (s *GrackleMonsteraStub) DeleteBarrier(ctx context.Context, methodReq *corepb.DeleteBarrierRequest) (*corepb.DeleteBarrierResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1918,6 +2134,10 @@ func (s *GrackleMonsteraStub) DeleteBarrier(ctx context.Context, methodReq *core
 }
 
 func (s *GrackleMonsteraStub) UpdateBarrier(ctx context.Context, methodReq *corepb.UpdateBarrierRequest) (*corepb.UpdateBarrierResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1953,6 +2173,10 @@ func (s *GrackleMonsteraStub) UpdateBarrier(ctx context.Context, methodReq *core
 }
 
 func (s *GrackleMonsteraStub) ArriveAtBarrier(ctx context.Context, methodReq *corepb.ArriveAtBarrierRequest) (*corepb.ArriveAtBarrierResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -1988,6 +2212,10 @@ func (s *GrackleMonsteraStub) ArriveAtBarrier(ctx context.Context, methodReq *co
 }
 
 func (s *GrackleMonsteraStub) RunBarriersGarbageCollection(ctx context.Context, methodReq *corepb.RunBarriersGarbageCollectionRequest, shardId string) (*corepb.RunBarriersGarbageCollectionResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -2023,6 +2251,10 @@ func (s *GrackleMonsteraStub) RunBarriersGarbageCollection(ctx context.Context, 
 }
 
 func (s *GrackleMonsteraStub) BarriersDeleteNamespace(ctx context.Context, methodReq *corepb.BarriersDeleteNamespaceRequest) (*corepb.BarriersDeleteNamespaceResponse, error) {
+	if err := methodReq.Validate(); err != nil {
+		return nil, mrpc.NewError(mrpc.InvalidRequest, err.Error())
+	}
+
 	methodReqBytes, err := methodReq.MarshalBinary()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)

@@ -333,6 +333,10 @@ func ValidateAcquireLockRequest(req *gracklepb.AcquireLockRequest) error {
 		return err
 	}
 
+	if err := validateTimeOutSeconds(req.TimeoutSeconds, "AcquireLockRequest.TimeoutSeconds"); err != nil {
+		return err
+	}
+
 	if err := validateMetadata(req.Metadata, "AcquireLockRequest.Metadata"); err != nil {
 		return err
 	}
@@ -655,6 +659,14 @@ func ValidateListBarrierParticipantsRequest(req *gracklepb.ListBarrierParticipan
 
 	if err := validateLimit(req.Limit, "ListBarrierParticipantsRequest.Limit"); err != nil {
 		return err
+	}
+
+	// Generation names the specific round to list: Core filters participants
+	// to exactly this generation (see ListBarrierParticipants), and a
+	// barrier's generation always starts at 1, so there is no such thing as
+	// a valid "generation 0" round to list.
+	if req.Generation <= 0 {
+		return invalid("ListBarrierParticipantsRequest.Generation", "must be greater than 0")
 	}
 
 	return nil

@@ -138,7 +138,7 @@ func TestCore_CreateBarrier(t *testing.T) {
 		appErr := createBarrierWithError(t, core, barrierId, "test_barrier", 0, 10, now)
 		require.NotNil(t, appErr)
 		require.Equal(t, mrpc.InvalidRequest, appErr.Code)
-		require.Contains(t, appErr.Message, "expected processes must be greater than 0")
+		require.Contains(t, appErr.Message, "ExpectedProcesses must be positive")
 	})
 }
 
@@ -577,7 +577,7 @@ func TestCore_UpdateBarrier(t *testing.T) {
 
 		appErr := updateBarrierWithError(t, core, barrierId, "wedge me", 0, 1, now.Add(time.Minute))
 		require.Equal(t, mrpc.InvalidRequest, appErr.Code)
-		require.Contains(t, appErr.Message, "expected processes must be greater than 0")
+		require.Contains(t, appErr.Message, "ExpectedProcesses must be positive")
 
 		// The rejected update did not change anything
 		barrier := getBarrier(t, core, barrierId)
@@ -629,7 +629,7 @@ func TestCore_ArriveAtBarrier(t *testing.T) {
 
 		// All three participant rows from generation 1 are preserved (clients can read
 		// them e.g. via ListBarrierParticipants until GC reaps the barrier).
-		resp := listBarrierParticipants(t, core, namespaceId, "test_barrier")
+		resp := listBarrierParticipants(t, core, namespaceId, "test_barrier", 1)
 		require.Len(t, resp.Participants, 3)
 	})
 
@@ -705,7 +705,7 @@ func TestCore_ArriveAtBarrier(t *testing.T) {
 		require.EqualValues(t, 2, barrier.Generation)
 
 		// Both participant rows from generation 1 are preserved.
-		resp := listBarrierParticipants(t, core, namespaceId, "test_barrier")
+		resp := listBarrierParticipants(t, core, namespaceId, "test_barrier", 1)
 		require.Len(t, resp.Participants, 2)
 
 		// T+3m: A third process that still references generation 1 is now stale and
@@ -768,7 +768,7 @@ func TestCore_ArriveAtBarrier(t *testing.T) {
 		barrier := getBarrier(t, core, barrierId)
 		require.EqualValues(t, 0, barrier.ArrivedProcesses)
 
-		resp := listBarrierParticipants(t, core, namespaceId, "test_barrier")
+		resp := listBarrierParticipants(t, core, namespaceId, "test_barrier", 1)
 		require.Empty(t, resp.Participants)
 
 		// Arrival with the current generation still succeeds
@@ -802,6 +802,7 @@ func TestCore_BarrierMetadata(t *testing.T) {
 			ExpectedProcesses:               2,
 			MaxNumberOfBarriersPerNamespace: 10,
 			Metadata:                        createMetadata,
+			DeleteInactiveAfterSeconds:      3600,
 		},
 		Now: now.UnixNano(),
 	})
@@ -821,11 +822,12 @@ func TestCore_BarrierMetadata(t *testing.T) {
 	updateTime := now.Add(time.Minute)
 	updateResp, err := core.UpdateBarrier(&coreapis.UpdateBarrierRequest{
 		Payload: &corepb.UpdateBarrierRequest{
-			BarrierId:         barrierId,
-			Description:       "Updated description",
-			ExpectedProcesses: 2,
-			Metadata:          updateMetadata,
-			ExpectedVersion:   1,
+			BarrierId:                  barrierId,
+			Description:                "Updated description",
+			ExpectedProcesses:          2,
+			Metadata:                   updateMetadata,
+			ExpectedVersion:            1,
+			DeleteInactiveAfterSeconds: 3600,
 		},
 		Now: updateTime.UnixNano(),
 	})
@@ -860,7 +862,7 @@ func TestCore_BarrierMetadata(t *testing.T) {
 	require.NotNil(t, arriveResp.Payload)
 
 	// List participants for generation 1 and verify the participant metadata round-trips.
-	listResp := listBarrierParticipants(t, core, namespaceId, "metadata_barrier")
+	listResp := listBarrierParticipants(t, core, namespaceId, "metadata_barrier", 1)
 	require.Len(t, listResp.Participants, 1)
 	require.Equal(t, "process_1", listResp.Participants[0].ProcessId)
 	require.EqualValues(t, 1, listResp.Participants[0].Generation)
@@ -890,7 +892,7 @@ func TestCore_ListBarrierParticipants(t *testing.T) {
 		}
 
 		// List participants
-		resp := listBarrierParticipants(t, core, namespaceId, "test_barrier")
+		resp := listBarrierParticipants(t, core, namespaceId, "test_barrier", 1)
 		require.Len(t, resp.Participants, 3)
 
 		// Verify all participants are present
@@ -922,7 +924,7 @@ func TestCore_ListBarrierParticipants(t *testing.T) {
 		_ = createBarrier(t, core, barrierId, "test_barrier", 3, 10, now)
 
 		// List participants before any have arrived
-		resp1 := listBarrierParticipants(t, core, namespaceId, "test_barrier")
+		resp1 := listBarrierParticipants(t, core, namespaceId, "test_barrier", 1)
 		require.Empty(t, resp1.Participants)
 	})
 
@@ -934,7 +936,7 @@ func TestCore_ListBarrierParticipants(t *testing.T) {
 		}
 
 		// Try to list participants of nonexistent barrier
-		appErr := listBarrierParticipantsWithError(t, core, namespaceId, "nonexistent_barrier")
+		appErr := listBarrierParticipantsWithError(t, core, namespaceId, "nonexistent_barrier", 1)
 		require.Contains(t, appErr.Message, "barrier not found")
 		require.Equal(t, mrpc.NotFound, appErr.Code)
 	})
@@ -984,18 +986,18 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 	require.EqualValues(t, 1, barrier.ArrivedProcesses) // Only process_1 arrived before snapshot
 
 	// List participants in restored state
-	resp := listBarrierParticipants(t, core2, namespaceId, "test_barrier")
+	resp := listBarrierParticipants(t, core2, namespaceId, "test_barrier", 1)
 	require.Len(t, resp.Participants, 1)
 	require.Equal(t, "process_1", resp.Participants[0].ProcessId)
 
 	// Verify that the original core has different state (it should have 2 participants)
-	resp2 := listBarrierParticipants(t, core1, namespaceId, "test_barrier")
+	resp2 := listBarrierParticipants(t, core1, namespaceId, "test_barrier", 1)
 	require.Len(t, resp2.Participants, 2)
 }
 
 func TestCore_RunBarriersGarbageCollection(t *testing.T) {
 	t.Run("delete_barrier_drains_participants", func(t *testing.T) {
-		core := newBarriersCore(t)
+		core := rawBarriersCore(t)
 		now := time.Now()
 		namespaceId := &corepb.NamespaceId{
 			AccountId:   rand.Uint64(),
@@ -1060,12 +1062,12 @@ func TestCore_RunBarriersGarbageCollection(t *testing.T) {
 		// The sibling barrier and its participant must still be intact.
 		sibling := getBarrier(t, core, siblingId)
 		require.EqualValues(t, 1, sibling.ArrivedProcesses)
-		siblingParticipants := listBarrierParticipants(t, core, namespaceId, "barrier_to_keep")
+		siblingParticipants := listBarrierParticipants(t, core, namespaceId, "barrier_to_keep", 1)
 		require.Len(t, siblingParticipants.Participants, 1)
 	})
 
 	t.Run("delete_namespace_drains_everything", func(t *testing.T) {
-		core := newBarriersCore(t)
+		core := rawBarriersCore(t)
 		now := time.Now()
 
 		// Two namespaces: one will be deleted, the other must survive.
@@ -1122,7 +1124,7 @@ func TestCore_RunBarriersGarbageCollection(t *testing.T) {
 		// The keep namespace must be intact.
 		keepBarriers := listBarriers(t, core, keepNs)
 		require.Len(t, keepBarriers.Barriers, 1)
-		keepParticipants := listBarrierParticipants(t, core, keepNs, "keep_barrier")
+		keepParticipants := listBarrierParticipants(t, core, keepNs, "keep_barrier", 1)
 		require.Len(t, keepParticipants.Participants, 1)
 	})
 }
@@ -1216,7 +1218,7 @@ func TestCore_AutoDeleteInactiveBarriers(t *testing.T) {
 
 // createBarrierWithDeletion creates a barrier with an explicit
 // delete_inactive_after_seconds so auto-deletion can be exercised.
-func createBarrierWithDeletion(t *testing.T, core *Core, barrierId *corepb.BarrierId, name string, expectedProcesses int64, deleteInactiveAfterSeconds int64, now time.Time) *corepb.Barrier {
+func createBarrierWithDeletion(t *testing.T, core coreapis.GrackleBarriersCoreApi, barrierId *corepb.BarrierId, name string, expectedProcesses int64, deleteInactiveAfterSeconds int64, now time.Time) *corepb.Barrier {
 	t.Helper()
 
 	resp, err := core.CreateBarrier(&coreapis.CreateBarrierRequest{
@@ -1241,7 +1243,11 @@ func createBarrierWithDeletion(t *testing.T, core *Core, barrierId *corepb.Barri
 	return resp.Payload.Barrier
 }
 
-func newBarriersCore(t *testing.T) *Core {
+// rawBarriersCore constructs a bare Core backed by an in-memory store, with
+// no validation wrapper. Used only where a test needs direct access to
+// Core's internal storage (badgerStore/gcRecords/participants), which is not
+// part of GrackleBarriersCoreApi — see TestCore_RunBarriersGarbageCollection.
+func rawBarriersCore(t *testing.T) *Core {
 	t.Helper()
 
 	badgerStore, err := store.NewBadgerInMemoryStore()
@@ -1249,7 +1255,17 @@ func newBarriersCore(t *testing.T) *Core {
 	return NewCore(badgerStore, []byte{0x1d, 0x36, 0x00, 0x00}, 0x00000000, 0xffffffff)
 }
 
-func createBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, name string, expectedProcesses int64, maxNumberOfBarriersPerNamespace int64, now time.Time) *corepb.Barrier {
+// newBarriersCore wraps the Core in GrackleBarriersValidatingCore, the same
+// middleware the client-side stub applies before a request is ever sent, so
+// tests exercise requests the way it does: Validate runs before the request
+// reaches Core.
+func newBarriersCore(t *testing.T) coreapis.GrackleBarriersCoreApi {
+	t.Helper()
+
+	return coreapis.NewGrackleBarriersValidatingCore(rawBarriersCore(t))
+}
+
+func createBarrier(t *testing.T, core coreapis.GrackleBarriersCoreApi, barrierId *corepb.BarrierId, name string, expectedProcesses int64, maxNumberOfBarriersPerNamespace int64, now time.Time) *corepb.Barrier {
 	t.Helper()
 
 	resp, err := core.CreateBarrier(&coreapis.CreateBarrierRequest{
@@ -1275,7 +1291,7 @@ func createBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, name s
 	return resp.Payload.Barrier
 }
 
-func createBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierId, name string, expectedProcesses int64, maxNumberOfBarriersPerNamespace int64, now time.Time) *mrpc.Error {
+func createBarrierWithError(t *testing.T, core coreapis.GrackleBarriersCoreApi, barrierId *corepb.BarrierId, name string, expectedProcesses int64, maxNumberOfBarriersPerNamespace int64, now time.Time) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.CreateBarrier(&coreapis.CreateBarrierRequest{
@@ -1298,7 +1314,7 @@ func createBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierI
 	return resp.ApplicationError
 }
 
-func arriveAtBarrier(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, barrierName string, processId string, generation int64, now time.Time) *corepb.Barrier {
+func arriveAtBarrier(t *testing.T, core coreapis.GrackleBarriersCoreApi, namespaceId *corepb.NamespaceId, barrierName string, processId string, generation int64, now time.Time) *corepb.Barrier {
 	t.Helper()
 
 	resp, err := core.ArriveAtBarrier(&coreapis.ArriveAtBarrierRequest{
@@ -1320,7 +1336,7 @@ func arriveAtBarrier(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, 
 	return resp.Payload.Barrier
 }
 
-func arriveAtBarrierWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, barrierName string, processId string, generation int64, now time.Time) *mrpc.Error {
+func arriveAtBarrierWithError(t *testing.T, core coreapis.GrackleBarriersCoreApi, namespaceId *corepb.NamespaceId, barrierName string, processId string, generation int64, now time.Time) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.ArriveAtBarrier(&coreapis.ArriveAtBarrierRequest{
@@ -1341,7 +1357,7 @@ func arriveAtBarrierWithError(t *testing.T, core *Core, namespaceId *corepb.Name
 	return resp.ApplicationError
 }
 
-func getBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId) *corepb.Barrier {
+func getBarrier(t *testing.T, core coreapis.GrackleBarriersCoreApi, barrierId *corepb.BarrierId) *corepb.Barrier {
 	t.Helper()
 
 	resp, err := core.GetBarrier(&coreapis.GetBarrierRequest{
@@ -1359,7 +1375,7 @@ func getBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId) *corepb.B
 	return resp.Payload.Barrier
 }
 
-func getBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierId) *mrpc.Error {
+func getBarrierWithError(t *testing.T, core coreapis.GrackleBarriersCoreApi, barrierId *corepb.BarrierId) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.GetBarrier(&coreapis.GetBarrierRequest{
@@ -1376,7 +1392,7 @@ func getBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierId) 
 	return resp.ApplicationError
 }
 
-func listBarriers(t *testing.T, core *Core, namespaceId *corepb.NamespaceId) *corepb.ListBarriersResponse {
+func listBarriers(t *testing.T, core coreapis.GrackleBarriersCoreApi, namespaceId *corepb.NamespaceId) *corepb.ListBarriersResponse {
 	t.Helper()
 
 	resp, err := core.ListBarriers(&coreapis.ListBarriersRequest{
@@ -1393,13 +1409,14 @@ func listBarriers(t *testing.T, core *Core, namespaceId *corepb.NamespaceId) *co
 	return resp.Payload
 }
 
-func listBarrierParticipants(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, barrierName string) *corepb.ListBarrierParticipantsResponse {
+func listBarrierParticipants(t *testing.T, core coreapis.GrackleBarriersCoreApi, namespaceId *corepb.NamespaceId, barrierName string, generation int64) *corepb.ListBarrierParticipantsResponse {
 	t.Helper()
 
 	resp, err := core.ListBarrierParticipants(&coreapis.ListBarrierParticipantsRequest{
 		Payload: &corepb.ListBarrierParticipantsRequest{
 			NamespaceId: namespaceId,
 			BarrierName: barrierName,
+			Generation:  generation,
 		},
 	})
 
@@ -1411,13 +1428,14 @@ func listBarrierParticipants(t *testing.T, core *Core, namespaceId *corepb.Names
 	return resp.Payload
 }
 
-func listBarrierParticipantsWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, barrierName string) *mrpc.Error {
+func listBarrierParticipantsWithError(t *testing.T, core coreapis.GrackleBarriersCoreApi, namespaceId *corepb.NamespaceId, barrierName string, generation int64) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.ListBarrierParticipants(&coreapis.ListBarrierParticipantsRequest{
 		Payload: &corepb.ListBarrierParticipantsRequest{
 			NamespaceId: namespaceId,
 			BarrierName: barrierName,
+			Generation:  generation,
 		},
 	})
 
@@ -1429,7 +1447,7 @@ func listBarrierParticipantsWithError(t *testing.T, core *Core, namespaceId *cor
 	return resp.ApplicationError
 }
 
-func updateBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, description string, expectedProcesses int64, version int64, now time.Time) *corepb.UpdateBarrierResponse {
+func updateBarrier(t *testing.T, core coreapis.GrackleBarriersCoreApi, barrierId *corepb.BarrierId, description string, expectedProcesses int64, version int64, now time.Time) *corepb.UpdateBarrierResponse {
 	t.Helper()
 
 	resp, err := core.UpdateBarrier(&coreapis.UpdateBarrierRequest{
@@ -1451,7 +1469,7 @@ func updateBarrier(t *testing.T, core *Core, barrierId *corepb.BarrierId, descri
 	return resp.Payload
 }
 
-func updateBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierId, description string, expectedProcesses int64, version int64, now time.Time) *mrpc.Error {
+func updateBarrierWithError(t *testing.T, core coreapis.GrackleBarriersCoreApi, barrierId *corepb.BarrierId, description string, expectedProcesses int64, version int64, now time.Time) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.UpdateBarrier(&coreapis.UpdateBarrierRequest{
@@ -1473,7 +1491,7 @@ func updateBarrierWithError(t *testing.T, core *Core, barrierId *corepb.BarrierI
 	return resp.ApplicationError
 }
 
-func getBarrierByName(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, barrierName string) *corepb.GetBarrierByNameResponse {
+func getBarrierByName(t *testing.T, core coreapis.GrackleBarriersCoreApi, namespaceId *corepb.NamespaceId, barrierName string) *corepb.GetBarrierByNameResponse {
 	t.Helper()
 
 	resp, err := core.GetBarrierByName(&coreapis.GetBarrierByNameRequest{
@@ -1491,7 +1509,7 @@ func getBarrierByName(t *testing.T, core *Core, namespaceId *corepb.NamespaceId,
 	return resp.Payload
 }
 
-func getBarrierByNameWithError(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, barrierName string) *mrpc.Error {
+func getBarrierByNameWithError(t *testing.T, core coreapis.GrackleBarriersCoreApi, namespaceId *corepb.NamespaceId, barrierName string) *mrpc.Error {
 	t.Helper()
 
 	resp, err := core.GetBarrierByName(&coreapis.GetBarrierByNameRequest{
@@ -1509,7 +1527,7 @@ func getBarrierByNameWithError(t *testing.T, core *Core, namespaceId *corepb.Nam
 	return resp.ApplicationError
 }
 
-func deleteBarrier(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, barrierName string, recordId uint64, now time.Time) *corepb.DeleteBarrierResponse {
+func deleteBarrier(t *testing.T, core coreapis.GrackleBarriersCoreApi, namespaceId *corepb.NamespaceId, barrierName string, recordId uint64, now time.Time) *corepb.DeleteBarrierResponse {
 	t.Helper()
 
 	resp, err := core.DeleteBarrier(&coreapis.DeleteBarrierRequest{
@@ -1529,7 +1547,7 @@ func deleteBarrier(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, ba
 	return resp.Payload
 }
 
-func barriersDeleteNamespace(t *testing.T, core *Core, namespaceId *corepb.NamespaceId, recordId uint64, now time.Time) {
+func barriersDeleteNamespace(t *testing.T, core coreapis.GrackleBarriersCoreApi, namespaceId *corepb.NamespaceId, recordId uint64, now time.Time) {
 	t.Helper()
 
 	resp, err := core.BarriersDeleteNamespace(&coreapis.BarriersDeleteNamespaceRequest{
@@ -1546,7 +1564,7 @@ func barriersDeleteNamespace(t *testing.T, core *Core, namespaceId *corepb.Names
 	require.NotNil(t, resp.Payload)
 }
 
-func runBarriersGarbageCollection(t *testing.T, core *Core, now time.Time, gcRecordsPageSize, gcRecordBarriersPageSize, gcRecordParticipantsPageSize, maxVisited int64) {
+func runBarriersGarbageCollection(t *testing.T, core coreapis.GrackleBarriersCoreApi, now time.Time, gcRecordsPageSize, gcRecordBarriersPageSize, gcRecordParticipantsPageSize, maxVisited int64) {
 	t.Helper()
 
 	resp, err := core.RunBarriersGarbageCollection(&coreapis.RunBarriersGarbageCollectionRequest{
@@ -1634,7 +1652,7 @@ func TestCore_SplitSnapshotRestore(t *testing.T) {
 
 		// Participant restored via the key-parsing path.
 		participantsResp, err := tc.owner.ListBarrierParticipants(&coreapis.ListBarrierParticipantsRequest{
-			Payload: &corepb.ListBarrierParticipantsRequest{NamespaceId: namespaceId, BarrierName: "barrier-split"},
+			Payload: &corepb.ListBarrierParticipantsRequest{NamespaceId: namespaceId, BarrierName: "barrier-split", Generation: 1},
 			Now:     now.Add(time.Minute).UnixNano(),
 		})
 		require.NoError(t, err)
