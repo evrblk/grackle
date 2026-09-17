@@ -32,6 +32,8 @@ is opaque to Grackle and is returned by `ListWaitGroupCompletedJobs` — see
 * Returns `NotFound` if the namespace does not exist.
 * Returns `NotFound` if the wait group does not exist.
 * Returns `InvalidArgument` if the call would push `completed_jobs` above `counter`.
+* `now` is the server clock (Unix nanoseconds) at the moment this response was produced — use
+  it, not your local clock, to compute remaining time against `expires_at`.
 
 ```json
 {
@@ -47,6 +49,7 @@ is opaque to Grackle and is returned by `ListWaitGroupCompletedJobs` — see
     "delete_after_finished_seconds": 3600,
     "finished_at": 0,
     "last_activity_at": 1718150480000000000
-  }
+  },
+  "now": 1718150480000000000
 }
 ```

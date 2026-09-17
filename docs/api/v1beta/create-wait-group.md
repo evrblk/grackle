@@ -40,6 +40,8 @@ Safe to retry — duplicate calls fail with `AlreadyExists`.
 * Returns `NotFound` if the namespace does not exist.
 * Returns `AlreadyExists` if a wait group with the same name exists in the namespace.
 * Returns `ResourceExhausted` if the namespace has reached its wait group quota.
+* `now` is the server clock (Unix nanoseconds) at the moment this response was produced — use
+  it, not your local clock, to compute remaining time against `expires_at`.
 
 ```json
 {
@@ -59,6 +61,7 @@ Safe to retry — duplicate calls fail with `AlreadyExists`.
     "metadata": {
       "pipeline": "etl-daily"
     }
-  }
+  },
+  "now": 1718150400000000000
 }
 ```

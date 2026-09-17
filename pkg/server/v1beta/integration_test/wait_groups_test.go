@@ -74,13 +74,13 @@ func TestCreateWaitGroup(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// expires_at less than 5 minutes into the future is rejected
+		// expires_at less than 1 minute into the future is rejected
 		_, err = server.CreateWaitGroup(ctx, &gracklepb.CreateWaitGroupRequest{
 			NamespaceName:              "namespace1",
 			WaitGroupName:              "waitgroup2",
 			Counter:                    1,
 			DeleteAfterFinishedSeconds: 60,
-			ExpiresAt:                  time.Now().Add(time.Minute).UnixNano(),
+			ExpiresAt:                  time.Now().Add(30 * time.Second).UnixNano(),
 		})
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "expires_at must be at least")

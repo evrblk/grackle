@@ -21,6 +21,8 @@ Read-only and safe to retry.
 
 * Returns `NotFound` if the namespace does not exist.
 * Non-empty `next_pagination_token` indicates more pages are available.
+* `now` is the server clock (Unix nanoseconds) at the moment this response was produced — use
+  it, not your local clock, to compute remaining time against each lease's `expires_at`.
 
 ```json
 {
@@ -33,6 +35,7 @@ Read-only and safe to retry.
     }
   ],
   "next_pagination_token": "",
-  "previous_pagination_token": ""
+  "previous_pagination_token": "",
+  "now": 1695826270671432000
 }
 ```

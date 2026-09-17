@@ -224,6 +224,7 @@ func (s *GrackleApiServerHandler) CreateWaitGroup(ctx context.Context, req *grac
 	// Create wait group with generated ID. On the rare ID collision the core
 	// returns IDCollision; regenerate the ID and retry rather than surfacing it.
 	for range maxIDGenerationAttempts {
+		var meta mrpc.ResponseMeta
 		resp1, err := s.grackleClient.CreateWaitGroup(ctx, &corepb.CreateWaitGroupRequest{
 			WaitGroupId: &corepb.WaitGroupId{
 				AccountId:   accountId,
@@ -237,7 +238,7 @@ func (s *GrackleApiServerHandler) CreateWaitGroup(ctx context.Context, req *grac
 			Metadata:                          req.Metadata,
 			MaxNumberOfWaitGroupsPerNamespace: limits.MaxNumberOfWaitGroupsPerNamespace,
 			DeleteAfterFinishedSeconds:        req.DeleteAfterFinishedSeconds,
-		})
+		}, mrpc.WithResponseMeta(&meta))
 		if err != nil {
 			if isIDCollision(err) {
 				continue
@@ -247,6 +248,7 @@ func (s *GrackleApiServerHandler) CreateWaitGroup(ctx context.Context, req *grac
 
 		return &gracklepb.CreateWaitGroupResponse{
 			WaitGroup: waitGroupToFront(resp1.WaitGroup),
+			Now:       meta.Now,
 		}, nil
 	}
 
@@ -274,6 +276,7 @@ func (s *GrackleApiServerHandler) UpdateWaitGroup(ctx context.Context, req *grac
 	}
 
 	// Create wait group with generated ID
+	var meta mrpc.ResponseMeta
 	resp1, err := s.grackleClient.UpdateWaitGroup(ctx, &corepb.UpdateWaitGroupRequest{
 		NamespaceId:                namespace.Id,
 		WaitGroupName:              req.WaitGroupName,
@@ -283,13 +286,14 @@ func (s *GrackleApiServerHandler) UpdateWaitGroup(ctx context.Context, req *grac
 		Metadata:                   req.Metadata,
 		ExpectedVersion:            req.ExpectedVersion,
 		DeleteAfterFinishedSeconds: req.DeleteAfterFinishedSeconds,
-	})
+	}, mrpc.WithResponseMeta(&meta))
 	if err != nil {
 		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.UpdateWaitGroupResponse{
 		WaitGroup: waitGroupToFront(resp1.WaitGroup),
+		Now:       meta.Now,
 	}, nil
 }
 
@@ -301,16 +305,18 @@ func (s *GrackleApiServerHandler) GetWaitGroup(ctx context.Context, req *grackle
 	}
 
 	// Retrieve wait group by name within the namespace
+	var meta mrpc.ResponseMeta
 	resp1, err := s.grackleClient.GetWaitGroupByName(ctx, &corepb.GetWaitGroupByNameRequest{
 		NamespaceId:   namespace.Id,
 		WaitGroupName: req.WaitGroupName,
-	})
+	}, mrpc.WithResponseMeta(&meta))
 	if err != nil {
 		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.GetWaitGroupResponse{
 		WaitGroup: waitGroupToFront(resp1.WaitGroup),
+		Now:       meta.Now,
 	}, nil
 }
 
@@ -335,10 +341,11 @@ func (s *GrackleApiServerHandler) WaitForWaitGroup(ctx context.Context, req *gra
 		}
 
 		// Poll wait group state
+		var meta mrpc.ResponseMeta
 		resp1, err := s.grackleClient.GetWaitGroupByName(ctx, &corepb.GetWaitGroupByNameRequest{
 			NamespaceId:   namespace.Id,
 			WaitGroupName: req.WaitGroupName,
-		})
+		}, mrpc.WithResponseMeta(&meta))
 		if err != nil {
 			return nil, mrpc.ErrorToGRPC(err)
 		}
@@ -350,11 +357,13 @@ func (s *GrackleApiServerHandler) WaitForWaitGroup(ctx context.Context, req *gra
 			return &gracklepb.WaitForWaitGroupResponse{
 				WaitGroup: waitGroupToFront(resp1.WaitGroup),
 				Outcome:   gracklepb.WaitGroupWaitOutcome_WAIT_GROUP_WAIT_OUTCOME_COMPLETED,
+				Now:       meta.Now,
 			}, nil
 		case corepb.WaitGroupStatus_WAIT_GROUP_STATUS_EXPIRED:
 			return &gracklepb.WaitForWaitGroupResponse{
 				WaitGroup: waitGroupToFront(resp1.WaitGroup),
 				Outcome:   gracklepb.WaitGroupWaitOutcome_WAIT_GROUP_WAIT_OUTCOME_EXPIRED,
+				Now:       meta.Now,
 			}, nil
 		}
 
@@ -362,6 +371,7 @@ func (s *GrackleApiServerHandler) WaitForWaitGroup(ctx context.Context, req *gra
 			return &gracklepb.WaitForWaitGroupResponse{
 				WaitGroup: waitGroupToFront(resp1.WaitGroup),
 				Outcome:   gracklepb.WaitGroupWaitOutcome_WAIT_GROUP_WAIT_OUTCOME_TIMED_OUT,
+				Now:       meta.Now,
 			}, nil
 		}
 
@@ -389,17 +399,19 @@ func (s *GrackleApiServerHandler) CompleteJobsFromWaitGroup(ctx context.Context,
 	}
 
 	// Mark jobs as completed in the wait group
+	var meta mrpc.ResponseMeta
 	resp1, err := s.grackleClient.CompleteJobsFromWaitGroup(ctx, &corepb.CompleteJobsFromWaitGroupRequest{
 		NamespaceId:   namespace.Id,
 		WaitGroupName: req.WaitGroupName,
 		Jobs:          completeJobsToCore(req.Jobs),
-	})
+	}, mrpc.WithResponseMeta(&meta))
 	if err != nil {
 		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.CompleteJobsFromWaitGroupResponse{
 		WaitGroup: waitGroupToFront(resp1.WaitGroup),
+		Now:       meta.Now,
 	}, nil
 }
 
@@ -437,11 +449,12 @@ func (s *GrackleApiServerHandler) ListWaitGroups(ctx context.Context, req *grack
 	}
 
 	// List wait groups in namespace with pagination
+	var meta mrpc.ResponseMeta
 	resp1, err := s.grackleClient.ListWaitGroups(ctx, &corepb.ListWaitGroupsRequest{
 		NamespaceId:     namespace.Id,
 		PaginationToken: paginationToken,
 		Limit:           req.Limit,
-	})
+	}, mrpc.WithResponseMeta(&meta))
 	if err != nil {
 		return nil, mrpc.ErrorToGRPC(err)
 	}
@@ -460,6 +473,7 @@ func (s *GrackleApiServerHandler) ListWaitGroups(ctx context.Context, req *grack
 		WaitGroups:              waitGroupsToFront(resp1.WaitGroups),
 		NextPaginationToken:     nextPaginationToken,
 		PreviousPaginationToken: previousPaginationToken,
+		Now:                     meta.Now,
 	}, nil
 }
 
@@ -1301,6 +1315,7 @@ func (s *GrackleApiServerHandler) CreateSemaphoreLease(ctx context.Context, req 
 	// Create semaphore lease with generated ID. On the rare ID collision the core
 	// returns IDCollision; regenerate the ID and retry.
 	for range maxIDGenerationAttempts {
+		var meta mrpc.ResponseMeta
 		resp1, err := s.grackleClient.CreateSemaphoreLease(ctx, &corepb.CreateSemaphoreLeaseRequest{
 			LeaseId: &corepb.LeaseId{
 				AccountId:   accountId,
@@ -1311,7 +1326,7 @@ func (s *GrackleApiServerHandler) CreateSemaphoreLease(ctx context.Context, req 
 			TtlSeconds:                 req.TtlSeconds,
 			Metadata:                   req.Metadata,
 			MaxNumberOfSemaphoreLeases: limits.MaxNumberOfSemaphoreLeases,
-		})
+		}, mrpc.WithResponseMeta(&meta))
 		if err != nil {
 			if isIDCollision(err) {
 				continue
@@ -1321,6 +1336,7 @@ func (s *GrackleApiServerHandler) CreateSemaphoreLease(ctx context.Context, req 
 
 		return &gracklepb.CreateSemaphoreLeaseResponse{
 			Lease: leaseToFront(resp1.Lease),
+			Now:   meta.Now,
 		}, nil
 	}
 
@@ -1375,16 +1391,18 @@ func (s *GrackleApiServerHandler) RefreshSemaphoreLease(ctx context.Context, req
 	}
 
 	// Refresh the semaphore lease TTL
+	var meta mrpc.ResponseMeta
 	resp1, err := s.grackleClient.RefreshSemaphoreLease(ctx, &corepb.RefreshSemaphoreLeaseRequest{
 		LeaseId:    leaseId,
 		TtlSeconds: req.TtlSeconds,
-	})
+	}, mrpc.WithResponseMeta(&meta))
 	if err != nil {
 		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.RefreshSemaphoreLeaseResponse{
 		Lease: leaseToFront(resp1.Lease),
+		Now:   meta.Now,
 	}, nil
 }
 
@@ -1402,11 +1420,12 @@ func (s *GrackleApiServerHandler) ListSemaphoreLeases(ctx context.Context, req *
 	}
 
 	// List semaphore leases with pagination
+	var meta mrpc.ResponseMeta
 	resp1, err := s.grackleClient.ListSemaphoreLeases(ctx, &corepb.ListSemaphoreLeasesRequest{
 		NamespaceId:     namespace.Id,
 		PaginationToken: paginationToken,
 		Limit:           req.Limit,
-	})
+	}, mrpc.WithResponseMeta(&meta))
 	if err != nil {
 		return nil, mrpc.ErrorToGRPC(err)
 	}
@@ -1425,6 +1444,7 @@ func (s *GrackleApiServerHandler) ListSemaphoreLeases(ctx context.Context, req *
 		Leases:                  leasesToFront(resp1.Leases),
 		NextPaginationToken:     nextPaginationToken,
 		PreviousPaginationToken: previousPaginationToken,
+		Now:                     meta.Now,
 	}, nil
 }
 
@@ -1447,15 +1467,17 @@ func (s *GrackleApiServerHandler) GetSemaphoreLease(ctx context.Context, req *gr
 	}
 
 	// Retrieve semaphore lease by ID
+	var meta mrpc.ResponseMeta
 	resp1, err := s.grackleClient.GetSemaphoreLease(ctx, &corepb.GetSemaphoreLeaseRequest{
 		LeaseId: leaseId,
-	})
+	}, mrpc.WithResponseMeta(&meta))
 	if err != nil {
 		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.GetSemaphoreLeaseResponse{
 		Lease: leaseToFront(resp1.Lease),
+		Now:   meta.Now,
 	}, nil
 }
 
@@ -1469,6 +1491,7 @@ func (s *GrackleApiServerHandler) CreateLockLease(ctx context.Context, req *grac
 	// Create lock lease with generated ID. On the rare ID collision the core
 	// returns IDCollision; regenerate the ID and retry.
 	for range maxIDGenerationAttempts {
+		var meta mrpc.ResponseMeta
 		resp1, err := s.grackleClient.CreateLockLease(ctx, &corepb.CreateLockLeaseRequest{
 			LeaseId: &corepb.LeaseId{
 				AccountId:   accountId,
@@ -1479,7 +1502,7 @@ func (s *GrackleApiServerHandler) CreateLockLease(ctx context.Context, req *grac
 			TtlSeconds:            req.TtlSeconds,
 			Metadata:              req.Metadata,
 			MaxNumberOfLockLeases: limits.MaxNumberOfLockLeases,
-		})
+		}, mrpc.WithResponseMeta(&meta))
 		if err != nil {
 			if isIDCollision(err) {
 				continue
@@ -1489,6 +1512,7 @@ func (s *GrackleApiServerHandler) CreateLockLease(ctx context.Context, req *grac
 
 		return &gracklepb.CreateLockLeaseResponse{
 			Lease: leaseToFront(resp1.Lease),
+			Now:   meta.Now,
 		}, nil
 	}
 
@@ -1543,16 +1567,18 @@ func (s *GrackleApiServerHandler) RefreshLockLease(ctx context.Context, req *gra
 	}
 
 	// Refresh the lock lease TTL
+	var meta mrpc.ResponseMeta
 	resp1, err := s.grackleClient.RefreshLockLease(ctx, &corepb.RefreshLockLeaseRequest{
 		LeaseId:    leaseId,
 		TtlSeconds: req.TtlSeconds,
-	})
+	}, mrpc.WithResponseMeta(&meta))
 	if err != nil {
 		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.RefreshLockLeaseResponse{
 		Lease: leaseToFront(resp1.Lease),
+		Now:   meta.Now,
 	}, nil
 }
 
@@ -1570,11 +1596,12 @@ func (s *GrackleApiServerHandler) ListLockLeases(ctx context.Context, req *grack
 	}
 
 	// List lock leases with pagination
+	var meta mrpc.ResponseMeta
 	resp1, err := s.grackleClient.ListLockLeases(ctx, &corepb.ListLockLeasesRequest{
 		NamespaceId:     namespace.Id,
 		PaginationToken: paginationToken,
 		Limit:           req.Limit,
-	})
+	}, mrpc.WithResponseMeta(&meta))
 	if err != nil {
 		return nil, mrpc.ErrorToGRPC(err)
 	}
@@ -1593,6 +1620,7 @@ func (s *GrackleApiServerHandler) ListLockLeases(ctx context.Context, req *grack
 		Leases:                  leasesToFront(resp1.Leases),
 		NextPaginationToken:     nextPaginationToken,
 		PreviousPaginationToken: previousPaginationToken,
+		Now:                     meta.Now,
 	}, nil
 }
 
@@ -1615,15 +1643,17 @@ func (s *GrackleApiServerHandler) GetLockLease(ctx context.Context, req *grackle
 	}
 
 	// Retrieve lock lease by ID
+	var meta mrpc.ResponseMeta
 	resp1, err := s.grackleClient.GetLockLease(ctx, &corepb.GetLockLeaseRequest{
 		LeaseId: leaseId,
-	})
+	}, mrpc.WithResponseMeta(&meta))
 	if err != nil {
 		return nil, mrpc.ErrorToGRPC(err)
 	}
 
 	return &gracklepb.GetLockLeaseResponse{
 		Lease: leaseToFront(resp1.Lease),
+		Now:   meta.Now,
 	}, nil
 }
 

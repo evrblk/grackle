@@ -51,13 +51,13 @@ func (s *GrackleMonsteraStub) GetLock(ctx context.Context, methodReq *corepb.Get
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleLocks", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleLocks", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -68,10 +68,7 @@ func (s *GrackleMonsteraStub) GetLock(ctx context.Context, methodReq *corepb.Get
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -101,13 +98,13 @@ func (s *GrackleMonsteraStub) ListLocks(ctx context.Context, methodReq *corepb.L
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleLocks", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleLocks", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -118,10 +115,7 @@ func (s *GrackleMonsteraStub) ListLocks(ctx context.Context, methodReq *corepb.L
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -151,13 +145,13 @@ func (s *GrackleMonsteraStub) ListLocksByLeaseId(ctx context.Context, methodReq 
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleLocks", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleLocks", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -168,10 +162,7 @@ func (s *GrackleMonsteraStub) ListLocksByLeaseId(ctx context.Context, methodReq 
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -201,13 +192,13 @@ func (s *GrackleMonsteraStub) ListLockLeases(ctx context.Context, methodReq *cor
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleLocks", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleLocks", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -218,10 +209,7 @@ func (s *GrackleMonsteraStub) ListLockLeases(ctx context.Context, methodReq *cor
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -251,13 +239,13 @@ func (s *GrackleMonsteraStub) ListLockLeasesByProcessId(ctx context.Context, met
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleLocks", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleLocks", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -268,10 +256,7 @@ func (s *GrackleMonsteraStub) ListLockLeasesByProcessId(ctx context.Context, met
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -301,13 +286,13 @@ func (s *GrackleMonsteraStub) GetLockLease(ctx context.Context, methodReq *corep
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleLocks", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleLocks", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -318,10 +303,7 @@ func (s *GrackleMonsteraStub) GetLockLease(ctx context.Context, methodReq *corep
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -351,13 +333,13 @@ func (s *GrackleMonsteraStub) AcquireLock(ctx context.Context, methodReq *corepb
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleLocks", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -370,7 +352,7 @@ func (s *GrackleMonsteraStub) AcquireLock(ctx context.Context, methodReq *corepb
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -401,13 +383,13 @@ func (s *GrackleMonsteraStub) ReleaseLock(ctx context.Context, methodReq *corepb
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleLocks", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -420,7 +402,7 @@ func (s *GrackleMonsteraStub) ReleaseLock(ctx context.Context, methodReq *corepb
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -451,13 +433,13 @@ func (s *GrackleMonsteraStub) DeleteLock(ctx context.Context, methodReq *corepb.
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleLocks", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -470,7 +452,7 @@ func (s *GrackleMonsteraStub) DeleteLock(ctx context.Context, methodReq *corepb.
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -501,13 +483,13 @@ func (s *GrackleMonsteraStub) RunLocksGarbageCollection(ctx context.Context, met
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.UpdateShard(ctx, "GrackleLocks", shardId, rpcReqBytes)
+	clientResp, err := s.monsteraClient.UpdateShard(ctx, "GrackleLocks", shardId, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -520,7 +502,7 @@ func (s *GrackleMonsteraStub) RunLocksGarbageCollection(ctx context.Context, met
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -551,13 +533,13 @@ func (s *GrackleMonsteraStub) LocksDeleteNamespace(ctx context.Context, methodRe
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleLocks", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -570,7 +552,7 @@ func (s *GrackleMonsteraStub) LocksDeleteNamespace(ctx context.Context, methodRe
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -601,13 +583,13 @@ func (s *GrackleMonsteraStub) CreateLockLease(ctx context.Context, methodReq *co
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleLocks", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -620,7 +602,7 @@ func (s *GrackleMonsteraStub) CreateLockLease(ctx context.Context, methodReq *co
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -651,13 +633,13 @@ func (s *GrackleMonsteraStub) RefreshLockLease(ctx context.Context, methodReq *c
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleLocks", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -670,7 +652,7 @@ func (s *GrackleMonsteraStub) RefreshLockLease(ctx context.Context, methodReq *c
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -701,13 +683,13 @@ func (s *GrackleMonsteraStub) RevokeLockLease(ctx context.Context, methodReq *co
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleLocks", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleLocks", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -720,7 +702,7 @@ func (s *GrackleMonsteraStub) RevokeLockLease(ctx context.Context, methodReq *co
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -751,13 +733,13 @@ func (s *GrackleMonsteraStub) GetSemaphore(ctx context.Context, methodReq *corep
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -768,10 +750,7 @@ func (s *GrackleMonsteraStub) GetSemaphore(ctx context.Context, methodReq *corep
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -801,13 +780,13 @@ func (s *GrackleMonsteraStub) GetSemaphoreByName(ctx context.Context, methodReq 
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -818,10 +797,7 @@ func (s *GrackleMonsteraStub) GetSemaphoreByName(ctx context.Context, methodReq 
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -851,13 +827,13 @@ func (s *GrackleMonsteraStub) ListSemaphores(ctx context.Context, methodReq *cor
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -868,10 +844,7 @@ func (s *GrackleMonsteraStub) ListSemaphores(ctx context.Context, methodReq *cor
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -901,13 +874,13 @@ func (s *GrackleMonsteraStub) ListSemaphoresByLeaseId(ctx context.Context, metho
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -918,10 +891,7 @@ func (s *GrackleMonsteraStub) ListSemaphoresByLeaseId(ctx context.Context, metho
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -951,13 +921,13 @@ func (s *GrackleMonsteraStub) ListSemaphoreHolders(ctx context.Context, methodRe
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -968,10 +938,7 @@ func (s *GrackleMonsteraStub) ListSemaphoreHolders(ctx context.Context, methodRe
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -1001,13 +968,13 @@ func (s *GrackleMonsteraStub) ListSemaphoreLeases(ctx context.Context, methodReq
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -1018,10 +985,7 @@ func (s *GrackleMonsteraStub) ListSemaphoreLeases(ctx context.Context, methodReq
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -1051,13 +1015,13 @@ func (s *GrackleMonsteraStub) ListSemaphoreLeasesByProcessId(ctx context.Context
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -1068,10 +1032,7 @@ func (s *GrackleMonsteraStub) ListSemaphoreLeasesByProcessId(ctx context.Context
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -1101,13 +1062,13 @@ func (s *GrackleMonsteraStub) GetSemaphoreLease(ctx context.Context, methodReq *
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleSemaphores", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -1118,10 +1079,7 @@ func (s *GrackleMonsteraStub) GetSemaphoreLease(ctx context.Context, methodReq *
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -1151,13 +1109,13 @@ func (s *GrackleMonsteraStub) AcquireSemaphore(ctx context.Context, methodReq *c
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -1170,7 +1128,7 @@ func (s *GrackleMonsteraStub) AcquireSemaphore(ctx context.Context, methodReq *c
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -1201,13 +1159,13 @@ func (s *GrackleMonsteraStub) ReleaseSemaphore(ctx context.Context, methodReq *c
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -1220,7 +1178,7 @@ func (s *GrackleMonsteraStub) ReleaseSemaphore(ctx context.Context, methodReq *c
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -1251,13 +1209,13 @@ func (s *GrackleMonsteraStub) CreateSemaphore(ctx context.Context, methodReq *co
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -1270,7 +1228,7 @@ func (s *GrackleMonsteraStub) CreateSemaphore(ctx context.Context, methodReq *co
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -1301,13 +1259,13 @@ func (s *GrackleMonsteraStub) UpdateSemaphore(ctx context.Context, methodReq *co
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -1320,7 +1278,7 @@ func (s *GrackleMonsteraStub) UpdateSemaphore(ctx context.Context, methodReq *co
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -1351,13 +1309,13 @@ func (s *GrackleMonsteraStub) DeleteSemaphore(ctx context.Context, methodReq *co
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -1370,7 +1328,7 @@ func (s *GrackleMonsteraStub) DeleteSemaphore(ctx context.Context, methodReq *co
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -1401,13 +1359,13 @@ func (s *GrackleMonsteraStub) RunSemaphoresGarbageCollection(ctx context.Context
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.UpdateShard(ctx, "GrackleSemaphores", shardId, rpcReqBytes)
+	clientResp, err := s.monsteraClient.UpdateShard(ctx, "GrackleSemaphores", shardId, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -1420,7 +1378,7 @@ func (s *GrackleMonsteraStub) RunSemaphoresGarbageCollection(ctx context.Context
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -1451,13 +1409,13 @@ func (s *GrackleMonsteraStub) SemaphoresDeleteNamespace(ctx context.Context, met
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -1470,7 +1428,7 @@ func (s *GrackleMonsteraStub) SemaphoresDeleteNamespace(ctx context.Context, met
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -1501,13 +1459,13 @@ func (s *GrackleMonsteraStub) CreateSemaphoreLease(ctx context.Context, methodRe
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -1520,7 +1478,7 @@ func (s *GrackleMonsteraStub) CreateSemaphoreLease(ctx context.Context, methodRe
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -1551,13 +1509,13 @@ func (s *GrackleMonsteraStub) RevokeSemaphoreLease(ctx context.Context, methodRe
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -1570,7 +1528,7 @@ func (s *GrackleMonsteraStub) RevokeSemaphoreLease(ctx context.Context, methodRe
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -1601,13 +1559,13 @@ func (s *GrackleMonsteraStub) RefreshSemaphoreLease(ctx context.Context, methodR
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleSemaphores", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -1620,7 +1578,7 @@ func (s *GrackleMonsteraStub) RefreshSemaphoreLease(ctx context.Context, methodR
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -1651,13 +1609,13 @@ func (s *GrackleMonsteraStub) GetNamespace(ctx context.Context, methodReq *corep
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleNamespaces", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleNamespaces", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -1668,10 +1626,7 @@ func (s *GrackleMonsteraStub) GetNamespace(ctx context.Context, methodReq *corep
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -1701,13 +1656,13 @@ func (s *GrackleMonsteraStub) GetNamespaceByName(ctx context.Context, methodReq 
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleNamespaces", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleNamespaces", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -1718,10 +1673,7 @@ func (s *GrackleMonsteraStub) GetNamespaceByName(ctx context.Context, methodReq 
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -1751,13 +1703,13 @@ func (s *GrackleMonsteraStub) ListNamespaces(ctx context.Context, methodReq *cor
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleNamespaces", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleNamespaces", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -1768,10 +1720,7 @@ func (s *GrackleMonsteraStub) ListNamespaces(ctx context.Context, methodReq *cor
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -1801,13 +1750,13 @@ func (s *GrackleMonsteraStub) CreateNamespace(ctx context.Context, methodReq *co
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleNamespaces", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleNamespaces", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -1820,7 +1769,7 @@ func (s *GrackleMonsteraStub) CreateNamespace(ctx context.Context, methodReq *co
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -1851,13 +1800,13 @@ func (s *GrackleMonsteraStub) UpdateNamespace(ctx context.Context, methodReq *co
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleNamespaces", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleNamespaces", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -1870,7 +1819,7 @@ func (s *GrackleMonsteraStub) UpdateNamespace(ctx context.Context, methodReq *co
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -1901,13 +1850,13 @@ func (s *GrackleMonsteraStub) DeleteNamespace(ctx context.Context, methodReq *co
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleNamespaces", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleNamespaces", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -1920,7 +1869,7 @@ func (s *GrackleMonsteraStub) DeleteNamespace(ctx context.Context, methodReq *co
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -1951,13 +1900,13 @@ func (s *GrackleMonsteraStub) GetWaitGroup(ctx context.Context, methodReq *corep
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleWaitGroups", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleWaitGroups", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -1968,10 +1917,7 @@ func (s *GrackleMonsteraStub) GetWaitGroup(ctx context.Context, methodReq *corep
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -2001,13 +1947,13 @@ func (s *GrackleMonsteraStub) GetWaitGroupByName(ctx context.Context, methodReq 
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleWaitGroups", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleWaitGroups", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -2018,10 +1964,7 @@ func (s *GrackleMonsteraStub) GetWaitGroupByName(ctx context.Context, methodReq 
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -2051,13 +1994,13 @@ func (s *GrackleMonsteraStub) ListWaitGroups(ctx context.Context, methodReq *cor
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleWaitGroups", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleWaitGroups", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -2068,10 +2011,7 @@ func (s *GrackleMonsteraStub) ListWaitGroups(ctx context.Context, methodReq *cor
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -2101,13 +2041,13 @@ func (s *GrackleMonsteraStub) ListWaitGroupCompletedJobs(ctx context.Context, me
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleWaitGroups", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleWaitGroups", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -2118,10 +2058,7 @@ func (s *GrackleMonsteraStub) ListWaitGroupCompletedJobs(ctx context.Context, me
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -2151,13 +2088,13 @@ func (s *GrackleMonsteraStub) UpdateWaitGroup(ctx context.Context, methodReq *co
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleWaitGroups", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleWaitGroups", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -2170,7 +2107,7 @@ func (s *GrackleMonsteraStub) UpdateWaitGroup(ctx context.Context, methodReq *co
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -2201,13 +2138,13 @@ func (s *GrackleMonsteraStub) CompleteJobsFromWaitGroup(ctx context.Context, met
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleWaitGroups", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleWaitGroups", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -2220,7 +2157,7 @@ func (s *GrackleMonsteraStub) CompleteJobsFromWaitGroup(ctx context.Context, met
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -2251,13 +2188,13 @@ func (s *GrackleMonsteraStub) CreateWaitGroup(ctx context.Context, methodReq *co
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleWaitGroups", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleWaitGroups", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -2270,7 +2207,7 @@ func (s *GrackleMonsteraStub) CreateWaitGroup(ctx context.Context, methodReq *co
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -2301,13 +2238,13 @@ func (s *GrackleMonsteraStub) DeleteWaitGroup(ctx context.Context, methodReq *co
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleWaitGroups", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleWaitGroups", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -2320,7 +2257,7 @@ func (s *GrackleMonsteraStub) DeleteWaitGroup(ctx context.Context, methodReq *co
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -2351,13 +2288,13 @@ func (s *GrackleMonsteraStub) RunWaitGroupsGarbageCollection(ctx context.Context
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.UpdateShard(ctx, "GrackleWaitGroups", shardId, rpcReqBytes)
+	clientResp, err := s.monsteraClient.UpdateShard(ctx, "GrackleWaitGroups", shardId, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -2370,7 +2307,7 @@ func (s *GrackleMonsteraStub) RunWaitGroupsGarbageCollection(ctx context.Context
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -2401,13 +2338,13 @@ func (s *GrackleMonsteraStub) WaitGroupsDeleteNamespace(ctx context.Context, met
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleWaitGroups", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleWaitGroups", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -2420,7 +2357,7 @@ func (s *GrackleMonsteraStub) WaitGroupsDeleteNamespace(ctx context.Context, met
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -2451,13 +2388,13 @@ func (s *GrackleMonsteraStub) GetBarrier(ctx context.Context, methodReq *corepb.
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleBarriers", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleBarriers", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -2468,10 +2405,7 @@ func (s *GrackleMonsteraStub) GetBarrier(ctx context.Context, methodReq *corepb.
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -2501,13 +2435,13 @@ func (s *GrackleMonsteraStub) GetBarrierByName(ctx context.Context, methodReq *c
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleBarriers", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleBarriers", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -2518,10 +2452,7 @@ func (s *GrackleMonsteraStub) GetBarrierByName(ctx context.Context, methodReq *c
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -2551,13 +2482,13 @@ func (s *GrackleMonsteraStub) ListBarriers(ctx context.Context, methodReq *corep
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleBarriers", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleBarriers", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -2568,10 +2499,7 @@ func (s *GrackleMonsteraStub) ListBarriers(ctx context.Context, methodReq *corep
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -2601,13 +2529,13 @@ func (s *GrackleMonsteraStub) ListBarrierParticipants(ctx context.Context, metho
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Read(ctx, "GrackleBarriers", methodReq.ShardKey(), false, rpcReqBytes)
+	clientResp, err := s.monsteraClient.Read(ctx, "GrackleBarriers", methodReq.ShardKey(), false, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -2618,10 +2546,7 @@ func (s *GrackleMonsteraStub) ListBarrierParticipants(ctx context.Context, metho
 	}
 
 	if settings.ResponseMeta != nil {
-		*settings.ResponseMeta = mrpc.ResponseMeta{
-			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
-		}
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
 	}
 
 	return methodResp, nilifyIfEmpty(rpcResp.Error)
@@ -2651,13 +2576,13 @@ func (s *GrackleMonsteraStub) CreateBarrier(ctx context.Context, methodReq *core
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleBarriers", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleBarriers", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -2670,7 +2595,7 @@ func (s *GrackleMonsteraStub) CreateBarrier(ctx context.Context, methodReq *core
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -2701,13 +2626,13 @@ func (s *GrackleMonsteraStub) DeleteBarrier(ctx context.Context, methodReq *core
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleBarriers", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleBarriers", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -2720,7 +2645,7 @@ func (s *GrackleMonsteraStub) DeleteBarrier(ctx context.Context, methodReq *core
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -2751,13 +2676,13 @@ func (s *GrackleMonsteraStub) UpdateBarrier(ctx context.Context, methodReq *core
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleBarriers", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleBarriers", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -2770,7 +2695,7 @@ func (s *GrackleMonsteraStub) UpdateBarrier(ctx context.Context, methodReq *core
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -2801,13 +2726,13 @@ func (s *GrackleMonsteraStub) ArriveAtBarrier(ctx context.Context, methodReq *co
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleBarriers", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleBarriers", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -2820,7 +2745,7 @@ func (s *GrackleMonsteraStub) ArriveAtBarrier(ctx context.Context, methodReq *co
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -2851,13 +2776,13 @@ func (s *GrackleMonsteraStub) RunBarriersGarbageCollection(ctx context.Context, 
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.UpdateShard(ctx, "GrackleBarriers", shardId, rpcReqBytes)
+	clientResp, err := s.monsteraClient.UpdateShard(ctx, "GrackleBarriers", shardId, rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -2870,7 +2795,7 @@ func (s *GrackleMonsteraStub) RunBarriersGarbageCollection(ctx context.Context, 
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 
@@ -2901,13 +2826,13 @@ func (s *GrackleMonsteraStub) BarriersDeleteNamespace(ctx context.Context, metho
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	rpcRespBytes, err := s.monsteraClient.Update(ctx, "GrackleBarriers", methodReq.ShardKey(), rpcReqBytes)
+	clientResp, err := s.monsteraClient.Update(ctx, "GrackleBarriers", methodReq.ShardKey(), rpcReqBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	rpcResp := &mrpc.Response{}
-	err = rpcResp.UnmarshalVT(rpcRespBytes)
+	err = rpcResp.UnmarshalVT(clientResp.Data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -2920,7 +2845,7 @@ func (s *GrackleMonsteraStub) BarriersDeleteNamespace(ctx context.Context, metho
 	if settings.ResponseMeta != nil {
 		*settings.ResponseMeta = mrpc.ResponseMeta{
 			Now:          now,
-			RaftLogIndex: rpcResp.RaftLogIndex,
+			RaftLogIndex: clientResp.RaftLogIndex,
 		}
 	}
 

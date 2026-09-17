@@ -24,6 +24,8 @@ Read-only and safe to retry.
 * Non-empty `next_pagination_token` indicates more pages are available.
 * Returns the current `status` and `completed_jobs` of each wait group.
 * `metadata` is the optional, opaque map stored with each wait group — see [Metadata](/docs/api-overview.md#metadata).
+* `now` is the server clock (Unix nanoseconds) at the moment this response was produced — use
+  it, not your local clock, to compute remaining time against each wait group's `expires_at`.
 
 ```json
 {
@@ -47,6 +49,7 @@ Read-only and safe to retry.
     }
   ],
   "next_pagination_token": "",
-  "previous_pagination_token": ""
+  "previous_pagination_token": "",
+  "now": 1718150500000000000
 }
 ```

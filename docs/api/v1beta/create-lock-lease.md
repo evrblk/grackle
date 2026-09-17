@@ -24,6 +24,8 @@ OK to retry — every call creates a new lease.
 
 * Returns `NotFound` if the namespace does not exist.
 * Returns `ResourceExhausted` if the namespace has reached its lease quota.
+* `now` is the server clock (Unix nanoseconds) at the moment this response was produced — use
+  it, not your local clock, to compute remaining time against `expires_at`.
 
 
 ```json
@@ -33,6 +35,7 @@ OK to retry — every call creates a new lease.
     "process_id": "host-123/pid-4567",
     "created_at": 1695826239671432000,
     "expires_at": 1695826299671432000
-  }
+  },
+  "now": 1695826239671432000
 }
 ```

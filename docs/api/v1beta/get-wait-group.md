@@ -24,6 +24,8 @@ Read-only and safe to retry.
 * `status` is one of `active`, `completed`, or `expired`. `finished_at` is the timestamp at which
   the group finished (completed or expired), or `0` while it is still active.
 * `metadata` is the optional, opaque map stored with the wait group — see [Metadata](/docs/api-overview.md#metadata).
+* `now` is the server clock (Unix nanoseconds) at the moment this response was produced — use
+  it, not your local clock, to compute remaining time against `expires_at`.
 
 ```json
 {
@@ -43,6 +45,7 @@ Read-only and safe to retry.
     "metadata": {
       "pipeline": "etl-daily"
     }
-  }
+  },
+  "now": 1718150500000000000
 }
 ```

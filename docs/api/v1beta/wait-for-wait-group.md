@@ -27,6 +27,8 @@ in the background.
   group's `expires_at` passed while still active (its `status` is then `EXPIRED`), and
   `WAIT_GROUP_WAIT_OUTCOME_TIMED_OUT` means `timeout_seconds` elapsed while the group was still
   active.
+* `now` is the server clock (Unix nanoseconds) at the moment the final poll was made — use it,
+  not your local clock, to compute remaining time against `expires_at`.
 
 __Completed before timeout:__
 
@@ -41,7 +43,8 @@ __Completed before timeout:__
     "finished_at": 1718150700000000000,
     "last_activity_at": 1718150700000000000
   },
-  "outcome": "WAIT_GROUP_WAIT_OUTCOME_COMPLETED"
+  "outcome": "WAIT_GROUP_WAIT_OUTCOME_COMPLETED",
+  "now": 1718150700000000000
 }
 ```
 
@@ -57,6 +60,7 @@ __Timeout fired first:__
     "expires_at": 1718236800000000000,
     "last_activity_at": 1718150480000000000
   },
-  "outcome": "WAIT_GROUP_WAIT_OUTCOME_TIMED_OUT"
+  "outcome": "WAIT_GROUP_WAIT_OUTCOME_TIMED_OUT",
+  "now": 1718150780000000000
 }
 ```

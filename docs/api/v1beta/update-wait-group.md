@@ -45,6 +45,8 @@ Safe to retry.
 * Returns `InvalidArgument` if `expected_version` does not match the wait group's current `version`.
 * Returns `InvalidArgument` if the new `counter` is below the current `completed_jobs` count.
 * `last_activity_at` is not affected by updates — it only advances on `CompleteJobsFromWaitGroup`.
+* `now` is the server clock (Unix nanoseconds) at the moment this response was produced — use
+  it, not your local clock, to compute remaining time against `expires_at`.
 
 ```json
 {
@@ -62,6 +64,7 @@ Safe to retry.
     "finished_at": 0,
     "last_activity_at": 1718150420000000000,
     "metadata": { "team": "data", "pipeline": "etl", "priority": "high" }
-  }
+  },
+  "now": 1718150480000000000
 }
 ```
