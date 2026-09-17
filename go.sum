@@ -19,8 +19,8 @@ github.com/evrblk/evrblk-go v0.0.0-20260917205857-891670b70f0f h1:hHowru9tcNMSCX
 github.com/evrblk/evrblk-go v0.0.0-20260917205857-891670b70f0f/go.mod h1:DsQb7MKo354EVWGMERlCMPxPrYqnZ+lQWuuk3f6ft0Q=
 github.com/evrblk/fenestra v0.0.0-20260724141201-56c281e924fc h1:hK9DOUE1ev1jmBAQye8IK7Xb/lD/Z1eFeoW2hW4GgKE=
 github.com/evrblk/fenestra v0.0.0-20260724141201-56c281e924fc/go.mod h1:kYcV1aDoe0NJQBCvHUG8uGy9QsVol+LhAUiAEurGPfc=
-github.com/evrblk/monstera v0.0.0-20260917180311-31d9d965ee74 h1:3fX6Hfou4xMRSBkaCoPIwTpafQPKxfxRP4JHcedsMok=
-github.com/evrblk/monstera v0.0.0-20260917180311-31d9d965ee74/go.mod h1:B9lp2aJQfeeXsRQVANGEgroHIZktqaAUc9v4OmNH/ZU=
+github.com/evrblk/monstera v0.0.0-20260917194923-3e76cee8845b h1:gZenKr/HqEp81yLi/Zk/GEwVz5xzikmAIUESLXWTW4g=
+github.com/evrblk/monstera v0.0.0-20260917194923-3e76cee8845b/go.mod h1:dCMZWRpeMZz2ocGyzfCRvjbZ7HaAYPxeqew11GsF1dw=
 github.com/evrblk/yellowstone-common v0.0.0-20260915204323-38c802c5a1de h1:uwtzx9mguA+uhMSUYZaEwLvTLXH/P3TKH4+LZF+pC+A=
 github.com/evrblk/yellowstone-common v0.0.0-20260915204323-38c802c5a1de/go.mod h1:QAapEUlIB7cHhNQpzj+JHo4yD9/419OAeohuLSP3ZGE=
 github.com/fatih/color v1.13.0/go.mod h1:kLAiJbzzSOZDVNGyDpeOxJ47H46qBXwg5ILebYFFOfk=
@@ -58,7 +58,6 @@ github.com/klauspost/compress v1.20.0 h1:a3C1ke2ohxFymNlb2HWAHjDeKCI90scRskErZkR
 github.com/klauspost/compress v1.20.0/go.mod h1:LUdAzn7YLVvxLpc7y3V1m40wESHTgc1422pwwBSKYuI=
 github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=
 github.com/kr/pretty v0.3.1/go.mod h1:hoEshYVHaxMs3cyo3Yncou5ZscifuDolrwPKZanG3xk=
-github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0 h1:45sCR5RtlFHMR4UwH9sdQ5TC8v0qDQCHnXt+kaKSTVE=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
 github.com/kylelemons/godebug v1.1.0 h1:RPNrshWIDI6G2gRW9EHilWtl7Z6Sb1BR0xunSBf0SNc=

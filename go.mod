@@ -4,7 +4,7 @@ go 1.27.0
 
 require (
 	github.com/evrblk/evrblk-go v0.0.0-20260917205857-891670b70f0f
-	github.com/evrblk/monstera v0.0.0-20260917180311-31d9d965ee74
+	github.com/evrblk/monstera v0.0.0-20260917194923-3e76cee8845b
 	github.com/evrblk/yellowstone-common v0.0.0-20260915204323-38c802c5a1de
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10
 	github.com/prometheus/client_golang v1.24.1
@@ -36,7 +36,6 @@ require (
 	github.com/hashicorp/raft v1.8.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/klauspost/compress v1.20.0 // indirect
-	github.com/kr/text v0.1.0 // indirect
 	github.com/labstack/echo/v4 v4.15.4 // indirect
 	github.com/labstack/gommon v0.5.0 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
