@@ -363,33 +363,33 @@ type fakeGrackleClient struct {
 	createLockLease      func(ctx context.Context, req *corepb.CreateLockLeaseRequest) (*corepb.CreateLockLeaseResponse, error)
 }
 
-func (f *fakeGrackleClient) CreateNamespace(ctx context.Context, req *corepb.CreateNamespaceRequest) (*corepb.CreateNamespaceResponse, error) {
+func (f *fakeGrackleClient) CreateNamespace(ctx context.Context, req *corepb.CreateNamespaceRequest, _ ...mrpc.CallOption) (*corepb.CreateNamespaceResponse, error) {
 	return f.createNamespace(ctx, req)
 }
 
-func (f *fakeGrackleClient) CreateWaitGroup(ctx context.Context, req *corepb.CreateWaitGroupRequest) (*corepb.CreateWaitGroupResponse, error) {
+func (f *fakeGrackleClient) CreateWaitGroup(ctx context.Context, req *corepb.CreateWaitGroupRequest, _ ...mrpc.CallOption) (*corepb.CreateWaitGroupResponse, error) {
 	return f.createWaitGroup(ctx, req)
 }
 
-func (f *fakeGrackleClient) CreateSemaphore(ctx context.Context, req *corepb.CreateSemaphoreRequest) (*corepb.CreateSemaphoreResponse, error) {
+func (f *fakeGrackleClient) CreateSemaphore(ctx context.Context, req *corepb.CreateSemaphoreRequest, _ ...mrpc.CallOption) (*corepb.CreateSemaphoreResponse, error) {
 	return f.createSemaphore(ctx, req)
 }
 
-func (f *fakeGrackleClient) CreateBarrier(ctx context.Context, req *corepb.CreateBarrierRequest) (*corepb.CreateBarrierResponse, error) {
+func (f *fakeGrackleClient) CreateBarrier(ctx context.Context, req *corepb.CreateBarrierRequest, _ ...mrpc.CallOption) (*corepb.CreateBarrierResponse, error) {
 	return f.createBarrier(ctx, req)
 }
 
-func (f *fakeGrackleClient) CreateSemaphoreLease(ctx context.Context, req *corepb.CreateSemaphoreLeaseRequest) (*corepb.CreateSemaphoreLeaseResponse, error) {
+func (f *fakeGrackleClient) CreateSemaphoreLease(ctx context.Context, req *corepb.CreateSemaphoreLeaseRequest, _ ...mrpc.CallOption) (*corepb.CreateSemaphoreLeaseResponse, error) {
 	return f.createSemaphoreLease(ctx, req)
 }
 
-func (f *fakeGrackleClient) CreateLockLease(ctx context.Context, req *corepb.CreateLockLeaseRequest) (*corepb.CreateLockLeaseResponse, error) {
+func (f *fakeGrackleClient) CreateLockLease(ctx context.Context, req *corepb.CreateLockLeaseRequest, _ ...mrpc.CallOption) (*corepb.CreateLockLeaseResponse, error) {
 	return f.createLockLease(ctx, req)
 }
 
 // The wait group / semaphore / barrier handlers first resolve the namespace by
 // name; return a fixed namespace so the create path is reached.
-func (f *fakeGrackleClient) GetNamespaceByName(ctx context.Context, req *corepb.GetNamespaceByNameRequest) (*corepb.GetNamespaceByNameResponse, error) {
+func (f *fakeGrackleClient) GetNamespaceByName(ctx context.Context, req *corepb.GetNamespaceByNameRequest, _ ...mrpc.CallOption) (*corepb.GetNamespaceByNameResponse, error) {
 	return &corepb.GetNamespaceByNameResponse{
 		Namespace: &corepb.Namespace{Id: &corepb.NamespaceId{AccountId: req.AccountId, NamespaceId: 7}},
 	}, nil
