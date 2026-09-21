@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log/slog"
 	"math/rand/v2"
 	"testing"
 	"time"
@@ -49,7 +50,7 @@ func TestCore_Create(t *testing.T) {
 			Payload: &corepb.GetWaitGroupRequest{
 				WaitGroupId: waitGroupId,
 			},
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, resp2)
@@ -70,7 +71,7 @@ func TestCore_Create(t *testing.T) {
 				},
 				WaitGroupName: "test_wait_group",
 			},
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, resp3)
@@ -181,7 +182,7 @@ func TestCore_CompleteJobsFromWaitGroup(t *testing.T) {
 				Jobs:          completeJobRequests([]string{"job_1", "job_2", "job_3"}),
 			},
 			Now: now.Add(time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, resp2)
@@ -198,7 +199,7 @@ func TestCore_CompleteJobsFromWaitGroup(t *testing.T) {
 				Jobs:          completeJobRequests([]string{"job_1", "job_2"}),
 			},
 			Now: now.Add(2 * time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, resp3)
@@ -223,7 +224,7 @@ func TestCore_CompleteJobsFromWaitGroup(t *testing.T) {
 				Jobs:          completeJobRequests([]string{"job_1", "job_2", "job_3"}),
 			},
 			Now: now.UnixNano(),
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, resp1)
@@ -301,7 +302,7 @@ func TestCore_ListWaitGroups(t *testing.T) {
 				NamespaceId: namespaceId,
 			},
 		},
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp3)
@@ -335,7 +336,7 @@ func TestCore_ListWaitGroupCompletedJobs(t *testing.T) {
 				Jobs:          completeJobRequests([]string{"job_1", "job_2", "job_3"}),
 			},
 			Now: now.Add(time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.NotNil(t, resp2)
 		require.Nil(t, resp2.ApplicationError)
@@ -347,7 +348,7 @@ func TestCore_ListWaitGroupCompletedJobs(t *testing.T) {
 				NamespaceId:   namespaceId,
 				WaitGroupName: "test_wait_group",
 			},
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, resp3)
@@ -386,7 +387,7 @@ func TestCore_ListWaitGroupCompletedJobs(t *testing.T) {
 				Jobs:          completeJobRequests(jobIds),
 			},
 			Now: now.Add(time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.NotNil(t, resp2)
 		require.Nil(t, resp2.ApplicationError)
@@ -399,7 +400,7 @@ func TestCore_ListWaitGroupCompletedJobs(t *testing.T) {
 				WaitGroupName: "test_wait_group",
 				Limit:         20,
 			},
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, resp3)
@@ -416,7 +417,7 @@ func TestCore_ListWaitGroupCompletedJobs(t *testing.T) {
 				Limit:           20,
 				PaginationToken: resp3.Payload.NextPaginationToken,
 			},
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, resp4)
@@ -433,7 +434,7 @@ func TestCore_ListWaitGroupCompletedJobs(t *testing.T) {
 				Limit:           20,
 				PaginationToken: resp4.Payload.NextPaginationToken,
 			},
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, resp5)
@@ -465,7 +466,7 @@ func TestCore_ListWaitGroupCompletedJobs(t *testing.T) {
 				NamespaceId:   namespaceId,
 				WaitGroupName: "test_wait_group",
 			},
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.Len(t, resp2.Payload.Jobs, 0)
@@ -485,7 +486,7 @@ func TestCore_ListWaitGroupCompletedJobs(t *testing.T) {
 				},
 				WaitGroupName: "nonexistent_wait_group",
 			},
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, resp1)
@@ -518,7 +519,7 @@ func TestCore_DeleteWaitGroup(t *testing.T) {
 				NamespaceId:   namespaceId,
 				WaitGroupName: "test_wait_group",
 			},
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.NotNil(t, resp2)
 		require.NotNil(t, resp2.Payload)
@@ -529,7 +530,7 @@ func TestCore_DeleteWaitGroup(t *testing.T) {
 				NamespaceId:   namespaceId,
 				WaitGroupName: "test_wait_group",
 			},
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.NotNil(t, resp3)
 		require.Nil(t, resp3.Payload)
@@ -549,7 +550,7 @@ func TestCore_DeleteWaitGroup(t *testing.T) {
 				},
 				WaitGroupName: "nonexistent_wait_group",
 			},
-		})
+		}, slog.Default())
 
 		// Deleting a nonexistent wait group does not return errors
 		require.NoError(t, err)
@@ -593,7 +594,7 @@ func TestCore_DeleteWaitGroup(t *testing.T) {
 					Jobs:          completeJobRequests(jobIds),
 				},
 				Now: now.Add(time.Duration(completedJobs) * time.Millisecond).UnixNano(),
-			})
+			}, slog.Default())
 
 			require.NoError(t, err)
 			require.NotNil(t, resp2)
@@ -618,7 +619,7 @@ func TestCore_DeleteWaitGroup(t *testing.T) {
 				},
 				WaitGroupName: "test_large_wait_group",
 			},
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.NotNil(t, resp4)
 		require.Nil(t, resp4.ApplicationError)
@@ -654,7 +655,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				MaxNumberOfWaitGroupsPerNamespace: 100,
 			},
 			Now: now.UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, resp1.ApplicationError)
 		require.Equal(t, map[string]string{"team": "search", "env": "staging"}, resp1.Payload.WaitGroup.Metadata)
@@ -673,7 +674,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				Counter:                    10,
 			},
 			Now: now.Add(time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.NotNil(t, resp2)
 		require.Nil(t, resp2.ApplicationError)
@@ -720,7 +721,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				MaxNumberOfWaitGroupsPerNamespace: 100,
 			},
 			Now: now.UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 
 		// Update with no metadata clears it
@@ -734,7 +735,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				ExpectedVersion:            1,
 			},
 			Now: now.Add(time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, resp.ApplicationError)
 		require.Empty(t, resp.Payload.WaitGroup.Metadata)
@@ -756,7 +757,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				DeleteAfterFinishedSeconds: 3600,
 			},
 			Now: now.UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.NotNil(t, resp)
 		require.Nil(t, resp.Payload)
@@ -790,7 +791,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				MaxNumberOfWaitGroupsPerNamespace: 100,
 			},
 			Now: now.UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 
 		// Push expiration far into the future
@@ -805,7 +806,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				Counter:                    1,
 			},
 			Now: now.Add(time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 
 		// Running GC at a time after the OLD expiration but before the NEW one
@@ -818,7 +819,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				MaxDeletedObjects:          1000,
 			},
 			Now: now.Add(24 * time.Hour).UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 
 		// Wait group is still present
@@ -851,7 +852,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				MaxNumberOfWaitGroupsPerNamespace: 100,
 			},
 			Now: now.UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, resp1.ApplicationError)
 		require.EqualValues(t, 1, resp1.Payload.WaitGroup.Version)
@@ -868,7 +869,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				Counter:                    10,
 			},
 			Now: now.Add(time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, resp2.ApplicationError)
 		require.EqualValues(t, 2, resp2.Payload.WaitGroup.Version)
@@ -885,7 +886,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				Counter:                    10,
 			},
 			Now: now.Add(2 * time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, resp3.ApplicationError)
 		require.EqualValues(t, 3, resp3.Payload.WaitGroup.Version)
@@ -915,7 +916,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				MaxNumberOfWaitGroupsPerNamespace: 100,
 			},
 			Now: now.UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 
 		// First update with version 1 succeeds (wait group is now at version 2)
@@ -930,7 +931,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				Counter:                    10,
 			},
 			Now: now.Add(time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, resp.ApplicationError)
 
@@ -946,7 +947,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				Counter:                    10,
 			},
 			Now: now.Add(2 * time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, resp.Payload)
 		require.NotNil(t, resp.ApplicationError)
@@ -983,7 +984,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				MaxNumberOfWaitGroupsPerNamespace: 100,
 			},
 			Now: now.UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 
 		// Passing a version the wait group has never reached is rejected
@@ -998,7 +999,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				Counter:                    10,
 			},
 			Now: now.Add(time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, resp.Payload)
 		require.NotNil(t, resp.ApplicationError)
@@ -1030,7 +1031,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				MaxNumberOfWaitGroupsPerNamespace: 100,
 			},
 			Now: now.UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 
 		// Complete all jobs so the wait group becomes COMPLETED.
@@ -1049,7 +1050,7 @@ func TestCore_UpdateWaitGroup(t *testing.T) {
 				Counter:                    2,
 			},
 			Now: now.Add(2 * time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, resp.Payload)
 		require.NotNil(t, resp.ApplicationError)
@@ -1081,7 +1082,7 @@ func TestCore_CompleteJobsWithMetadata(t *testing.T) {
 			MaxNumberOfWaitGroupsPerNamespace: 100,
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 
 	// Complete jobs, each carrying its own metadata
@@ -1095,7 +1096,7 @@ func TestCore_CompleteJobsWithMetadata(t *testing.T) {
 			},
 		},
 		Now: now.Add(time.Minute).UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.Nil(t, resp.ApplicationError)
 	require.EqualValues(t, 2, resp.Payload.WaitGroup.CompletedJobs)
@@ -1135,7 +1136,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 			MaxNumberOfWaitGroupsPerNamespace: 100,
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp1)
 	require.Nil(t, resp1.ApplicationError)
@@ -1152,7 +1153,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 			Jobs:          completeJobRequests([]string{"job_1", "job_2", "job_3"}),
 		},
 		Now: now.Add(time.Minute).UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp2)
 	require.Nil(t, resp2.ApplicationError)
@@ -1172,7 +1173,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 			Jobs:          completeJobRequests([]string{"job_4", "job_5"}),
 		},
 		Now: now.Add(2 * time.Minute).UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp3)
 	require.Nil(t, resp3.ApplicationError)
@@ -1193,7 +1194,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 		Payload: &corepb.GetWaitGroupRequest{
 			WaitGroupId: waitGroupId,
 		},
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp5)
 	require.Nil(t, resp5.ApplicationError)
@@ -1213,7 +1214,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 			Jobs:          completeJobRequests([]string{"job_6", "job_7"}),
 		},
 		Now: now.Add(5 * time.Minute).UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp6)
 	require.Nil(t, resp6.ApplicationError)
@@ -1224,7 +1225,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 		Payload: &corepb.GetWaitGroupRequest{
 			WaitGroupId: waitGroupId,
 		},
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp7)
 	require.Nil(t, resp7.ApplicationError)
@@ -1243,7 +1244,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 			Jobs:          completeJobRequests([]string{"job_8", "job_9"}),
 		},
 		Now: now.Add(8 * time.Minute).UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp8)
 	require.Nil(t, resp8.ApplicationError)
@@ -1254,7 +1255,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 		Payload: &corepb.GetWaitGroupRequest{
 			WaitGroupId: waitGroupId,
 		},
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp9)
 	require.Nil(t, resp9.ApplicationError)
@@ -1267,7 +1268,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 		Payload: &corepb.GetWaitGroupRequest{
 			WaitGroupId: waitGroupId,
 		},
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp10)
 	require.Nil(t, resp10.ApplicationError)
@@ -1317,7 +1318,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 				MaxNumberOfWaitGroupsPerNamespace: 100,
 			},
 			Now: now.UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.NotNil(t, resp1)
 		require.Nil(t, resp1.ApplicationError)
@@ -1369,7 +1370,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 					MaxNumberOfWaitGroupsPerNamespace: 100,
 				},
 				Now: now.UnixNano(),
-			})
+			}, slog.Default())
 			require.NoError(t, err)
 			require.NotNil(t, resp3)
 			require.Nil(t, resp3.ApplicationError)
@@ -1398,7 +1399,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 			},
 			WaitGroupName: "test_wait_group_0",
 		},
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp5)
 	require.Nil(t, resp5.ApplicationError)
@@ -1413,7 +1414,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 			NamespaceId: namespaceToDelete,
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp6)
 	require.Nil(t, resp6.ApplicationError)
@@ -1435,7 +1436,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 				MaxDeletedObjects:          maxDeletedObjects,
 			},
 			Now: now.UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.NotNil(t, resp7)
 		require.Nil(t, resp7.ApplicationError)
@@ -1450,7 +1451,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 			Payload: &corepb.GetWaitGroupRequest{
 				WaitGroupId: waitGroupIds[0],
 			},
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.NotNil(t, resp8)
 
@@ -1469,7 +1470,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 			Payload: &corepb.GetWaitGroupRequest{
 				WaitGroupId: deletedNamespaceWaitGroupId,
 			},
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.NotNil(t, resp8)
 
@@ -1492,7 +1493,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 		Payload: &corepb.GetWaitGroupRequest{
 			WaitGroupId: waitGroupIds[0],
 		},
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp10)
 	require.NotNil(t, resp10.ApplicationError)
@@ -1507,7 +1508,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 				WaitGroupId: 1, // the first wait group created in this namespace (wg=0 above, shifted by +1)
 			},
 		},
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp11)
 	require.NotNil(t, resp11.ApplicationError)
@@ -1518,7 +1519,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 		Payload: &corepb.GetWaitGroupRequest{
 			WaitGroupId: waitGroupIds[1],
 		},
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp12)
 	require.Nil(t, resp12.ApplicationError)
@@ -1535,7 +1536,7 @@ func TestCore_RunWaitGroupsGarbageCollection(t *testing.T) {
 		Payload: &corepb.GetWaitGroupRequest{
 			WaitGroupId: remainingNamespaceWaitGroupId,
 		},
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp13)
 	require.Nil(t, resp13.ApplicationError)
@@ -1570,7 +1571,7 @@ func TestCore_DeleteAfterFinished(t *testing.T) {
 				DeleteAfterFinishedSeconds:        deleteAfterSeconds,
 			},
 			Now: now.UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 
 		// Completing all jobs finishes the wait group as COMPLETED.
@@ -1616,7 +1617,7 @@ func TestCore_DeleteAfterFinished(t *testing.T) {
 				DeleteAfterFinishedSeconds:        deleteAfterSeconds,
 			},
 			Now: now.UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 
 		// Only partially complete it so it never reaches its counter.
@@ -1661,7 +1662,7 @@ func TestCore_DeleteAfterFinished(t *testing.T) {
 				DeleteAfterFinishedSeconds: int64((24 * time.Hour).Seconds()),
 			},
 			Now: now.UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 
 		// Way past expires_at, but well within the retention window.
@@ -1683,7 +1684,7 @@ func runWaitGroupsGC(t *testing.T, core coreapis.GrackleWaitGroupsCoreApi, now t
 			MaxDeletedObjects:          1000,
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.Nil(t, resp.ApplicationError)
@@ -1697,7 +1698,7 @@ func requireWaitGroupNotFound(t *testing.T, core coreapis.GrackleWaitGroupsCoreA
 		Payload: &corepb.GetWaitGroupRequest{
 			WaitGroupId: waitGroupId,
 		},
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.NotNil(t, resp.ApplicationError)
@@ -1734,7 +1735,7 @@ func TestCore_LastActivityAt(t *testing.T) {
 				ExpectedVersion:            1,
 			},
 			Now: now.Add(time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, updateResp.ApplicationError)
 		require.Equal(t, now.UnixNano(), updateResp.Payload.WaitGroup.LastActivityAt)
@@ -1774,7 +1775,7 @@ func completeManyJobs(t *testing.T, core coreapis.GrackleWaitGroupsCoreApi, name
 				Jobs:          completeJobRequests(jobIds[start:end]),
 			},
 			Now: now.UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.NotNil(t, resp)
 		require.Nil(t, resp.ApplicationError)
@@ -1807,7 +1808,7 @@ func createWaitGroup(t *testing.T, core coreapis.GrackleWaitGroupsCoreApi, waitG
 			DeleteAfterFinishedSeconds:        3600,
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.Nil(t, resp.ApplicationError)
@@ -1830,7 +1831,7 @@ func createWaitGroupWithError(t *testing.T, core coreapis.GrackleWaitGroupsCoreA
 			DeleteAfterFinishedSeconds:        3600,
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.Nil(t, resp.Payload)
@@ -1848,7 +1849,7 @@ func completeJobsFromWaitGroup(t *testing.T, core coreapis.GrackleWaitGroupsCore
 			Jobs:          completeJobRequests(jobIds),
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.Nil(t, resp.ApplicationError)
@@ -1867,7 +1868,7 @@ func completeJobsFromWaitGroupWithError(t *testing.T, core coreapis.GrackleWaitG
 			Jobs:          completeJobRequests(jobIds),
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.Nil(t, resp.Payload)
@@ -1882,7 +1883,7 @@ func getWaitGroup(t *testing.T, core coreapis.GrackleWaitGroupsCoreApi, waitGrou
 		Payload: &corepb.GetWaitGroupRequest{
 			WaitGroupId: waitGroupId,
 		},
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.Nil(t, resp.ApplicationError)
@@ -1899,7 +1900,7 @@ func ListWaitGroupCompletedJobs(t *testing.T, core coreapis.GrackleWaitGroupsCor
 			NamespaceId:   namespaceId,
 			WaitGroupName: waitGroupName,
 		},
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.Nil(t, resp.ApplicationError)
@@ -1941,7 +1942,7 @@ func TestCore_SplitSnapshotRestore(t *testing.T) {
 				Jobs:          completeJobRequests([]string{"job-1", "job-2"}),
 			},
 			Now: now.UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, resp.ApplicationError)
 	}
@@ -1975,7 +1976,7 @@ func TestCore_SplitSnapshotRestore(t *testing.T) {
 		wgResp, err := tc.owner.GetWaitGroupByName(&coreapis.GetWaitGroupByNameRequest{
 			Payload: &corepb.GetWaitGroupByNameRequest{NamespaceId: namespaceId, WaitGroupName: "wg-split"},
 			Now:     now.Add(time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, wgResp.ApplicationError)
 		require.EqualValues(t, 2, wgResp.Payload.WaitGroup.CompletedJobs)
@@ -1988,7 +1989,7 @@ func TestCore_SplitSnapshotRestore(t *testing.T) {
 				Limit:         10,
 			},
 			Now: now.Add(time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, jobsResp.ApplicationError)
 		require.Len(t, jobsResp.Payload.Jobs, 2)

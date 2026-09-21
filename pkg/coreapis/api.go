@@ -8,6 +8,7 @@ import (
 	monstera "github.com/evrblk/monstera"
 	mrpc "github.com/evrblk/monstera/rpc"
 	"io"
+	"log/slog"
 )
 
 type GetLockRequest = mrpc.ReadRequest[*corepb.GetLockRequest]
@@ -197,86 +198,86 @@ type GrackleLocksCoreApi interface {
 	Snapshot() monstera.ApplicationCoreSnapshot
 	Restore(readers ...io.ReadCloser) error
 	Close()
-	GetLock(req *GetLockRequest) (*GetLockResponse, error)
-	ListLocks(req *ListLocksRequest) (*ListLocksResponse, error)
-	ListLocksByLeaseId(req *ListLocksByLeaseIdRequest) (*ListLocksByLeaseIdResponse, error)
-	ListLockLeases(req *ListLockLeasesRequest) (*ListLockLeasesResponse, error)
-	ListLockLeasesByProcessId(req *ListLockLeasesByProcessIdRequest) (*ListLockLeasesByProcessIdResponse, error)
-	GetLockLease(req *GetLockLeaseRequest) (*GetLockLeaseResponse, error)
-	AcquireLock(req *AcquireLockRequest) (*AcquireLockResponse, error)
-	ReleaseLock(req *ReleaseLockRequest) (*ReleaseLockResponse, error)
-	DeleteLock(req *DeleteLockRequest) (*DeleteLockResponse, error)
-	RunLocksGarbageCollection(req *RunLocksGarbageCollectionRequest) (*RunLocksGarbageCollectionResponse, error)
-	LocksDeleteNamespace(req *LocksDeleteNamespaceRequest) (*LocksDeleteNamespaceResponse, error)
-	CreateLockLease(req *CreateLockLeaseRequest) (*CreateLockLeaseResponse, error)
-	RefreshLockLease(req *RefreshLockLeaseRequest) (*RefreshLockLeaseResponse, error)
-	RevokeLockLease(req *RevokeLockLeaseRequest) (*RevokeLockLeaseResponse, error)
+	GetLock(req *GetLockRequest, log *slog.Logger) (*GetLockResponse, error)
+	ListLocks(req *ListLocksRequest, log *slog.Logger) (*ListLocksResponse, error)
+	ListLocksByLeaseId(req *ListLocksByLeaseIdRequest, log *slog.Logger) (*ListLocksByLeaseIdResponse, error)
+	ListLockLeases(req *ListLockLeasesRequest, log *slog.Logger) (*ListLockLeasesResponse, error)
+	ListLockLeasesByProcessId(req *ListLockLeasesByProcessIdRequest, log *slog.Logger) (*ListLockLeasesByProcessIdResponse, error)
+	GetLockLease(req *GetLockLeaseRequest, log *slog.Logger) (*GetLockLeaseResponse, error)
+	AcquireLock(req *AcquireLockRequest, log *slog.Logger) (*AcquireLockResponse, error)
+	ReleaseLock(req *ReleaseLockRequest, log *slog.Logger) (*ReleaseLockResponse, error)
+	DeleteLock(req *DeleteLockRequest, log *slog.Logger) (*DeleteLockResponse, error)
+	RunLocksGarbageCollection(req *RunLocksGarbageCollectionRequest, log *slog.Logger) (*RunLocksGarbageCollectionResponse, error)
+	LocksDeleteNamespace(req *LocksDeleteNamespaceRequest, log *slog.Logger) (*LocksDeleteNamespaceResponse, error)
+	CreateLockLease(req *CreateLockLeaseRequest, log *slog.Logger) (*CreateLockLeaseResponse, error)
+	RefreshLockLease(req *RefreshLockLeaseRequest, log *slog.Logger) (*RefreshLockLeaseResponse, error)
+	RevokeLockLease(req *RevokeLockLeaseRequest, log *slog.Logger) (*RevokeLockLeaseResponse, error)
 }
 
 type GrackleSemaphoresCoreApi interface {
 	Snapshot() monstera.ApplicationCoreSnapshot
 	Restore(readers ...io.ReadCloser) error
 	Close()
-	GetSemaphore(req *GetSemaphoreRequest) (*GetSemaphoreResponse, error)
-	GetSemaphoreByName(req *GetSemaphoreByNameRequest) (*GetSemaphoreByNameResponse, error)
-	ListSemaphores(req *ListSemaphoresRequest) (*ListSemaphoresResponse, error)
-	ListSemaphoresByLeaseId(req *ListSemaphoresByLeaseIdRequest) (*ListSemaphoresByLeaseIdResponse, error)
-	ListSemaphoreHolders(req *ListSemaphoreHoldersRequest) (*ListSemaphoreHoldersResponse, error)
-	ListSemaphoreLeases(req *ListSemaphoreLeasesRequest) (*ListSemaphoreLeasesResponse, error)
-	ListSemaphoreLeasesByProcessId(req *ListSemaphoreLeasesByProcessIdRequest) (*ListSemaphoreLeasesByProcessIdResponse, error)
-	GetSemaphoreLease(req *GetSemaphoreLeaseRequest) (*GetSemaphoreLeaseResponse, error)
-	AcquireSemaphore(req *AcquireSemaphoreRequest) (*AcquireSemaphoreResponse, error)
-	ReleaseSemaphore(req *ReleaseSemaphoreRequest) (*ReleaseSemaphoreResponse, error)
-	CreateSemaphore(req *CreateSemaphoreRequest) (*CreateSemaphoreResponse, error)
-	UpdateSemaphore(req *UpdateSemaphoreRequest) (*UpdateSemaphoreResponse, error)
-	DeleteSemaphore(req *DeleteSemaphoreRequest) (*DeleteSemaphoreResponse, error)
-	RunSemaphoresGarbageCollection(req *RunSemaphoresGarbageCollectionRequest) (*RunSemaphoresGarbageCollectionResponse, error)
-	SemaphoresDeleteNamespace(req *SemaphoresDeleteNamespaceRequest) (*SemaphoresDeleteNamespaceResponse, error)
-	CreateSemaphoreLease(req *CreateSemaphoreLeaseRequest) (*CreateSemaphoreLeaseResponse, error)
-	RevokeSemaphoreLease(req *RevokeSemaphoreLeaseRequest) (*RevokeSemaphoreLeaseResponse, error)
-	RefreshSemaphoreLease(req *RefreshSemaphoreLeaseRequest) (*RefreshSemaphoreLeaseResponse, error)
+	GetSemaphore(req *GetSemaphoreRequest, log *slog.Logger) (*GetSemaphoreResponse, error)
+	GetSemaphoreByName(req *GetSemaphoreByNameRequest, log *slog.Logger) (*GetSemaphoreByNameResponse, error)
+	ListSemaphores(req *ListSemaphoresRequest, log *slog.Logger) (*ListSemaphoresResponse, error)
+	ListSemaphoresByLeaseId(req *ListSemaphoresByLeaseIdRequest, log *slog.Logger) (*ListSemaphoresByLeaseIdResponse, error)
+	ListSemaphoreHolders(req *ListSemaphoreHoldersRequest, log *slog.Logger) (*ListSemaphoreHoldersResponse, error)
+	ListSemaphoreLeases(req *ListSemaphoreLeasesRequest, log *slog.Logger) (*ListSemaphoreLeasesResponse, error)
+	ListSemaphoreLeasesByProcessId(req *ListSemaphoreLeasesByProcessIdRequest, log *slog.Logger) (*ListSemaphoreLeasesByProcessIdResponse, error)
+	GetSemaphoreLease(req *GetSemaphoreLeaseRequest, log *slog.Logger) (*GetSemaphoreLeaseResponse, error)
+	AcquireSemaphore(req *AcquireSemaphoreRequest, log *slog.Logger) (*AcquireSemaphoreResponse, error)
+	ReleaseSemaphore(req *ReleaseSemaphoreRequest, log *slog.Logger) (*ReleaseSemaphoreResponse, error)
+	CreateSemaphore(req *CreateSemaphoreRequest, log *slog.Logger) (*CreateSemaphoreResponse, error)
+	UpdateSemaphore(req *UpdateSemaphoreRequest, log *slog.Logger) (*UpdateSemaphoreResponse, error)
+	DeleteSemaphore(req *DeleteSemaphoreRequest, log *slog.Logger) (*DeleteSemaphoreResponse, error)
+	RunSemaphoresGarbageCollection(req *RunSemaphoresGarbageCollectionRequest, log *slog.Logger) (*RunSemaphoresGarbageCollectionResponse, error)
+	SemaphoresDeleteNamespace(req *SemaphoresDeleteNamespaceRequest, log *slog.Logger) (*SemaphoresDeleteNamespaceResponse, error)
+	CreateSemaphoreLease(req *CreateSemaphoreLeaseRequest, log *slog.Logger) (*CreateSemaphoreLeaseResponse, error)
+	RevokeSemaphoreLease(req *RevokeSemaphoreLeaseRequest, log *slog.Logger) (*RevokeSemaphoreLeaseResponse, error)
+	RefreshSemaphoreLease(req *RefreshSemaphoreLeaseRequest, log *slog.Logger) (*RefreshSemaphoreLeaseResponse, error)
 }
 
 type GrackleNamespacesCoreApi interface {
 	Snapshot() monstera.ApplicationCoreSnapshot
 	Restore(readers ...io.ReadCloser) error
 	Close()
-	GetNamespace(req *GetNamespaceRequest) (*GetNamespaceResponse, error)
-	GetNamespaceByName(req *GetNamespaceByNameRequest) (*GetNamespaceByNameResponse, error)
-	ListNamespaces(req *ListNamespacesRequest) (*ListNamespacesResponse, error)
-	CreateNamespace(req *CreateNamespaceRequest) (*CreateNamespaceResponse, error)
-	UpdateNamespace(req *UpdateNamespaceRequest) (*UpdateNamespaceResponse, error)
-	DeleteNamespace(req *DeleteNamespaceRequest) (*DeleteNamespaceResponse, error)
+	GetNamespace(req *GetNamespaceRequest, log *slog.Logger) (*GetNamespaceResponse, error)
+	GetNamespaceByName(req *GetNamespaceByNameRequest, log *slog.Logger) (*GetNamespaceByNameResponse, error)
+	ListNamespaces(req *ListNamespacesRequest, log *slog.Logger) (*ListNamespacesResponse, error)
+	CreateNamespace(req *CreateNamespaceRequest, log *slog.Logger) (*CreateNamespaceResponse, error)
+	UpdateNamespace(req *UpdateNamespaceRequest, log *slog.Logger) (*UpdateNamespaceResponse, error)
+	DeleteNamespace(req *DeleteNamespaceRequest, log *slog.Logger) (*DeleteNamespaceResponse, error)
 }
 
 type GrackleWaitGroupsCoreApi interface {
 	Snapshot() monstera.ApplicationCoreSnapshot
 	Restore(readers ...io.ReadCloser) error
 	Close()
-	GetWaitGroup(req *GetWaitGroupRequest) (*GetWaitGroupResponse, error)
-	GetWaitGroupByName(req *GetWaitGroupByNameRequest) (*GetWaitGroupByNameResponse, error)
-	ListWaitGroups(req *ListWaitGroupsRequest) (*ListWaitGroupsResponse, error)
-	ListWaitGroupCompletedJobs(req *ListWaitGroupCompletedJobsRequest) (*ListWaitGroupCompletedJobsResponse, error)
-	UpdateWaitGroup(req *UpdateWaitGroupRequest) (*UpdateWaitGroupResponse, error)
-	CompleteJobsFromWaitGroup(req *CompleteJobsFromWaitGroupRequest) (*CompleteJobsFromWaitGroupResponse, error)
-	CreateWaitGroup(req *CreateWaitGroupRequest) (*CreateWaitGroupResponse, error)
-	DeleteWaitGroup(req *DeleteWaitGroupRequest) (*DeleteWaitGroupResponse, error)
-	RunWaitGroupsGarbageCollection(req *RunWaitGroupsGarbageCollectionRequest) (*RunWaitGroupsGarbageCollectionResponse, error)
-	WaitGroupsDeleteNamespace(req *WaitGroupsDeleteNamespaceRequest) (*WaitGroupsDeleteNamespaceResponse, error)
+	GetWaitGroup(req *GetWaitGroupRequest, log *slog.Logger) (*GetWaitGroupResponse, error)
+	GetWaitGroupByName(req *GetWaitGroupByNameRequest, log *slog.Logger) (*GetWaitGroupByNameResponse, error)
+	ListWaitGroups(req *ListWaitGroupsRequest, log *slog.Logger) (*ListWaitGroupsResponse, error)
+	ListWaitGroupCompletedJobs(req *ListWaitGroupCompletedJobsRequest, log *slog.Logger) (*ListWaitGroupCompletedJobsResponse, error)
+	UpdateWaitGroup(req *UpdateWaitGroupRequest, log *slog.Logger) (*UpdateWaitGroupResponse, error)
+	CompleteJobsFromWaitGroup(req *CompleteJobsFromWaitGroupRequest, log *slog.Logger) (*CompleteJobsFromWaitGroupResponse, error)
+	CreateWaitGroup(req *CreateWaitGroupRequest, log *slog.Logger) (*CreateWaitGroupResponse, error)
+	DeleteWaitGroup(req *DeleteWaitGroupRequest, log *slog.Logger) (*DeleteWaitGroupResponse, error)
+	RunWaitGroupsGarbageCollection(req *RunWaitGroupsGarbageCollectionRequest, log *slog.Logger) (*RunWaitGroupsGarbageCollectionResponse, error)
+	WaitGroupsDeleteNamespace(req *WaitGroupsDeleteNamespaceRequest, log *slog.Logger) (*WaitGroupsDeleteNamespaceResponse, error)
 }
 
 type GrackleBarriersCoreApi interface {
 	Snapshot() monstera.ApplicationCoreSnapshot
 	Restore(readers ...io.ReadCloser) error
 	Close()
-	GetBarrier(req *GetBarrierRequest) (*GetBarrierResponse, error)
-	GetBarrierByName(req *GetBarrierByNameRequest) (*GetBarrierByNameResponse, error)
-	ListBarriers(req *ListBarriersRequest) (*ListBarriersResponse, error)
-	ListBarrierParticipants(req *ListBarrierParticipantsRequest) (*ListBarrierParticipantsResponse, error)
-	CreateBarrier(req *CreateBarrierRequest) (*CreateBarrierResponse, error)
-	DeleteBarrier(req *DeleteBarrierRequest) (*DeleteBarrierResponse, error)
-	UpdateBarrier(req *UpdateBarrierRequest) (*UpdateBarrierResponse, error)
-	ArriveAtBarrier(req *ArriveAtBarrierRequest) (*ArriveAtBarrierResponse, error)
-	RunBarriersGarbageCollection(req *RunBarriersGarbageCollectionRequest) (*RunBarriersGarbageCollectionResponse, error)
-	BarriersDeleteNamespace(req *BarriersDeleteNamespaceRequest) (*BarriersDeleteNamespaceResponse, error)
+	GetBarrier(req *GetBarrierRequest, log *slog.Logger) (*GetBarrierResponse, error)
+	GetBarrierByName(req *GetBarrierByNameRequest, log *slog.Logger) (*GetBarrierByNameResponse, error)
+	ListBarriers(req *ListBarriersRequest, log *slog.Logger) (*ListBarriersResponse, error)
+	ListBarrierParticipants(req *ListBarrierParticipantsRequest, log *slog.Logger) (*ListBarrierParticipantsResponse, error)
+	CreateBarrier(req *CreateBarrierRequest, log *slog.Logger) (*CreateBarrierResponse, error)
+	DeleteBarrier(req *DeleteBarrierRequest, log *slog.Logger) (*DeleteBarrierResponse, error)
+	UpdateBarrier(req *UpdateBarrierRequest, log *slog.Logger) (*UpdateBarrierResponse, error)
+	ArriveAtBarrier(req *ArriveAtBarrierRequest, log *slog.Logger) (*ArriveAtBarrierResponse, error)
+	RunBarriersGarbageCollection(req *RunBarriersGarbageCollectionRequest, log *slog.Logger) (*RunBarriersGarbageCollectionResponse, error)
+	BarriersDeleteNamespace(req *BarriersDeleteNamespaceRequest, log *slog.Logger) (*BarriersDeleteNamespaceResponse, error)
 }

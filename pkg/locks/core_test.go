@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log/slog"
 	"math/rand/v2"
 	"testing"
 	"time"
@@ -47,7 +48,7 @@ func TestCore_AcquireLock(t *testing.T) {
 				LockId: lockId,
 			},
 			Now: now.Add(time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.Nil(t, resp2.ApplicationError)
@@ -61,7 +62,7 @@ func TestCore_AcquireLock(t *testing.T) {
 				LockId: lockId,
 			},
 			Now: now.Add(61 * time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.Nil(t, resp3.ApplicationError)
@@ -243,7 +244,7 @@ func TestCore_AcquireLock(t *testing.T) {
 					MaxNumberOfLocksPerNamespace: maxLocksPerNamespace,
 				},
 				Now: now.UnixNano(),
-			})
+			}, slog.Default())
 
 			require.NoError(t, err)
 			require.Nil(t, response.ApplicationError)
@@ -268,7 +269,7 @@ func TestCore_AcquireLock(t *testing.T) {
 				MaxNumberOfLocksPerNamespace: maxLocksPerNamespace,
 			},
 			Now: now.Add(time.Second).UnixNano(),
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, resp1)
@@ -297,7 +298,7 @@ func TestCore_AcquireLock(t *testing.T) {
 				MaxNumberOfLocksPerNamespace: maxLocksPerNamespace,
 			},
 			Now: now.Add(time.Second * 2).UnixNano(),
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, response.Payload.Lock)
@@ -320,7 +321,7 @@ func TestCore_AcquireLock(t *testing.T) {
 				MaxNumberOfLocksPerNamespace: maxLocksPerNamespace,
 			},
 			Now: now.Add(time.Second * 4).UnixNano(),
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, response.Payload.Lock)
@@ -345,7 +346,7 @@ func TestCore_AcquireLock(t *testing.T) {
 				MaxNumberOfLocksPerNamespace: maxLocksPerNamespace,
 			},
 			Now: now.UnixNano(),
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, response.Payload.Lock)
@@ -370,7 +371,7 @@ func TestCore_AcquireLock(t *testing.T) {
 				MaxNumberOfLocksPerNamespace: maxLocksPerNamespace,
 			},
 			Now: now.UnixNano(),
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, response.Payload.Lock)
@@ -926,7 +927,7 @@ func TestCore_LockHolderMetadata(t *testing.T) {
 			MaxNumberOfLocksPerNamespace: 2_000,
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.Nil(t, resp.ApplicationError)
@@ -986,12 +987,12 @@ func TestCore_CreateLockLease(t *testing.T) {
 		}
 
 		// Create first lease
-		resp1, err := core.CreateLockLease(req("process-1"))
+		resp1, err := core.CreateLockLease(req("process-1"), slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, resp1.ApplicationError)
 
 		// Reusing the same ID is an ID collision
-		resp2, err := core.CreateLockLease(req("process-2"))
+		resp2, err := core.CreateLockLease(req("process-2"), slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, resp2.Payload)
 		require.NotNil(t, resp2.ApplicationError)
@@ -1149,7 +1150,7 @@ func TestCore_DeleteLock(t *testing.T) {
 				LockId: lockId,
 			},
 			Now: now.UnixNano(),
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 	})
@@ -1179,7 +1180,7 @@ func TestCore_DeleteLock(t *testing.T) {
 				LockId: lockId,
 			},
 			Now: now.Add(time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 
@@ -1342,7 +1343,7 @@ func TestCore_ReleaseLock(t *testing.T) {
 				MaxVisitedLocks:       100,
 			},
 			Now: now.Add(3 * time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.NotNil(t, gcResponse)
 
@@ -1423,7 +1424,7 @@ func TestCore_SnapshotAndRestore(t *testing.T) {
 			LeaseId: lease1.Id.LeaseId,
 		},
 		Now: now.Add(6 * time.Minute).UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 
 	// T+7m: Verify lock is unlocked in restored state
@@ -1456,7 +1457,7 @@ func TestCore_ListLocks(t *testing.T) {
 				NamespaceId: namespaceId,
 			},
 			Now: now.UnixNano(),
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, response)
@@ -1513,7 +1514,7 @@ func TestCore_ListLocks(t *testing.T) {
 				NamespaceId: namespaceId,
 			},
 			Now: now.Add(3 * time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, response4)
@@ -1574,7 +1575,7 @@ func TestCore_ListLocks(t *testing.T) {
 				NamespaceId: namespaceId,
 			},
 			Now: now.Add(3 * time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, response3)
@@ -1624,7 +1625,7 @@ func TestCore_ListLocks(t *testing.T) {
 				},
 			},
 			Now: now.Add(2 * time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, response3)
@@ -1643,7 +1644,7 @@ func TestCore_ListLocks(t *testing.T) {
 				},
 			},
 			Now: now.Add(3 * time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, response4)
@@ -1662,7 +1663,7 @@ func TestCore_ListLocks(t *testing.T) {
 				},
 			},
 			Now: now.Add(4 * time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, response5)
@@ -1722,7 +1723,7 @@ func TestCore_ListLocks(t *testing.T) {
 				NamespaceId: namespaceId,
 			},
 			Now: now.Add(4 * time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, response5)
@@ -1787,7 +1788,7 @@ func TestCore_ListLocks(t *testing.T) {
 				NamespaceId: namespaceId,
 			},
 			Now: now.Add(3 * time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, response3)
@@ -1880,7 +1881,7 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 				MaxVisitedLocks:       maxVisitedLocks,
 			},
 			Now: gcTime.UnixNano(),
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, gcResponse)
@@ -1926,7 +1927,7 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 				MaxVisitedLocks:       maxVisitedLocks,
 			},
 			Now: gcTime.UnixNano(),
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, gcResponse2)
@@ -2000,7 +2001,7 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 				NamespaceId: namespaceId,
 			},
 			Now: now.UnixNano(),
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, deleteResponse)
@@ -2013,7 +2014,7 @@ func TestCore_RunLocksGarbageCollection(t *testing.T) {
 				MaxVisitedLocks:       1000,
 			},
 			Now: now.UnixNano(),
-		})
+		}, slog.Default())
 
 		require.NoError(t, err)
 		require.NotNil(t, gcResponse)
@@ -2187,7 +2188,7 @@ func TestCore_RevokeLockLease(t *testing.T) {
 				LeaseId: lease.Id,
 			},
 			Now: now.UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 
 		// Verify that all locks are released
@@ -2207,7 +2208,7 @@ func TestCore_RevokeLockLease(t *testing.T) {
 			Payload: &corepb.GetLockLeaseRequest{
 				LeaseId: lease.Id,
 			},
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.NotNil(t, resp)
 		require.Nil(t, resp.Payload)
@@ -2298,7 +2299,7 @@ func TestCore_RevokeLockLease_ReleasesSharedLocks(t *testing.T) {
 			LeaseId: lease1.Id,
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 
 	// Verify that the lock is still held by lease2
@@ -2313,7 +2314,7 @@ func TestCore_RevokeLockLease_ReleasesSharedLocks(t *testing.T) {
 			LeaseId: lease2.Id,
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 
 	// Verify that the lock is now unlocked
@@ -2338,7 +2339,7 @@ func TestCore_RefreshLockLease(t *testing.T) {
 				TtlSeconds: int64((5 * time.Minute).Seconds()),
 			},
 			Now: refreshAt.UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, resp.ApplicationError)
 		require.NotNil(t, resp.Payload)
@@ -2351,7 +2352,7 @@ func TestCore_RefreshLockLease(t *testing.T) {
 				LeaseId: lease.Id,
 			},
 			Now: refreshAt.Add(4 * time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, getResp.ApplicationError)
 		require.EqualValues(t, refreshAt.Add(5*time.Minute).UnixNano(), getResp.Payload.Lease.ExpiresAt)
@@ -2371,7 +2372,7 @@ func TestCore_RefreshLockLease(t *testing.T) {
 				TtlSeconds: 60,
 			},
 			Now: now.UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, resp.Payload)
 		require.NotNil(t, resp.ApplicationError)
@@ -2417,7 +2418,7 @@ func TestCore_RefreshLockLease(t *testing.T) {
 				TtlSeconds: 60,
 			},
 			Now: refreshAt.UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, resp.Payload)
 		require.NotNil(t, resp.ApplicationError)
@@ -2429,7 +2430,7 @@ func TestCore_RefreshLockLease(t *testing.T) {
 				LeaseId: lease.Id,
 			},
 			Now: refreshAt.UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, getResp.Payload)
 		require.NotNil(t, getResp.ApplicationError)
@@ -2475,7 +2476,7 @@ func TestCore_RefreshLockLease(t *testing.T) {
 				TtlSeconds: 60,
 			},
 			Now: refreshAt.UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, resp.Payload)
 		require.NotNil(t, resp.ApplicationError)
@@ -2782,307 +2783,6 @@ func TestCore_LastActivityAt(t *testing.T) {
 	})
 }
 
-// newLocksCore wraps the Core in GrackleLocksValidatingCore so tests exercise
-// requests the way the client-side stub does: Validate runs before the
-// request reaches Core. (The Raft-applied adapter no longer wraps in
-// ValidatingCore itself, to avoid FSM divergence if a validator changes —
-// this wrapper still backs the stub's own checks, tests, and single-node
-// mode.)
-func newLocksCore(t *testing.T) coreapis.GrackleLocksCoreApi {
-	return coreapis.NewGrackleLocksValidatingCore(newRawLocksCore(t))
-}
-
-// newRawLocksCore returns the unwrapped Core, for tests that need direct
-// access to internal tables (e.g. ancestor rollups in ancestors_test.go)
-// rather than the request API. Most tests should use newLocksCore instead.
-func newRawLocksCore(t *testing.T) *Core {
-	badgerStore, err := store.NewBadgerInMemoryStore()
-	require.NoError(t, err)
-	return NewCore(badgerStore, []byte{0x1d, 0x36, 0x00, 0x00}, 0x00000000, 0xffffffff)
-}
-
-func createLease(t *testing.T, core coreapis.GrackleLocksCoreApi, accountId uint64, namespaceId uint64, processId string, now time.Time, ttl time.Duration) *corepb.Lease {
-	t.Helper()
-
-	leaseId := rand.Uint64()
-	resp, err := core.CreateLockLease(&coreapis.CreateLockLeaseRequest{
-		Payload: &corepb.CreateLockLeaseRequest{
-			LeaseId: &corepb.LeaseId{
-				AccountId:   accountId,
-				NamespaceId: namespaceId,
-				LeaseId:     leaseId,
-			},
-			ProcessId:             processId,
-			TtlSeconds:            int64(ttl.Seconds()),
-			MaxNumberOfLockLeases: 100,
-		},
-		Now: now.UnixNano(),
-	})
-	require.NoError(t, err)
-	require.NotNil(t, resp)
-	require.Nil(t, resp.ApplicationError)
-	require.NotNil(t, resp.Payload)
-	require.NotNil(t, resp.Payload.Lease)
-	return resp.Payload.Lease
-}
-
-func acquireLock(t *testing.T, core coreapis.GrackleLocksCoreApi, lockId *corepb.LockId, leaseId *corepb.LeaseId, exclusive bool, now time.Time) (bool, *corepb.Lock) {
-	t.Helper()
-
-	resp, err := core.AcquireLock(&coreapis.AcquireLockRequest{
-		Payload: &corepb.AcquireLockRequest{
-			LockId:                       lockId,
-			LeaseId:                      leaseId.LeaseId,
-			Exclusive:                    exclusive,
-			MaxNumberOfLocksPerNamespace: 2_000,
-		},
-		Now: now.UnixNano(),
-	})
-
-	require.NoError(t, err)
-	require.NotNil(t, resp)
-	require.Nil(t, resp.ApplicationError)
-	require.NotNil(t, resp.Payload)
-	require.NotNil(t, resp.Payload.Lock)
-
-	return resp.Payload.Success, resp.Payload.Lock
-}
-
-// acquireLockReason is like acquireLock but also returns the contention reason
-// and blocking locks the core reported for the attempt.
-func acquireLockReason(t *testing.T, core coreapis.GrackleLocksCoreApi, lockId *corepb.LockId, leaseId *corepb.LeaseId, exclusive bool, now time.Time) (bool, corepb.ContentionReason, []*corepb.Lock) {
-	t.Helper()
-
-	resp, err := core.AcquireLock(&coreapis.AcquireLockRequest{
-		Payload: &corepb.AcquireLockRequest{
-			LockId:                       lockId,
-			LeaseId:                      leaseId.LeaseId,
-			Exclusive:                    exclusive,
-			MaxNumberOfLocksPerNamespace: 2_000,
-		},
-		Now: now.UnixNano(),
-	})
-
-	require.NoError(t, err)
-	require.Nil(t, resp.ApplicationError)
-	require.NotNil(t, resp.Payload)
-
-	return resp.Payload.Success, resp.Payload.Reason, resp.Payload.BlockingLocks
-}
-
-// lockNames returns the names of the given locks, for convenient assertions.
-func lockNames(locks []*corepb.Lock) []string {
-	names := make([]string, len(locks))
-	for i, l := range locks {
-		names[i] = l.Id.LockName
-	}
-	return names
-}
-
-func releaseLock(t *testing.T, core coreapis.GrackleLocksCoreApi, lockId *corepb.LockId, leaseId *corepb.LeaseId, now time.Time) *corepb.Lock {
-	t.Helper()
-
-	resp, err := core.ReleaseLock(&coreapis.ReleaseLockRequest{
-		Payload: &corepb.ReleaseLockRequest{
-			LockId:  lockId,
-			LeaseId: leaseId.LeaseId,
-		},
-		Now: now.UnixNano(),
-	})
-
-	require.NoError(t, err)
-	require.NotNil(t, resp)
-	require.Nil(t, resp.ApplicationError)
-	require.NotNil(t, resp.Payload)
-	require.NotNil(t, resp.Payload.Lock)
-
-	return resp.Payload.Lock
-}
-
-func getLock(t *testing.T, core coreapis.GrackleLocksCoreApi, lockId *corepb.LockId, now time.Time) *corepb.Lock {
-	t.Helper()
-
-	resp, err := core.GetLock(&coreapis.GetLockRequest{
-		Payload: &corepb.GetLockRequest{
-			LockId: lockId,
-		},
-		Now: now.UnixNano(),
-	})
-
-	require.NoError(t, err)
-	require.NotNil(t, resp)
-	require.Nil(t, resp.ApplicationError)
-	require.NotNil(t, resp.Payload)
-	require.NotNil(t, resp.Payload.Lock)
-
-	return resp.Payload.Lock
-}
-
-func acquireLockWithError(t *testing.T, core coreapis.GrackleLocksCoreApi, lockId *corepb.LockId, leaseId *corepb.LeaseId, exclusive bool, now time.Time) *mrpc.Error {
-	t.Helper()
-
-	resp, err := core.AcquireLock(&coreapis.AcquireLockRequest{
-		Payload: &corepb.AcquireLockRequest{
-			LockId:                       lockId,
-			LeaseId:                      leaseId.LeaseId,
-			Exclusive:                    exclusive,
-			MaxNumberOfLocksPerNamespace: 2_000,
-		},
-		Now: now.UnixNano(),
-	})
-
-	require.NoError(t, err)
-	require.NotNil(t, resp)
-	require.Nil(t, resp.Payload)
-	require.NotNil(t, resp.ApplicationError)
-
-	return resp.ApplicationError
-}
-
-func createLeaseWithMax(t *testing.T, core coreapis.GrackleLocksCoreApi, accountId uint64, namespaceId uint64, processId string, now time.Time, ttl time.Duration, maxNumberOfLockLeases int64) *corepb.Lease {
-	t.Helper()
-
-	resp, err := core.CreateLockLease(&coreapis.CreateLockLeaseRequest{
-		Payload: &corepb.CreateLockLeaseRequest{
-			LeaseId: &corepb.LeaseId{
-				AccountId:   accountId,
-				NamespaceId: namespaceId,
-				LeaseId:     rand.Uint64(),
-			},
-			ProcessId:             processId,
-			TtlSeconds:            int64(ttl.Seconds()),
-			MaxNumberOfLockLeases: maxNumberOfLockLeases,
-		},
-		Now: now.UnixNano(),
-	})
-	require.NoError(t, err)
-	require.NotNil(t, resp)
-	require.Nil(t, resp.ApplicationError)
-	require.NotNil(t, resp.Payload)
-	require.NotNil(t, resp.Payload.Lease)
-	return resp.Payload.Lease
-}
-
-func createLeaseWithError(t *testing.T, core coreapis.GrackleLocksCoreApi, accountId uint64, namespaceId uint64, processId string, now time.Time, ttl time.Duration, maxNumberOfLockLeases int64) *mrpc.Error {
-	t.Helper()
-
-	resp, err := core.CreateLockLease(&coreapis.CreateLockLeaseRequest{
-		Payload: &corepb.CreateLockLeaseRequest{
-			LeaseId: &corepb.LeaseId{
-				AccountId:   accountId,
-				NamespaceId: namespaceId,
-				LeaseId:     rand.Uint64(),
-			},
-			ProcessId:             processId,
-			TtlSeconds:            int64(ttl.Seconds()),
-			MaxNumberOfLockLeases: maxNumberOfLockLeases,
-		},
-		Now: now.UnixNano(),
-	})
-	require.NoError(t, err)
-	require.NotNil(t, resp)
-	require.Nil(t, resp.Payload)
-	require.NotNil(t, resp.ApplicationError)
-	return resp.ApplicationError
-}
-
-func getLockLease(t *testing.T, core coreapis.GrackleLocksCoreApi, leaseId *corepb.LeaseId, now time.Time) *corepb.Lease {
-	t.Helper()
-
-	resp, err := core.GetLockLease(&coreapis.GetLockLeaseRequest{
-		Payload: &corepb.GetLockLeaseRequest{
-			LeaseId: leaseId,
-		},
-		Now: now.UnixNano(),
-	})
-	require.NoError(t, err)
-	require.NotNil(t, resp)
-	require.Nil(t, resp.ApplicationError)
-	require.NotNil(t, resp.Payload)
-	require.NotNil(t, resp.Payload.Lease)
-	return resp.Payload.Lease
-}
-
-func getLockLeaseWithError(t *testing.T, core coreapis.GrackleLocksCoreApi, leaseId *corepb.LeaseId, now time.Time) *mrpc.Error {
-	t.Helper()
-
-	resp, err := core.GetLockLease(&coreapis.GetLockLeaseRequest{
-		Payload: &corepb.GetLockLeaseRequest{
-			LeaseId: leaseId,
-		},
-		Now: now.UnixNano(),
-	})
-	require.NoError(t, err)
-	require.NotNil(t, resp)
-	require.Nil(t, resp.Payload)
-	require.NotNil(t, resp.ApplicationError)
-	return resp.ApplicationError
-}
-
-func revokeLockLease(t *testing.T, core coreapis.GrackleLocksCoreApi, leaseId *corepb.LeaseId, now time.Time) {
-	t.Helper()
-
-	resp, err := core.RevokeLockLease(&coreapis.RevokeLockLeaseRequest{
-		Payload: &corepb.RevokeLockLeaseRequest{
-			LeaseId: leaseId,
-		},
-		Now: now.UnixNano(),
-	})
-	require.NoError(t, err)
-	require.NotNil(t, resp)
-	require.Nil(t, resp.ApplicationError)
-	require.NotNil(t, resp.Payload)
-}
-
-func listLockLeases(t *testing.T, core coreapis.GrackleLocksCoreApi, namespaceId *corepb.NamespaceId, now time.Time) *corepb.ListLockLeasesResponse {
-	t.Helper()
-
-	resp, err := core.ListLockLeases(&coreapis.ListLockLeasesRequest{
-		Payload: &corepb.ListLockLeasesRequest{
-			NamespaceId: namespaceId,
-		},
-		Now: now.UnixNano(),
-	})
-	require.NoError(t, err)
-	require.NotNil(t, resp)
-	require.Nil(t, resp.ApplicationError)
-	require.NotNil(t, resp.Payload)
-	return resp.Payload
-}
-
-func listLockLeasesByProcessId(t *testing.T, core coreapis.GrackleLocksCoreApi, namespaceId *corepb.NamespaceId, processId string, now time.Time) *corepb.ListLockLeasesByProcessIdResponse {
-	t.Helper()
-
-	resp, err := core.ListLockLeasesByProcessId(&coreapis.ListLockLeasesByProcessIdRequest{
-		Payload: &corepb.ListLockLeasesByProcessIdRequest{
-			NamespaceId: namespaceId,
-			ProcessId:   processId,
-		},
-		Now: now.UnixNano(),
-	})
-	require.NoError(t, err)
-	require.NotNil(t, resp)
-	require.Nil(t, resp.ApplicationError)
-	require.NotNil(t, resp.Payload)
-	return resp.Payload
-}
-
-func listLocksByLeaseId(t *testing.T, core coreapis.GrackleLocksCoreApi, leaseId *corepb.LeaseId, now time.Time) *corepb.ListLocksByLeaseIdResponse {
-	t.Helper()
-
-	resp, err := core.ListLocksByLeaseId(&coreapis.ListLocksByLeaseIdRequest{
-		Payload: &corepb.ListLocksByLeaseIdRequest{
-			LeaseId: leaseId,
-		},
-		Now: now.UnixNano(),
-	})
-	require.NoError(t, err)
-	require.NotNil(t, resp)
-	require.Nil(t, resp.ApplicationError)
-	require.NotNil(t, resp.Payload)
-	return resp.Payload
-}
-
 // TestCore_SplitSnapshotRestore proves the portable, bounds-filtered snapshot
 // contract on the locks core: a parent core's snapshot is restored into two
 // child cores with disjoint bounds (sharing ONE Badger store with the parent,
@@ -3135,7 +2835,7 @@ func TestCore_SplitSnapshotRestore(t *testing.T) {
 			NamespaceId: &corepb.NamespaceId{AccountId: lo.accountId, NamespaceId: lo.namespaceId + 1},
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 
 	// Snapshot the parent; restore into both children.
@@ -3178,7 +2878,7 @@ func TestCore_SplitSnapshotRestore(t *testing.T) {
 		leaseResp, err := tc.owner.GetLockLease(&coreapis.GetLockLeaseRequest{
 			Payload: &corepb.GetLockLeaseRequest{LeaseId: tc.fx.lease.Id},
 			Now:     now.Add(time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, leaseResp.ApplicationError)
 
@@ -3205,7 +2905,7 @@ func TestCore_SplitSnapshotRestore(t *testing.T) {
 			MaxVisitedLocks:       100,
 		},
 		Now: now.Add(2 * time.Minute).UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, gcResp)
 
@@ -3218,7 +2918,7 @@ func TestCore_SplitSnapshotRestore(t *testing.T) {
 			MaxVisitedLocks:       100,
 		},
 		Now: now.Add(2 * time.Hour).UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	lock := getLock(t, child2, hi.plainLock, now.Add(2*time.Hour))
 	require.Equal(t, corepb.LockState_LOCK_STATE_UNLOCKED, lock.State, "expired lease must release its locks via the rebuilt indexes")
@@ -3229,54 +2929,6 @@ func TestCore_SplitSnapshotRestore(t *testing.T) {
 	require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
 	lock = getLock(t, parent, hi.plainLock, now.Add(time.Minute))
 	require.Equal(t, corepb.LockState_LOCK_STATE_EXCLUSIVE_LOCKED, lock.State)
-}
-
-// ownedTableNames lists the registry names of every table the core owns —
-// the physical storage prefixes are <registry table id><shard prefix>.
-var ownedTableNames = [][]byte{
-	tablePrefixLocks,
-	tablePrefixLocksLeaseIdIndex,
-	tablePrefixAncestors,
-	tablePrefixCounters,
-	tablePrefixLeases,
-	tablePrefixLeasesProcessIdIndex,
-	tablePrefixLeasesExpirationIndex,
-	tablePrefixGCRecords,
-}
-
-// countOwnedRows counts the physical rows under every storage prefix the core
-// owns.
-func countOwnedRows(t *testing.T, c *Core) int {
-	t.Helper()
-	txn := c.badgerStore.View()
-	defer txn.Discard()
-
-	count := 0
-	for _, tablePrefix := range ownedTableNames {
-		prefix := utils.ConcatBytes(c.replicaPrefix, tablePrefix)
-		err := txn.EachPrefixKeys(prefix, func(key []byte) (bool, error) {
-			count++
-			return true, nil
-		})
-		require.NoError(t, err)
-	}
-	return count
-}
-
-// namespaceInRange finds an (accountId, namespaceId) pair whose shard key
-// falls within [lower, upper].
-func namespaceInRange(t *testing.T, lower cluster.ShardKey, upper cluster.ShardKey) (uint64, uint64) {
-	t.Helper()
-	for i := 0; i < 100_000; i++ {
-		accountId := rand.Uint64()
-		namespaceId := rand.Uint64()
-		sk := sharding.ByAccountAndNamespace(accountId, namespaceId)
-		if sk >= lower && sk <= upper {
-			return accountId, namespaceId
-		}
-	}
-	t.Fatalf("no namespace found hashing into [%x, %x]", lower, upper)
-	return 0, 0
 }
 
 // TestCore_MergeSnapshotRestore proves the variadic Restore contract
@@ -3341,4 +2993,353 @@ func TestCore_MergeSnapshotRestore(t *testing.T) {
 	// Restore replaces the union with just parent A's half.
 	require.NoError(t, child.Restore(io.NopCloser(bytes.NewReader(snapA))))
 	require.Equal(t, countOwnedRows(t, parentA), countOwnedRows(t, child))
+}
+
+// newLocksCore wraps the Core in GrackleLocksValidatingCore so tests exercise
+// requests the way the client-side stub does: Validate runs before the
+// request reaches Core. (The Raft-applied adapter no longer wraps in
+// ValidatingCore itself, to avoid FSM divergence if a validator changes —
+// this wrapper still backs the stub's own checks, tests, and single-node
+// mode.)
+func newLocksCore(t *testing.T) coreapis.GrackleLocksCoreApi {
+	return coreapis.NewGrackleLocksValidatingCore(newRawLocksCore(t))
+}
+
+// newRawLocksCore returns the unwrapped Core, for tests that need direct
+// access to internal tables (e.g. ancestor rollups in ancestors_test.go)
+// rather than the request API. Most tests should use newLocksCore instead.
+func newRawLocksCore(t *testing.T) *Core {
+	badgerStore, err := store.NewBadgerInMemoryStore()
+	require.NoError(t, err)
+	return NewCore(badgerStore, []byte{0x1d, 0x36, 0x00, 0x00}, 0x00000000, 0xffffffff)
+}
+
+func createLease(t *testing.T, core coreapis.GrackleLocksCoreApi, accountId uint64, namespaceId uint64, processId string, now time.Time, ttl time.Duration) *corepb.Lease {
+	t.Helper()
+
+	leaseId := rand.Uint64()
+	resp, err := core.CreateLockLease(&coreapis.CreateLockLeaseRequest{
+		Payload: &corepb.CreateLockLeaseRequest{
+			LeaseId: &corepb.LeaseId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId,
+				LeaseId:     leaseId,
+			},
+			ProcessId:             processId,
+			TtlSeconds:            int64(ttl.Seconds()),
+			MaxNumberOfLockLeases: 100,
+		},
+		Now: now.UnixNano(),
+	}, slog.Default())
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+	require.NotNil(t, resp.Payload.Lease)
+	return resp.Payload.Lease
+}
+
+func acquireLock(t *testing.T, core coreapis.GrackleLocksCoreApi, lockId *corepb.LockId, leaseId *corepb.LeaseId, exclusive bool, now time.Time) (bool, *corepb.Lock) {
+	t.Helper()
+
+	resp, err := core.AcquireLock(&coreapis.AcquireLockRequest{
+		Payload: &corepb.AcquireLockRequest{
+			LockId:                       lockId,
+			LeaseId:                      leaseId.LeaseId,
+			Exclusive:                    exclusive,
+			MaxNumberOfLocksPerNamespace: 2_000,
+		},
+		Now: now.UnixNano(),
+	}, slog.Default())
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+	require.NotNil(t, resp.Payload.Lock)
+
+	return resp.Payload.Success, resp.Payload.Lock
+}
+
+// acquireLockReason is like acquireLock but also returns the contention reason
+// and blocking locks the core reported for the attempt.
+func acquireLockReason(t *testing.T, core coreapis.GrackleLocksCoreApi, lockId *corepb.LockId, leaseId *corepb.LeaseId, exclusive bool, now time.Time) (bool, corepb.ContentionReason, []*corepb.Lock) {
+	t.Helper()
+
+	resp, err := core.AcquireLock(&coreapis.AcquireLockRequest{
+		Payload: &corepb.AcquireLockRequest{
+			LockId:                       lockId,
+			LeaseId:                      leaseId.LeaseId,
+			Exclusive:                    exclusive,
+			MaxNumberOfLocksPerNamespace: 2_000,
+		},
+		Now: now.UnixNano(),
+	}, slog.Default())
+
+	require.NoError(t, err)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+
+	return resp.Payload.Success, resp.Payload.Reason, resp.Payload.BlockingLocks
+}
+
+// lockNames returns the names of the given locks, for convenient assertions.
+func lockNames(locks []*corepb.Lock) []string {
+	names := make([]string, len(locks))
+	for i, l := range locks {
+		names[i] = l.Id.LockName
+	}
+	return names
+}
+
+func releaseLock(t *testing.T, core coreapis.GrackleLocksCoreApi, lockId *corepb.LockId, leaseId *corepb.LeaseId, now time.Time) *corepb.Lock {
+	t.Helper()
+
+	resp, err := core.ReleaseLock(&coreapis.ReleaseLockRequest{
+		Payload: &corepb.ReleaseLockRequest{
+			LockId:  lockId,
+			LeaseId: leaseId.LeaseId,
+		},
+		Now: now.UnixNano(),
+	}, slog.Default())
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+	require.NotNil(t, resp.Payload.Lock)
+
+	return resp.Payload.Lock
+}
+
+func getLock(t *testing.T, core coreapis.GrackleLocksCoreApi, lockId *corepb.LockId, now time.Time) *corepb.Lock {
+	t.Helper()
+
+	resp, err := core.GetLock(&coreapis.GetLockRequest{
+		Payload: &corepb.GetLockRequest{
+			LockId: lockId,
+		},
+		Now: now.UnixNano(),
+	}, slog.Default())
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+	require.NotNil(t, resp.Payload.Lock)
+
+	return resp.Payload.Lock
+}
+
+func acquireLockWithError(t *testing.T, core coreapis.GrackleLocksCoreApi, lockId *corepb.LockId, leaseId *corepb.LeaseId, exclusive bool, now time.Time) *mrpc.Error {
+	t.Helper()
+
+	resp, err := core.AcquireLock(&coreapis.AcquireLockRequest{
+		Payload: &corepb.AcquireLockRequest{
+			LockId:                       lockId,
+			LeaseId:                      leaseId.LeaseId,
+			Exclusive:                    exclusive,
+			MaxNumberOfLocksPerNamespace: 2_000,
+		},
+		Now: now.UnixNano(),
+	}, slog.Default())
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.Payload)
+	require.NotNil(t, resp.ApplicationError)
+
+	return resp.ApplicationError
+}
+
+func createLeaseWithMax(t *testing.T, core coreapis.GrackleLocksCoreApi, accountId uint64, namespaceId uint64, processId string, now time.Time, ttl time.Duration, maxNumberOfLockLeases int64) *corepb.Lease {
+	t.Helper()
+
+	resp, err := core.CreateLockLease(&coreapis.CreateLockLeaseRequest{
+		Payload: &corepb.CreateLockLeaseRequest{
+			LeaseId: &corepb.LeaseId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId,
+				LeaseId:     rand.Uint64(),
+			},
+			ProcessId:             processId,
+			TtlSeconds:            int64(ttl.Seconds()),
+			MaxNumberOfLockLeases: maxNumberOfLockLeases,
+		},
+		Now: now.UnixNano(),
+	}, slog.Default())
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+	require.NotNil(t, resp.Payload.Lease)
+	return resp.Payload.Lease
+}
+
+func createLeaseWithError(t *testing.T, core coreapis.GrackleLocksCoreApi, accountId uint64, namespaceId uint64, processId string, now time.Time, ttl time.Duration, maxNumberOfLockLeases int64) *mrpc.Error {
+	t.Helper()
+
+	resp, err := core.CreateLockLease(&coreapis.CreateLockLeaseRequest{
+		Payload: &corepb.CreateLockLeaseRequest{
+			LeaseId: &corepb.LeaseId{
+				AccountId:   accountId,
+				NamespaceId: namespaceId,
+				LeaseId:     rand.Uint64(),
+			},
+			ProcessId:             processId,
+			TtlSeconds:            int64(ttl.Seconds()),
+			MaxNumberOfLockLeases: maxNumberOfLockLeases,
+		},
+		Now: now.UnixNano(),
+	}, slog.Default())
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.Payload)
+	require.NotNil(t, resp.ApplicationError)
+	return resp.ApplicationError
+}
+
+func getLockLease(t *testing.T, core coreapis.GrackleLocksCoreApi, leaseId *corepb.LeaseId, now time.Time) *corepb.Lease {
+	t.Helper()
+
+	resp, err := core.GetLockLease(&coreapis.GetLockLeaseRequest{
+		Payload: &corepb.GetLockLeaseRequest{
+			LeaseId: leaseId,
+		},
+		Now: now.UnixNano(),
+	}, slog.Default())
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+	require.NotNil(t, resp.Payload.Lease)
+	return resp.Payload.Lease
+}
+
+func getLockLeaseWithError(t *testing.T, core coreapis.GrackleLocksCoreApi, leaseId *corepb.LeaseId, now time.Time) *mrpc.Error {
+	t.Helper()
+
+	resp, err := core.GetLockLease(&coreapis.GetLockLeaseRequest{
+		Payload: &corepb.GetLockLeaseRequest{
+			LeaseId: leaseId,
+		},
+		Now: now.UnixNano(),
+	}, slog.Default())
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.Payload)
+	require.NotNil(t, resp.ApplicationError)
+	return resp.ApplicationError
+}
+
+func revokeLockLease(t *testing.T, core coreapis.GrackleLocksCoreApi, leaseId *corepb.LeaseId, now time.Time) {
+	t.Helper()
+
+	resp, err := core.RevokeLockLease(&coreapis.RevokeLockLeaseRequest{
+		Payload: &corepb.RevokeLockLeaseRequest{
+			LeaseId: leaseId,
+		},
+		Now: now.UnixNano(),
+	}, slog.Default())
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+}
+
+func listLockLeases(t *testing.T, core coreapis.GrackleLocksCoreApi, namespaceId *corepb.NamespaceId, now time.Time) *corepb.ListLockLeasesResponse {
+	t.Helper()
+
+	resp, err := core.ListLockLeases(&coreapis.ListLockLeasesRequest{
+		Payload: &corepb.ListLockLeasesRequest{
+			NamespaceId: namespaceId,
+		},
+		Now: now.UnixNano(),
+	}, slog.Default())
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+	return resp.Payload
+}
+
+func listLockLeasesByProcessId(t *testing.T, core coreapis.GrackleLocksCoreApi, namespaceId *corepb.NamespaceId, processId string, now time.Time) *corepb.ListLockLeasesByProcessIdResponse {
+	t.Helper()
+
+	resp, err := core.ListLockLeasesByProcessId(&coreapis.ListLockLeasesByProcessIdRequest{
+		Payload: &corepb.ListLockLeasesByProcessIdRequest{
+			NamespaceId: namespaceId,
+			ProcessId:   processId,
+		},
+		Now: now.UnixNano(),
+	}, slog.Default())
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+	return resp.Payload
+}
+
+func listLocksByLeaseId(t *testing.T, core coreapis.GrackleLocksCoreApi, leaseId *corepb.LeaseId, now time.Time) *corepb.ListLocksByLeaseIdResponse {
+	t.Helper()
+
+	resp, err := core.ListLocksByLeaseId(&coreapis.ListLocksByLeaseIdRequest{
+		Payload: &corepb.ListLocksByLeaseIdRequest{
+			LeaseId: leaseId,
+		},
+		Now: now.UnixNano(),
+	}, slog.Default())
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Nil(t, resp.ApplicationError)
+	require.NotNil(t, resp.Payload)
+	return resp.Payload
+}
+
+// ownedTableNames lists the registry names of every table the core owns —
+// the physical storage prefixes are <registry table id><shard prefix>.
+var ownedTableNames = [][]byte{
+	tablePrefixLocks,
+	tablePrefixLocksLeaseIdIndex,
+	tablePrefixAncestors,
+	tablePrefixCounters,
+	tablePrefixLeases,
+	tablePrefixLeasesProcessIdIndex,
+	tablePrefixLeasesExpirationIndex,
+	tablePrefixGCRecords,
+}
+
+// countOwnedRows counts the physical rows under every storage prefix the core
+// owns.
+func countOwnedRows(t *testing.T, c *Core) int {
+	t.Helper()
+	txn := c.badgerStore.View()
+	defer txn.Discard()
+
+	count := 0
+	for _, tablePrefix := range ownedTableNames {
+		prefix := utils.ConcatBytes(c.replicaPrefix, tablePrefix)
+		err := txn.EachPrefixKeys(prefix, func(key []byte) (bool, error) {
+			count++
+			return true, nil
+		})
+		require.NoError(t, err)
+	}
+	return count
+}
+
+// namespaceInRange finds an (accountId, namespaceId) pair whose shard key
+// falls within [lower, upper].
+func namespaceInRange(t *testing.T, lower cluster.ShardKey, upper cluster.ShardKey) (uint64, uint64) {
+	t.Helper()
+	for i := 0; i < 100_000; i++ {
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint64()
+		sk := sharding.ByAccountAndNamespace(accountId, namespaceId)
+		if sk >= lower && sk <= upper {
+			return accountId, namespaceId
+		}
+	}
+	t.Fatalf("no namespace found hashing into [%x, %x]", lower, upper)
+	return 0, 0
 }

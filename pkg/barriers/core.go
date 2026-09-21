@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"time"
 
 	"github.com/evrblk/monstera"
@@ -97,7 +98,7 @@ func (c *Core) Restore(readers ...io.ReadCloser) error {
 
 // GetBarrier looks up a barrier by its full BarrierId. Returns a NotFound
 // application error if no barrier with that id exists.
-func (c *Core) GetBarrier(req *coreapis.GetBarrierRequest) (*coreapis.GetBarrierResponse, error) {
+func (c *Core) GetBarrier(req *coreapis.GetBarrierRequest, log *slog.Logger) (*coreapis.GetBarrierResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
@@ -127,7 +128,7 @@ func (c *Core) GetBarrier(req *coreapis.GetBarrierRequest) (*coreapis.GetBarrier
 // GetBarrierByName looks up a barrier by its (account, namespace, name)
 // triple. Returns a NotFound application error if no barrier with that name
 // exists in the given namespace.
-func (c *Core) GetBarrierByName(req *coreapis.GetBarrierByNameRequest) (*coreapis.GetBarrierByNameResponse, error) {
+func (c *Core) GetBarrierByName(req *coreapis.GetBarrierByNameRequest, log *slog.Logger) (*coreapis.GetBarrierByNameResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
@@ -157,7 +158,7 @@ func (c *Core) GetBarrierByName(req *coreapis.GetBarrierByNameRequest) (*coreapi
 // ListBarriers returns a page of barriers in the given namespace, ordered by
 // name. Use the returned NextPaginationToken / PreviousPaginationToken to
 // walk forward or backward through pages.
-func (c *Core) ListBarriers(req *coreapis.ListBarriersRequest) (*coreapis.ListBarriersResponse, error) {
+func (c *Core) ListBarriers(req *coreapis.ListBarriersRequest, log *slog.Logger) (*coreapis.ListBarriersResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
@@ -182,7 +183,7 @@ func (c *Core) ListBarriers(req *coreapis.ListBarriersRequest) (*coreapis.ListBa
 // the next one (participant rows are only ever cleaned up by GC, not by the
 // trip itself). Returns a NotFound application error if the barrier does
 // not exist.
-func (c *Core) ListBarrierParticipants(req *coreapis.ListBarrierParticipantsRequest) (*coreapis.ListBarrierParticipantsResponse, error) {
+func (c *Core) ListBarrierParticipants(req *coreapis.ListBarrierParticipantsRequest, log *slog.Logger) (*coreapis.ListBarrierParticipantsResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
@@ -221,7 +222,7 @@ func (c *Core) ListBarrierParticipants(req *coreapis.ListBarrierParticipantsRequ
 // AlreadyExists if a barrier with the same name already exists in the
 // namespace, or ResourceExhausted if creating it would exceed
 // MaxNumberOfBarriersPerNamespace.
-func (c *Core) CreateBarrier(req *coreapis.CreateBarrierRequest) (*coreapis.CreateBarrierResponse, error) {
+func (c *Core) CreateBarrier(req *coreapis.CreateBarrierRequest, log *slog.Logger) (*coreapis.CreateBarrierResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -298,7 +299,7 @@ func (c *Core) CreateBarrier(req *coreapis.CreateBarrierRequest) (*coreapis.Crea
 // returns success. Leftover participant rows are not deleted synchronously;
 // instead a GC record is created so that RunBarriersGarbageCollection can
 // drain them in bounded batches.
-func (c *Core) DeleteBarrier(req *coreapis.DeleteBarrierRequest) (*coreapis.DeleteBarrierResponse, error) {
+func (c *Core) DeleteBarrier(req *coreapis.DeleteBarrierRequest, log *slog.Logger) (*coreapis.DeleteBarrierResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -367,7 +368,7 @@ func (c *Core) DeleteBarrier(req *coreapis.DeleteBarrierRequest) (*coreapis.Dele
 // state). Lowering ExpectedProcesses to exactly ArrivedProcesses trips the
 // barrier (resetting arrived and advancing the generation) rather than leaving
 // it wedged — see the trip logic below.
-func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest) (*coreapis.UpdateBarrierResponse, error) {
+func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest, log *slog.Logger) (*coreapis.UpdateBarrierResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -474,7 +475,7 @@ func (c *Core) UpdateBarrier(req *coreapis.UpdateBarrierRequest) (*coreapis.Upda
 // barrier does not exist, or InvalidArgument if req.Generation is different
 // from the barrier's current generation; in the InvalidArgument case the
 // transaction is discarded and no participant rows are persisted.
-func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest) (*coreapis.ArriveAtBarrierResponse, error) {
+func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest, log *slog.Logger) (*coreapis.ArriveAtBarrierResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -606,7 +607,7 @@ func (c *Core) ArriveAtBarrier(req *coreapis.ArriveAtBarrierRequest) (*coreapis.
 // barriers + counter rows) have been touched so that one invocation cannot
 // produce an unbounded transaction. Intended to be invoked periodically by
 // the scheduler.
-func (c *Core) RunBarriersGarbageCollection(req *coreapis.RunBarriersGarbageCollectionRequest) (*coreapis.RunBarriersGarbageCollectionResponse, error) {
+func (c *Core) RunBarriersGarbageCollection(req *coreapis.RunBarriersGarbageCollectionRequest, log *slog.Logger) (*coreapis.RunBarriersGarbageCollectionResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -716,7 +717,7 @@ commit:
 // RunBarriersGarbageCollection ticks, delete every barrier and participant
 // row belonging to the given namespace. The deletion itself is asynchronous;
 // this call only enqueues the request.
-func (c *Core) BarriersDeleteNamespace(req *coreapis.BarriersDeleteNamespaceRequest) (*coreapis.BarriersDeleteNamespaceResponse, error) {
+func (c *Core) BarriersDeleteNamespace(req *coreapis.BarriersDeleteNamespaceRequest, log *slog.Logger) (*coreapis.BarriersDeleteNamespaceResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"strings"
 
 	"github.com/samber/lo"
@@ -110,7 +111,7 @@ func (c *Core) Restore(readers ...io.ReadCloser) error {
 // caller. This runs on a read-only transaction: expired rows are not deleted
 // here — that is left to the GC. If every holder has expired the returned lock
 // has state UNLOCKED.
-func (c *Core) GetLock(req *coreapis.GetLockRequest) (*coreapis.GetLockResponse, error) {
+func (c *Core) GetLock(req *coreapis.GetLockRequest, log *slog.Logger) (*coreapis.GetLockResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
@@ -149,7 +150,7 @@ func (c *Core) GetLock(req *coreapis.GetLockRequest) (*coreapis.GetLockResponse,
 // holders have all expired (as observed against req.Now) are filtered out of
 // the result. Unlike GetLock, this is a read-only view and does not delete
 // expired rows — that is left to the GC.
-func (c *Core) ListLocks(req *coreapis.ListLocksRequest) (*coreapis.ListLocksResponse, error) {
+func (c *Core) ListLocks(req *coreapis.ListLocksRequest, log *slog.Logger) (*coreapis.ListLocksResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
@@ -182,7 +183,7 @@ func (c *Core) ListLocks(req *coreapis.ListLocksRequest) (*coreapis.ListLocksRes
 // DeleteLock unconditionally removes the lock record, regardless of current
 // holders, and updates ancestor counters and the per-namespace lock counter.
 // Deleting a lock that does not exist is a no-op and returns success.
-func (c *Core) DeleteLock(req *coreapis.DeleteLockRequest) (*coreapis.DeleteLockResponse, error) {
+func (c *Core) DeleteLock(req *coreapis.DeleteLockRequest, log *slog.Logger) (*coreapis.DeleteLockResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -240,7 +241,7 @@ func (c *Core) DeleteLock(req *coreapis.DeleteLockRequest) (*coreapis.DeleteLock
 // false and no state changes. Returns a NotFound application error if the
 // lease is missing or expired, or ResourceExhausted if creating a new lock
 // would exceed MaxNumberOfLocksPerNamespace.
-func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest) (*coreapis.AcquireLockResponse, error) {
+func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest, log *slog.Logger) (*coreapis.AcquireLockResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -472,7 +473,7 @@ func (c *Core) AcquireLock(req *coreapis.AcquireLockRequest) (*coreapis.AcquireL
 // non-holder lease is a no-op. Releasing a non-existent lock returns a
 // synthetic UNLOCKED lock without error. Expired holders are evicted before
 // the release is applied.
-func (c *Core) ReleaseLock(req *coreapis.ReleaseLockRequest) (*coreapis.ReleaseLockResponse, error) {
+func (c *Core) ReleaseLock(req *coreapis.ReleaseLockRequest, log *slog.Logger) (*coreapis.ReleaseLockResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -605,7 +606,7 @@ func (c *Core) ReleaseLock(req *coreapis.ReleaseLockRequest) (*coreapis.ReleaseL
 // (along with any locks they still hold). The amount of work per call is
 // bounded by req.MaxVisitedLocks; records that fully drain within budget are
 // removed, otherwise they are left for the next GC tick.
-func (c *Core) RunLocksGarbageCollection(req *coreapis.RunLocksGarbageCollectionRequest) (*coreapis.RunLocksGarbageCollectionResponse, error) {
+func (c *Core) RunLocksGarbageCollection(req *coreapis.RunLocksGarbageCollectionRequest, log *slog.Logger) (*coreapis.RunLocksGarbageCollectionResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -764,7 +765,7 @@ commit:
 // RunLocksGarbageCollection ticks, delete every lock and lease belonging to
 // the given namespace. The deletion itself is asynchronous; this call only
 // enqueues the request.
-func (c *Core) LocksDeleteNamespace(req *coreapis.LocksDeleteNamespaceRequest) (*coreapis.LocksDeleteNamespaceResponse, error) {
+func (c *Core) LocksDeleteNamespace(req *coreapis.LocksDeleteNamespaceRequest, log *slog.Logger) (*coreapis.LocksDeleteNamespaceResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -790,7 +791,7 @@ func (c *Core) LocksDeleteNamespace(req *coreapis.LocksDeleteNamespaceRequest) (
 // CreateLockLease creates a new lease for the given process with TTL of
 // req.TtlSeconds and bumps the per-namespace lease counter. Returns
 // ResourceExhausted if creating it would exceed MaxNumberOfLockLeases.
-func (c *Core) CreateLockLease(req *coreapis.CreateLockLeaseRequest) (*coreapis.CreateLockLeaseResponse, error) {
+func (c *Core) CreateLockLease(req *coreapis.CreateLockLeaseRequest, log *slog.Logger) (*coreapis.CreateLockLeaseResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -871,7 +872,7 @@ func (c *Core) CreateLockLease(req *coreapis.CreateLockLeaseRequest) (*coreapis.
 
 // GetLockLease returns the lease with the given id. Returns NotFound if the
 // lease does not exist or has already expired as of req.Now.
-func (c *Core) GetLockLease(req *coreapis.GetLockLeaseRequest) (*coreapis.GetLockLeaseResponse, error) {
+func (c *Core) GetLockLease(req *coreapis.GetLockLeaseRequest, log *slog.Logger) (*coreapis.GetLockLeaseResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
@@ -914,7 +915,7 @@ func (c *Core) GetLockLease(req *coreapis.GetLockLeaseRequest) (*coreapis.GetLoc
 // ListLockLeases returns a page of leases in the given namespace, filtering
 // out leases that have already expired as of req.Now. Expired rows are not
 // deleted here — that is left to the GC.
-func (c *Core) ListLockLeases(req *coreapis.ListLockLeasesRequest) (*coreapis.ListLockLeasesResponse, error) {
+func (c *Core) ListLockLeases(req *coreapis.ListLockLeasesRequest, log *slog.Logger) (*coreapis.ListLockLeasesResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
@@ -941,7 +942,7 @@ func (c *Core) ListLockLeases(req *coreapis.ListLockLeasesRequest) (*coreapis.Li
 // req.TtlSeconds. If the lease has already expired by the time the call is
 // processed, it is revoked (releasing all locks it still held) and the call
 // returns NotFound; otherwise the new expiration is persisted.
-func (c *Core) RefreshLockLease(req *coreapis.RefreshLockLeaseRequest) (*coreapis.RefreshLockLeaseResponse, error) {
+func (c *Core) RefreshLockLease(req *coreapis.RefreshLockLeaseRequest, log *slog.Logger) (*coreapis.RefreshLockLeaseResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -1009,7 +1010,7 @@ func (c *Core) RefreshLockLease(req *coreapis.RefreshLockLeaseRequest) (*coreapi
 // RevokeLockLease deletes the lease and synchronously releases every lock
 // it currently holds, updating per-namespace counters and ancestor entries.
 // Revoking a non-existent lease is a no-op and returns success.
-func (c *Core) RevokeLockLease(req *coreapis.RevokeLockLeaseRequest) (*coreapis.RevokeLockLeaseResponse, error) {
+func (c *Core) RevokeLockLease(req *coreapis.RevokeLockLeaseRequest, log *slog.Logger) (*coreapis.RevokeLockLeaseResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -1044,7 +1045,7 @@ func (c *Core) RevokeLockLease(req *coreapis.RevokeLockLeaseRequest) (*coreapis.
 // ListLockLeasesByProcessId returns a page of leases in the given namespace
 // that belong to req.ProcessId, filtering out leases that have already
 // expired as of req.Now.
-func (c *Core) ListLockLeasesByProcessId(req *coreapis.ListLockLeasesByProcessIdRequest) (*coreapis.ListLockLeasesByProcessIdResponse, error) {
+func (c *Core) ListLockLeasesByProcessId(req *coreapis.ListLockLeasesByProcessIdRequest, log *slog.Logger) (*coreapis.ListLockLeasesByProcessIdResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
@@ -1070,7 +1071,7 @@ func (c *Core) ListLockLeasesByProcessId(req *coreapis.ListLockLeasesByProcessId
 // ListLocksByLeaseId returns a page of locks currently held by the given
 // lease. The result is not filtered by lease expiration — callers that care
 // about staleness should consult GetLockLease.
-func (c *Core) ListLocksByLeaseId(req *coreapis.ListLocksByLeaseIdRequest) (*coreapis.ListLocksByLeaseIdResponse, error) {
+func (c *Core) ListLocksByLeaseId(req *coreapis.ListLocksByLeaseIdRequest, log *slog.Logger) (*coreapis.ListLocksByLeaseIdResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log/slog"
 	"math/rand/v2"
 	"testing"
 	"time"
@@ -805,7 +806,7 @@ func TestCore_BarrierMetadata(t *testing.T) {
 			DeleteInactiveAfterSeconds:      3600,
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, createResp)
 	require.Nil(t, createResp.ApplicationError)
@@ -830,7 +831,7 @@ func TestCore_BarrierMetadata(t *testing.T) {
 			DeleteInactiveAfterSeconds: 3600,
 		},
 		Now: updateTime.UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, updateResp)
 	require.Nil(t, updateResp.ApplicationError)
@@ -855,7 +856,7 @@ func TestCore_BarrierMetadata(t *testing.T) {
 			Metadata:    participantMetadata,
 		},
 		Now: now.Add(2 * time.Minute).UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, arriveResp)
 	require.Nil(t, arriveResp.ApplicationError)
@@ -1231,7 +1232,7 @@ func createBarrierWithDeletion(t *testing.T, core coreapis.GrackleBarriersCoreAp
 			DeleteInactiveAfterSeconds:      deleteInactiveAfterSeconds,
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -1280,7 +1281,7 @@ func createBarrier(t *testing.T, core coreapis.GrackleBarriersCoreApi, barrierId
 			DeleteInactiveAfterSeconds: int64((time.Hour).Seconds()),
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -1304,7 +1305,7 @@ func createBarrierWithError(t *testing.T, core coreapis.GrackleBarriersCoreApi, 
 			DeleteInactiveAfterSeconds:      int64((time.Hour).Seconds()),
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -1325,7 +1326,7 @@ func arriveAtBarrier(t *testing.T, core coreapis.GrackleBarriersCoreApi, namespa
 			Generation:  generation,
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -1347,7 +1348,7 @@ func arriveAtBarrierWithError(t *testing.T, core coreapis.GrackleBarriersCoreApi
 			Generation:  generation,
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -1364,7 +1365,7 @@ func getBarrier(t *testing.T, core coreapis.GrackleBarriersCoreApi, barrierId *c
 		Payload: &corepb.GetBarrierRequest{
 			BarrierId: barrierId,
 		},
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -1382,7 +1383,7 @@ func getBarrierWithError(t *testing.T, core coreapis.GrackleBarriersCoreApi, bar
 		Payload: &corepb.GetBarrierRequest{
 			BarrierId: barrierId,
 		},
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -1399,7 +1400,7 @@ func listBarriers(t *testing.T, core coreapis.GrackleBarriersCoreApi, namespaceI
 		Payload: &corepb.ListBarriersRequest{
 			NamespaceId: namespaceId,
 		},
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -1418,7 +1419,7 @@ func listBarrierParticipants(t *testing.T, core coreapis.GrackleBarriersCoreApi,
 			BarrierName: barrierName,
 			Generation:  generation,
 		},
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -1437,7 +1438,7 @@ func listBarrierParticipantsWithError(t *testing.T, core coreapis.GrackleBarrier
 			BarrierName: barrierName,
 			Generation:  generation,
 		},
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -1459,7 +1460,7 @@ func updateBarrier(t *testing.T, core coreapis.GrackleBarriersCoreApi, barrierId
 			DeleteInactiveAfterSeconds: int64((time.Hour).Seconds()),
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -1481,7 +1482,7 @@ func updateBarrierWithError(t *testing.T, core coreapis.GrackleBarriersCoreApi, 
 			DeleteInactiveAfterSeconds: int64((time.Hour).Seconds()),
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -1499,7 +1500,7 @@ func getBarrierByName(t *testing.T, core coreapis.GrackleBarriersCoreApi, namesp
 			NamespaceId: namespaceId,
 			BarrierName: barrierName,
 		},
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -1517,7 +1518,7 @@ func getBarrierByNameWithError(t *testing.T, core coreapis.GrackleBarriersCoreAp
 			NamespaceId: namespaceId,
 			BarrierName: barrierName,
 		},
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -1537,7 +1538,7 @@ func deleteBarrier(t *testing.T, core coreapis.GrackleBarriersCoreApi, namespace
 			RecordId:    recordId,
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -1556,7 +1557,7 @@ func barriersDeleteNamespace(t *testing.T, core coreapis.GrackleBarriersCoreApi,
 			RecordId:    recordId,
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -1575,7 +1576,7 @@ func runBarriersGarbageCollection(t *testing.T, core coreapis.GrackleBarriersCor
 			MaxVisited:                   maxVisited,
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -1646,7 +1647,7 @@ func TestCore_SplitSnapshotRestore(t *testing.T) {
 		barrierResp, err := tc.owner.GetBarrierByName(&coreapis.GetBarrierByNameRequest{
 			Payload: &corepb.GetBarrierByNameRequest{NamespaceId: namespaceId, BarrierName: "barrier-split"},
 			Now:     now.Add(time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, barrierResp.ApplicationError)
 
@@ -1654,7 +1655,7 @@ func TestCore_SplitSnapshotRestore(t *testing.T) {
 		participantsResp, err := tc.owner.ListBarrierParticipants(&coreapis.ListBarrierParticipantsRequest{
 			Payload: &corepb.ListBarrierParticipantsRequest{NamespaceId: namespaceId, BarrierName: "barrier-split", Generation: 1},
 			Now:     now.Add(time.Minute).UnixNano(),
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, participantsResp.ApplicationError)
 		require.Len(t, participantsResp.Payload.Participants, 1)

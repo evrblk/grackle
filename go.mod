@@ -4,7 +4,7 @@ go 1.27.0
 
 require (
 	github.com/evrblk/evrblk-go v0.0.0-20260917205857-891670b70f0f
-	github.com/evrblk/monstera v0.0.0-20260917194923-3e76cee8845b
+	github.com/evrblk/monstera v0.0.0-20260921134121-f99fd6a5d648
 	github.com/evrblk/yellowstone-common v0.0.0-20260915204323-38c802c5a1de
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10
 	github.com/prometheus/client_golang v1.24.1
@@ -22,7 +22,7 @@ require (
 	github.com/dave/jennifer v1.7.1 // indirect
 	github.com/dgraph-io/badger/v4 v4.9.6 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.4.2 // indirect
-	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/dustin/go-humanize v1.1.0 // indirect
 	github.com/evrblk/fenestra v0.0.0-20260724141201-56c281e924fc // indirect
 	github.com/fatih/color v1.19.0 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
@@ -57,7 +57,7 @@ require (
 	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260911204522-f61a6ca850bd // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260918162117-cecb64721679 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 

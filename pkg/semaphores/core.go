@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"math"
 
 	"github.com/evrblk/monstera"
@@ -110,7 +111,7 @@ func (c *Core) Restore(readers ...io.ReadCloser) error {
 // CreateSemaphore creates a new semaphore in the target namespace.
 // Returns a ResourceExhausted application error when the namespace has reached
 // MaxNumberOfSemaphoresPerNamespace, or AlreadyExists when a semaphore with the same name exists.
-func (c *Core) CreateSemaphore(req *coreapis.CreateSemaphoreRequest) (*coreapis.CreateSemaphoreResponse, error) {
+func (c *Core) CreateSemaphore(req *coreapis.CreateSemaphoreRequest, log *slog.Logger) (*coreapis.CreateSemaphoreResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -178,7 +179,7 @@ func (c *Core) CreateSemaphore(req *coreapis.CreateSemaphoreRequest) (*coreapis.
 // Expired holders are pruned before the check so that a stale ActiveHolds count cannot block
 // a legitimate shrink. Returns NotFound if the semaphore does not exist, or InvalidArgument if
 // the new permit count is below the current ActiveHolds.
-func (c *Core) UpdateSemaphore(req *coreapis.UpdateSemaphoreRequest) (*coreapis.UpdateSemaphoreResponse, error) {
+func (c *Core) UpdateSemaphore(req *coreapis.UpdateSemaphoreRequest, log *slog.Logger) (*coreapis.UpdateSemaphoreResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -281,7 +282,7 @@ func (c *Core) UpdateSemaphore(req *coreapis.UpdateSemaphoreRequest) (*coreapis.
 // the namespace counter. A missing semaphore is treated as success (no error, empty response).
 // Holders are not released synchronously; instead a GC record is created so that
 // RunSemaphoresGarbageCollection can drain them in bounded batches.
-func (c *Core) DeleteSemaphore(req *coreapis.DeleteSemaphoreRequest) (*coreapis.DeleteSemaphoreResponse, error) {
+func (c *Core) DeleteSemaphore(req *coreapis.DeleteSemaphoreRequest, log *slog.Logger) (*coreapis.DeleteSemaphoreResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -350,7 +351,7 @@ func (c *Core) DeleteSemaphore(req *coreapis.DeleteSemaphoreRequest) (*coreapis.
 // `ActiveHoldersCount`, and `EarliestHolderExpiresAt` adjusted as if holders that expired by `now`
 // had been removed. Expired rows are cleaned up by GC. Returns NotFound if the semaphore does not
 // exist.
-func (c *Core) GetSemaphore(req *coreapis.GetSemaphoreRequest) (*coreapis.GetSemaphoreResponse, error) {
+func (c *Core) GetSemaphore(req *coreapis.GetSemaphoreRequest, log *slog.Logger) (*coreapis.GetSemaphoreResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
@@ -389,7 +390,7 @@ func (c *Core) GetSemaphore(req *coreapis.GetSemaphoreRequest) (*coreapis.GetSem
 // `ActiveHolds`, `ActiveHoldersCount`, and `EarliestHolderExpiresAt` adjusted as if holders that
 // expired by `now` had been removed. Returns NotFound when no semaphore with that name exists in
 // the namespace.
-func (c *Core) GetSemaphoreByName(req *coreapis.GetSemaphoreByNameRequest) (*coreapis.GetSemaphoreByNameResponse, error) {
+func (c *Core) GetSemaphoreByName(req *coreapis.GetSemaphoreByNameRequest, log *slog.Logger) (*coreapis.GetSemaphoreByNameResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
@@ -427,7 +428,7 @@ func (c *Core) GetSemaphoreByName(req *coreapis.GetSemaphoreByNameRequest) (*cor
 // by `now` filtered out. The transaction is read-only, so expired entries remain in the store
 // and are cleaned up by GC or by a subsequent write path. Returns NotFound when the semaphore
 // does not exist.
-func (c *Core) ListSemaphoreHolders(req *coreapis.ListSemaphoreHoldersRequest) (*coreapis.ListSemaphoreHoldersResponse, error) {
+func (c *Core) ListSemaphoreHolders(req *coreapis.ListSemaphoreHoldersRequest, log *slog.Logger) (*coreapis.ListSemaphoreHoldersResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
@@ -470,7 +471,7 @@ func (c *Core) ListSemaphoreHolders(req *coreapis.ListSemaphoreHoldersRequest) (
 // transaction it cannot remove expired holders; instead it returns a copy of each
 // semaphore with `ActiveHolds`, `ActiveHoldersCount`, and `EarliestHolderExpiresAt`
 // adjusted as if expired holders had been removed.
-func (c *Core) ListSemaphores(req *coreapis.ListSemaphoresRequest) (*coreapis.ListSemaphoresResponse, error) {
+func (c *Core) ListSemaphores(req *coreapis.ListSemaphoresRequest, log *slog.Logger) (*coreapis.ListSemaphoresResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
@@ -504,7 +505,7 @@ func (c *Core) ListSemaphores(req *coreapis.ListSemaphoresRequest) (*coreapis.Li
 // Returns Payload.Success=false (without an application error) when the request is valid but
 // permits are unavailable. Returns NotFound application errors for missing/expired leases or a
 // missing semaphore.
-func (c *Core) AcquireSemaphore(req *coreapis.AcquireSemaphoreRequest) (*coreapis.AcquireSemaphoreResponse, error) {
+func (c *Core) AcquireSemaphore(req *coreapis.AcquireSemaphoreRequest, log *slog.Logger) (*coreapis.AcquireSemaphoreResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -701,7 +702,7 @@ func (c *Core) AcquireSemaphore(req *coreapis.AcquireSemaphoreRequest) (*coreapi
 // ReleaseSemaphore releases the lease's hold on a semaphore, freeing its permits.
 // Releasing a semaphore that the lease does not hold is treated as success (the semaphore is
 // returned unchanged). Returns NotFound for a missing lease or semaphore.
-func (c *Core) ReleaseSemaphore(req *coreapis.ReleaseSemaphoreRequest) (*coreapis.ReleaseSemaphoreResponse, error) {
+func (c *Core) ReleaseSemaphore(req *coreapis.ReleaseSemaphoreRequest, log *slog.Logger) (*coreapis.ReleaseSemaphoreResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -836,7 +837,7 @@ func (c *Core) ReleaseSemaphore(req *coreapis.ReleaseSemaphoreRequest) (*coreapi
 // semaphores. The pass stops once MaxVisited total records (holders + semaphores + leases) have
 // been touched so that one invocation cannot produce an unbounded transaction. Intended to be
 // invoked periodically by the scheduler.
-func (c *Core) RunSemaphoresGarbageCollection(req *coreapis.RunSemaphoresGarbageCollectionRequest) (*coreapis.RunSemaphoresGarbageCollectionResponse, error) {
+func (c *Core) RunSemaphoresGarbageCollection(req *coreapis.RunSemaphoresGarbageCollectionRequest, log *slog.Logger) (*coreapis.RunSemaphoresGarbageCollectionResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -1019,7 +1020,7 @@ commit:
 // SemaphoresDeleteNamespace marks a namespace for asynchronous deletion by creating a GC record.
 // The actual removal of the namespace's semaphores and counters happens in subsequent
 // RunSemaphoresGarbageCollection passes.
-func (c *Core) SemaphoresDeleteNamespace(req *coreapis.SemaphoresDeleteNamespaceRequest) (*coreapis.SemaphoresDeleteNamespaceResponse, error) {
+func (c *Core) SemaphoresDeleteNamespace(req *coreapis.SemaphoresDeleteNamespaceRequest, log *slog.Logger) (*coreapis.SemaphoresDeleteNamespaceResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -1046,7 +1047,7 @@ func (c *Core) SemaphoresDeleteNamespace(req *coreapis.SemaphoresDeleteNamespace
 
 // CreateSemaphoreLease creates a new semaphore lease with ExpiresAt = Now + TtlSeconds.
 // Returns ResourceExhausted when the namespace has reached MaxNumberOfSemaphoreLeases.
-func (c *Core) CreateSemaphoreLease(req *coreapis.CreateSemaphoreLeaseRequest) (*coreapis.CreateSemaphoreLeaseResponse, error) {
+func (c *Core) CreateSemaphoreLease(req *coreapis.CreateSemaphoreLeaseRequest, log *slog.Logger) (*coreapis.CreateSemaphoreLeaseResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -1126,7 +1127,7 @@ func (c *Core) CreateSemaphoreLease(req *coreapis.CreateSemaphoreLeaseRequest) (
 // GetSemaphoreLease fetches a lease by id. Returns NotFound when the lease does not exist or has
 // already expired by `now`. Read-only; an expired-but-not-yet-revoked lease is left in the store
 // for GC to clean up.
-func (c *Core) GetSemaphoreLease(req *coreapis.GetSemaphoreLeaseRequest) (*coreapis.GetSemaphoreLeaseResponse, error) {
+func (c *Core) GetSemaphoreLease(req *coreapis.GetSemaphoreLeaseRequest, log *slog.Logger) (*coreapis.GetSemaphoreLeaseResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
@@ -1169,7 +1170,7 @@ func (c *Core) GetSemaphoreLease(req *coreapis.GetSemaphoreLeaseRequest) (*corea
 // ListSemaphoreLeases returns a page of leases in a namespace, with leases that have expired by
 // `now` filtered out of the result. Runs on a read-only transaction; expired leases remain in the
 // store and are cleaned up by GC.
-func (c *Core) ListSemaphoreLeases(req *coreapis.ListSemaphoreLeasesRequest) (*coreapis.ListSemaphoreLeasesResponse, error) {
+func (c *Core) ListSemaphoreLeases(req *coreapis.ListSemaphoreLeasesRequest, log *slog.Logger) (*coreapis.ListSemaphoreLeasesResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
@@ -1196,7 +1197,7 @@ func (c *Core) ListSemaphoreLeases(req *coreapis.ListSemaphoreLeasesRequest) (*c
 // If the lease has already expired by `now` it is revoked instead (its semaphore holders are
 // released and the lease is deleted), and a NotFound application error is returned.
 // Returns NotFound when the lease does not exist.
-func (c *Core) RefreshSemaphoreLease(req *coreapis.RefreshSemaphoreLeaseRequest) (*coreapis.RefreshSemaphoreLeaseResponse, error) {
+func (c *Core) RefreshSemaphoreLease(req *coreapis.RefreshSemaphoreLeaseRequest, log *slog.Logger) (*coreapis.RefreshSemaphoreLeaseResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -1273,7 +1274,7 @@ func (c *Core) RefreshSemaphoreLease(req *coreapis.RefreshSemaphoreLeaseRequest)
 
 // RevokeSemaphoreLease releases every semaphore held by the lease, deletes the lease, and
 // decrements the namespace lease counter. Returns NotFound when the lease does not exist.
-func (c *Core) RevokeSemaphoreLease(req *coreapis.RevokeSemaphoreLeaseRequest) (*coreapis.RevokeSemaphoreLeaseResponse, error) {
+func (c *Core) RevokeSemaphoreLease(req *coreapis.RevokeSemaphoreLeaseRequest, log *slog.Logger) (*coreapis.RevokeSemaphoreLeaseResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -1315,7 +1316,7 @@ func (c *Core) RevokeSemaphoreLease(req *coreapis.RevokeSemaphoreLeaseRequest) (
 // ListSemaphoreLeasesByProcessId returns a page of leases belonging to a given process_id in a
 // namespace, with leases that have expired by `now` filtered out. Read-only; expired leases remain
 // in the store until GC removes them.
-func (c *Core) ListSemaphoreLeasesByProcessId(req *coreapis.ListSemaphoreLeasesByProcessIdRequest) (*coreapis.ListSemaphoreLeasesByProcessIdResponse, error) {
+func (c *Core) ListSemaphoreLeasesByProcessId(req *coreapis.ListSemaphoreLeasesByProcessIdRequest, log *slog.Logger) (*coreapis.ListSemaphoreLeasesByProcessIdResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
@@ -1342,7 +1343,7 @@ func (c *Core) ListSemaphoreLeasesByProcessId(req *coreapis.ListSemaphoreLeasesB
 // Because it runs on a read-only transaction it cannot remove expired holders; instead it returns
 // a copy of each semaphore with `ActiveHolds`, `ActiveHoldersCount`, and `EarliestHolderExpiresAt`
 // adjusted as if holders that expired by `now` had been removed.
-func (c *Core) ListSemaphoresByLeaseId(req *coreapis.ListSemaphoresByLeaseIdRequest) (*coreapis.ListSemaphoresByLeaseIdResponse, error) {
+func (c *Core) ListSemaphoresByLeaseId(req *coreapis.ListSemaphoresByLeaseIdRequest, log *slog.Logger) (*coreapis.ListSemaphoresByLeaseIdResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 

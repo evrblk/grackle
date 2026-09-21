@@ -6,6 +6,7 @@ import (
 	monstera "github.com/evrblk/monstera"
 	mrpc "github.com/evrblk/monstera/rpc"
 	"io"
+	"log/slog"
 )
 
 type GrackleLocksValidatingCore struct {
@@ -30,102 +31,102 @@ func (v *GrackleLocksValidatingCore) Close() {
 	v.core.Close()
 }
 
-func (v *GrackleLocksValidatingCore) GetLock(req *GetLockRequest) (*GetLockResponse, error) {
+func (v *GrackleLocksValidatingCore) GetLock(req *GetLockRequest, log *slog.Logger) (*GetLockResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &GetLockResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.GetLock(req)
+	return v.core.GetLock(req, log)
 }
 
-func (v *GrackleLocksValidatingCore) ListLocks(req *ListLocksRequest) (*ListLocksResponse, error) {
+func (v *GrackleLocksValidatingCore) ListLocks(req *ListLocksRequest, log *slog.Logger) (*ListLocksResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &ListLocksResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.ListLocks(req)
+	return v.core.ListLocks(req, log)
 }
 
-func (v *GrackleLocksValidatingCore) ListLocksByLeaseId(req *ListLocksByLeaseIdRequest) (*ListLocksByLeaseIdResponse, error) {
+func (v *GrackleLocksValidatingCore) ListLocksByLeaseId(req *ListLocksByLeaseIdRequest, log *slog.Logger) (*ListLocksByLeaseIdResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &ListLocksByLeaseIdResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.ListLocksByLeaseId(req)
+	return v.core.ListLocksByLeaseId(req, log)
 }
 
-func (v *GrackleLocksValidatingCore) ListLockLeases(req *ListLockLeasesRequest) (*ListLockLeasesResponse, error) {
+func (v *GrackleLocksValidatingCore) ListLockLeases(req *ListLockLeasesRequest, log *slog.Logger) (*ListLockLeasesResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &ListLockLeasesResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.ListLockLeases(req)
+	return v.core.ListLockLeases(req, log)
 }
 
-func (v *GrackleLocksValidatingCore) ListLockLeasesByProcessId(req *ListLockLeasesByProcessIdRequest) (*ListLockLeasesByProcessIdResponse, error) {
+func (v *GrackleLocksValidatingCore) ListLockLeasesByProcessId(req *ListLockLeasesByProcessIdRequest, log *slog.Logger) (*ListLockLeasesByProcessIdResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &ListLockLeasesByProcessIdResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.ListLockLeasesByProcessId(req)
+	return v.core.ListLockLeasesByProcessId(req, log)
 }
 
-func (v *GrackleLocksValidatingCore) GetLockLease(req *GetLockLeaseRequest) (*GetLockLeaseResponse, error) {
+func (v *GrackleLocksValidatingCore) GetLockLease(req *GetLockLeaseRequest, log *slog.Logger) (*GetLockLeaseResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &GetLockLeaseResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.GetLockLease(req)
+	return v.core.GetLockLease(req, log)
 }
 
-func (v *GrackleLocksValidatingCore) AcquireLock(req *AcquireLockRequest) (*AcquireLockResponse, error) {
+func (v *GrackleLocksValidatingCore) AcquireLock(req *AcquireLockRequest, log *slog.Logger) (*AcquireLockResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &AcquireLockResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.AcquireLock(req)
+	return v.core.AcquireLock(req, log)
 }
 
-func (v *GrackleLocksValidatingCore) ReleaseLock(req *ReleaseLockRequest) (*ReleaseLockResponse, error) {
+func (v *GrackleLocksValidatingCore) ReleaseLock(req *ReleaseLockRequest, log *slog.Logger) (*ReleaseLockResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &ReleaseLockResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.ReleaseLock(req)
+	return v.core.ReleaseLock(req, log)
 }
 
-func (v *GrackleLocksValidatingCore) DeleteLock(req *DeleteLockRequest) (*DeleteLockResponse, error) {
+func (v *GrackleLocksValidatingCore) DeleteLock(req *DeleteLockRequest, log *slog.Logger) (*DeleteLockResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &DeleteLockResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.DeleteLock(req)
+	return v.core.DeleteLock(req, log)
 }
 
-func (v *GrackleLocksValidatingCore) RunLocksGarbageCollection(req *RunLocksGarbageCollectionRequest) (*RunLocksGarbageCollectionResponse, error) {
+func (v *GrackleLocksValidatingCore) RunLocksGarbageCollection(req *RunLocksGarbageCollectionRequest, log *slog.Logger) (*RunLocksGarbageCollectionResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &RunLocksGarbageCollectionResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.RunLocksGarbageCollection(req)
+	return v.core.RunLocksGarbageCollection(req, log)
 }
 
-func (v *GrackleLocksValidatingCore) LocksDeleteNamespace(req *LocksDeleteNamespaceRequest) (*LocksDeleteNamespaceResponse, error) {
+func (v *GrackleLocksValidatingCore) LocksDeleteNamespace(req *LocksDeleteNamespaceRequest, log *slog.Logger) (*LocksDeleteNamespaceResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &LocksDeleteNamespaceResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.LocksDeleteNamespace(req)
+	return v.core.LocksDeleteNamespace(req, log)
 }
 
-func (v *GrackleLocksValidatingCore) CreateLockLease(req *CreateLockLeaseRequest) (*CreateLockLeaseResponse, error) {
+func (v *GrackleLocksValidatingCore) CreateLockLease(req *CreateLockLeaseRequest, log *slog.Logger) (*CreateLockLeaseResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &CreateLockLeaseResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.CreateLockLease(req)
+	return v.core.CreateLockLease(req, log)
 }
 
-func (v *GrackleLocksValidatingCore) RefreshLockLease(req *RefreshLockLeaseRequest) (*RefreshLockLeaseResponse, error) {
+func (v *GrackleLocksValidatingCore) RefreshLockLease(req *RefreshLockLeaseRequest, log *slog.Logger) (*RefreshLockLeaseResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &RefreshLockLeaseResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.RefreshLockLease(req)
+	return v.core.RefreshLockLease(req, log)
 }
 
-func (v *GrackleLocksValidatingCore) RevokeLockLease(req *RevokeLockLeaseRequest) (*RevokeLockLeaseResponse, error) {
+func (v *GrackleLocksValidatingCore) RevokeLockLease(req *RevokeLockLeaseRequest, log *slog.Logger) (*RevokeLockLeaseResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &RevokeLockLeaseResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.RevokeLockLease(req)
+	return v.core.RevokeLockLease(req, log)
 }
 
 type GrackleSemaphoresValidatingCore struct {
@@ -150,130 +151,130 @@ func (v *GrackleSemaphoresValidatingCore) Close() {
 	v.core.Close()
 }
 
-func (v *GrackleSemaphoresValidatingCore) GetSemaphore(req *GetSemaphoreRequest) (*GetSemaphoreResponse, error) {
+func (v *GrackleSemaphoresValidatingCore) GetSemaphore(req *GetSemaphoreRequest, log *slog.Logger) (*GetSemaphoreResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &GetSemaphoreResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.GetSemaphore(req)
+	return v.core.GetSemaphore(req, log)
 }
 
-func (v *GrackleSemaphoresValidatingCore) GetSemaphoreByName(req *GetSemaphoreByNameRequest) (*GetSemaphoreByNameResponse, error) {
+func (v *GrackleSemaphoresValidatingCore) GetSemaphoreByName(req *GetSemaphoreByNameRequest, log *slog.Logger) (*GetSemaphoreByNameResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &GetSemaphoreByNameResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.GetSemaphoreByName(req)
+	return v.core.GetSemaphoreByName(req, log)
 }
 
-func (v *GrackleSemaphoresValidatingCore) ListSemaphores(req *ListSemaphoresRequest) (*ListSemaphoresResponse, error) {
+func (v *GrackleSemaphoresValidatingCore) ListSemaphores(req *ListSemaphoresRequest, log *slog.Logger) (*ListSemaphoresResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &ListSemaphoresResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.ListSemaphores(req)
+	return v.core.ListSemaphores(req, log)
 }
 
-func (v *GrackleSemaphoresValidatingCore) ListSemaphoresByLeaseId(req *ListSemaphoresByLeaseIdRequest) (*ListSemaphoresByLeaseIdResponse, error) {
+func (v *GrackleSemaphoresValidatingCore) ListSemaphoresByLeaseId(req *ListSemaphoresByLeaseIdRequest, log *slog.Logger) (*ListSemaphoresByLeaseIdResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &ListSemaphoresByLeaseIdResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.ListSemaphoresByLeaseId(req)
+	return v.core.ListSemaphoresByLeaseId(req, log)
 }
 
-func (v *GrackleSemaphoresValidatingCore) ListSemaphoreHolders(req *ListSemaphoreHoldersRequest) (*ListSemaphoreHoldersResponse, error) {
+func (v *GrackleSemaphoresValidatingCore) ListSemaphoreHolders(req *ListSemaphoreHoldersRequest, log *slog.Logger) (*ListSemaphoreHoldersResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &ListSemaphoreHoldersResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.ListSemaphoreHolders(req)
+	return v.core.ListSemaphoreHolders(req, log)
 }
 
-func (v *GrackleSemaphoresValidatingCore) ListSemaphoreLeases(req *ListSemaphoreLeasesRequest) (*ListSemaphoreLeasesResponse, error) {
+func (v *GrackleSemaphoresValidatingCore) ListSemaphoreLeases(req *ListSemaphoreLeasesRequest, log *slog.Logger) (*ListSemaphoreLeasesResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &ListSemaphoreLeasesResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.ListSemaphoreLeases(req)
+	return v.core.ListSemaphoreLeases(req, log)
 }
 
-func (v *GrackleSemaphoresValidatingCore) ListSemaphoreLeasesByProcessId(req *ListSemaphoreLeasesByProcessIdRequest) (*ListSemaphoreLeasesByProcessIdResponse, error) {
+func (v *GrackleSemaphoresValidatingCore) ListSemaphoreLeasesByProcessId(req *ListSemaphoreLeasesByProcessIdRequest, log *slog.Logger) (*ListSemaphoreLeasesByProcessIdResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &ListSemaphoreLeasesByProcessIdResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.ListSemaphoreLeasesByProcessId(req)
+	return v.core.ListSemaphoreLeasesByProcessId(req, log)
 }
 
-func (v *GrackleSemaphoresValidatingCore) GetSemaphoreLease(req *GetSemaphoreLeaseRequest) (*GetSemaphoreLeaseResponse, error) {
+func (v *GrackleSemaphoresValidatingCore) GetSemaphoreLease(req *GetSemaphoreLeaseRequest, log *slog.Logger) (*GetSemaphoreLeaseResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &GetSemaphoreLeaseResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.GetSemaphoreLease(req)
+	return v.core.GetSemaphoreLease(req, log)
 }
 
-func (v *GrackleSemaphoresValidatingCore) AcquireSemaphore(req *AcquireSemaphoreRequest) (*AcquireSemaphoreResponse, error) {
+func (v *GrackleSemaphoresValidatingCore) AcquireSemaphore(req *AcquireSemaphoreRequest, log *slog.Logger) (*AcquireSemaphoreResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &AcquireSemaphoreResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.AcquireSemaphore(req)
+	return v.core.AcquireSemaphore(req, log)
 }
 
-func (v *GrackleSemaphoresValidatingCore) ReleaseSemaphore(req *ReleaseSemaphoreRequest) (*ReleaseSemaphoreResponse, error) {
+func (v *GrackleSemaphoresValidatingCore) ReleaseSemaphore(req *ReleaseSemaphoreRequest, log *slog.Logger) (*ReleaseSemaphoreResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &ReleaseSemaphoreResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.ReleaseSemaphore(req)
+	return v.core.ReleaseSemaphore(req, log)
 }
 
-func (v *GrackleSemaphoresValidatingCore) CreateSemaphore(req *CreateSemaphoreRequest) (*CreateSemaphoreResponse, error) {
+func (v *GrackleSemaphoresValidatingCore) CreateSemaphore(req *CreateSemaphoreRequest, log *slog.Logger) (*CreateSemaphoreResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &CreateSemaphoreResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.CreateSemaphore(req)
+	return v.core.CreateSemaphore(req, log)
 }
 
-func (v *GrackleSemaphoresValidatingCore) UpdateSemaphore(req *UpdateSemaphoreRequest) (*UpdateSemaphoreResponse, error) {
+func (v *GrackleSemaphoresValidatingCore) UpdateSemaphore(req *UpdateSemaphoreRequest, log *slog.Logger) (*UpdateSemaphoreResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &UpdateSemaphoreResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.UpdateSemaphore(req)
+	return v.core.UpdateSemaphore(req, log)
 }
 
-func (v *GrackleSemaphoresValidatingCore) DeleteSemaphore(req *DeleteSemaphoreRequest) (*DeleteSemaphoreResponse, error) {
+func (v *GrackleSemaphoresValidatingCore) DeleteSemaphore(req *DeleteSemaphoreRequest, log *slog.Logger) (*DeleteSemaphoreResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &DeleteSemaphoreResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.DeleteSemaphore(req)
+	return v.core.DeleteSemaphore(req, log)
 }
 
-func (v *GrackleSemaphoresValidatingCore) RunSemaphoresGarbageCollection(req *RunSemaphoresGarbageCollectionRequest) (*RunSemaphoresGarbageCollectionResponse, error) {
+func (v *GrackleSemaphoresValidatingCore) RunSemaphoresGarbageCollection(req *RunSemaphoresGarbageCollectionRequest, log *slog.Logger) (*RunSemaphoresGarbageCollectionResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &RunSemaphoresGarbageCollectionResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.RunSemaphoresGarbageCollection(req)
+	return v.core.RunSemaphoresGarbageCollection(req, log)
 }
 
-func (v *GrackleSemaphoresValidatingCore) SemaphoresDeleteNamespace(req *SemaphoresDeleteNamespaceRequest) (*SemaphoresDeleteNamespaceResponse, error) {
+func (v *GrackleSemaphoresValidatingCore) SemaphoresDeleteNamespace(req *SemaphoresDeleteNamespaceRequest, log *slog.Logger) (*SemaphoresDeleteNamespaceResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &SemaphoresDeleteNamespaceResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.SemaphoresDeleteNamespace(req)
+	return v.core.SemaphoresDeleteNamespace(req, log)
 }
 
-func (v *GrackleSemaphoresValidatingCore) CreateSemaphoreLease(req *CreateSemaphoreLeaseRequest) (*CreateSemaphoreLeaseResponse, error) {
+func (v *GrackleSemaphoresValidatingCore) CreateSemaphoreLease(req *CreateSemaphoreLeaseRequest, log *slog.Logger) (*CreateSemaphoreLeaseResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &CreateSemaphoreLeaseResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.CreateSemaphoreLease(req)
+	return v.core.CreateSemaphoreLease(req, log)
 }
 
-func (v *GrackleSemaphoresValidatingCore) RevokeSemaphoreLease(req *RevokeSemaphoreLeaseRequest) (*RevokeSemaphoreLeaseResponse, error) {
+func (v *GrackleSemaphoresValidatingCore) RevokeSemaphoreLease(req *RevokeSemaphoreLeaseRequest, log *slog.Logger) (*RevokeSemaphoreLeaseResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &RevokeSemaphoreLeaseResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.RevokeSemaphoreLease(req)
+	return v.core.RevokeSemaphoreLease(req, log)
 }
 
-func (v *GrackleSemaphoresValidatingCore) RefreshSemaphoreLease(req *RefreshSemaphoreLeaseRequest) (*RefreshSemaphoreLeaseResponse, error) {
+func (v *GrackleSemaphoresValidatingCore) RefreshSemaphoreLease(req *RefreshSemaphoreLeaseRequest, log *slog.Logger) (*RefreshSemaphoreLeaseResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &RefreshSemaphoreLeaseResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.RefreshSemaphoreLease(req)
+	return v.core.RefreshSemaphoreLease(req, log)
 }
 
 type GrackleNamespacesValidatingCore struct {
@@ -298,46 +299,46 @@ func (v *GrackleNamespacesValidatingCore) Close() {
 	v.core.Close()
 }
 
-func (v *GrackleNamespacesValidatingCore) GetNamespace(req *GetNamespaceRequest) (*GetNamespaceResponse, error) {
+func (v *GrackleNamespacesValidatingCore) GetNamespace(req *GetNamespaceRequest, log *slog.Logger) (*GetNamespaceResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &GetNamespaceResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.GetNamespace(req)
+	return v.core.GetNamespace(req, log)
 }
 
-func (v *GrackleNamespacesValidatingCore) GetNamespaceByName(req *GetNamespaceByNameRequest) (*GetNamespaceByNameResponse, error) {
+func (v *GrackleNamespacesValidatingCore) GetNamespaceByName(req *GetNamespaceByNameRequest, log *slog.Logger) (*GetNamespaceByNameResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &GetNamespaceByNameResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.GetNamespaceByName(req)
+	return v.core.GetNamespaceByName(req, log)
 }
 
-func (v *GrackleNamespacesValidatingCore) ListNamespaces(req *ListNamespacesRequest) (*ListNamespacesResponse, error) {
+func (v *GrackleNamespacesValidatingCore) ListNamespaces(req *ListNamespacesRequest, log *slog.Logger) (*ListNamespacesResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &ListNamespacesResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.ListNamespaces(req)
+	return v.core.ListNamespaces(req, log)
 }
 
-func (v *GrackleNamespacesValidatingCore) CreateNamespace(req *CreateNamespaceRequest) (*CreateNamespaceResponse, error) {
+func (v *GrackleNamespacesValidatingCore) CreateNamespace(req *CreateNamespaceRequest, log *slog.Logger) (*CreateNamespaceResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &CreateNamespaceResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.CreateNamespace(req)
+	return v.core.CreateNamespace(req, log)
 }
 
-func (v *GrackleNamespacesValidatingCore) UpdateNamespace(req *UpdateNamespaceRequest) (*UpdateNamespaceResponse, error) {
+func (v *GrackleNamespacesValidatingCore) UpdateNamespace(req *UpdateNamespaceRequest, log *slog.Logger) (*UpdateNamespaceResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &UpdateNamespaceResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.UpdateNamespace(req)
+	return v.core.UpdateNamespace(req, log)
 }
 
-func (v *GrackleNamespacesValidatingCore) DeleteNamespace(req *DeleteNamespaceRequest) (*DeleteNamespaceResponse, error) {
+func (v *GrackleNamespacesValidatingCore) DeleteNamespace(req *DeleteNamespaceRequest, log *slog.Logger) (*DeleteNamespaceResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &DeleteNamespaceResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.DeleteNamespace(req)
+	return v.core.DeleteNamespace(req, log)
 }
 
 type GrackleWaitGroupsValidatingCore struct {
@@ -362,74 +363,74 @@ func (v *GrackleWaitGroupsValidatingCore) Close() {
 	v.core.Close()
 }
 
-func (v *GrackleWaitGroupsValidatingCore) GetWaitGroup(req *GetWaitGroupRequest) (*GetWaitGroupResponse, error) {
+func (v *GrackleWaitGroupsValidatingCore) GetWaitGroup(req *GetWaitGroupRequest, log *slog.Logger) (*GetWaitGroupResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &GetWaitGroupResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.GetWaitGroup(req)
+	return v.core.GetWaitGroup(req, log)
 }
 
-func (v *GrackleWaitGroupsValidatingCore) GetWaitGroupByName(req *GetWaitGroupByNameRequest) (*GetWaitGroupByNameResponse, error) {
+func (v *GrackleWaitGroupsValidatingCore) GetWaitGroupByName(req *GetWaitGroupByNameRequest, log *slog.Logger) (*GetWaitGroupByNameResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &GetWaitGroupByNameResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.GetWaitGroupByName(req)
+	return v.core.GetWaitGroupByName(req, log)
 }
 
-func (v *GrackleWaitGroupsValidatingCore) ListWaitGroups(req *ListWaitGroupsRequest) (*ListWaitGroupsResponse, error) {
+func (v *GrackleWaitGroupsValidatingCore) ListWaitGroups(req *ListWaitGroupsRequest, log *slog.Logger) (*ListWaitGroupsResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &ListWaitGroupsResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.ListWaitGroups(req)
+	return v.core.ListWaitGroups(req, log)
 }
 
-func (v *GrackleWaitGroupsValidatingCore) ListWaitGroupCompletedJobs(req *ListWaitGroupCompletedJobsRequest) (*ListWaitGroupCompletedJobsResponse, error) {
+func (v *GrackleWaitGroupsValidatingCore) ListWaitGroupCompletedJobs(req *ListWaitGroupCompletedJobsRequest, log *slog.Logger) (*ListWaitGroupCompletedJobsResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &ListWaitGroupCompletedJobsResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.ListWaitGroupCompletedJobs(req)
+	return v.core.ListWaitGroupCompletedJobs(req, log)
 }
 
-func (v *GrackleWaitGroupsValidatingCore) UpdateWaitGroup(req *UpdateWaitGroupRequest) (*UpdateWaitGroupResponse, error) {
+func (v *GrackleWaitGroupsValidatingCore) UpdateWaitGroup(req *UpdateWaitGroupRequest, log *slog.Logger) (*UpdateWaitGroupResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &UpdateWaitGroupResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.UpdateWaitGroup(req)
+	return v.core.UpdateWaitGroup(req, log)
 }
 
-func (v *GrackleWaitGroupsValidatingCore) CompleteJobsFromWaitGroup(req *CompleteJobsFromWaitGroupRequest) (*CompleteJobsFromWaitGroupResponse, error) {
+func (v *GrackleWaitGroupsValidatingCore) CompleteJobsFromWaitGroup(req *CompleteJobsFromWaitGroupRequest, log *slog.Logger) (*CompleteJobsFromWaitGroupResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &CompleteJobsFromWaitGroupResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.CompleteJobsFromWaitGroup(req)
+	return v.core.CompleteJobsFromWaitGroup(req, log)
 }
 
-func (v *GrackleWaitGroupsValidatingCore) CreateWaitGroup(req *CreateWaitGroupRequest) (*CreateWaitGroupResponse, error) {
+func (v *GrackleWaitGroupsValidatingCore) CreateWaitGroup(req *CreateWaitGroupRequest, log *slog.Logger) (*CreateWaitGroupResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &CreateWaitGroupResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.CreateWaitGroup(req)
+	return v.core.CreateWaitGroup(req, log)
 }
 
-func (v *GrackleWaitGroupsValidatingCore) DeleteWaitGroup(req *DeleteWaitGroupRequest) (*DeleteWaitGroupResponse, error) {
+func (v *GrackleWaitGroupsValidatingCore) DeleteWaitGroup(req *DeleteWaitGroupRequest, log *slog.Logger) (*DeleteWaitGroupResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &DeleteWaitGroupResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.DeleteWaitGroup(req)
+	return v.core.DeleteWaitGroup(req, log)
 }
 
-func (v *GrackleWaitGroupsValidatingCore) RunWaitGroupsGarbageCollection(req *RunWaitGroupsGarbageCollectionRequest) (*RunWaitGroupsGarbageCollectionResponse, error) {
+func (v *GrackleWaitGroupsValidatingCore) RunWaitGroupsGarbageCollection(req *RunWaitGroupsGarbageCollectionRequest, log *slog.Logger) (*RunWaitGroupsGarbageCollectionResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &RunWaitGroupsGarbageCollectionResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.RunWaitGroupsGarbageCollection(req)
+	return v.core.RunWaitGroupsGarbageCollection(req, log)
 }
 
-func (v *GrackleWaitGroupsValidatingCore) WaitGroupsDeleteNamespace(req *WaitGroupsDeleteNamespaceRequest) (*WaitGroupsDeleteNamespaceResponse, error) {
+func (v *GrackleWaitGroupsValidatingCore) WaitGroupsDeleteNamespace(req *WaitGroupsDeleteNamespaceRequest, log *slog.Logger) (*WaitGroupsDeleteNamespaceResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &WaitGroupsDeleteNamespaceResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.WaitGroupsDeleteNamespace(req)
+	return v.core.WaitGroupsDeleteNamespace(req, log)
 }
 
 type GrackleBarriersValidatingCore struct {
@@ -454,72 +455,72 @@ func (v *GrackleBarriersValidatingCore) Close() {
 	v.core.Close()
 }
 
-func (v *GrackleBarriersValidatingCore) GetBarrier(req *GetBarrierRequest) (*GetBarrierResponse, error) {
+func (v *GrackleBarriersValidatingCore) GetBarrier(req *GetBarrierRequest, log *slog.Logger) (*GetBarrierResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &GetBarrierResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.GetBarrier(req)
+	return v.core.GetBarrier(req, log)
 }
 
-func (v *GrackleBarriersValidatingCore) GetBarrierByName(req *GetBarrierByNameRequest) (*GetBarrierByNameResponse, error) {
+func (v *GrackleBarriersValidatingCore) GetBarrierByName(req *GetBarrierByNameRequest, log *slog.Logger) (*GetBarrierByNameResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &GetBarrierByNameResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.GetBarrierByName(req)
+	return v.core.GetBarrierByName(req, log)
 }
 
-func (v *GrackleBarriersValidatingCore) ListBarriers(req *ListBarriersRequest) (*ListBarriersResponse, error) {
+func (v *GrackleBarriersValidatingCore) ListBarriers(req *ListBarriersRequest, log *slog.Logger) (*ListBarriersResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &ListBarriersResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.ListBarriers(req)
+	return v.core.ListBarriers(req, log)
 }
 
-func (v *GrackleBarriersValidatingCore) ListBarrierParticipants(req *ListBarrierParticipantsRequest) (*ListBarrierParticipantsResponse, error) {
+func (v *GrackleBarriersValidatingCore) ListBarrierParticipants(req *ListBarrierParticipantsRequest, log *slog.Logger) (*ListBarrierParticipantsResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &ListBarrierParticipantsResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.ListBarrierParticipants(req)
+	return v.core.ListBarrierParticipants(req, log)
 }
 
-func (v *GrackleBarriersValidatingCore) CreateBarrier(req *CreateBarrierRequest) (*CreateBarrierResponse, error) {
+func (v *GrackleBarriersValidatingCore) CreateBarrier(req *CreateBarrierRequest, log *slog.Logger) (*CreateBarrierResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &CreateBarrierResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.CreateBarrier(req)
+	return v.core.CreateBarrier(req, log)
 }
 
-func (v *GrackleBarriersValidatingCore) DeleteBarrier(req *DeleteBarrierRequest) (*DeleteBarrierResponse, error) {
+func (v *GrackleBarriersValidatingCore) DeleteBarrier(req *DeleteBarrierRequest, log *slog.Logger) (*DeleteBarrierResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &DeleteBarrierResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.DeleteBarrier(req)
+	return v.core.DeleteBarrier(req, log)
 }
 
-func (v *GrackleBarriersValidatingCore) UpdateBarrier(req *UpdateBarrierRequest) (*UpdateBarrierResponse, error) {
+func (v *GrackleBarriersValidatingCore) UpdateBarrier(req *UpdateBarrierRequest, log *slog.Logger) (*UpdateBarrierResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &UpdateBarrierResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.UpdateBarrier(req)
+	return v.core.UpdateBarrier(req, log)
 }
 
-func (v *GrackleBarriersValidatingCore) ArriveAtBarrier(req *ArriveAtBarrierRequest) (*ArriveAtBarrierResponse, error) {
+func (v *GrackleBarriersValidatingCore) ArriveAtBarrier(req *ArriveAtBarrierRequest, log *slog.Logger) (*ArriveAtBarrierResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &ArriveAtBarrierResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.ArriveAtBarrier(req)
+	return v.core.ArriveAtBarrier(req, log)
 }
 
-func (v *GrackleBarriersValidatingCore) RunBarriersGarbageCollection(req *RunBarriersGarbageCollectionRequest) (*RunBarriersGarbageCollectionResponse, error) {
+func (v *GrackleBarriersValidatingCore) RunBarriersGarbageCollection(req *RunBarriersGarbageCollectionRequest, log *slog.Logger) (*RunBarriersGarbageCollectionResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &RunBarriersGarbageCollectionResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.RunBarriersGarbageCollection(req)
+	return v.core.RunBarriersGarbageCollection(req, log)
 }
 
-func (v *GrackleBarriersValidatingCore) BarriersDeleteNamespace(req *BarriersDeleteNamespaceRequest) (*BarriersDeleteNamespaceResponse, error) {
+func (v *GrackleBarriersValidatingCore) BarriersDeleteNamespace(req *BarriersDeleteNamespaceRequest, log *slog.Logger) (*BarriersDeleteNamespaceResponse, error) {
 	if err := req.Payload.Validate(); err != nil {
 		return &BarriersDeleteNamespaceResponse{ApplicationError: mrpc.NewError(mrpc.InvalidRequest, err.Error())}, nil
 	}
-	return v.core.BarriersDeleteNamespace(req)
+	return v.core.BarriersDeleteNamespace(req, log)
 }

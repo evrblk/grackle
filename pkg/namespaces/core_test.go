@@ -3,6 +3,7 @@ package namespaces
 import (
 	"bytes"
 	"io"
+	"log/slog"
 	"math/rand/v2"
 	"testing"
 	"time"
@@ -617,7 +618,7 @@ func TestCore_NamespaceMetadata(t *testing.T) {
 			MaxNumberOfNamespaces: 100,
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.Nil(t, resp1.ApplicationError)
 	require.Equal(t, map[string]string{"team": "search", "cost-center": "1234"}, resp1.Payload.Namespace.Metadata)
@@ -636,7 +637,7 @@ func TestCore_NamespaceMetadata(t *testing.T) {
 			ExpectedVersion: 1,
 		},
 		Now: now.Add(time.Minute).UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.Nil(t, resp2.ApplicationError)
 	require.Equal(t, map[string]string{"team": "search", "cost-center": "5678"}, resp2.Payload.Namespace.Metadata)
@@ -667,7 +668,7 @@ func createNamespace(t *testing.T, core coreapis.GrackleNamespacesCoreApi, names
 			MaxNumberOfNamespaces: maxNumberOfNamespaces,
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -689,7 +690,7 @@ func createNamespaceWithError(t *testing.T, core coreapis.GrackleNamespacesCoreA
 			MaxNumberOfNamespaces: maxNumberOfNamespaces,
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -707,7 +708,7 @@ func getNamespaceByName(t *testing.T, core coreapis.GrackleNamespacesCoreApi, ac
 			AccountId:     accountId,
 			NamespaceName: name,
 		},
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -725,7 +726,7 @@ func getNamespace(t *testing.T, core coreapis.GrackleNamespacesCoreApi, namespac
 		Payload: &corepb.GetNamespaceRequest{
 			NamespaceId: namespaceId,
 		},
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -743,7 +744,7 @@ func getNamespaceWithError(t *testing.T, core coreapis.GrackleNamespacesCoreApi,
 		Payload: &corepb.GetNamespaceRequest{
 			NamespaceId: namespaceId,
 		},
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -761,7 +762,7 @@ func getNamespaceByNameWithError(t *testing.T, core coreapis.GrackleNamespacesCo
 			AccountId:     accountId,
 			NamespaceName: "test_namespace",
 		},
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -778,7 +779,7 @@ func listNamespaces(t *testing.T, core coreapis.GrackleNamespacesCoreApi, accoun
 		Payload: &corepb.ListNamespacesRequest{
 			AccountId: accountId,
 		},
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -799,7 +800,7 @@ func updateNamespace(t *testing.T, core coreapis.GrackleNamespacesCoreApi, accou
 			ExpectedVersion: version,
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -821,7 +822,7 @@ func updateNamespaceWithError(t *testing.T, core coreapis.GrackleNamespacesCoreA
 			ExpectedVersion: version,
 		},
 		Now: now.UnixNano(),
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -839,7 +840,7 @@ func deleteNamespace(t *testing.T, core coreapis.GrackleNamespacesCoreApi, accou
 			AccountId:     accountId,
 			NamespaceName: namespaceName,
 		},
-	})
+	}, slog.Default())
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -893,7 +894,7 @@ func TestCore_SplitSnapshotRestore(t *testing.T) {
 		// Names index rebuilt: lookup by name works on the owner.
 		resp, err := tc.owner.GetNamespaceByName(&coreapis.GetNamespaceByNameRequest{
 			Payload: &corepb.GetNamespaceByNameRequest{AccountId: tc.accountId, NamespaceName: "ns-one"},
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.Nil(t, resp.ApplicationError)
 		require.Equal(t, "ns-one", resp.Payload.Namespace.Name)
@@ -901,7 +902,7 @@ func TestCore_SplitSnapshotRestore(t *testing.T) {
 		// Both namespaces landed on the owner.
 		listResp, err := tc.owner.ListNamespaces(&coreapis.ListNamespacesRequest{
 			Payload: &corepb.ListNamespacesRequest{AccountId: tc.accountId},
-		})
+		}, slog.Default())
 		require.NoError(t, err)
 		require.Len(t, listResp.Payload.Namespaces, 2)
 	}

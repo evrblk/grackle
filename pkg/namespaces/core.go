@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 
 	"github.com/evrblk/monstera"
 	"github.com/evrblk/monstera/cluster"
@@ -86,7 +87,7 @@ func (c *Core) Restore(readers ...io.ReadCloser) error {
 // if creating it would exceed MaxNumberOfNamespaces, or IDCollision if the
 // randomly generated id is already taken (the caller regenerates the id and
 // retries; IDCollision is never surfaced to clients).
-func (c *Core) CreateNamespace(req *coreapis.CreateNamespaceRequest) (*coreapis.CreateNamespaceResponse, error) {
+func (c *Core) CreateNamespace(req *coreapis.CreateNamespaceRequest, log *slog.Logger) (*coreapis.CreateNamespaceResponse, error) {
 	if req.Payload.Name == "" {
 		return &coreapis.CreateNamespaceResponse{
 			ApplicationError: mrpc.NewErrorWithContext(
@@ -187,7 +188,7 @@ func (c *Core) CreateNamespace(req *coreapis.CreateNamespaceRequest) (*coreapis.
 // and bumps its version. It uses optimistic concurrency: returns InvalidRequest
 // on a version mismatch (ExpectedVersion != the stored version), or NotFound if
 // the namespace does not exist. The namespace name is immutable.
-func (c *Core) UpdateNamespace(req *coreapis.UpdateNamespaceRequest) (*coreapis.UpdateNamespaceResponse, error) {
+func (c *Core) UpdateNamespace(req *coreapis.UpdateNamespaceRequest, log *slog.Logger) (*coreapis.UpdateNamespaceResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -247,7 +248,7 @@ func (c *Core) UpdateNamespace(req *coreapis.UpdateNamespaceRequest) (*coreapis.
 // returns success. This deletes only the namespace row and its counter; the
 // primitives (locks, semaphores, wait groups, barriers) living in the namespace
 // are torn down separately by the front handler's cross-primitive fan-out.
-func (c *Core) DeleteNamespace(req *coreapis.DeleteNamespaceRequest) (*coreapis.DeleteNamespaceResponse, error) {
+func (c *Core) DeleteNamespace(req *coreapis.DeleteNamespaceRequest, log *slog.Logger) (*coreapis.DeleteNamespaceResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -292,7 +293,7 @@ func (c *Core) DeleteNamespace(req *coreapis.DeleteNamespaceRequest) (*coreapis.
 
 // GetNamespace looks up a namespace by its full NamespaceId. Returns a NotFound
 // application error if no namespace with that id exists.
-func (c *Core) GetNamespace(req *coreapis.GetNamespaceRequest) (*coreapis.GetNamespaceResponse, error) {
+func (c *Core) GetNamespace(req *coreapis.GetNamespaceRequest, log *slog.Logger) (*coreapis.GetNamespaceResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
@@ -320,7 +321,7 @@ func (c *Core) GetNamespace(req *coreapis.GetNamespaceRequest) (*coreapis.GetNam
 
 // GetNamespaceByName looks up a namespace by its (account, name) pair. Returns a
 // NotFound application error if no namespace with that name exists in the account.
-func (c *Core) GetNamespaceByName(req *coreapis.GetNamespaceByNameRequest) (*coreapis.GetNamespaceByNameResponse, error) {
+func (c *Core) GetNamespaceByName(req *coreapis.GetNamespaceByNameRequest, log *slog.Logger) (*coreapis.GetNamespaceByNameResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
@@ -349,7 +350,7 @@ func (c *Core) GetNamespaceByName(req *coreapis.GetNamespaceByNameRequest) (*cor
 // ListNamespaces returns a page of namespaces in the given account, ordered by
 // name. Use the returned NextPaginationToken / PreviousPaginationToken to walk
 // forward or backward through pages.
-func (c *Core) ListNamespaces(req *coreapis.ListNamespacesRequest) (*coreapis.ListNamespacesResponse, error) {
+func (c *Core) ListNamespaces(req *coreapis.ListNamespacesRequest, log *slog.Logger) (*coreapis.ListNamespacesResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 

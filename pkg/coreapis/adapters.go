@@ -10,6 +10,7 @@ import (
 	mrpc "github.com/evrblk/monstera/rpc"
 	prometheus "github.com/prometheus/client_golang/prometheus"
 	"io"
+	"log/slog"
 	"time"
 )
 
@@ -72,7 +73,7 @@ func (a *GrackleLocksCoreAdapter) Close() {
 	a.grackleLocksCore.Close()
 }
 
-func (a *GrackleLocksCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateResponse, error) {
+func (a *GrackleLocksCoreAdapter) Update(rpcReqBytes []byte, log *slog.Logger) (*monstera.UpdateResponse, error) {
 	t1 := time.Now()
 
 	resp := &monstera.UpdateResponse{}
@@ -100,7 +101,7 @@ func (a *GrackleLocksCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateRe
 		methodResp, err := a.grackleLocksCore.AcquireLock(&AcquireLockRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -127,7 +128,7 @@ func (a *GrackleLocksCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateRe
 		methodResp, err := a.grackleLocksCore.ReleaseLock(&ReleaseLockRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -154,7 +155,7 @@ func (a *GrackleLocksCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateRe
 		methodResp, err := a.grackleLocksCore.DeleteLock(&DeleteLockRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -178,7 +179,7 @@ func (a *GrackleLocksCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateRe
 		methodResp, err := a.grackleLocksCore.RunLocksGarbageCollection(&RunLocksGarbageCollectionRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -205,7 +206,7 @@ func (a *GrackleLocksCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateRe
 		methodResp, err := a.grackleLocksCore.LocksDeleteNamespace(&LocksDeleteNamespaceRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -232,7 +233,7 @@ func (a *GrackleLocksCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateRe
 		methodResp, err := a.grackleLocksCore.CreateLockLease(&CreateLockLeaseRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -259,7 +260,7 @@ func (a *GrackleLocksCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateRe
 		methodResp, err := a.grackleLocksCore.RefreshLockLease(&RefreshLockLeaseRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -286,7 +287,7 @@ func (a *GrackleLocksCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateRe
 		methodResp, err := a.grackleLocksCore.RevokeLockLease(&RevokeLockLeaseRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -311,7 +312,7 @@ func (a *GrackleLocksCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateRe
 	return resp, nil
 }
 
-func (a *GrackleLocksCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadResponse, error) {
+func (a *GrackleLocksCoreAdapter) Read(rpcReqBytes []byte, log *slog.Logger) (*monstera.ReadResponse, error) {
 	t1 := time.Now()
 
 	resp := &monstera.ReadResponse{}
@@ -339,7 +340,7 @@ func (a *GrackleLocksCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadRespon
 		methodResp, err := a.grackleLocksCore.GetLock(&GetLockRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -366,7 +367,7 @@ func (a *GrackleLocksCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadRespon
 		methodResp, err := a.grackleLocksCore.ListLocks(&ListLocksRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -393,7 +394,7 @@ func (a *GrackleLocksCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadRespon
 		methodResp, err := a.grackleLocksCore.ListLocksByLeaseId(&ListLocksByLeaseIdRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -420,7 +421,7 @@ func (a *GrackleLocksCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadRespon
 		methodResp, err := a.grackleLocksCore.ListLockLeases(&ListLockLeasesRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -447,7 +448,7 @@ func (a *GrackleLocksCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadRespon
 		methodResp, err := a.grackleLocksCore.ListLockLeasesByProcessId(&ListLockLeasesByProcessIdRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -474,7 +475,7 @@ func (a *GrackleLocksCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadRespon
 		methodResp, err := a.grackleLocksCore.GetLockLease(&GetLockLeaseRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -535,7 +536,7 @@ func (a *GrackleSemaphoresCoreAdapter) Close() {
 	a.grackleSemaphoresCore.Close()
 }
 
-func (a *GrackleSemaphoresCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateResponse, error) {
+func (a *GrackleSemaphoresCoreAdapter) Update(rpcReqBytes []byte, log *slog.Logger) (*monstera.UpdateResponse, error) {
 	t1 := time.Now()
 
 	resp := &monstera.UpdateResponse{}
@@ -563,7 +564,7 @@ func (a *GrackleSemaphoresCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		methodResp, err := a.grackleSemaphoresCore.AcquireSemaphore(&AcquireSemaphoreRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -590,7 +591,7 @@ func (a *GrackleSemaphoresCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		methodResp, err := a.grackleSemaphoresCore.ReleaseSemaphore(&ReleaseSemaphoreRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -617,7 +618,7 @@ func (a *GrackleSemaphoresCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		methodResp, err := a.grackleSemaphoresCore.CreateSemaphore(&CreateSemaphoreRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -644,7 +645,7 @@ func (a *GrackleSemaphoresCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		methodResp, err := a.grackleSemaphoresCore.UpdateSemaphore(&UpdateSemaphoreRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -671,7 +672,7 @@ func (a *GrackleSemaphoresCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		methodResp, err := a.grackleSemaphoresCore.DeleteSemaphore(&DeleteSemaphoreRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -695,7 +696,7 @@ func (a *GrackleSemaphoresCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		methodResp, err := a.grackleSemaphoresCore.RunSemaphoresGarbageCollection(&RunSemaphoresGarbageCollectionRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -722,7 +723,7 @@ func (a *GrackleSemaphoresCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		methodResp, err := a.grackleSemaphoresCore.SemaphoresDeleteNamespace(&SemaphoresDeleteNamespaceRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -749,7 +750,7 @@ func (a *GrackleSemaphoresCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		methodResp, err := a.grackleSemaphoresCore.CreateSemaphoreLease(&CreateSemaphoreLeaseRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -776,7 +777,7 @@ func (a *GrackleSemaphoresCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		methodResp, err := a.grackleSemaphoresCore.RevokeSemaphoreLease(&RevokeSemaphoreLeaseRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -803,7 +804,7 @@ func (a *GrackleSemaphoresCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		methodResp, err := a.grackleSemaphoresCore.RefreshSemaphoreLease(&RefreshSemaphoreLeaseRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -828,7 +829,7 @@ func (a *GrackleSemaphoresCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 	return resp, nil
 }
 
-func (a *GrackleSemaphoresCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadResponse, error) {
+func (a *GrackleSemaphoresCoreAdapter) Read(rpcReqBytes []byte, log *slog.Logger) (*monstera.ReadResponse, error) {
 	t1 := time.Now()
 
 	resp := &monstera.ReadResponse{}
@@ -856,7 +857,7 @@ func (a *GrackleSemaphoresCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		methodResp, err := a.grackleSemaphoresCore.GetSemaphore(&GetSemaphoreRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -883,7 +884,7 @@ func (a *GrackleSemaphoresCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		methodResp, err := a.grackleSemaphoresCore.GetSemaphoreByName(&GetSemaphoreByNameRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -910,7 +911,7 @@ func (a *GrackleSemaphoresCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		methodResp, err := a.grackleSemaphoresCore.ListSemaphores(&ListSemaphoresRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -937,7 +938,7 @@ func (a *GrackleSemaphoresCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		methodResp, err := a.grackleSemaphoresCore.ListSemaphoresByLeaseId(&ListSemaphoresByLeaseIdRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -964,7 +965,7 @@ func (a *GrackleSemaphoresCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		methodResp, err := a.grackleSemaphoresCore.ListSemaphoreHolders(&ListSemaphoreHoldersRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -991,7 +992,7 @@ func (a *GrackleSemaphoresCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		methodResp, err := a.grackleSemaphoresCore.ListSemaphoreLeases(&ListSemaphoreLeasesRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1018,7 +1019,7 @@ func (a *GrackleSemaphoresCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		methodResp, err := a.grackleSemaphoresCore.ListSemaphoreLeasesByProcessId(&ListSemaphoreLeasesByProcessIdRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1045,7 +1046,7 @@ func (a *GrackleSemaphoresCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		methodResp, err := a.grackleSemaphoresCore.GetSemaphoreLease(&GetSemaphoreLeaseRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1106,7 +1107,7 @@ func (a *GrackleNamespacesCoreAdapter) Close() {
 	a.grackleNamespacesCore.Close()
 }
 
-func (a *GrackleNamespacesCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateResponse, error) {
+func (a *GrackleNamespacesCoreAdapter) Update(rpcReqBytes []byte, log *slog.Logger) (*monstera.UpdateResponse, error) {
 	t1 := time.Now()
 
 	resp := &monstera.UpdateResponse{}
@@ -1134,7 +1135,7 @@ func (a *GrackleNamespacesCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		methodResp, err := a.grackleNamespacesCore.CreateNamespace(&CreateNamespaceRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1161,7 +1162,7 @@ func (a *GrackleNamespacesCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		methodResp, err := a.grackleNamespacesCore.UpdateNamespace(&UpdateNamespaceRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1188,7 +1189,7 @@ func (a *GrackleNamespacesCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		methodResp, err := a.grackleNamespacesCore.DeleteNamespace(&DeleteNamespaceRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1213,7 +1214,7 @@ func (a *GrackleNamespacesCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 	return resp, nil
 }
 
-func (a *GrackleNamespacesCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadResponse, error) {
+func (a *GrackleNamespacesCoreAdapter) Read(rpcReqBytes []byte, log *slog.Logger) (*monstera.ReadResponse, error) {
 	t1 := time.Now()
 
 	resp := &monstera.ReadResponse{}
@@ -1241,7 +1242,7 @@ func (a *GrackleNamespacesCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		methodResp, err := a.grackleNamespacesCore.GetNamespace(&GetNamespaceRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1268,7 +1269,7 @@ func (a *GrackleNamespacesCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		methodResp, err := a.grackleNamespacesCore.GetNamespaceByName(&GetNamespaceByNameRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1295,7 +1296,7 @@ func (a *GrackleNamespacesCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		methodResp, err := a.grackleNamespacesCore.ListNamespaces(&ListNamespacesRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1356,7 +1357,7 @@ func (a *GrackleWaitGroupsCoreAdapter) Close() {
 	a.grackleWaitGroupsCore.Close()
 }
 
-func (a *GrackleWaitGroupsCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateResponse, error) {
+func (a *GrackleWaitGroupsCoreAdapter) Update(rpcReqBytes []byte, log *slog.Logger) (*monstera.UpdateResponse, error) {
 	t1 := time.Now()
 
 	resp := &monstera.UpdateResponse{}
@@ -1384,7 +1385,7 @@ func (a *GrackleWaitGroupsCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		methodResp, err := a.grackleWaitGroupsCore.UpdateWaitGroup(&UpdateWaitGroupRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1411,7 +1412,7 @@ func (a *GrackleWaitGroupsCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		methodResp, err := a.grackleWaitGroupsCore.CompleteJobsFromWaitGroup(&CompleteJobsFromWaitGroupRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1438,7 +1439,7 @@ func (a *GrackleWaitGroupsCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		methodResp, err := a.grackleWaitGroupsCore.CreateWaitGroup(&CreateWaitGroupRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1465,7 +1466,7 @@ func (a *GrackleWaitGroupsCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		methodResp, err := a.grackleWaitGroupsCore.DeleteWaitGroup(&DeleteWaitGroupRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1489,7 +1490,7 @@ func (a *GrackleWaitGroupsCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		methodResp, err := a.grackleWaitGroupsCore.RunWaitGroupsGarbageCollection(&RunWaitGroupsGarbageCollectionRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1516,7 +1517,7 @@ func (a *GrackleWaitGroupsCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 		methodResp, err := a.grackleWaitGroupsCore.WaitGroupsDeleteNamespace(&WaitGroupsDeleteNamespaceRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1541,7 +1542,7 @@ func (a *GrackleWaitGroupsCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Upd
 	return resp, nil
 }
 
-func (a *GrackleWaitGroupsCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadResponse, error) {
+func (a *GrackleWaitGroupsCoreAdapter) Read(rpcReqBytes []byte, log *slog.Logger) (*monstera.ReadResponse, error) {
 	t1 := time.Now()
 
 	resp := &monstera.ReadResponse{}
@@ -1569,7 +1570,7 @@ func (a *GrackleWaitGroupsCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		methodResp, err := a.grackleWaitGroupsCore.GetWaitGroup(&GetWaitGroupRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1596,7 +1597,7 @@ func (a *GrackleWaitGroupsCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		methodResp, err := a.grackleWaitGroupsCore.GetWaitGroupByName(&GetWaitGroupByNameRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1623,7 +1624,7 @@ func (a *GrackleWaitGroupsCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		methodResp, err := a.grackleWaitGroupsCore.ListWaitGroups(&ListWaitGroupsRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1650,7 +1651,7 @@ func (a *GrackleWaitGroupsCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadR
 		methodResp, err := a.grackleWaitGroupsCore.ListWaitGroupCompletedJobs(&ListWaitGroupCompletedJobsRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1711,7 +1712,7 @@ func (a *GrackleBarriersCoreAdapter) Close() {
 	a.grackleBarriersCore.Close()
 }
 
-func (a *GrackleBarriersCoreAdapter) Update(rpcReqBytes []byte) (*monstera.UpdateResponse, error) {
+func (a *GrackleBarriersCoreAdapter) Update(rpcReqBytes []byte, log *slog.Logger) (*monstera.UpdateResponse, error) {
 	t1 := time.Now()
 
 	resp := &monstera.UpdateResponse{}
@@ -1739,7 +1740,7 @@ func (a *GrackleBarriersCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Updat
 		methodResp, err := a.grackleBarriersCore.CreateBarrier(&CreateBarrierRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1766,7 +1767,7 @@ func (a *GrackleBarriersCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Updat
 		methodResp, err := a.grackleBarriersCore.DeleteBarrier(&DeleteBarrierRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1793,7 +1794,7 @@ func (a *GrackleBarriersCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Updat
 		methodResp, err := a.grackleBarriersCore.UpdateBarrier(&UpdateBarrierRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1820,7 +1821,7 @@ func (a *GrackleBarriersCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Updat
 		methodResp, err := a.grackleBarriersCore.ArriveAtBarrier(&ArriveAtBarrierRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1844,7 +1845,7 @@ func (a *GrackleBarriersCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Updat
 		methodResp, err := a.grackleBarriersCore.RunBarriersGarbageCollection(&RunBarriersGarbageCollectionRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1871,7 +1872,7 @@ func (a *GrackleBarriersCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Updat
 		methodResp, err := a.grackleBarriersCore.BarriersDeleteNamespace(&BarriersDeleteNamespaceRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1896,7 +1897,7 @@ func (a *GrackleBarriersCoreAdapter) Update(rpcReqBytes []byte) (*monstera.Updat
 	return resp, nil
 }
 
-func (a *GrackleBarriersCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadResponse, error) {
+func (a *GrackleBarriersCoreAdapter) Read(rpcReqBytes []byte, log *slog.Logger) (*monstera.ReadResponse, error) {
 	t1 := time.Now()
 
 	resp := &monstera.ReadResponse{}
@@ -1924,7 +1925,7 @@ func (a *GrackleBarriersCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadRes
 		methodResp, err := a.grackleBarriersCore.GetBarrier(&GetBarrierRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1951,7 +1952,7 @@ func (a *GrackleBarriersCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadRes
 		methodResp, err := a.grackleBarriersCore.GetBarrierByName(&GetBarrierByNameRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -1978,7 +1979,7 @@ func (a *GrackleBarriersCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadRes
 		methodResp, err := a.grackleBarriersCore.ListBarriers(&ListBarriersRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}
@@ -2005,7 +2006,7 @@ func (a *GrackleBarriersCoreAdapter) Read(rpcReqBytes []byte) (*monstera.ReadRes
 		methodResp, err := a.grackleBarriersCore.ListBarrierParticipants(&ListBarrierParticipantsRequest{
 			Now:     rpcReq.Now,
 			Payload: &methodReq,
-		})
+		}, log)
 		if err != nil {
 			return nil, err
 		}

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"time"
 
 	"github.com/evrblk/monstera"
@@ -100,7 +101,7 @@ func (c *Core) Restore(readers ...io.ReadCloser) error {
 
 // GetWaitGroup looks up a wait group by its full WaitGroupId. Returns a
 // NotFound application error if no wait group with that id exists.
-func (c *Core) GetWaitGroup(req *coreapis.GetWaitGroupRequest) (*coreapis.GetWaitGroupResponse, error) {
+func (c *Core) GetWaitGroup(req *coreapis.GetWaitGroupRequest, log *slog.Logger) (*coreapis.GetWaitGroupResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
@@ -130,7 +131,7 @@ func (c *Core) GetWaitGroup(req *coreapis.GetWaitGroupRequest) (*coreapis.GetWai
 // GetWaitGroupByName looks up a wait group by its name.
 // Returns a NotFound application error if no wait group with that name
 // exists in the given namespace.
-func (c *Core) GetWaitGroupByName(req *coreapis.GetWaitGroupByNameRequest) (*coreapis.GetWaitGroupByNameResponse, error) {
+func (c *Core) GetWaitGroupByName(req *coreapis.GetWaitGroupByNameRequest, log *slog.Logger) (*coreapis.GetWaitGroupByNameResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
@@ -160,7 +161,7 @@ func (c *Core) GetWaitGroupByName(req *coreapis.GetWaitGroupByNameRequest) (*cor
 // ListWaitGroups returns a page of wait groups in the given namespace,
 // ordered by name. Use the returned NextPaginationToken / PreviousPaginationToken
 // to walk forward or backward through pages.
-func (c *Core) ListWaitGroups(req *coreapis.ListWaitGroupsRequest) (*coreapis.ListWaitGroupsResponse, error) {
+func (c *Core) ListWaitGroups(req *coreapis.ListWaitGroupsRequest, log *slog.Logger) (*coreapis.ListWaitGroupsResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
@@ -181,7 +182,7 @@ func (c *Core) ListWaitGroups(req *coreapis.ListWaitGroupsRequest) (*coreapis.Li
 // ListWaitGroupCompletedJobs returns a page of completed jobs for the named wait
 // group. Returns a NotFound application error if the wait group does not
 // exist.
-func (c *Core) ListWaitGroupCompletedJobs(req *coreapis.ListWaitGroupCompletedJobsRequest) (*coreapis.ListWaitGroupCompletedJobsResponse, error) {
+func (c *Core) ListWaitGroupCompletedJobs(req *coreapis.ListWaitGroupCompletedJobsRequest, log *slog.Logger) (*coreapis.ListWaitGroupCompletedJobsResponse, error) {
 	txn := c.badgerStore.View()
 	defer txn.Discard()
 
@@ -219,7 +220,7 @@ func (c *Core) ListWaitGroupCompletedJobs(req *coreapis.ListWaitGroupCompletedJo
 // the per-namespace wait-group counter. Returns AlreadyExists if a wait group
 // with the same name already exists in the namespace, or ResourceExhausted
 // if creating it would exceed MaxNumberOfWaitGroupsPerNamespace.
-func (c *Core) CreateWaitGroup(req *coreapis.CreateWaitGroupRequest) (*coreapis.CreateWaitGroupResponse, error) {
+func (c *Core) CreateWaitGroup(req *coreapis.CreateWaitGroupRequest, log *slog.Logger) (*coreapis.CreateWaitGroupResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -328,7 +329,7 @@ func (c *Core) CreateWaitGroup(req *coreapis.CreateWaitGroupRequest) (*coreapis.
 // one. It is not allowed to shrink counter below the current number of completed
 // jobs. Returns NotFound if the wait group does not exist. Only active wait groups
 // can be updated.
-func (c *Core) UpdateWaitGroup(req *coreapis.UpdateWaitGroupRequest) (*coreapis.UpdateWaitGroupResponse, error) {
+func (c *Core) UpdateWaitGroup(req *coreapis.UpdateWaitGroupRequest, log *slog.Logger) (*coreapis.UpdateWaitGroupResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -441,7 +442,7 @@ func (c *Core) UpdateWaitGroup(req *coreapis.UpdateWaitGroupRequest) (*coreapis.
 // DeleteWaitGroup removes the named wait group and schedules its completed
 // jobs for asynchronous deletion via a GC record. Deleting a wait group that
 // does not exist is a no-op and returns success.
-func (c *Core) DeleteWaitGroup(req *coreapis.DeleteWaitGroupRequest) (*coreapis.DeleteWaitGroupResponse, error) {
+func (c *Core) DeleteWaitGroup(req *coreapis.DeleteWaitGroupRequest, log *slog.Logger) (*coreapis.DeleteWaitGroupResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -514,7 +515,7 @@ func (c *Core) DeleteWaitGroup(req *coreapis.DeleteWaitGroupRequest) (*coreapis.
 // Returns NotFound if the wait group does not exist, or InvalidArgument if
 // the call would push CompletedJobs above Counter — in the latter case the
 // transaction is discarded and no jobs are persisted.
-func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroupRequest) (*coreapis.CompleteJobsFromWaitGroupResponse, error) {
+func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroupRequest, log *slog.Logger) (*coreapis.CompleteJobsFromWaitGroupResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -626,7 +627,7 @@ func (c *Core) CompleteJobsFromWaitGroup(req *coreapis.CompleteJobsFromWaitGroup
 // On every tick it also: (1) marks active wait groups whose expires_at has
 // passed as expired and schedules their deletion, and (2) deletes finished
 // wait groups (completed or expired) whose scheduled deletion time has passed.
-func (c *Core) RunWaitGroupsGarbageCollection(req *coreapis.RunWaitGroupsGarbageCollectionRequest) (*coreapis.RunWaitGroupsGarbageCollectionResponse, error) {
+func (c *Core) RunWaitGroupsGarbageCollection(req *coreapis.RunWaitGroupsGarbageCollectionRequest, log *slog.Logger) (*coreapis.RunWaitGroupsGarbageCollectionResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 
@@ -696,7 +697,7 @@ func (c *Core) RunWaitGroupsGarbageCollection(req *coreapis.RunWaitGroupsGarbage
 // RunWaitGroupsGarbageCollection ticks, delete every wait group and job
 // belonging to the given namespace. The deletion itself is asynchronous;
 // this call only enqueues the request.
-func (c *Core) WaitGroupsDeleteNamespace(req *coreapis.WaitGroupsDeleteNamespaceRequest) (*coreapis.WaitGroupsDeleteNamespaceResponse, error) {
+func (c *Core) WaitGroupsDeleteNamespace(req *coreapis.WaitGroupsDeleteNamespaceRequest, log *slog.Logger) (*coreapis.WaitGroupsDeleteNamespaceResponse, error) {
 	txn := c.badgerStore.Update()
 	defer txn.Discard()
 

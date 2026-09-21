@@ -3,6 +3,7 @@ package locks
 import (
 	"bytes"
 	"io"
+	"log/slog"
 	"math/rand/v2"
 	"testing"
 	"time"
@@ -135,7 +136,7 @@ func TestAncestors_MultipleLocksSameAncestor(t *testing.T) {
 		Payload: &corepb.DeleteLockRequest{
 			LockId: lockId1,
 		},
-	},
+	}, slog.Default(),
 	)
 	require.NoError(t, err)
 	require.NotNil(t, resp1)
@@ -215,7 +216,7 @@ func TestAncestors_ExpirationCleansUpAncestors(t *testing.T) {
 			MaxVisitedLocks:       100,
 		},
 		Now: now.Add(2 * time.Minute).UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, gcResponse)
 
@@ -252,7 +253,7 @@ func TestAncestors_GarbageCollectionCleansUpAncestors(t *testing.T) {
 			MaxVisitedLocks:       100,
 		},
 		Now: now.Add(2 * time.Minute).UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp1)
 	require.NotNil(t, resp1.Payload)
@@ -292,7 +293,7 @@ func TestAncestors_NamespaceGCCleansUpAncestors(t *testing.T) {
 			NamespaceId: namespaceId,
 			RecordId:    1,
 		},
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp1)
 	require.NotNil(t, resp1.Payload)
@@ -305,7 +306,7 @@ func TestAncestors_NamespaceGCCleansUpAncestors(t *testing.T) {
 			MaxVisitedLocks:       100,
 		},
 		Now: now.Add(time.Minute).UnixNano(),
-	})
+	}, slog.Default())
 	require.NoError(t, err)
 	require.NotNil(t, resp2)
 	require.NotNil(t, resp2.Payload)
