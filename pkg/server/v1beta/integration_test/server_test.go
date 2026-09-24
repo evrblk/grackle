@@ -1,6 +1,7 @@
 package integration_test
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/evrblk/monstera/cluster"
@@ -48,7 +49,7 @@ func newGrackleApiServer(t *testing.T) (*v1beta.GrackleApiServer, func()) {
 			return barriers.NewCore(dataStore, utils.GetTruncatedHash([]byte(shardId), 4), lowerBound, upperBound)
 		},
 	}
-	grackleCoreApiClient := coreapis.NewGrackleNonclusteredStub(8, coresFactory)
+	grackleCoreApiClient := coreapis.NewGrackleNonclusteredStub(8, coresFactory, slog.Default())
 
 	grackleApiGatewayServer := v1beta.NewGrackleApiServer(grackleCoreApiClient)
 

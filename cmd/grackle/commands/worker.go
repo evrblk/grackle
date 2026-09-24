@@ -2,12 +2,12 @@ package commands
 
 import (
 	"context"
-	"log"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
 
 	"github.com/evrblk/monstera"
@@ -19,24 +19,28 @@ import (
 )
 
 var workerCmdCfg struct {
-	prometheusPort int
-	nodes          monsteraNodesFlags
+	prometheusListenAddr string
+	nodes                monsteraNodesFlags
+	log                  logFlags
 }
 
 var workerCmd = &cobra.Command{
 	Use:   "worker",
 	Short: "Run Grackle background worker",
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Println("Initializing Grackle Worker...")
+		baseLogger := setupLogger(workerCmdCfg.log).With("service_name", "worker")
+		baseLogger.Info("Initializing Grackle Worker...")
 
 		// Metrics
-		metricsSrv := metrics.NewMetricsServer(workerCmdCfg.prometheusPort)
+		workers.RegisterMetrics(prometheus.DefaultRegisterer)
+		metricsSrv := metrics.NewMetricsServer(workerCmdCfg.prometheusListenAddr)
 		metricsSrv.Start()
 
 		// Node discovery + polling config provider.
 		discovery, err := buildNodeDiscovery(workerCmdCfg.nodes)
 		if err != nil {
-			log.Fatal(err)
+			baseLogger.Error(err.Error())
+			os.Exit(1)
 		}
 		adminClient := monstera_grpc.NewAdminClient()
 		provider := monstera.NewPollingClusterConfigProvider(discovery, adminClient, monstera.PollingOptions{})
@@ -47,7 +51,8 @@ var workerCmd = &cobra.Command{
 
 		ctx, cancel := context.WithCancel(context.Background())
 		if err := monsteraClient.Start(ctx); err != nil {
-			log.Fatalf("failed to start monstera client: %v", err)
+			baseLogger.Error("failed to start monstera client", "error", err)
+			os.Exit(1)
 		}
 		defer monsteraClient.Stop()
 		defer adminClient.Close()
@@ -56,13 +61,13 @@ var workerCmd = &cobra.Command{
 		grackleCoreApiClient := coreapis.NewGrackleMonsteraStub(monsteraClient)
 
 		// Grackle workers
-		grackeLocksGarbageCollectionWorker := workers.NewGrackleLocksGCWorker(grackleCoreApiClient)
+		grackeLocksGarbageCollectionWorker := workers.NewGrackleLocksGCWorker(grackleCoreApiClient, baseLogger.With("component", "grackle-locks-gc-worker"))
 		grackeLocksGarbageCollectionWorker.Start()
-		grackeSemaphoresGarbageCollectionWorker := workers.NewGrackleSemaphoresGCWorker(grackleCoreApiClient)
+		grackeSemaphoresGarbageCollectionWorker := workers.NewGrackleSemaphoresGCWorker(grackleCoreApiClient, baseLogger.With("component", "grackle-semaphores-gc-worker"))
 		grackeSemaphoresGarbageCollectionWorker.Start()
-		grackeWaitGroupsGarbageCollectionWorker := workers.NewGrackleWaitGroupsGCWorker(grackleCoreApiClient)
+		grackeWaitGroupsGarbageCollectionWorker := workers.NewGrackleWaitGroupsGCWorker(grackleCoreApiClient, baseLogger.With("component", "grackle-wait-groups-gc-worker"))
 		grackeWaitGroupsGarbageCollectionWorker.Start()
-		grackeBarriersGarbageCollectionWorker := workers.NewGrackleBarriersGCWorker(grackleCoreApiClient)
+		grackeBarriersGarbageCollectionWorker := workers.NewGrackleBarriersGCWorker(grackleCoreApiClient, baseLogger.With("component", "grackle-barriers-gc-worker"))
 		grackeBarriersGarbageCollectionWorker.Start()
 
 		wg := sync.WaitGroup{}
@@ -72,7 +77,7 @@ var workerCmd = &cobra.Command{
 		go func() {
 			select {
 			case <-c:
-				log.Println("Received SIGINT. Shutting down...")
+				baseLogger.Info("Received SIGINT. Shutting down...")
 				cancel()
 				metricsSrv.Stop()
 				grackeLocksGarbageCollectionWorker.Stop()
@@ -95,7 +100,8 @@ var workerCmd = &cobra.Command{
 func init() {
 	runCmd.AddCommand(workerCmd)
 
-	workerCmd.PersistentFlags().IntVarP(&workerCmdCfg.prometheusPort, "prometheus-port", "", 2112, "Prometheus metrics port")
+	workerCmd.PersistentFlags().StringVarP(&workerCmdCfg.prometheusListenAddr, "prometheus-listen-addr", "", ":2112", "Prometheus metrics bind address")
 
 	addMonsteraNodesFlags(workerCmd, &workerCmdCfg.nodes)
+	addLogFlags(workerCmd, &workerCmdCfg.log)
 }

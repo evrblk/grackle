@@ -2,7 +2,7 @@ package workers
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -15,12 +15,19 @@ import (
 
 type GrackleSemaphoresGCWorker struct {
 	coreApiClient coreapis.GrackleClientApi
+	logger        *slog.Logger
 	worker        *workers.IntervalWorker
 }
 
-func NewGrackleSemaphoresGCWorker(coreApiClient coreapis.GrackleClientApi) *GrackleSemaphoresGCWorker {
+// NewGrackleSemaphoresGCWorker builds a GrackleSemaphoresGCWorker logging to
+// logger, or to slog.Default() if logger is nil.
+func NewGrackleSemaphoresGCWorker(coreApiClient coreapis.GrackleClientApi, logger *slog.Logger) *GrackleSemaphoresGCWorker {
+	if logger == nil {
+		logger = slog.Default()
+	}
 	return &GrackleSemaphoresGCWorker{
 		coreApiClient: coreApiClient,
+		logger:        logger,
 		worker:        workers.NewIntervalWorker(time.Duration(5) * time.Second),
 	}
 }
@@ -36,7 +43,7 @@ func (w *GrackleSemaphoresGCWorker) Stop() {
 func (w *GrackleSemaphoresGCWorker) handler() {
 	shards, err := w.coreApiClient.ListShards("GrackleSemaphores")
 	if err != nil {
-		log.Printf("ListShards(\"GrackleSemaphores\"): %v", err)
+		w.logger.Error("ListShards failed", "application", "GrackleSemaphores", "error", err)
 		return // TODO
 	}
 
@@ -66,6 +73,6 @@ func (w *GrackleSemaphoresGCWorker) runGarbageCollection(shardId string, now tim
 	}, shardId)
 	if err != nil {
 		grackleSemaphoresGCWorkerErrorsTotal.WithLabelValues(shardId).Inc()
-		log.Printf("RunSemaphoresGarbageCollection failed: %v", err)
+		w.logger.Error("RunSemaphoresGarbageCollection failed", "shard_id", shardId, "error", err)
 	}
 }

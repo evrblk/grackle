@@ -25,7 +25,7 @@ no zookeeper, or whatever) and it stores all its state on disk (on embedded Badg
 ### Single-node mode
 
 ```shell
-$ ./grackle run single-node --port=8000 --data-dir=./data
+$ ./grackle run single-node --gateway-listen-addr=:8000 --data-dir=./data
 ```
 
 ### Clustered mode
@@ -92,9 +92,9 @@ Next, start the (empty, unprovisioned) nodes — each just needs its own data di
 gRPC address it will listen on, matching what you put in the config:
 
 ```shell
-$ ./grackle run node --data-dir=./data/node_01 --listen=localhost:7001
-$ ./grackle run node --data-dir=./data/node_02 --listen=localhost:7002
-$ ./grackle run node --data-dir=./data/node_03 --listen=localhost:7003
+$ ./grackle run node --data-dir=./data/node_01 --monstera-listen-addr=localhost:7001
+$ ./grackle run node --data-dir=./data/node_02 --monstera-listen-addr=localhost:7002
+$ ./grackle run node --data-dir=./data/node_03 --monstera-listen-addr=localhost:7003
 ```
 
 Then push the config to all of them in one step over the admin plane — this assigns each node its
@@ -112,7 +112,7 @@ so this doesn't need to be an exhaustive list):
 ```shell
 $ ./grackle run worker --monstera-nodes=localhost:7001,localhost:7002,localhost:7003
 
-$ ./grackle run gateway --port=8000 --monstera-nodes=localhost:7001,localhost:7002,localhost:7003
+$ ./grackle run gateway --gateway-listen-addr=:8000 --monstera-nodes=localhost:7001,localhost:7002,localhost:7003
 ```
 
 To add a node to a running cluster, move a shard's replica between nodes, or fetch the live

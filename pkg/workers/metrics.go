@@ -57,13 +57,16 @@ var (
 	}, []string{"shard_id"})
 )
 
-func init() {
-	prometheus.MustRegister(grackleLocksGCWorkerDuration)
-	prometheus.MustRegister(grackleSemaphoresGCWorkerDuration)
-	prometheus.MustRegister(grackleWaitGroupsGCWorkerDuration)
-	prometheus.MustRegister(grackleBarriersGCWorkerDuration)
-	prometheus.MustRegister(grackleLocksGCWorkerErrorsTotal)
-	prometheus.MustRegister(grackleSemaphoresGCWorkerErrorsTotal)
-	prometheus.MustRegister(grackleWaitGroupsGCWorkerErrorsTotal)
-	prometheus.MustRegister(grackleBarriersGCWorkerErrorsTotal)
+// RegisterMetrics registers the worker metrics with the given registerer.
+// Call once at startup, e.g. RegisterMetrics(prometheus.DefaultRegisterer).
+// It panics if a metric is already registered.
+func RegisterMetrics(registerer prometheus.Registerer) {
+	registerer.MustRegister(grackleLocksGCWorkerDuration)
+	registerer.MustRegister(grackleSemaphoresGCWorkerDuration)
+	registerer.MustRegister(grackleWaitGroupsGCWorkerDuration)
+	registerer.MustRegister(grackleBarriersGCWorkerDuration)
+	registerer.MustRegister(grackleLocksGCWorkerErrorsTotal)
+	registerer.MustRegister(grackleSemaphoresGCWorkerErrorsTotal)
+	registerer.MustRegister(grackleWaitGroupsGCWorkerErrorsTotal)
+	registerer.MustRegister(grackleBarriersGCWorkerErrorsTotal)
 }

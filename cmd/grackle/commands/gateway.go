@@ -2,8 +2,6 @@ package commands
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -12,6 +10,8 @@ import (
 	"github.com/evrblk/monstera"
 	monstera_grpc "github.com/evrblk/monstera/transport/grpc"
 	"github.com/evrblk/yellowstone-common/metrics"
+	"github.com/evrblk/yellowstone-common/middleware"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
@@ -21,33 +21,36 @@ import (
 )
 
 var gatewayCmdCfg struct {
-	port           int
-	prometheusPort int
-	nodes          monsteraNodesFlags
-	authKeysPath   string
+	gatewayListenAddr    string
+	prometheusListenAddr string
+	nodes                monsteraNodesFlags
+	authKeysPath         string
+	log                  logFlags
 }
 
 var gatewayCmd = &cobra.Command{
 	Use:   "gateway",
 	Short: "Run Grackle API Gateway",
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Println("Initializing Grackle API Gateway Server...")
+		baseLogger := setupLogger(gatewayCmdCfg.log).With("service_name", "gateway")
+		baseLogger.Info("Initializing Grackle API Gateway Server...")
 
-		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", gatewayCmdCfg.port))
+		lis, err := net.Listen("tcp", gatewayCmdCfg.gatewayListenAddr)
 		if err != nil {
-			log.Fatalf("failed to listen: %v", err)
+			baseLogger.Error("failed to listen", "error", err, "address", gatewayCmdCfg.gatewayListenAddr)
+			os.Exit(1)
 		}
 
 		// Metrics
-		grackle_v1beta.RegisterMetrics()
-		metricsSrv := metrics.NewMetricsServer(gatewayCmdCfg.prometheusPort)
+		metricsSrv := metrics.NewMetricsServer(gatewayCmdCfg.prometheusListenAddr)
 		metricsSrv.Start()
 
 		// Node discovery + polling config provider: the gateway learns the cluster
 		// config from the cluster itself and refreshes as the topology changes.
 		discovery, err := buildNodeDiscovery(gatewayCmdCfg.nodes)
 		if err != nil {
-			log.Fatal(err)
+			baseLogger.Error(err.Error())
+			os.Exit(1)
 		}
 		adminClient := monstera_grpc.NewAdminClient()
 		provider := monstera.NewPollingClusterConfigProvider(discovery, adminClient, monstera.PollingOptions{})
@@ -58,13 +61,17 @@ var gatewayCmd = &cobra.Command{
 
 		ctx, cancel := context.WithCancel(context.Background())
 		if err := monsteraClient.Start(ctx); err != nil {
-			log.Fatalf("failed to start monstera client: %v", err)
+			baseLogger.Error("failed to start monstera client", "error", err)
+			os.Exit(1)
 		}
 
 		// Middleware
-		unaryInterceptors := make([]grpc.UnaryServerInterceptor, 0)
+		monitoringMiddleware := middleware.NewMonitoringMiddleware("grackle", baseLogger.With("component", "grpc"))
+		monitoringMiddleware.Register(prometheus.DefaultRegisterer)
+
+		unaryInterceptors := []grpc.UnaryServerInterceptor{monitoringMiddleware.Unary}
 		if gatewayCmdCfg.authKeysPath != "" {
-			unaryInterceptors = append(unaryInterceptors, grackle_v1beta.NewAuthenticationMiddleware(gatewayCmdCfg.authKeysPath).Unary)
+			unaryInterceptors = append(unaryInterceptors, middleware.NewAuthenticationMiddleware(gatewayCmdCfg.authKeysPath, "Grackle").Unary)
 		}
 
 		grpcServer := grpc.NewServer(
@@ -76,7 +83,7 @@ var gatewayCmd = &cobra.Command{
 		go func() {
 			select {
 			case <-c:
-				log.Println("Received SIGINT. Shutting down...")
+				baseLogger.Info("Received SIGINT. Shutting down...")
 				cancel()
 				grpcServer.GracefulStop()
 				monsteraClient.Stop()
@@ -96,7 +103,7 @@ var gatewayCmd = &cobra.Command{
 		defer grackleApiGatewayServer.Close()
 		gracklepb.RegisterGrackleApiServer(grpcServer, grackleApiGatewayServer)
 
-		log.Println("Starting API Gateway Server...")
+		baseLogger.Info("Starting API Gateway Server...", "address", gatewayCmdCfg.gatewayListenAddr)
 		grpcServer.Serve(lis)
 	},
 }
@@ -104,15 +111,10 @@ var gatewayCmd = &cobra.Command{
 func init() {
 	runCmd.AddCommand(gatewayCmd)
 
-	gatewayCmd.PersistentFlags().IntVarP(&gatewayCmdCfg.port, "port", "", 0, "Server port")
-	err := gatewayCmd.MarkPersistentFlagRequired("port")
-	if err != nil {
-		panic(err)
-	}
-
-	gatewayCmd.PersistentFlags().IntVarP(&gatewayCmdCfg.prometheusPort, "prometheus-port", "", 2112, "Prometheus metrics port")
+	gatewayCmd.PersistentFlags().StringVarP(&gatewayCmdCfg.gatewayListenAddr, "gateway-listen-addr", "", ":8000", "API Gateway bind address")
+	gatewayCmd.PersistentFlags().StringVarP(&gatewayCmdCfg.prometheusListenAddr, "prometheus-listen-addr", "", ":2112", "Prometheus metrics bind address")
+	gatewayCmd.PersistentFlags().StringVarP(&gatewayCmdCfg.authKeysPath, "auth-keys-path", "", "", "Path to the directory with auth keys. No authn if empty.")
 
 	addMonsteraNodesFlags(gatewayCmd, &gatewayCmdCfg.nodes)
-
-	gatewayCmd.PersistentFlags().StringVarP(&gatewayCmdCfg.authKeysPath, "auth-keys-path", "", "", "Path to the directory with auth keys. No authn if empty.")
+	addLogFlags(gatewayCmd, &gatewayCmdCfg.log)
 }

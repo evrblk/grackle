@@ -2,7 +2,7 @@ package workers
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -15,12 +15,19 @@ import (
 
 type GrackleBarriersGCWorker struct {
 	coreApiClient coreapis.GrackleClientApi
+	logger        *slog.Logger
 	worker        *workers.IntervalWorker
 }
 
-func NewGrackleBarriersGCWorker(coreApiClient coreapis.GrackleClientApi) *GrackleBarriersGCWorker {
+// NewGrackleBarriersGCWorker builds a GrackleBarriersGCWorker logging to
+// logger, or to slog.Default() if logger is nil.
+func NewGrackleBarriersGCWorker(coreApiClient coreapis.GrackleClientApi, logger *slog.Logger) *GrackleBarriersGCWorker {
+	if logger == nil {
+		logger = slog.Default()
+	}
 	return &GrackleBarriersGCWorker{
 		coreApiClient: coreApiClient,
+		logger:        logger,
 		worker:        workers.NewIntervalWorker(time.Duration(5) * time.Second),
 	}
 }
@@ -36,7 +43,7 @@ func (w *GrackleBarriersGCWorker) Stop() {
 func (w *GrackleBarriersGCWorker) handler() {
 	shards, err := w.coreApiClient.ListShards("GrackleBarriers")
 	if err != nil {
-		log.Printf("ListShards(\"GrackleBarriers\"): %v", err)
+		w.logger.Error("ListShards failed", "application", "GrackleBarriers", "error", err)
 		return // TODO
 	}
 
@@ -66,6 +73,6 @@ func (w *GrackleBarriersGCWorker) runGarbageCollection(shardId string, now time.
 	}, shardId)
 	if err != nil {
 		grackleBarriersGCWorkerErrorsTotal.WithLabelValues(shardId).Inc()
-		log.Printf("RunBarriersGarbageCollection failed: %v", err)
+		w.logger.Error("RunBarriersGarbageCollection failed", "shard_id", shardId, "error", err)
 	}
 }

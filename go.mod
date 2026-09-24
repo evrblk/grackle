@@ -4,8 +4,8 @@ go 1.27.0
 
 require (
 	github.com/evrblk/evrblk-go v0.0.0-20260917205857-891670b70f0f
-	github.com/evrblk/monstera v0.0.0-20260921134121-f99fd6a5d648
-	github.com/evrblk/yellowstone-common v0.0.0-20260915204323-38c802c5a1de
+	github.com/evrblk/monstera v0.0.0-20260924155748-4a96144e15f8
+	github.com/evrblk/yellowstone-common v0.0.0-20260924154037-e9875d1e1bf7
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10
 	github.com/prometheus/client_golang v1.24.1
 	github.com/samber/lo v1.53.0
@@ -57,7 +57,7 @@ require (
 	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260918162117-cecb64721679 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260921155816-b14227669459 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 

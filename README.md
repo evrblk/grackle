@@ -63,7 +63,7 @@ $ make grackle
 ### Single-node mode
 
 ```shell
-$ ./grackle run single-node --port=8000 --data-dir=./data
+$ ./grackle run single-node --gateway-listen-addr=:8000 --data-dir=./data
 ```
 
 ### Clustered mode

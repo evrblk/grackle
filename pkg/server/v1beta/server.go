@@ -2,7 +2,6 @@ package v1beta
 
 import (
 	"context"
-	"log"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -20,7 +19,6 @@ type GrackleApiServer struct {
 }
 
 func (s *GrackleApiServer) Close() {
-	log.Println("Stopping GrackleApiServer...")
 	s.handler.Stop()
 }
 

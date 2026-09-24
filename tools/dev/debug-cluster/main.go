@@ -35,12 +35,12 @@ import (
 )
 
 var (
-	configPath     = flag.String("config", "./cluster_config.json", "Path to cluster config file")
-	baseDataDir    = flag.String("data-dir", "./.data", "Base directory for node data")
-	prometheusPort = flag.Int("prometheus-port", 2112, "Prometheus metrics port")
-	cpuProfile     = flag.String("cpu-profile", "", "Write CPU profile to file")
-	transportType  = flag.String("transport", "grpc", "Transport type: 'grpc' or 'local'")
-	gatewayPort    = flag.Int("gateway-port", 0, "Gateway port for client connections (0 = disabled)")
+	configPath           = flag.String("config", "./cluster_config.json", "Path to cluster config file")
+	baseDataDir          = flag.String("data-dir", "./.data", "Base directory for node data")
+	prometheusListenAddr = flag.String("prometheus-listen-addr", ":2112", "Prometheus metrics bind address")
+	cpuProfile           = flag.String("cpu-profile", "", "Write CPU profile to file")
+	transportType        = flag.String("transport", "grpc", "Transport type: 'grpc' or 'local'")
+	gatewayPort          = flag.Int("gateway-port", 0, "Gateway port for client connections (0 = disabled)")
 )
 
 type nodeRunner struct {
@@ -211,7 +211,7 @@ func main() {
 	// Metrics
 	monstera.RegisterMetrics(prometheus.DefaultRegisterer)
 	coreapis.RegisterMetrics(prometheus.DefaultRegisterer)
-	metricsSrv := metrics.NewMetricsServer(*prometheusPort)
+	metricsSrv := metrics.NewMetricsServer(*prometheusListenAddr)
 	metricsSrv.Start()
 	defer metricsSrv.Stop()
 
@@ -283,9 +283,6 @@ func main() {
 
 	if *gatewayPort > 0 {
 		log.Printf("Starting gateway on port %d...", *gatewayPort)
-
-		// Register gateway metrics
-		grackle_v1beta.RegisterMetrics()
 
 		// Create listener
 		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *gatewayPort))

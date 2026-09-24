@@ -68,9 +68,9 @@ type Config struct {
 	LeaseRefreshInterval time.Duration
 
 	// General
-	PrometheusPort int
-	LogInterval    time.Duration
-	Cleanup        bool
+	PrometheusListenAddr string
+	LogInterval          time.Duration
+	Cleanup              bool
 }
 
 func parseFlags() *Config {
@@ -125,7 +125,7 @@ func parseFlags() *Config {
 	flag.DurationVar(&config.LeaseRefreshInterval, "lease-refresh-interval", 10*time.Second, "Lease refresh interval")
 
 	// General
-	flag.IntVar(&config.PrometheusPort, "prometheus-port", 2113, "Prometheus metrics port")
+	flag.StringVar(&config.PrometheusListenAddr, "prometheus-listen-addr", ":2113", "Prometheus metrics bind address")
 	flag.DurationVar(&config.LogInterval, "log-interval", 5*time.Second, "Stats logging interval")
 	flag.BoolVar(&config.Cleanup, "cleanup", true, "Cleanup resources on shutdown")
 

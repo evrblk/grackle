@@ -2,8 +2,6 @@ package commands
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -15,6 +13,8 @@ import (
 	"github.com/evrblk/monstera/store"
 	"github.com/evrblk/yellowstone-common/honey"
 	"github.com/evrblk/yellowstone-common/metrics"
+	"github.com/evrblk/yellowstone-common/middleware"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
@@ -29,33 +29,37 @@ import (
 )
 
 var singleNodeCmdCfg struct {
-	port           int
-	prometheusPort int
-	authKeysPath   string
-	shardsCount    int
-	dataDir        string
+	gatewayListenAddr    string
+	prometheusListenAddr string
+	authKeysPath         string
+	shardsCount          int
+	dataDir              string
+	log                  logFlags
 }
 
 var singleNodeCmd = &cobra.Command{
 	Use:   "single-node",
 	Short: "Run Grackle in single-node mode",
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Println("Initializing Grackle...")
+		baseLogger := setupLogger(singleNodeCmdCfg.log).With("service_name", "single-node")
+		baseLogger.Info("Initializing Grackle...")
 
-		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", singleNodeCmdCfg.port))
+		lis, err := net.Listen("tcp", singleNodeCmdCfg.gatewayListenAddr)
 		if err != nil {
-			log.Fatalf("failed to listen: %v", err)
+			baseLogger.Error("failed to listen", "error", err, "address", singleNodeCmdCfg.gatewayListenAddr)
+			os.Exit(1)
 		}
 
 		// Metrics
-		grackle_v1beta.RegisterMetrics()
-		metricsSrv := metrics.NewMetricsServer(singleNodeCmdCfg.prometheusPort)
+		workers.RegisterMetrics(prometheus.DefaultRegisterer)
+		metricsSrv := metrics.NewMetricsServer(singleNodeCmdCfg.prometheusListenAddr)
 		metricsSrv.Start()
 
 		// Create shared Badger store for application cores
 		dataStore, err := store.NewBadgerStore(store.DefaultOptions(filepath.Join(singleNodeCmdCfg.dataDir, "cores")))
 		if err != nil {
-			log.Fatalf("failed to create data store: %v", err)
+			baseLogger.Error("failed to create data store", "error", err)
+			os.Exit(1)
 		}
 
 		// Node-local registry handing out a stable two-byte prefix per shard, so
@@ -65,15 +69,19 @@ var singleNodeCmd = &cobra.Command{
 		replicaPrefix := func(shardId string) []byte {
 			prefix, err := replicaRegistry.GetOrAssignPrefix(shardId)
 			if err != nil {
-				log.Fatalf("failed to assign replica prefix for shard %s: %v", shardId, err)
+				baseLogger.Error("failed to assign replica prefix", "shard_id", shardId, "error", err)
+				os.Exit(1)
 			}
 			return prefix
 		}
 
 		// Middleware
-		unaryInterceptors := make([]grpc.UnaryServerInterceptor, 0)
+		monitoringMiddleware := middleware.NewMonitoringMiddleware("grackle", baseLogger.With("component", "grpc"))
+		monitoringMiddleware.Register(prometheus.DefaultRegisterer)
+
+		unaryInterceptors := []grpc.UnaryServerInterceptor{monitoringMiddleware.Unary}
 		if singleNodeCmdCfg.authKeysPath != "" {
-			unaryInterceptors = append(unaryInterceptors, grackle_v1beta.NewAuthenticationMiddleware(singleNodeCmdCfg.authKeysPath).Unary)
+			unaryInterceptors = append(unaryInterceptors, middleware.NewAuthenticationMiddleware(singleNodeCmdCfg.authKeysPath, "Grackle").Unary)
 		}
 
 		// Grackle single node client
@@ -94,16 +102,16 @@ var singleNodeCmd = &cobra.Command{
 				return barriers.NewCore(dataStore, replicaPrefix(shardId), lowerBound, upperBound)
 			},
 		}
-		grackleCoreApiClient := coreapis.NewGrackleNonclusteredStub(singleNodeCmdCfg.shardsCount, coresFactory)
+		grackleCoreApiClient := coreapis.NewGrackleNonclusteredStub(singleNodeCmdCfg.shardsCount, coresFactory, baseLogger.With("component", "core"))
 
 		// Grackle workers
-		grackeLocksGarbageCollectionWorker := workers.NewGrackleLocksGCWorker(grackleCoreApiClient)
+		grackeLocksGarbageCollectionWorker := workers.NewGrackleLocksGCWorker(grackleCoreApiClient, baseLogger.With("component", "grackle-locks-gc-worker"))
 		grackeLocksGarbageCollectionWorker.Start()
-		grackeSemaphoresGarbageCollectionWorker := workers.NewGrackleSemaphoresGCWorker(grackleCoreApiClient)
+		grackeSemaphoresGarbageCollectionWorker := workers.NewGrackleSemaphoresGCWorker(grackleCoreApiClient, baseLogger.With("component", "grackle-semaphores-gc-worker"))
 		grackeSemaphoresGarbageCollectionWorker.Start()
-		grackeWaitGroupsGarbageCollectionWorker := workers.NewGrackleWaitGroupsGCWorker(grackleCoreApiClient)
+		grackeWaitGroupsGarbageCollectionWorker := workers.NewGrackleWaitGroupsGCWorker(grackleCoreApiClient, baseLogger.With("component", "grackle-wait-groups-gc-worker"))
 		grackeWaitGroupsGarbageCollectionWorker.Start()
-		grackeBarriersGarbageCollectionWorker := workers.NewGrackleBarriersGCWorker(grackleCoreApiClient)
+		grackeBarriersGarbageCollectionWorker := workers.NewGrackleBarriersGCWorker(grackleCoreApiClient, baseLogger.With("component", "grackle-barriers-gc-worker"))
 		grackeBarriersGarbageCollectionWorker.Start()
 
 		grpcServer := grpc.NewServer(
@@ -116,7 +124,7 @@ var singleNodeCmd = &cobra.Command{
 		go func() {
 			select {
 			case <-c:
-				log.Println("Received SIGINT. Shutting down...")
+				baseLogger.Info("Received SIGINT. Shutting down...")
 				cancel()
 				grackeLocksGarbageCollectionWorker.Stop()
 				grackeSemaphoresGarbageCollectionWorker.Stop()
@@ -137,7 +145,7 @@ var singleNodeCmd = &cobra.Command{
 		defer grackleApiGatewayServer.Close()
 		gracklepb.RegisterGrackleApiServer(grpcServer, grackleApiGatewayServer)
 
-		log.Println("Starting API Gateway Server...")
+		baseLogger.Info("Starting API Gateway Server...", "address", singleNodeCmdCfg.gatewayListenAddr)
 		grpcServer.Serve(lis)
 	},
 }
@@ -145,21 +153,11 @@ var singleNodeCmd = &cobra.Command{
 func init() {
 	runCmd.AddCommand(singleNodeCmd)
 
-	singleNodeCmd.PersistentFlags().IntVarP(&singleNodeCmdCfg.port, "port", "", 0, "Server port")
-	err := singleNodeCmd.MarkPersistentFlagRequired("port")
-	if err != nil {
-		panic(err)
-	}
-
-	singleNodeCmd.PersistentFlags().IntVarP(&singleNodeCmdCfg.prometheusPort, "prometheus-port", "", 2112, "Prometheus metrics port")
-
+	singleNodeCmd.PersistentFlags().StringVarP(&singleNodeCmdCfg.gatewayListenAddr, "gateway-listen-addr", "", ":8000", "API Gateway bind address")
+	singleNodeCmd.PersistentFlags().StringVarP(&singleNodeCmdCfg.dataDir, "data-dir", "", "./data", "Base directory for data")
+	singleNodeCmd.PersistentFlags().StringVarP(&singleNodeCmdCfg.prometheusListenAddr, "prometheus-listen-addr", "", ":2112", "Prometheus metrics bind address")
 	singleNodeCmd.PersistentFlags().IntVarP(&singleNodeCmdCfg.shardsCount, "shards", "", 64, "Number of internal shards")
-
-	singleNodeCmd.PersistentFlags().StringVarP(&singleNodeCmdCfg.dataDir, "data-dir", "", "", "Base directory for data")
-	err = singleNodeCmd.MarkPersistentFlagRequired("data-dir")
-	if err != nil {
-		panic(err)
-	}
-
 	singleNodeCmd.PersistentFlags().StringVarP(&singleNodeCmdCfg.authKeysPath, "auth-keys-path", "", "", "Path to the directory with auth keys. No authn if empty.")
+
+	addLogFlags(singleNodeCmd, &singleNodeCmdCfg.log)
 }

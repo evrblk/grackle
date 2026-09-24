@@ -40,7 +40,7 @@ Run all nodes in a single process:
 Optional flags:
 - `--config` - Path to cluster config file (default: `./cluster_config.json`)
 - `--data-dir` - Base directory for node data (default: `./.data`)
-- `--prometheus-port` - Prometheus metrics port (default: `2112`)
+- `--prometheus-listen-addr` - Prometheus metrics bind address (default: `:2112`)
 - `--cpu-profile` - Write CPU profile to file (e.g., `cpu.prof`)
 - `--transport` - Transport type: `grpc` or `local` (default: `grpc`)
 - `--gateway-port` - Gateway port for client connections (default: `0` = disabled)

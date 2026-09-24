@@ -144,7 +144,7 @@ The client RPC deadline is set comfortably above each server-side timeout.
 
 ### General
 
-- `--prometheus-port` - Prometheus metrics port (default: `2113`)
+- `--prometheus-listen-addr` - Prometheus metrics bind address (default: `:2113`)
 - `--log-interval` - Stats logging interval (default: `5s`)
 - `--cleanup` - Cleanup resources on shutdown (default: `true`)
 
