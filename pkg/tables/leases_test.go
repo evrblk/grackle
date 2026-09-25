@@ -752,6 +752,57 @@ func TestLeasesTable_ListByProcessId(t *testing.T) {
 	require.Equal(t, processId2, result.Leases[0].ProcessId)
 }
 
+func TestLeasesTable_ListByProcessIdPrefixCollision(t *testing.T) {
+	store, err := store.NewBadgerInMemoryStore()
+	require.NoError(t, err)
+
+	table := NewLeasesTable([]byte{0x01}, []byte{0x02}, []byte{0x03})
+
+	accountId := rand.Uint64()
+	namespaceId := rand.Uint64()
+	now := time.Now()
+
+	// "worker-1" is a string-prefix of "worker-10": a process id index whose
+	// key doesn't length-delimit processId would let a scan for "worker-1"
+	// also pick up leases actually held by "worker-10".
+	shortLease := &corepb.Lease{
+		Id: &corepb.LeaseId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LeaseId:     rand.Uint64(),
+		},
+		ProcessId: "worker-1",
+		ExpiresAt: now.Add(time.Hour).UnixNano(),
+		CreatedAt: now.UnixNano(),
+	}
+	longLease := &corepb.Lease{
+		Id: &corepb.LeaseId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+			LeaseId:     rand.Uint64(),
+		},
+		ProcessId: "worker-10",
+		ExpiresAt: now.Add(time.Hour).UnixNano(),
+		CreatedAt: now.UnixNano(),
+	}
+
+	txn := store.Update()
+	require.NoError(t, table.Create(txn, shortLease))
+	require.NoError(t, table.Create(txn, longLease))
+	require.NoError(t, txn.Commit())
+
+	txn = store.View()
+	result, err := table.ListByProcessId(txn, &corepb.NamespaceId{
+		AccountId:   accountId,
+		NamespaceId: namespaceId,
+	}, "worker-1", nil, 100)
+	txn.Discard()
+
+	require.NoError(t, err)
+	require.Len(t, result.Leases, 1, "should only find the lease actually held by \"worker-1\"")
+	require.Equal(t, shortLease.Id.LeaseId, result.Leases[0].Id.LeaseId)
+}
+
 func TestLeasesTable_ListByProcessIdEmpty(t *testing.T) {
 	store, err := store.NewBadgerInMemoryStore()
 	require.NoError(t, err)

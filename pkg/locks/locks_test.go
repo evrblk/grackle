@@ -868,3 +868,67 @@ func TestLocksTable_ListByLeaseId(t *testing.T) {
 		txn.Discard()
 	})
 }
+
+func TestLocksTable_ListDescendantsByPath(t *testing.T) {
+	t.Run("finds descendants but not a same-named sibling", func(t *testing.T) {
+		badgerStore, err := store.NewBadgerInMemoryStore()
+		require.NoError(t, err)
+
+		table := newLocksTable([]byte{0x77, 0x77, 0x77, 0x77})
+
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint64()
+
+		// "a/bc" is a string-prefix match for "a/b" but is not its descendant
+		// (it's a sibling: "a/bc" does not live under "a/b/"). A raw
+		// byte-prefix scan for "a/b" would wrongly include it.
+		names := []string{"a/b", "a/b/c", "a/b/c/d", "a/bc"}
+		for _, name := range names {
+			lock := &corepb.Lock{
+				Id: &corepb.LockId{
+					AccountId:   accountId,
+					NamespaceId: namespaceId,
+					LockName:    name,
+				},
+				State: corepb.LockState_LOCK_STATE_SHARED_LOCKED,
+			}
+			txn := badgerStore.Update()
+			require.NoError(t, table.Update(txn, lock))
+			require.NoError(t, txn.Commit())
+		}
+
+		txn := badgerStore.View()
+		descendants, err := table.ListDescendantsByPath(txn, &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+		}, "a/b", 10)
+		txn.Discard()
+
+		require.NoError(t, err)
+		gotNames := make([]string, len(descendants))
+		for i, d := range descendants {
+			gotNames[i] = d.Id.LockName
+		}
+		require.ElementsMatch(t, []string{"a/b/c", "a/b/c/d"}, gotNames)
+	})
+
+	t.Run("empty when the path has no descendants", func(t *testing.T) {
+		badgerStore, err := store.NewBadgerInMemoryStore()
+		require.NoError(t, err)
+
+		table := newLocksTable([]byte{0x77, 0x77, 0x77, 0x77})
+
+		accountId := rand.Uint64()
+		namespaceId := rand.Uint64()
+
+		txn := badgerStore.View()
+		descendants, err := table.ListDescendantsByPath(txn, &corepb.NamespaceId{
+			AccountId:   accountId,
+			NamespaceId: namespaceId,
+		}, "a/b", 10)
+		txn.Discard()
+
+		require.NoError(t, err)
+		require.Empty(t, descendants)
+	})
+}

@@ -1409,9 +1409,9 @@ func (c *Core) checkDescendantConflicts(txn *store.Txn, lockId *corepb.LockId, r
 	// Bounded scan of the subtree to surface what is holding it. The aggregate
 	// counts above already proved a conflict exists; this is only for reporting,
 	// so the cap keeps it cheap even for large subtrees.
-	descendants, err := c.locks.ListByNamePrefix(txn,
+	descendants, err := c.locks.ListDescendantsByPath(txn,
 		&corepb.NamespaceId{AccountId: lockId.AccountId, NamespaceId: lockId.NamespaceId},
-		lockId.LockName+"/", maxBlockingLocks)
+		lockId.LockName, maxBlockingLocks)
 	if err != nil {
 		return corepb.ContentionReason_CONTENTION_REASON_UNSPECIFIED, nil, err
 	}

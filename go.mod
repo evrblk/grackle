@@ -3,9 +3,9 @@ module github.com/evrblk/grackle
 go 1.27.0
 
 require (
-	github.com/evrblk/evrblk-go v0.0.0-20260917205857-891670b70f0f
-	github.com/evrblk/monstera v0.0.0-20260924155748-4a96144e15f8
-	github.com/evrblk/yellowstone-common v0.0.0-20260924154037-e9875d1e1bf7
+	github.com/evrblk/evrblk-go v0.0.0-20260918142802-63460f69282e
+	github.com/evrblk/monstera v0.0.0-20260925133631-cc2cf260a0f5
+	github.com/evrblk/yellowstone-common v0.0.0-20260924200624-0aa6f4575caa
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10
 	github.com/prometheus/client_golang v1.24.1
 	github.com/samber/lo v1.53.0
@@ -35,9 +35,7 @@ require (
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/raft v1.8.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/klauspost/compress v1.20.0 // indirect
-	github.com/labstack/echo/v4 v4.15.4 // indirect
-	github.com/labstack/gommon v0.5.0 // indirect
+	github.com/klauspost/compress v1.20.1 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
@@ -45,8 +43,6 @@ require (
 	github.com/prometheus/common v0.71.0 // indirect
 	github.com/prometheus/procfs v0.22.0 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
-	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	github.com/valyala/fasttemplate v1.2.2 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/otel v1.46.0 // indirect
 	go.opentelemetry.io/otel/metric v1.46.0 // indirect

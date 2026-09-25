@@ -239,10 +239,16 @@ func (t *LeasesTable) tableSK(leaseId uint64) []byte {
 	)
 }
 
+// processId is length-prefixed before its bytes: without that, ConcatBytes'
+// raw concatenation would let one process id's key be a byte-prefix of
+// another's (e.g. "worker-1" of "worker-10"), so ListByProcessId's prefix
+// scan for the shorter id would also match every lease indexed under the
+// longer one.
 func (t *LeasesTable) processIdIndexPK(accountId uint64, namespaceId uint64, processId string) []byte {
 	return utils.ConcatBytes(
 		accountId,
 		namespaceId,
+		uint32(len(processId)),
 		processId,
 	)
 }

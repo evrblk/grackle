@@ -10,6 +10,7 @@ import (
 	cluster "github.com/evrblk/monstera/cluster"
 	mrpc "github.com/evrblk/monstera/rpc"
 	"log/slog"
+	"sort"
 	"sync"
 	"time"
 )
@@ -2927,35 +2928,104 @@ type GrackleNonclusteredStub struct {
 
 var _ GrackleClientApi = &GrackleNonclusteredStub{}
 
+func (s *GrackleNonclusteredStub) findGrackleLocksAdapter(shardKey cluster.ShardKey) (*grackleLocksCoreNonclusteredAdapter, error) {
+	adapters := s.grackleLocksCores
+	i := sort.Search(len(adapters), func(i int) bool {
+		return adapters[i].lowerBound > shardKey
+	})
+	if i > 0 {
+		candidate := adapters[i-1]
+		if shardKey <= candidate.upperBound {
+			return candidate, nil
+		}
+	}
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+}
+
+func (s *GrackleNonclusteredStub) findGrackleSemaphoresAdapter(shardKey cluster.ShardKey) (*grackleSemaphoresCoreNonclusteredAdapter, error) {
+	adapters := s.grackleSemaphoresCores
+	i := sort.Search(len(adapters), func(i int) bool {
+		return adapters[i].lowerBound > shardKey
+	})
+	if i > 0 {
+		candidate := adapters[i-1]
+		if shardKey <= candidate.upperBound {
+			return candidate, nil
+		}
+	}
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+}
+
+func (s *GrackleNonclusteredStub) findGrackleNamespacesAdapter(shardKey cluster.ShardKey) (*grackleNamespacesCoreNonclusteredAdapter, error) {
+	adapters := s.grackleNamespacesCores
+	i := sort.Search(len(adapters), func(i int) bool {
+		return adapters[i].lowerBound > shardKey
+	})
+	if i > 0 {
+		candidate := adapters[i-1]
+		if shardKey <= candidate.upperBound {
+			return candidate, nil
+		}
+	}
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+}
+
+func (s *GrackleNonclusteredStub) findGrackleWaitGroupsAdapter(shardKey cluster.ShardKey) (*grackleWaitGroupsCoreNonclusteredAdapter, error) {
+	adapters := s.grackleWaitGroupsCores
+	i := sort.Search(len(adapters), func(i int) bool {
+		return adapters[i].lowerBound > shardKey
+	})
+	if i > 0 {
+		candidate := adapters[i-1]
+		if shardKey <= candidate.upperBound {
+			return candidate, nil
+		}
+	}
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+}
+
+func (s *GrackleNonclusteredStub) findGrackleBarriersAdapter(shardKey cluster.ShardKey) (*grackleBarriersCoreNonclusteredAdapter, error) {
+	adapters := s.grackleBarriersCores
+	i := sort.Search(len(adapters), func(i int) bool {
+		return adapters[i].lowerBound > shardKey
+	})
+	if i > 0 {
+		candidate := adapters[i-1]
+		if shardKey <= candidate.upperBound {
+			return candidate, nil
+		}
+	}
+	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+}
+
 func (s *GrackleNonclusteredStub) GetLock(ctx context.Context, req *corepb.GetLockRequest, opts ...mrpc.CallOption) (*corepb.GetLockResponse, error) {
 	settings := mrpc.ApplyCallOptions(opts...)
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleLocksCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.GetLock(&mrpc.ReadRequest[*corepb.GetLockRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleLocksAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.GetLock(&mrpc.ReadRequest[*corepb.GetLockRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) ListLocks(ctx context.Context, req *corepb.ListLocksRequest, opts ...mrpc.CallOption) (*corepb.ListLocksResponse, error) {
@@ -2963,30 +3033,29 @@ func (s *GrackleNonclusteredStub) ListLocks(ctx context.Context, req *corepb.Lis
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleLocksCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.ListLocks(&mrpc.ReadRequest[*corepb.ListLocksRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleLocksAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.ListLocks(&mrpc.ReadRequest[*corepb.ListLocksRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) ListLocksByLeaseId(ctx context.Context, req *corepb.ListLocksByLeaseIdRequest, opts ...mrpc.CallOption) (*corepb.ListLocksByLeaseIdResponse, error) {
@@ -2994,30 +3063,29 @@ func (s *GrackleNonclusteredStub) ListLocksByLeaseId(ctx context.Context, req *c
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleLocksCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.ListLocksByLeaseId(&mrpc.ReadRequest[*corepb.ListLocksByLeaseIdRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleLocksAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.ListLocksByLeaseId(&mrpc.ReadRequest[*corepb.ListLocksByLeaseIdRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) ListLockLeases(ctx context.Context, req *corepb.ListLockLeasesRequest, opts ...mrpc.CallOption) (*corepb.ListLockLeasesResponse, error) {
@@ -3025,30 +3093,29 @@ func (s *GrackleNonclusteredStub) ListLockLeases(ctx context.Context, req *corep
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleLocksCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.ListLockLeases(&mrpc.ReadRequest[*corepb.ListLockLeasesRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleLocksAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.ListLockLeases(&mrpc.ReadRequest[*corepb.ListLockLeasesRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) ListLockLeasesByProcessId(ctx context.Context, req *corepb.ListLockLeasesByProcessIdRequest, opts ...mrpc.CallOption) (*corepb.ListLockLeasesByProcessIdResponse, error) {
@@ -3056,30 +3123,29 @@ func (s *GrackleNonclusteredStub) ListLockLeasesByProcessId(ctx context.Context,
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleLocksCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.ListLockLeasesByProcessId(&mrpc.ReadRequest[*corepb.ListLockLeasesByProcessIdRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleLocksAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.ListLockLeasesByProcessId(&mrpc.ReadRequest[*corepb.ListLockLeasesByProcessIdRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) GetLockLease(ctx context.Context, req *corepb.GetLockLeaseRequest, opts ...mrpc.CallOption) (*corepb.GetLockLeaseResponse, error) {
@@ -3087,30 +3153,29 @@ func (s *GrackleNonclusteredStub) GetLockLease(ctx context.Context, req *corepb.
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleLocksCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.GetLockLease(&mrpc.ReadRequest[*corepb.GetLockLeaseRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleLocksAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.GetLockLease(&mrpc.ReadRequest[*corepb.GetLockLeaseRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) AcquireLock(ctx context.Context, req *corepb.AcquireLockRequest, opts ...mrpc.CallOption) (*corepb.AcquireLockResponse, error) {
@@ -3118,30 +3183,29 @@ func (s *GrackleNonclusteredStub) AcquireLock(ctx context.Context, req *corepb.A
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleLocksCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.AcquireLock(&mrpc.UpdateRequest[*corepb.AcquireLockRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleLocksAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.AcquireLock(&mrpc.UpdateRequest[*corepb.AcquireLockRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) ReleaseLock(ctx context.Context, req *corepb.ReleaseLockRequest, opts ...mrpc.CallOption) (*corepb.ReleaseLockResponse, error) {
@@ -3149,30 +3213,29 @@ func (s *GrackleNonclusteredStub) ReleaseLock(ctx context.Context, req *corepb.R
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleLocksCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.ReleaseLock(&mrpc.UpdateRequest[*corepb.ReleaseLockRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleLocksAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.ReleaseLock(&mrpc.UpdateRequest[*corepb.ReleaseLockRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) DeleteLock(ctx context.Context, req *corepb.DeleteLockRequest, opts ...mrpc.CallOption) (*corepb.DeleteLockResponse, error) {
@@ -3180,30 +3243,29 @@ func (s *GrackleNonclusteredStub) DeleteLock(ctx context.Context, req *corepb.De
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleLocksCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.DeleteLock(&mrpc.UpdateRequest[*corepb.DeleteLockRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleLocksAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.DeleteLock(&mrpc.UpdateRequest[*corepb.DeleteLockRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) RunLocksGarbageCollection(ctx context.Context, req *corepb.RunLocksGarbageCollectionRequest, shardId string, opts ...mrpc.CallOption) (*corepb.RunLocksGarbageCollectionResponse, error) {
@@ -3241,30 +3303,29 @@ func (s *GrackleNonclusteredStub) LocksDeleteNamespace(ctx context.Context, req 
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleLocksCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.LocksDeleteNamespace(&mrpc.UpdateRequest[*corepb.LocksDeleteNamespaceRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleLocksAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.LocksDeleteNamespace(&mrpc.UpdateRequest[*corepb.LocksDeleteNamespaceRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) CreateLockLease(ctx context.Context, req *corepb.CreateLockLeaseRequest, opts ...mrpc.CallOption) (*corepb.CreateLockLeaseResponse, error) {
@@ -3272,30 +3333,29 @@ func (s *GrackleNonclusteredStub) CreateLockLease(ctx context.Context, req *core
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleLocksCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.CreateLockLease(&mrpc.UpdateRequest[*corepb.CreateLockLeaseRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleLocksAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.CreateLockLease(&mrpc.UpdateRequest[*corepb.CreateLockLeaseRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) RefreshLockLease(ctx context.Context, req *corepb.RefreshLockLeaseRequest, opts ...mrpc.CallOption) (*corepb.RefreshLockLeaseResponse, error) {
@@ -3303,30 +3363,29 @@ func (s *GrackleNonclusteredStub) RefreshLockLease(ctx context.Context, req *cor
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleLocksCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.RefreshLockLease(&mrpc.UpdateRequest[*corepb.RefreshLockLeaseRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleLocksAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.RefreshLockLease(&mrpc.UpdateRequest[*corepb.RefreshLockLeaseRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) RevokeLockLease(ctx context.Context, req *corepb.RevokeLockLeaseRequest, opts ...mrpc.CallOption) (*corepb.RevokeLockLeaseResponse, error) {
@@ -3334,30 +3393,29 @@ func (s *GrackleNonclusteredStub) RevokeLockLease(ctx context.Context, req *core
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleLocksCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.RevokeLockLease(&mrpc.UpdateRequest[*corepb.RevokeLockLeaseRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleLocksAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.RevokeLockLease(&mrpc.UpdateRequest[*corepb.RevokeLockLeaseRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) GetSemaphore(ctx context.Context, req *corepb.GetSemaphoreRequest, opts ...mrpc.CallOption) (*corepb.GetSemaphoreResponse, error) {
@@ -3365,30 +3423,29 @@ func (s *GrackleNonclusteredStub) GetSemaphore(ctx context.Context, req *corepb.
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleSemaphoresCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.GetSemaphore(&mrpc.ReadRequest[*corepb.GetSemaphoreRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleSemaphoresAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.GetSemaphore(&mrpc.ReadRequest[*corepb.GetSemaphoreRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) GetSemaphoreByName(ctx context.Context, req *corepb.GetSemaphoreByNameRequest, opts ...mrpc.CallOption) (*corepb.GetSemaphoreByNameResponse, error) {
@@ -3396,30 +3453,29 @@ func (s *GrackleNonclusteredStub) GetSemaphoreByName(ctx context.Context, req *c
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleSemaphoresCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.GetSemaphoreByName(&mrpc.ReadRequest[*corepb.GetSemaphoreByNameRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleSemaphoresAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.GetSemaphoreByName(&mrpc.ReadRequest[*corepb.GetSemaphoreByNameRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) ListSemaphores(ctx context.Context, req *corepb.ListSemaphoresRequest, opts ...mrpc.CallOption) (*corepb.ListSemaphoresResponse, error) {
@@ -3427,30 +3483,29 @@ func (s *GrackleNonclusteredStub) ListSemaphores(ctx context.Context, req *corep
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleSemaphoresCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.ListSemaphores(&mrpc.ReadRequest[*corepb.ListSemaphoresRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleSemaphoresAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.ListSemaphores(&mrpc.ReadRequest[*corepb.ListSemaphoresRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) ListSemaphoresByLeaseId(ctx context.Context, req *corepb.ListSemaphoresByLeaseIdRequest, opts ...mrpc.CallOption) (*corepb.ListSemaphoresByLeaseIdResponse, error) {
@@ -3458,30 +3513,29 @@ func (s *GrackleNonclusteredStub) ListSemaphoresByLeaseId(ctx context.Context, r
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleSemaphoresCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.ListSemaphoresByLeaseId(&mrpc.ReadRequest[*corepb.ListSemaphoresByLeaseIdRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleSemaphoresAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.ListSemaphoresByLeaseId(&mrpc.ReadRequest[*corepb.ListSemaphoresByLeaseIdRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) ListSemaphoreHolders(ctx context.Context, req *corepb.ListSemaphoreHoldersRequest, opts ...mrpc.CallOption) (*corepb.ListSemaphoreHoldersResponse, error) {
@@ -3489,30 +3543,29 @@ func (s *GrackleNonclusteredStub) ListSemaphoreHolders(ctx context.Context, req 
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleSemaphoresCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.ListSemaphoreHolders(&mrpc.ReadRequest[*corepb.ListSemaphoreHoldersRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleSemaphoresAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.ListSemaphoreHolders(&mrpc.ReadRequest[*corepb.ListSemaphoreHoldersRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) ListSemaphoreLeases(ctx context.Context, req *corepb.ListSemaphoreLeasesRequest, opts ...mrpc.CallOption) (*corepb.ListSemaphoreLeasesResponse, error) {
@@ -3520,30 +3573,29 @@ func (s *GrackleNonclusteredStub) ListSemaphoreLeases(ctx context.Context, req *
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleSemaphoresCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.ListSemaphoreLeases(&mrpc.ReadRequest[*corepb.ListSemaphoreLeasesRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleSemaphoresAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.ListSemaphoreLeases(&mrpc.ReadRequest[*corepb.ListSemaphoreLeasesRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) ListSemaphoreLeasesByProcessId(ctx context.Context, req *corepb.ListSemaphoreLeasesByProcessIdRequest, opts ...mrpc.CallOption) (*corepb.ListSemaphoreLeasesByProcessIdResponse, error) {
@@ -3551,30 +3603,29 @@ func (s *GrackleNonclusteredStub) ListSemaphoreLeasesByProcessId(ctx context.Con
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleSemaphoresCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.ListSemaphoreLeasesByProcessId(&mrpc.ReadRequest[*corepb.ListSemaphoreLeasesByProcessIdRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleSemaphoresAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.ListSemaphoreLeasesByProcessId(&mrpc.ReadRequest[*corepb.ListSemaphoreLeasesByProcessIdRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) GetSemaphoreLease(ctx context.Context, req *corepb.GetSemaphoreLeaseRequest, opts ...mrpc.CallOption) (*corepb.GetSemaphoreLeaseResponse, error) {
@@ -3582,30 +3633,29 @@ func (s *GrackleNonclusteredStub) GetSemaphoreLease(ctx context.Context, req *co
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleSemaphoresCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.GetSemaphoreLease(&mrpc.ReadRequest[*corepb.GetSemaphoreLeaseRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleSemaphoresAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.GetSemaphoreLease(&mrpc.ReadRequest[*corepb.GetSemaphoreLeaseRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) AcquireSemaphore(ctx context.Context, req *corepb.AcquireSemaphoreRequest, opts ...mrpc.CallOption) (*corepb.AcquireSemaphoreResponse, error) {
@@ -3613,30 +3663,29 @@ func (s *GrackleNonclusteredStub) AcquireSemaphore(ctx context.Context, req *cor
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleSemaphoresCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.AcquireSemaphore(&mrpc.UpdateRequest[*corepb.AcquireSemaphoreRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleSemaphoresAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.AcquireSemaphore(&mrpc.UpdateRequest[*corepb.AcquireSemaphoreRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) ReleaseSemaphore(ctx context.Context, req *corepb.ReleaseSemaphoreRequest, opts ...mrpc.CallOption) (*corepb.ReleaseSemaphoreResponse, error) {
@@ -3644,30 +3693,29 @@ func (s *GrackleNonclusteredStub) ReleaseSemaphore(ctx context.Context, req *cor
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleSemaphoresCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.ReleaseSemaphore(&mrpc.UpdateRequest[*corepb.ReleaseSemaphoreRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleSemaphoresAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.ReleaseSemaphore(&mrpc.UpdateRequest[*corepb.ReleaseSemaphoreRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) CreateSemaphore(ctx context.Context, req *corepb.CreateSemaphoreRequest, opts ...mrpc.CallOption) (*corepb.CreateSemaphoreResponse, error) {
@@ -3675,30 +3723,29 @@ func (s *GrackleNonclusteredStub) CreateSemaphore(ctx context.Context, req *core
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleSemaphoresCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.CreateSemaphore(&mrpc.UpdateRequest[*corepb.CreateSemaphoreRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleSemaphoresAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.CreateSemaphore(&mrpc.UpdateRequest[*corepb.CreateSemaphoreRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) UpdateSemaphore(ctx context.Context, req *corepb.UpdateSemaphoreRequest, opts ...mrpc.CallOption) (*corepb.UpdateSemaphoreResponse, error) {
@@ -3706,30 +3753,29 @@ func (s *GrackleNonclusteredStub) UpdateSemaphore(ctx context.Context, req *core
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleSemaphoresCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.UpdateSemaphore(&mrpc.UpdateRequest[*corepb.UpdateSemaphoreRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleSemaphoresAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.UpdateSemaphore(&mrpc.UpdateRequest[*corepb.UpdateSemaphoreRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) DeleteSemaphore(ctx context.Context, req *corepb.DeleteSemaphoreRequest, opts ...mrpc.CallOption) (*corepb.DeleteSemaphoreResponse, error) {
@@ -3737,30 +3783,29 @@ func (s *GrackleNonclusteredStub) DeleteSemaphore(ctx context.Context, req *core
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleSemaphoresCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.DeleteSemaphore(&mrpc.UpdateRequest[*corepb.DeleteSemaphoreRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleSemaphoresAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.DeleteSemaphore(&mrpc.UpdateRequest[*corepb.DeleteSemaphoreRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) RunSemaphoresGarbageCollection(ctx context.Context, req *corepb.RunSemaphoresGarbageCollectionRequest, shardId string, opts ...mrpc.CallOption) (*corepb.RunSemaphoresGarbageCollectionResponse, error) {
@@ -3798,30 +3843,29 @@ func (s *GrackleNonclusteredStub) SemaphoresDeleteNamespace(ctx context.Context,
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleSemaphoresCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.SemaphoresDeleteNamespace(&mrpc.UpdateRequest[*corepb.SemaphoresDeleteNamespaceRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleSemaphoresAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.SemaphoresDeleteNamespace(&mrpc.UpdateRequest[*corepb.SemaphoresDeleteNamespaceRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) CreateSemaphoreLease(ctx context.Context, req *corepb.CreateSemaphoreLeaseRequest, opts ...mrpc.CallOption) (*corepb.CreateSemaphoreLeaseResponse, error) {
@@ -3829,30 +3873,29 @@ func (s *GrackleNonclusteredStub) CreateSemaphoreLease(ctx context.Context, req 
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleSemaphoresCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.CreateSemaphoreLease(&mrpc.UpdateRequest[*corepb.CreateSemaphoreLeaseRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleSemaphoresAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.CreateSemaphoreLease(&mrpc.UpdateRequest[*corepb.CreateSemaphoreLeaseRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) RevokeSemaphoreLease(ctx context.Context, req *corepb.RevokeSemaphoreLeaseRequest, opts ...mrpc.CallOption) (*corepb.RevokeSemaphoreLeaseResponse, error) {
@@ -3860,30 +3903,29 @@ func (s *GrackleNonclusteredStub) RevokeSemaphoreLease(ctx context.Context, req 
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleSemaphoresCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.RevokeSemaphoreLease(&mrpc.UpdateRequest[*corepb.RevokeSemaphoreLeaseRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleSemaphoresAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.RevokeSemaphoreLease(&mrpc.UpdateRequest[*corepb.RevokeSemaphoreLeaseRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) RefreshSemaphoreLease(ctx context.Context, req *corepb.RefreshSemaphoreLeaseRequest, opts ...mrpc.CallOption) (*corepb.RefreshSemaphoreLeaseResponse, error) {
@@ -3891,30 +3933,29 @@ func (s *GrackleNonclusteredStub) RefreshSemaphoreLease(ctx context.Context, req
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleSemaphoresCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.RefreshSemaphoreLease(&mrpc.UpdateRequest[*corepb.RefreshSemaphoreLeaseRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleSemaphoresAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.RefreshSemaphoreLease(&mrpc.UpdateRequest[*corepb.RefreshSemaphoreLeaseRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) GetNamespace(ctx context.Context, req *corepb.GetNamespaceRequest, opts ...mrpc.CallOption) (*corepb.GetNamespaceResponse, error) {
@@ -3922,30 +3963,29 @@ func (s *GrackleNonclusteredStub) GetNamespace(ctx context.Context, req *corepb.
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleNamespacesCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.GetNamespace(&mrpc.ReadRequest[*corepb.GetNamespaceRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleNamespacesAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.GetNamespace(&mrpc.ReadRequest[*corepb.GetNamespaceRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) GetNamespaceByName(ctx context.Context, req *corepb.GetNamespaceByNameRequest, opts ...mrpc.CallOption) (*corepb.GetNamespaceByNameResponse, error) {
@@ -3953,30 +3993,29 @@ func (s *GrackleNonclusteredStub) GetNamespaceByName(ctx context.Context, req *c
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleNamespacesCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.GetNamespaceByName(&mrpc.ReadRequest[*corepb.GetNamespaceByNameRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleNamespacesAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.GetNamespaceByName(&mrpc.ReadRequest[*corepb.GetNamespaceByNameRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) ListNamespaces(ctx context.Context, req *corepb.ListNamespacesRequest, opts ...mrpc.CallOption) (*corepb.ListNamespacesResponse, error) {
@@ -3984,30 +4023,29 @@ func (s *GrackleNonclusteredStub) ListNamespaces(ctx context.Context, req *corep
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleNamespacesCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.ListNamespaces(&mrpc.ReadRequest[*corepb.ListNamespacesRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleNamespacesAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.ListNamespaces(&mrpc.ReadRequest[*corepb.ListNamespacesRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) CreateNamespace(ctx context.Context, req *corepb.CreateNamespaceRequest, opts ...mrpc.CallOption) (*corepb.CreateNamespaceResponse, error) {
@@ -4015,30 +4053,29 @@ func (s *GrackleNonclusteredStub) CreateNamespace(ctx context.Context, req *core
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleNamespacesCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.CreateNamespace(&mrpc.UpdateRequest[*corepb.CreateNamespaceRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleNamespacesAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.CreateNamespace(&mrpc.UpdateRequest[*corepb.CreateNamespaceRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) UpdateNamespace(ctx context.Context, req *corepb.UpdateNamespaceRequest, opts ...mrpc.CallOption) (*corepb.UpdateNamespaceResponse, error) {
@@ -4046,30 +4083,29 @@ func (s *GrackleNonclusteredStub) UpdateNamespace(ctx context.Context, req *core
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleNamespacesCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.UpdateNamespace(&mrpc.UpdateRequest[*corepb.UpdateNamespaceRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleNamespacesAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.UpdateNamespace(&mrpc.UpdateRequest[*corepb.UpdateNamespaceRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) DeleteNamespace(ctx context.Context, req *corepb.DeleteNamespaceRequest, opts ...mrpc.CallOption) (*corepb.DeleteNamespaceResponse, error) {
@@ -4077,30 +4113,29 @@ func (s *GrackleNonclusteredStub) DeleteNamespace(ctx context.Context, req *core
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleNamespacesCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.DeleteNamespace(&mrpc.UpdateRequest[*corepb.DeleteNamespaceRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleNamespacesAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.DeleteNamespace(&mrpc.UpdateRequest[*corepb.DeleteNamespaceRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) GetWaitGroup(ctx context.Context, req *corepb.GetWaitGroupRequest, opts ...mrpc.CallOption) (*corepb.GetWaitGroupResponse, error) {
@@ -4108,30 +4143,29 @@ func (s *GrackleNonclusteredStub) GetWaitGroup(ctx context.Context, req *corepb.
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleWaitGroupsCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.GetWaitGroup(&mrpc.ReadRequest[*corepb.GetWaitGroupRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleWaitGroupsAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.GetWaitGroup(&mrpc.ReadRequest[*corepb.GetWaitGroupRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) GetWaitGroupByName(ctx context.Context, req *corepb.GetWaitGroupByNameRequest, opts ...mrpc.CallOption) (*corepb.GetWaitGroupByNameResponse, error) {
@@ -4139,30 +4173,29 @@ func (s *GrackleNonclusteredStub) GetWaitGroupByName(ctx context.Context, req *c
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleWaitGroupsCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.GetWaitGroupByName(&mrpc.ReadRequest[*corepb.GetWaitGroupByNameRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleWaitGroupsAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.GetWaitGroupByName(&mrpc.ReadRequest[*corepb.GetWaitGroupByNameRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) ListWaitGroups(ctx context.Context, req *corepb.ListWaitGroupsRequest, opts ...mrpc.CallOption) (*corepb.ListWaitGroupsResponse, error) {
@@ -4170,30 +4203,29 @@ func (s *GrackleNonclusteredStub) ListWaitGroups(ctx context.Context, req *corep
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleWaitGroupsCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.ListWaitGroups(&mrpc.ReadRequest[*corepb.ListWaitGroupsRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleWaitGroupsAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.ListWaitGroups(&mrpc.ReadRequest[*corepb.ListWaitGroupsRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) ListWaitGroupCompletedJobs(ctx context.Context, req *corepb.ListWaitGroupCompletedJobsRequest, opts ...mrpc.CallOption) (*corepb.ListWaitGroupCompletedJobsResponse, error) {
@@ -4201,30 +4233,29 @@ func (s *GrackleNonclusteredStub) ListWaitGroupCompletedJobs(ctx context.Context
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleWaitGroupsCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.ListWaitGroupCompletedJobs(&mrpc.ReadRequest[*corepb.ListWaitGroupCompletedJobsRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleWaitGroupsAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.ListWaitGroupCompletedJobs(&mrpc.ReadRequest[*corepb.ListWaitGroupCompletedJobsRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) UpdateWaitGroup(ctx context.Context, req *corepb.UpdateWaitGroupRequest, opts ...mrpc.CallOption) (*corepb.UpdateWaitGroupResponse, error) {
@@ -4232,30 +4263,29 @@ func (s *GrackleNonclusteredStub) UpdateWaitGroup(ctx context.Context, req *core
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleWaitGroupsCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.UpdateWaitGroup(&mrpc.UpdateRequest[*corepb.UpdateWaitGroupRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleWaitGroupsAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.UpdateWaitGroup(&mrpc.UpdateRequest[*corepb.UpdateWaitGroupRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) CompleteJobsFromWaitGroup(ctx context.Context, req *corepb.CompleteJobsFromWaitGroupRequest, opts ...mrpc.CallOption) (*corepb.CompleteJobsFromWaitGroupResponse, error) {
@@ -4263,30 +4293,29 @@ func (s *GrackleNonclusteredStub) CompleteJobsFromWaitGroup(ctx context.Context,
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleWaitGroupsCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.CompleteJobsFromWaitGroup(&mrpc.UpdateRequest[*corepb.CompleteJobsFromWaitGroupRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleWaitGroupsAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.CompleteJobsFromWaitGroup(&mrpc.UpdateRequest[*corepb.CompleteJobsFromWaitGroupRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) CreateWaitGroup(ctx context.Context, req *corepb.CreateWaitGroupRequest, opts ...mrpc.CallOption) (*corepb.CreateWaitGroupResponse, error) {
@@ -4294,30 +4323,29 @@ func (s *GrackleNonclusteredStub) CreateWaitGroup(ctx context.Context, req *core
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleWaitGroupsCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.CreateWaitGroup(&mrpc.UpdateRequest[*corepb.CreateWaitGroupRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleWaitGroupsAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.CreateWaitGroup(&mrpc.UpdateRequest[*corepb.CreateWaitGroupRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) DeleteWaitGroup(ctx context.Context, req *corepb.DeleteWaitGroupRequest, opts ...mrpc.CallOption) (*corepb.DeleteWaitGroupResponse, error) {
@@ -4325,30 +4353,29 @@ func (s *GrackleNonclusteredStub) DeleteWaitGroup(ctx context.Context, req *core
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleWaitGroupsCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.DeleteWaitGroup(&mrpc.UpdateRequest[*corepb.DeleteWaitGroupRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleWaitGroupsAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.DeleteWaitGroup(&mrpc.UpdateRequest[*corepb.DeleteWaitGroupRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) RunWaitGroupsGarbageCollection(ctx context.Context, req *corepb.RunWaitGroupsGarbageCollectionRequest, shardId string, opts ...mrpc.CallOption) (*corepb.RunWaitGroupsGarbageCollectionResponse, error) {
@@ -4386,30 +4413,29 @@ func (s *GrackleNonclusteredStub) WaitGroupsDeleteNamespace(ctx context.Context,
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleWaitGroupsCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.WaitGroupsDeleteNamespace(&mrpc.UpdateRequest[*corepb.WaitGroupsDeleteNamespaceRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleWaitGroupsAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.WaitGroupsDeleteNamespace(&mrpc.UpdateRequest[*corepb.WaitGroupsDeleteNamespaceRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) GetBarrier(ctx context.Context, req *corepb.GetBarrierRequest, opts ...mrpc.CallOption) (*corepb.GetBarrierResponse, error) {
@@ -4417,30 +4443,29 @@ func (s *GrackleNonclusteredStub) GetBarrier(ctx context.Context, req *corepb.Ge
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleBarriersCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.GetBarrier(&mrpc.ReadRequest[*corepb.GetBarrierRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleBarriersAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.GetBarrier(&mrpc.ReadRequest[*corepb.GetBarrierRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) GetBarrierByName(ctx context.Context, req *corepb.GetBarrierByNameRequest, opts ...mrpc.CallOption) (*corepb.GetBarrierByNameResponse, error) {
@@ -4448,30 +4473,29 @@ func (s *GrackleNonclusteredStub) GetBarrierByName(ctx context.Context, req *cor
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleBarriersCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.GetBarrierByName(&mrpc.ReadRequest[*corepb.GetBarrierByNameRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleBarriersAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.GetBarrierByName(&mrpc.ReadRequest[*corepb.GetBarrierByNameRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) ListBarriers(ctx context.Context, req *corepb.ListBarriersRequest, opts ...mrpc.CallOption) (*corepb.ListBarriersResponse, error) {
@@ -4479,30 +4503,29 @@ func (s *GrackleNonclusteredStub) ListBarriers(ctx context.Context, req *corepb.
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleBarriersCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.ListBarriers(&mrpc.ReadRequest[*corepb.ListBarriersRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleBarriersAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.ListBarriers(&mrpc.ReadRequest[*corepb.ListBarriersRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) ListBarrierParticipants(ctx context.Context, req *corepb.ListBarrierParticipantsRequest, opts ...mrpc.CallOption) (*corepb.ListBarrierParticipantsResponse, error) {
@@ -4510,30 +4533,29 @@ func (s *GrackleNonclusteredStub) ListBarrierParticipants(ctx context.Context, r
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleBarriersCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.RLock()
-			defer adapter.mu.RUnlock()
-
-			resp, err := adapter.core.ListBarrierParticipants(&mrpc.ReadRequest[*corepb.ListBarrierParticipantsRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleBarriersAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.RLock()
+	defer adapter.mu.RUnlock()
+
+	resp, err := adapter.core.ListBarrierParticipants(&mrpc.ReadRequest[*corepb.ListBarrierParticipantsRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) CreateBarrier(ctx context.Context, req *corepb.CreateBarrierRequest, opts ...mrpc.CallOption) (*corepb.CreateBarrierResponse, error) {
@@ -4541,30 +4563,29 @@ func (s *GrackleNonclusteredStub) CreateBarrier(ctx context.Context, req *corepb
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleBarriersCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.CreateBarrier(&mrpc.UpdateRequest[*corepb.CreateBarrierRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleBarriersAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.CreateBarrier(&mrpc.UpdateRequest[*corepb.CreateBarrierRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) DeleteBarrier(ctx context.Context, req *corepb.DeleteBarrierRequest, opts ...mrpc.CallOption) (*corepb.DeleteBarrierResponse, error) {
@@ -4572,30 +4593,29 @@ func (s *GrackleNonclusteredStub) DeleteBarrier(ctx context.Context, req *corepb
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleBarriersCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.DeleteBarrier(&mrpc.UpdateRequest[*corepb.DeleteBarrierRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleBarriersAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.DeleteBarrier(&mrpc.UpdateRequest[*corepb.DeleteBarrierRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) UpdateBarrier(ctx context.Context, req *corepb.UpdateBarrierRequest, opts ...mrpc.CallOption) (*corepb.UpdateBarrierResponse, error) {
@@ -4603,30 +4623,29 @@ func (s *GrackleNonclusteredStub) UpdateBarrier(ctx context.Context, req *corepb
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleBarriersCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.UpdateBarrier(&mrpc.UpdateRequest[*corepb.UpdateBarrierRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleBarriersAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.UpdateBarrier(&mrpc.UpdateRequest[*corepb.UpdateBarrierRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) ArriveAtBarrier(ctx context.Context, req *corepb.ArriveAtBarrierRequest, opts ...mrpc.CallOption) (*corepb.ArriveAtBarrierResponse, error) {
@@ -4634,30 +4653,29 @@ func (s *GrackleNonclusteredStub) ArriveAtBarrier(ctx context.Context, req *core
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleBarriersCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.ArriveAtBarrier(&mrpc.UpdateRequest[*corepb.ArriveAtBarrierRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleBarriersAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.ArriveAtBarrier(&mrpc.UpdateRequest[*corepb.ArriveAtBarrierRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) RunBarriersGarbageCollection(ctx context.Context, req *corepb.RunBarriersGarbageCollectionRequest, shardId string, opts ...mrpc.CallOption) (*corepb.RunBarriersGarbageCollectionResponse, error) {
@@ -4695,30 +4713,29 @@ func (s *GrackleNonclusteredStub) BarriersDeleteNamespace(ctx context.Context, r
 	now := time.Now().UnixNano()
 
 	shardKey := req.ShardKey()
-	for _, adapter := range s.grackleBarriersCores {
-		if shardKey >= adapter.lowerBound && shardKey <= adapter.upperBound {
-			adapter.mu.Lock()
-			defer adapter.mu.Unlock()
-
-			resp, err := adapter.core.BarriersDeleteNamespace(&mrpc.UpdateRequest[*corepb.BarriersDeleteNamespaceRequest]{
-				Now:     now,
-				Payload: req,
-			}, s.logger)
-			if err != nil {
-				return nil, err
-			}
-			err = nilifyIfEmpty(resp.ApplicationError)
-			if err != nil {
-				return nil, err
-			}
-			if settings.ResponseMeta != nil {
-				*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
-			}
-			return resp.Payload, nil
-		}
+	adapter, err := s.findGrackleBarriersAdapter(shardKey)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("no shard found for shardKey: %s", shardKey)
+	adapter.mu.Lock()
+	defer adapter.mu.Unlock()
+
+	resp, err := adapter.core.BarriersDeleteNamespace(&mrpc.UpdateRequest[*corepb.BarriersDeleteNamespaceRequest]{
+		Now:     now,
+		Payload: req,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+	err = nilifyIfEmpty(resp.ApplicationError)
+	if err != nil {
+		return nil, err
+	}
+	if settings.ResponseMeta != nil {
+		*settings.ResponseMeta = mrpc.ResponseMeta{Now: now}
+	}
+	return resp.Payload, nil
 }
 
 func (s *GrackleNonclusteredStub) ListShards(applicationName string) ([]string, error) {

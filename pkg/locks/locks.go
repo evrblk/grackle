@@ -127,14 +127,18 @@ func (t *locksTable) ListByLeaseId(txn *store.Txn, leaseId *corepb.LeaseId, pagi
 	}, nil
 }
 
-// ListByNamePrefix returns up to limit locks within the namespace whose name
-// starts with namePrefix. Locks are sorted by name, so passing "a/b/" yields
-// the descendants of "a/b". The scan is bounded by limit.
-func (t *locksTable) ListByNamePrefix(txn *store.Txn, namespaceId *corepb.NamespaceId, namePrefix string, limit int) ([]*corepb.Lock, error) {
+// ListDescendantsByPath returns up to limit locks within the namespace whose
+// name is a descendant of path — i.e. name equals path plus a "/"-separated
+// suffix, never path itself. The "/" is appended internally rather than left
+// to the caller: without it, this would be a raw byte-prefix scan, and one
+// lock name that is a string-prefix of another (e.g. "a/b" of "a/bc") would
+// wrongly count as its descendant even though it isn't below it in the
+// hierarchy. The scan is bounded by limit.
+func (t *locksTable) ListDescendantsByPath(txn *store.Txn, namespaceId *corepb.NamespaceId, path string, limit int) ([]*corepb.Lock, error) {
 	result, err := t.table.ListPaginated(txn,
 		utils.ConcatBytes(
 			t.tablePK(namespaceId.AccountId, namespaceId.NamespaceId),
-			t.tableSK(namePrefix)),
+			t.tableSK(path+"/")),
 		nil, limit)
 	if err != nil {
 		return nil, err
