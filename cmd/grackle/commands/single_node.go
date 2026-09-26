@@ -42,7 +42,7 @@ var singleNodeCmd = &cobra.Command{
 	Short: "Run Grackle in single-node mode",
 	Run: func(cmd *cobra.Command, args []string) {
 		baseLogger := setupLogger(singleNodeCmdCfg.log).With("service_name", "single-node")
-		baseLogger.Info("Initializing Grackle...")
+		baseLogger.Info("Initializing Grackle")
 
 		lis, err := net.Listen("tcp", singleNodeCmdCfg.gatewayListenAddr)
 		if err != nil {
@@ -124,7 +124,7 @@ var singleNodeCmd = &cobra.Command{
 		go func() {
 			select {
 			case <-c:
-				baseLogger.Info("Received SIGINT. Shutting down...")
+				baseLogger.Info("Received SIGINT. Shutting down")
 				cancel()
 				grackeLocksGarbageCollectionWorker.Stop()
 				grackeSemaphoresGarbageCollectionWorker.Stop()
@@ -145,7 +145,7 @@ var singleNodeCmd = &cobra.Command{
 		defer grackleApiGatewayServer.Close()
 		gracklepb.RegisterGrackleApiServer(grpcServer, grackleApiGatewayServer)
 
-		baseLogger.Info("Starting API Gateway Server...", "address", singleNodeCmdCfg.gatewayListenAddr)
+		baseLogger.Info("Starting API Gateway Server", "address", singleNodeCmdCfg.gatewayListenAddr)
 		grpcServer.Serve(lis)
 	},
 }

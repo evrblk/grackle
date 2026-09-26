@@ -29,7 +29,7 @@ var workerCmd = &cobra.Command{
 	Short: "Run Grackle background worker",
 	Run: func(cmd *cobra.Command, args []string) {
 		baseLogger := setupLogger(workerCmdCfg.log).With("service_name", "worker")
-		baseLogger.Info("Initializing Grackle Worker...")
+		baseLogger.Info("Initializing Grackle Worker")
 
 		// Metrics
 		workers.RegisterMetrics(prometheus.DefaultRegisterer)
@@ -77,7 +77,7 @@ var workerCmd = &cobra.Command{
 		go func() {
 			select {
 			case <-c:
-				baseLogger.Info("Received SIGINT. Shutting down...")
+				baseLogger.Info("Received SIGINT. Shutting down")
 				cancel()
 				metricsSrv.Stop()
 				grackeLocksGarbageCollectionWorker.Stop()

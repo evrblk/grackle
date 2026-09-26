@@ -38,7 +38,7 @@ var nodeCmd = &cobra.Command{
 	Short: "Run Monstera node with Grackle cores",
 	Run: func(cmd *cobra.Command, args []string) {
 		baseLogger := setupLogger(nodeCmdCfg.log).With("service_name", "node")
-		baseLogger.Info("Initializing Grackle Node server...", "address", nodeCmdCfg.monsteraListenAddress)
+		baseLogger.Info("Initializing Grackle Node server", "address", nodeCmdCfg.monsteraListenAddress)
 
 		// Metrics
 		monstera.RegisterMetrics(prometheus.DefaultRegisterer)
@@ -135,7 +135,7 @@ var nodeCmd = &cobra.Command{
 		go func() {
 			select {
 			case <-c:
-				baseLogger.Info("Received SIGINT. Shutting down...")
+				baseLogger.Info("Received SIGINT. Shutting down")
 				cancel()
 				monsteraNode.Stop()
 				monsteraServer.Stop()
@@ -160,7 +160,7 @@ var nodeCmd = &cobra.Command{
 
 		cleanupDone.Wait()
 
-		baseLogger.Info("Exiting...")
+		baseLogger.Info("Exiting")
 	},
 }
 
